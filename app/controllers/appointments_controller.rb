@@ -32,8 +32,10 @@ class AppointmentsController < ApplicationController
             end
         end
 
+        sorted_appointments = todaysAppointments.sort { |a, b| a.start_time <=> b.start_time }
+
         if appointments
-            render json: todaysAppointments
+            render json: sorted_appointments
         else
             render json: { error: "No appointments found" }, status: :not_found
         end
@@ -71,5 +73,4 @@ class AppointmentsController < ApplicationController
             puts "error!"
         end
     end
-      
 end

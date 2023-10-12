@@ -21,7 +21,7 @@ class PetsController < ApplicationController
 
     def update
         pet =  @current_user.pets.find_by(id: params[:id])
-        pet.update(pet_params)
+        pet.update(pet_params_update)
         if pet.valid?
             render json: pet, status: :created
         else
@@ -33,5 +33,10 @@ class PetsController < ApplicationController
 
     def pet_params
         params.require(:pet).permit(:user_id, :name, :spayed_neutered, :supplies_location, :behavorial_notes, :birthdate, :sex, :allergies, :address, :profile_pic)
+    end
+
+
+    def pet_params_update
+        params.permit(:user_id, :name, :spayed_neutered, :supplies_location, :behavorial_notes, :birthdate, :sex, :allergies, :address, :profile_pic)
     end
 end

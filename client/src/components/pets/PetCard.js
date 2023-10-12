@@ -25,32 +25,35 @@ export default function PetCard({ pet, updateUserPets }) {
 
     const [errors, setErrors] = useState([])
 
+    const [profilePic, setProfilePic] = useState(null)
+
     function handleUpdatePet(e) {
 
         e.preventDefault()
+        const formData = new FormData()
+        formData.append('name', name)
+        formData.append('address', address)
+        formData.append('sex', sex)
+        formData.append('birthdate', birthdate)
+        formData.append('supplies_location', suppliesLocation)
+        formData.append('allergies', allergies)
+        formData.append('behavorial_notes', behavorialNotes)
+        formData.append('profile_pic', profilePic)
+
         fetch(`/pets/${pet.id}`, {
-            method: "PATCH",
+            method: 'PATCH',
+            body: formData,
             headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                name: name,
-                sex: sex,
-                address: address,
-                birthdate: birthdate,
-                allergies: allergies,
-                behavorial_notes: behavorialNotes,
-                supplies_location: suppliesLocation,
-                spayed_neutered: spayedOrNeutered
-            })
+            }
         })
-            .then((response) => {
-                if (response.ok) {
-                    response.json().then((newPet) => {
+
+            .then(res => {
+                if (res.ok) {
+                    res.json().then((newPet) => {
                         updateUserPets(newPet)
                     })
                 } else {
-                    response.json().then((errorData) => setErrors(errorData.errors))
+                    res.json().then((errorData) => setErrors(errorData.errors))
                 }
             })
     }
@@ -96,7 +99,7 @@ export default function PetCard({ pet, updateUserPets }) {
                 <Accordion.Header>{pet.name}, {pet.address}</Accordion.Header>
                 <Accordion.Body>
                     <Card style={{ width: '100%' }}>
-                        <Card.Img variant="top" src="holder.js/100px180?text=Image cap" />
+                        <Card.Img variant="top" src={pet.profile_pic} />
                         <Card.Body>
                             <Card.Title>{pet.name}</Card.Title>
                             <Card.Text>
@@ -127,6 +130,13 @@ export default function PetCard({ pet, updateUserPets }) {
                     <h3 classsex="display-3">Update information for "{pet.name}"</h3>
                     <Form className="text-bg-light p-3" onSubmit={handleUpdatePet}>
                         <Form.Group classsex="mb-3">
+                            <Form.Label>Pet's Photo</Form.Label>
+                            <Form.Control
+                                id='file-upload'
+                                type='file' accept='image/*'
+                                onChange={(e) => {
+                                    setProfilePic(e.target.files[0])
+                                }} />
                             <Form.Label>Pet's Name</Form.Label>
                             <Form.Control onChange={(e) => setName(e.target.value)} value={name} type="text" placeholder="Enter name" />
                         </Form.Group>

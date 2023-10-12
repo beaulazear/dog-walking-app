@@ -13,10 +13,17 @@ export default function TodaysAppointmentsCard({ apt }) {
     const startTime = getHourAndMinutes(apt.start_time);
     const endTime = getHourAndMinutes(apt.end_time);
 
+    const photoStyles = {
+        width: '100px',
+        height: '100px',
+        borderRadius: '50%',
+        objectFit: 'cover',
+    }
+
     return (
-        <Card style={{ width: '100%' }}>
-            <Card.Img variant="top" src="holder.js/100px180?text=Image cap" />
+        <Card className="m-3" style={{ width: '100%' }}>
             <Card.Body>
+                <img style={photoStyles} src={apt.pet.profile_pic} />
                 <Card.Title>{apt.pet.name}</Card.Title>
                 <Card.Text>
                     {apt.pet.supplies_location}
@@ -29,10 +36,10 @@ export default function TodaysAppointmentsCard({ apt }) {
                 <ListGroup.Item><b>Earliest pick up time:</b> {startTime}</ListGroup.Item>
                 <ListGroup.Item><b>Latest pick up time:</b> {endTime}</ListGroup.Item>
                 <ListGroup.Item><b>Address:</b> {apt.pet.address}</ListGroup.Item>
+                <ListGroup.Item><b>Walk Duration:</b> {apt.duration} minutes</ListGroup.Item>
             </ListGroup>
             <Card.Body>
-                <Card.Link href="#">Card Link</Card.Link>
-                <Card.Link href="#">Another Link</Card.Link>
+                <Card.Link href="#">Mark as completed</Card.Link>
             </Card.Body>
         </Card>
     );
