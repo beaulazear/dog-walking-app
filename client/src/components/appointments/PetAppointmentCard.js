@@ -8,11 +8,10 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
     if (datetimeString) {
 
         function formatDateToYYYYMMDD(datetimeString) {
-            const date = new Date(datetimeString);
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
+            const year = datetimeString.slice(0, 4);
+            const month = datetimeString.slice(5, 7);
+            const day = datetimeString.slice(8, 10);
+            return datetimeString = `${year}-${month}-${day}`;
         }
 
         datetimeString = formatDateToYYYYMMDD(datetimeString);
@@ -54,10 +53,10 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
         }
     }
 
-    function handleDelete(){
-        fetch(`/appointments/${apt.id}`, {method: "DELETE"})
-        .then((resp) => resp.json())
-        .then((oldApt) => updateAppointmentsDelete(oldApt))
+    function handleDelete() {
+        fetch(`/appointments/${apt.id}`, { method: "DELETE" })
+            .then((resp) => resp.json())
+            .then((oldApt) => updateAppointmentsDelete(oldApt))
     }
 
     return (

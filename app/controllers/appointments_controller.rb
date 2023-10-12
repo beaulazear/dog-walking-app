@@ -20,9 +20,56 @@ class AppointmentsController < ApplicationController
         end
     end
 
+    def index
+        appointments = @current_user.appointments
+        todaysAppointments = []
+
+        for apt in appointments
+            if apt.recurring == false && is_today?(apt.appointment_date)
+                todaysAppointments << apt
+            elsif apt.recurring == true && day_of_the_week?(apt)
+                todaysAppointments << apt
+            end
+        end
+
+        if appointments
+            render json: todaysAppointments
+        else
+            render json: { error: "No appointments found" }, status: :not_found
+        end
+    end
+
     private
 
     def appointment_params
         params.require(:appointment).permit(:user_id, :pet_id, :appointment_date, :start_time, :end_time, :recurring, :duration, :monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday)
     end
+
+    def is_today?(date)
+        today = Date.today
+        date.year == today.year && date.month == today.month && date.day == today.day
+    end
+
+    def day_of_the_week?(apt)
+        time_now = Time.now
+        case time_now.wday
+        when 0
+            apt.sunday == true
+        when 1
+            apt.monday == true
+        when 2
+            apt.tuesday == true
+        when 3 
+            apt.wednesday == true
+        when 4
+            apt.thursday == true
+        when 5 
+            apt.friday == true
+        when 6
+            apt.saturday == true
+        else
+            puts "error!"
+        end
+    end
+      
 end

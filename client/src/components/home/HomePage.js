@@ -18,9 +18,9 @@ export default function HomePage() {
         )
     } else {
         return (
-            <div>
-                <h1 className="display-3">Welcome to PocketWalks!</h1>
-            </div>
+            <Container fluid className="m-3">
+                <h1 className="display-4">Welcome to PocketWalks!</h1>
+            </Container>
         )
     }
 }
