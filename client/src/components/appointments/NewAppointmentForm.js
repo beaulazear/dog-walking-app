@@ -5,7 +5,7 @@ import Form from "react-bootstrap/Form";
 import Container from 'react-bootstrap/Container';
 import Alert from 'react-bootstrap/Alert';
 
-export default function NewAppointmentForm({ pet }) {
+export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
 
     const { user } = useContext(UserContext)
 
@@ -51,8 +51,8 @@ export default function NewAppointmentForm({ pet }) {
         })
             .then((response) => {
                 if (response.ok) {
-                    response.json().then((newPet) => {
-                        console.log(newPet)
+                    response.json().then((newApt) => {
+                        updateAppointmentsNew(newApt)
                     })
                 } else {
                     response.json().then((errorData) => setErrors(errorData.errors))
@@ -64,10 +64,6 @@ export default function NewAppointmentForm({ pet }) {
         <Container className="m-3">
             <h1 className="display-6">New Appointment for {pet.name}</h1>
             <Form className="text-bg-light p-3" onSubmit={handleNewAppointmentRequest}>
-                <Form.Group className="mb-3">
-                    <Form.Label>Appointment Date</Form.Label>
-                    <Form.Control onChange={(e) => setAppointmentDate(e.target.value)} value={appointmentDate} type="date" />
-                </Form.Group>
                 <Form.Group className="mb-3" controlId="formBasicappointmentDate">
                     <Form.Label>Start Time</Form.Label>
                     <Form.Control onChange={(e) => setStartTime(e.target.value)} value={startTime} type="time" />
@@ -94,60 +90,66 @@ export default function NewAppointmentForm({ pet }) {
                 <Form.Group className="mb-3">
                     <Form.Label>Is this a recurring walk?</Form.Label>
                     <Form.Select onChange={(e) => setRecurring(!recurring)} aria-label="Default select example">
+                        <option value={false}>No</option>
                         <option value={true}>Yes</option>
-                        <option selected value={false}>No</option>
                     </Form.Select>
                 </Form.Group>
+                {recurring === false && (
+                    <Form.Group className="mb-3">
+                        <Form.Label>Appointment Date</Form.Label>
+                        <Form.Control onChange={(e) => setAppointmentDate(e.target.value)} value={appointmentDate} type="date" />
+                    </Form.Group>
+                )}
                 {recurring === true && (
                     <>
-                        <h3>For recurring walks, please select which day/days of the week this walk is to be repeated on.</h3>
+                        <h3>Please select which days of the week you would like this walk to be repeated.</h3>
                         <Form.Group className="mb-3">
                             <Form.Label>Monday</Form.Label>
                             <Form.Select onChange={(e) => setMonday(!monday)} aria-label="Default select example">
+                                <option value={false}>No</option>
                                 <option value={true}>Yes</option>
-                                <option selected value={false}>No</option>
                             </Form.Select>
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Tuesday</Form.Label>
                             <Form.Select onChange={(e) => setTuesday(!tuesday)} aria-label="Default select example">
+                                <option value={false}>No</option>
                                 <option value={true}>Yes</option>
-                                <option selected value={false}>No</option>
                             </Form.Select>
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Wednesday</Form.Label>
                             <Form.Select onChange={(e) => setWednesday(!wednesday)} aria-label="Default select example">
+                                <option value={false}>No</option>
                                 <option value={true}>Yes</option>
-                                <option selected value={false}>No</option>
                             </Form.Select>
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Thursday</Form.Label>
                             <Form.Select onChange={(e) => setThursday(!thursday)} aria-label="Default select example">
+                                <option value={false}>No</option>
                                 <option value={true}>Yes</option>
-                                <option selected value={false}>No</option>
                             </Form.Select>
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Friday</Form.Label>
                             <Form.Select onChange={(e) => setFriday(!friday)} aria-label="Default select example">
+                                <option value={false}>No</option>
                                 <option value={true}>Yes</option>
-                                <option selected value={false}>No</option>
                             </Form.Select>
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Saturday</Form.Label>
                             <Form.Select onChange={(e) => setSaturday(!saturday)} aria-label="Default select example">
+                                <option value={false}>No</option>
                                 <option value={true}>Yes</option>
-                                <option selected value={false}>No</option>
                             </Form.Select>
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Sunday</Form.Label>
                             <Form.Select onChange={(e) => setSunday(!sunday)} aria-label="Default select example">
+                                <option value={false}>No</option>
                                 <option value={true}>Yes</option>
-                                <option selected value={false}>No</option>
                             </Form.Select>
                         </Form.Group>
                     </>

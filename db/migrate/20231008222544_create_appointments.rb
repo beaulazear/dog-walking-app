@@ -1,4 +1,4 @@
-class CreateAppontments < ActiveRecord::Migration[6.1]
+class CreateAppointments < ActiveRecord::Migration[6.1]
   def change
     create_table :appointments do |t|
       t.belongs_to :user, null: false, foreign_key: true

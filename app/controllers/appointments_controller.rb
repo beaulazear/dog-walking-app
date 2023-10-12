@@ -10,6 +10,16 @@ class AppointmentsController < ApplicationController
         end
     end
 
+    def destroy
+        appointment = @current_user.appointments.find_by(id: params[:id])
+        if appointment
+            appointment.destroy
+            render json: appointment
+        else
+            render json: { error: "Appointment not found" }, status: :not_found
+        end
+    end
+
     private
 
     def appointment_params

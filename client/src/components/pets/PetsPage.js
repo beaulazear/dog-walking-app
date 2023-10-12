@@ -1,5 +1,5 @@
-import React, { useEffect, useContext, useState } from "react";
-import { UserContext } from "../../context/user";
+import React, { useEffect, useState } from "react";
+// import { UserContext } from "../../context/user";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
@@ -10,7 +10,7 @@ import PetCard from "./PetCard";
 
 export default function PetsPage() {
 
-    const { user, setUser } = useContext(UserContext)
+    // const { user, setUser } = useContext(UserContext)
     
     const [displayFormButton, setDisplayFormButton] = useState(false)
 

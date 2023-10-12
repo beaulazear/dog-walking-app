@@ -21,6 +21,7 @@ export default function PetCard({ pet, updateUserPets }) {
     const [spayedOrNeutered, setSpayedOrNeutered] = useState(pet.spayed_neutered)
 
     const [newAptButton, setNewAptButton] = useState(false)
+    const [appointments, setAppointments] = useState(pet.appointments)
 
     const [errors, setErrors] = useState([])
 
@@ -79,6 +80,16 @@ export default function PetCard({ pet, updateUserPets }) {
         setNewAptButton(!newAptButton)
     }
 
+    function updateAppointmentsNew(newApt) {
+        setAppointments([...appointments, newApt])
+        changeAptFormView()
+    }
+
+    function updateAppointmentsDelete(oldApt) {
+        const newAppointments = appointments.filter((apt) => apt.id !== oldApt.id)
+        setAppointments(newAppointments)
+    }
+
     return (
         <Accordion className='m-3'>
             <Accordion.Item className="text-bg-light p-3" eventKey="0">
@@ -97,14 +108,14 @@ export default function PetCard({ pet, updateUserPets }) {
                             <ListGroup.Item><b>Supplies:</b> {pet.supplies_location}</ListGroup.Item>
                             <ListGroup.Item><b>Notes:</b> {pet.behavorial_notes}</ListGroup.Item>
                             <ListGroup.Item><b>Allergies:</b> {pet.allergies}</ListGroup.Item>
-                            <ListGroup.Item><b>Appointments:</b>
-                                {pet.appointments?.map((apt) => (
-                                    <PetAppointmentCard apt={apt} pet={pet} key={apt.id}>Apt</PetAppointmentCard>
-                                ))}
+                            <ListGroup.Item><b>Appointments:</b> Upcoming appointments for {pet.name}
                             </ListGroup.Item>
+                            {appointments?.map((apt) => (
+                                <PetAppointmentCard updateAppointmentsDelete={updateAppointmentsDelete} apt={apt} key={apt.id}>Apt</PetAppointmentCard>
+                            ))}
                             <Button variant="primary" onClick={handleNewAptRequest}>New Appointment</Button>
                             {newAptButton === true && (
-                                <NewAppointmentForm pet={pet} />
+                                <NewAppointmentForm updateAppointmentsNew={updateAppointmentsNew} pet={pet} />
                             )}
                         </ListGroup>
                     </Card>

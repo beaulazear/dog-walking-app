@@ -1,5 +1,5 @@
-import React, { useContext, useState, useEffect } from "react";
-import { UserContext } from "../../context/user";
+import React, { useState, useEffect } from "react";
+// import { UserContext } from "../../context/user";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from 'react-bootstrap/Col';
@@ -7,7 +7,7 @@ import Button from "react-bootstrap/Button"
 
 export default function AppointmentsPage() {
 
-    const { user } = useContext(UserContext)
+    // const { user } = useContext(UserContext)
 
     const [appointments, setAppointments] = useState([])
     useEffect(() => {
