@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_10_04_225107) do
+ActiveRecord::Schema.define(version: 2023_10_08_222544) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -43,6 +43,30 @@ ActiveRecord::Schema.define(version: 2023_10_04_225107) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "appointments", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "pet_id", null: false
+    t.boolean "recurring"
+    t.datetime "appointment_date"
+    t.datetime "start_time"
+    t.datetime "end_time"
+    t.integer "duration"
+    t.integer "price"
+    t.boolean "monday"
+    t.boolean "tuesday"
+    t.boolean "wednesday"
+    t.boolean "thursday"
+    t.boolean "friday"
+    t.boolean "saturday"
+    t.boolean "sunday"
+    t.boolean "completed"
+    t.boolean "canceled"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["pet_id"], name: "index_appointments_on_pet_id"
+    t.index ["user_id"], name: "index_appointments_on_user_id"
+  end
+
   create_table "pets", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "name"
@@ -69,5 +93,7 @@ ActiveRecord::Schema.define(version: 2023_10_04_225107) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "appointments", "pets"
+  add_foreign_key "appointments", "users"
   add_foreign_key "pets", "users"
 end

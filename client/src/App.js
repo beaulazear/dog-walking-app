@@ -5,6 +5,7 @@ import HomePage from "./components/home/HomePage";
 import Login from "./components/home/Login";
 import Signup from "./components/home/Signup";
 import PetsPage from "./components/pets/PetsPage";
+import AppointmentsPage from "./components/appointments/AppointmentsPage";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signuppage" element={<Signup />} />
         <Route path="/petspage" element={<PetsPage />} />
+        <Route path="/appointmentspage" element={<AppointmentsPage />} />
       </Routes>
     </div>
   );

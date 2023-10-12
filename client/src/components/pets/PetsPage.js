@@ -1,8 +1,8 @@
 import React, { useEffect, useContext, useState } from "react";
 import { UserContext } from "../../context/user";
 import "bootstrap/dist/css/bootstrap.min.css";
-import Container from "react-bootstrap/Container"
-import Row from "react-bootstrap/Row"
+import Container from "react-bootstrap/Container";
+import Row from "react-bootstrap/Row";
 import Col from 'react-bootstrap/Col';
 import Button from "react-bootstrap/Button"
 import NewPetForm from "./NewPetForm";
@@ -45,10 +45,10 @@ export default function PetsPage() {
             <Container className="m-3">
                 <Row>
                     <Col>
-                        <h2 className="display-4">Pets Page</h2>
+                        <h2 className="display-4">Current Pets</h2>
                     </Col>
                     <Col>
-                        <Button className="m-1" variant="primary" onClick={updateDisplayButton}>Create New Pet</Button>
+                        <Button className="m-2" variant="primary" onClick={updateDisplayButton}>Create New Pet</Button>
                     </Col>
                 </Row>
                 <Container className="m-3">

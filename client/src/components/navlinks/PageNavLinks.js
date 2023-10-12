@@ -31,6 +31,7 @@ export default function PageNavLinks() {
                         <Nav className="me-auto">
                             <Nav.Link href="/">Home</Nav.Link>
                             <Nav.Link href="/petspage">Pets</Nav.Link>
+                            <Nav.Link href="/appointmentspage">Appointments</Nav.Link>
                             <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
                         </Nav>
                     </Container>

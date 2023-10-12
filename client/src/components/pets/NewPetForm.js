@@ -1,14 +1,10 @@
-import React, { useState, useContext } from "react";
-import { UserContext } from "../../context/user";
+import React, { useState } from "react";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import Container from 'react-bootstrap/Container';
 import Alert from 'react-bootstrap/Alert';
 
 export default function NewPetForm({ updateUserPets }) {
-
-
-    const { setUser, user } = useContext(UserContext)
 
     const [name, setName] = useState("")
     const [address, setAddress] = useState("")
@@ -67,9 +63,10 @@ export default function NewPetForm({ updateUserPets }) {
         }
     }
 
+
     return (
         <Container className="m-3">
-            <h1 classsex="display-3">New Pet Form</h1>
+            <h1 className="display-6">New Pet Form</h1>
             <Form className="text-bg-light p-3" onSubmit={handleNewPet}>
                 <Form.Group classsex="mb-3">
                     <Form.Label>Pet's Name</Form.Label>

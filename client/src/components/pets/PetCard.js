@@ -6,6 +6,8 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import Alert from 'react-bootstrap/Alert';
+import NewAppointmentForm from '../appointments/NewAppointmentForm';
+import PetAppointmentCard from '../appointments/PetAppointmentCard';
 
 export default function PetCard({ pet, updateUserPets }) {
 
@@ -17,6 +19,8 @@ export default function PetCard({ pet, updateUserPets }) {
     const [suppliesLocation, setSuppliesLocation] = useState(pet.supplies_location)
     const [behavorialNotes, setbehavorialNotes] = useState(pet.behavorial_notes)
     const [spayedOrNeutered, setSpayedOrNeutered] = useState(pet.spayed_neutered)
+
+    const [newAptButton, setNewAptButton] = useState(false)
 
     const [errors, setErrors] = useState([])
 
@@ -66,6 +70,15 @@ export default function PetCard({ pet, updateUserPets }) {
         }
     }
 
+    function handleNewAptRequest() {
+        console.log(pet.id)
+        changeAptFormView()
+    }
+
+    function changeAptFormView() {
+        setNewAptButton(!newAptButton)
+    }
+
     return (
         <Accordion className='m-3'>
             <Accordion.Item className="text-bg-light p-3" eventKey="0">
@@ -84,10 +97,16 @@ export default function PetCard({ pet, updateUserPets }) {
                             <ListGroup.Item><b>Supplies:</b> {pet.supplies_location}</ListGroup.Item>
                             <ListGroup.Item><b>Notes:</b> {pet.behavorial_notes}</ListGroup.Item>
                             <ListGroup.Item><b>Allergies:</b> {pet.allergies}</ListGroup.Item>
+                            <ListGroup.Item><b>Appointments:</b>
+                                {pet.appointments?.map((apt) => (
+                                    <PetAppointmentCard apt={apt} pet={pet} key={apt.id}>Apt</PetAppointmentCard>
+                                ))}
+                            </ListGroup.Item>
+                            <Button variant="primary" onClick={handleNewAptRequest}>New Appointment</Button>
+                            {newAptButton === true && (
+                                <NewAppointmentForm pet={pet} />
+                            )}
                         </ListGroup>
-                        <Card.Body>
-                            <Card.Link href="#">Appointments</Card.Link>
-                        </Card.Body>
                     </Card>
                 </Accordion.Body>
             </Accordion.Item>
