@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
   
+  resources :invoices
   resources :appointments
   resources :pets
   resources :users

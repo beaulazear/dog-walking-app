@@ -3,4 +3,5 @@ class UserSerializer < ActiveModel::Serializer
 
   has_many :pets
   has_many :appointments
+  has_many :invoices
 end

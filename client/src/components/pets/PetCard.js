@@ -107,7 +107,7 @@ export default function PetCard({ pet, updateUserPets }) {
                             </Card.Text>
                         </Card.Body>
                         <ListGroup className="list-group-flush">
-                            <ListGroup.Item>{pet.sex}, {pet.spayed_neutered ? "fixed" : "Not fixed"}</ListGroup.Item>
+                            <ListGroup.Item><b>Sex:</b> {pet.sex}, {pet.spayed_neutered ? "fixed" : "Not fixed"}</ListGroup.Item>
                             <ListGroup.Item><b>Supplies:</b> {pet.supplies_location}</ListGroup.Item>
                             <ListGroup.Item><b>Notes:</b> {pet.behavorial_notes}</ListGroup.Item>
                             <ListGroup.Item><b>Allergies:</b> {pet.allergies}</ListGroup.Item>

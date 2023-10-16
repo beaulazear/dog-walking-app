@@ -29,6 +29,11 @@ export default function AppointmentsPage() {
         return formattedDate;
     }
 
+    function updateAppointments(newApt) {
+        const newAppointments = appointments.filter((apt) => apt.id !== newApt.id)
+        setAppointments([...newAppointments, newApt])
+    }
+
     const todayFormatted = getCurrentDateFormatted();
 
     if (appointments.length > 0) {
@@ -37,7 +42,7 @@ export default function AppointmentsPage() {
                 <h2 className="display-4">Today's Appointments</h2>
                 <h4 className="display-6">Current Date: {todayFormatted}</h4>
                 {appointments.map((apt) => (
-                    <TodaysAppointmentsCard key={apt.id} apt={apt} />
+                    <TodaysAppointmentsCard updateAppointments={updateAppointments} key={apt.id} apt={apt} />
                 ))}
             </Container>
         )
