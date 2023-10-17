@@ -6,6 +6,7 @@ import Login from "./components/home/Login";
 import Signup from "./components/home/Signup";
 import PetsPage from "./components/pets/PetsPage";
 import AppointmentsPage from "./components/appointments/AppointmentsPage";
+import InvoicesPage from "./components/invoices/InvoicePage";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/signuppage" element={<Signup />} />
         <Route path="/petspage" element={<PetsPage />} />
         <Route path="/appointmentspage" element={<AppointmentsPage />} />
+        <Route path="/invoicespage" element={<InvoicesPage />} />
       </Routes>
     </div>
   );

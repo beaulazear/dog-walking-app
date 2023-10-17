@@ -3,7 +3,6 @@ class User < ApplicationRecord
 
     has_many :pets
     has_many :appointments
-    has_many :invoices
     
     validates :username, uniqueness: true
     validates :username, presence: true

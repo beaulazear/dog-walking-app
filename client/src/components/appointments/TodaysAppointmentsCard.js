@@ -39,7 +39,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                pet_id: apt.pet.pet_id,
+                pet_id: apt.pet.id,
                 appointment_id: apt.id,
                 date_completed: apt.start_time,
                 paid: false,

@@ -2,20 +2,22 @@ class InvoicesController < ApplicationController
     before_action :current_user
 
     def create
-        invoice = @current_user.invoices.create(invoice_params)
+        pet = @current_user.pets.find_by(id: params[:pet_id])
+        invoice = pet.invoices.create(invoice_params)
         if invoice.valid?
             render json: invoice, status: :created
         else
-            render json: { errors: invoice.errorrs.full_messages }, status: :unprocessable_entity
+            render json: { errors: invoice.errors.full_messages }, status: :unprocessable_entity
         end
     end
 
-    def index
-        invoices = @current_user.invoices
-        if invoices
-            render json: invoices
+    def paid
+        invoice = Invoice.find_by(id: params[:id])
+        invoice.update(paid: true)
+        if invoice.valid?
+            render json: invoice
         else
-            render json: { error: "Not found" }, status: :not_found
+            render json: { error: "not found" }, status: :not_found
         end
     end
 

@@ -69,14 +69,14 @@ ActiveRecord::Schema.define(version: 2023_10_16_205459) do
 
   create_table "invoices", force: :cascade do |t|
     t.bigint "appointment_id", null: false
-    t.bigint "user_id", null: false
+    t.bigint "pet_id", null: false
     t.datetime "date_completed"
     t.integer "compensation"
     t.boolean "paid"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["appointment_id"], name: "index_invoices_on_appointment_id"
-    t.index ["user_id"], name: "index_invoices_on_user_id"
+    t.index ["pet_id"], name: "index_invoices_on_pet_id"
   end
 
   create_table "pets", force: :cascade do |t|
@@ -108,6 +108,6 @@ ActiveRecord::Schema.define(version: 2023_10_16_205459) do
   add_foreign_key "appointments", "pets"
   add_foreign_key "appointments", "users"
   add_foreign_key "invoices", "appointments"
-  add_foreign_key "invoices", "users"
+  add_foreign_key "invoices", "pets"
   add_foreign_key "pets", "users"
 end
