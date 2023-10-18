@@ -1,22 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext } from "react";
+import { TodaysAppointmentsContext } from "../../context/appointments";
 import Container from "react-bootstrap/Container";
 import TodaysAppointmentsCard from "./TodaysAppointmentsCard";
 
-export default function AppointmentsPage() {
+export default function TodaysWalksPage() {
 
-    const [appointments, setAppointments] = useState([])
-
-    useEffect(() => {
-        fetch("/appointments").then((response) => {
-            if (response.ok) {
-                response.json().then((apts) => {
-                    setAppointments(apts)
-                });
-            }
-        });
-    }, []);
-
-    console.log(appointments)
+    const { appointments, setAppointments } = useContext(TodaysAppointmentsContext)
 
     function getCurrentDateFormatted() {
         const currentDate = new Date();
@@ -36,7 +25,7 @@ export default function AppointmentsPage() {
 
     const todayFormatted = getCurrentDateFormatted();
 
-    if (appointments.length > 0) {
+    if (appointments?.length > 0) {
         return (
             <Container className="m-3">
                 <h2 className="display-4">Today's Appointments</h2>

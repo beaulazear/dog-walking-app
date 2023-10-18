@@ -33,7 +33,7 @@ export default function Login() {
                 if (response.ok) {
                     response.json().then((user) => {
                         setUser(user)
-                        navigate('/')
+                        navigate('/loggedinhome')
                     })
                 } else {
                     response.json().then((errorData) => setError(errorData.error))

@@ -50,7 +50,6 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
         .then((newInvoice) => {
             let newApt = apt
             newApt.invoices.push(newInvoice)
-            console.log(newApt)
             updateAppointments(newApt)
         })
     }
@@ -63,7 +62,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                 <Card.Body>
                     <img alt="Pet associated with appointment" style={photoStyles} src={apt.pet.profile_pic} />
                     <Card.Title>{apt.pet.name}, {apt.duration} minute walk between {startTime} & {endTime}.</Card.Title>
-                    <Card.Text className='display-6'>Completed Walk</Card.Text>
+                    <Card.Text className='display-6'>Walk Completed</Card.Text>
                 </Card.Body>
             </Card>
         );
