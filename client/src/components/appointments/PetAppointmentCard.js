@@ -53,8 +53,8 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
         }
     }
 
-    function handleDelete() {
-        fetch(`/appointments/${apt.id}`, { method: "DELETE" })
+    function handleCancel() {
+        fetch(`/appointments/${apt.id}/canceled`)
             .then((resp) => resp.json())
             .then((oldApt) => updateAppointmentsDelete(oldApt))
     }
@@ -83,7 +83,7 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                         </Card.Text>
                     </>
                 )}
-                <Button onClick={handleDelete} className="btn btn-danger">Delete Appointment</Button>
+                <Button onClick={handleCancel} className="btn btn-danger">Cancel Appointment</Button>
             </Card.Body>
         </Card>
     );

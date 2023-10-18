@@ -21,7 +21,7 @@ export default function PetCard({ pet, updateUserPets }) {
     const [spayedOrNeutered, setSpayedOrNeutered] = useState(pet.spayed_neutered)
 
     const [newAptButton, setNewAptButton] = useState(false)
-    const [appointments, setAppointments] = useState(pet.appointments)
+    const [appointments, setAppointments] = useState(pet.appointments.filter((apt) => apt.canceled !== true))
 
     const [errors, setErrors] = useState([])
 
@@ -116,7 +116,7 @@ export default function PetCard({ pet, updateUserPets }) {
                             {appointments?.map((apt) => (
                                 <PetAppointmentCard updateAppointmentsDelete={updateAppointmentsDelete} apt={apt} key={apt.id}>Apt</PetAppointmentCard>
                             ))}
-                            <Button variant="primary" onClick={handleNewAptRequest}>New Appointment</Button>
+                            <Button variant="primary" type="submit" onClick={handleNewAptRequest}>New Appointment</Button>
                             {newAptButton === true && (
                                 <NewAppointmentForm updateAppointmentsNew={updateAppointmentsNew} pet={pet} />
                             )}
@@ -188,6 +188,7 @@ export default function PetCard({ pet, updateUserPets }) {
                                     </Alert>))}
                             </ul>
                         )}
+                        <br></br>
                         <Button variant="primary" type="submit">
                             Submit
                         </Button>

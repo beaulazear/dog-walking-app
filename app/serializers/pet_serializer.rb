@@ -9,7 +9,8 @@ class PetSerializer < ActiveModel::Serializer
     if object.profile_pic.attached?
       Rails.application.routes.url_helpers.rails_blob_path(object.profile_pic, only_path: true)
     else
-      'https://cdn3.iconfinder.com/data/icons/essential-rounded/64/Rounded-31-1024.png'
+      'https://cdn4.iconfinder.com/data/icons/dog-breed-minimal-outline/512/Border_collie-512.png'
     end
   end
 end
+

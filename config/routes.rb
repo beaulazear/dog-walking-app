@@ -12,6 +12,8 @@ Rails.application.routes.draw do
 
   get "/invoices/:id/paid", to: "invoices#paid"
 
+  get '/appointments/:id/canceled', to: 'appointments#canceled'
+
   # Routing logic: fallback requests for React Router.
   # Leave this here to help deploy your app later!
 

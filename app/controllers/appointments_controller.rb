@@ -10,10 +10,10 @@ class AppointmentsController < ApplicationController
         end
     end
 
-    def destroy
+    def canceled
         appointment = @current_user.appointments.find_by(id: params[:id])
         if appointment
-            appointment.destroy
+            appointment.update(canceled: true)
             render json: appointment
         else
             render json: { error: "Appointment not found" }, status: :not_found

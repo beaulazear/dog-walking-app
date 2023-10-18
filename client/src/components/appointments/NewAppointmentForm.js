@@ -24,6 +24,8 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
 
     const [errors, setErrors] = useState([])
 
+    console.log(startTime)
+
     function handleNewAppointmentRequest(e) {
 
         e.preventDefault()

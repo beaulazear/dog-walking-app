@@ -48,8 +48,8 @@ ActiveRecord::Schema.define(version: 2023_10_16_205459) do
     t.bigint "pet_id", null: false
     t.boolean "recurring"
     t.datetime "appointment_date"
-    t.datetime "start_time"
-    t.datetime "end_time"
+    t.time "start_time"
+    t.time "end_time"
     t.integer "duration"
     t.integer "price"
     t.boolean "monday"

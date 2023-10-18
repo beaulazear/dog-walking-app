@@ -22,10 +22,10 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
             fetch(`/invoices/${invoice.id}/paid`)
             .then((response) => response.json())
             .then((newInvoice) => {
-                let newInvoices = invoices.filter((invoice) => invoice.id !== newInvoice.id)
-                setInvoices([...newInvoices, newInvoice])
+                paidInvoices.push(newInvoice)
             })
         })
+        setInvoices(paidInvoices)
     }
 
     return (
