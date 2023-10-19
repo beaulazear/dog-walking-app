@@ -22,12 +22,12 @@ function App() {
         <PageNavLinks />
         <TodaysAppointmentsProvider>
           <Routes>
-            <Route path="/loggedinhome" element={<LoggedInHome />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signuppage" element={<Signup />} />
             <Route path="/petspage" element={<PetsPage />} />
             <Route path="/todayswalkspage" element={<TodaysWalksPage />} />
             <Route path="/invoicespage" element={<InvoicesPage />} />
+            <Route path="/" element={<LoggedInHome />} />
           </Routes>
         </TodaysAppointmentsProvider>
       </div>

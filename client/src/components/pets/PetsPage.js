@@ -47,22 +47,18 @@ export default function PetsPage() {
             <Container className="m-3">
                 <Row>
                     <Col>
-                        <h2 className="display-4">Current Pets</h2>
+                        <h2 className="display-4">Pets</h2>
                     </Col>
                     <Col>
-                        <Button className="m-2" variant="primary" onClick={updateDisplayButton}>Create New Pet</Button>
+                        <Button className="m-2" variant="primary" onClick={updateDisplayButton}>New Pet</Button>
                     </Col>
                 </Row>
-                <Container className="m-3">
-                    {displayFormButton === true && (
-                        <NewPetForm updateUserPets={addNewPet} />
-                    )}
-                </Container>
-                <Container fluid="md">
-                    {pets.map((pet) => (
-                        <PetCard updatePetsAfterDelete={updatePetsAfterDelete} updateUserPets={updateUserPets} key={pet.id} pet={pet} />
-                    ))}
-                </Container>
+                {displayFormButton === true && (
+                    <NewPetForm updateUserPets={addNewPet} />
+                )}
+                {pets.map((pet) => (
+                    <PetCard updatePetsAfterDelete={updatePetsAfterDelete} updateUserPets={updateUserPets} key={pet.id} pet={pet} />
+                ))}
             </Container>
         )
     } else {

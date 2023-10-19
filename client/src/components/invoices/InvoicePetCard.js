@@ -29,7 +29,7 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
     }
 
     return (
-        <Accordion className='m-3'>
+        <Accordion>
             <Accordion.Item className="text-bg-light p-3" eventKey="0">
                 <Accordion.Header>Current Invoice for {pet.name}</Accordion.Header>
                 <Accordion.Body>

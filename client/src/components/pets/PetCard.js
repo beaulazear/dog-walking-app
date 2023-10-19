@@ -121,7 +121,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     }
 
     return (
-        <Accordion className='m-3'>
+        <Accordion>
             <Accordion.Item className="text-bg-light p-3" eventKey="0">
                 <Accordion.Header>{pet.name}, {pet.address}</Accordion.Header>
                 <Accordion.Body>
@@ -146,7 +146,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                             {appointments?.map((apt) => (
                                 <PetAppointmentCard updateAppointmentsDelete={updateAppointmentsDelete} apt={apt} key={apt.id}>Apt</PetAppointmentCard>
                             ))}
-                            <Button className='m-4' variant="primary" onClick={handleNewAptRequest}>Create new appointment for {pet.name}</Button>
+                            <Button className='m-4' variant="primary" onClick={handleNewAptRequest}>New Appointment</Button>
                             {newAptButton === true && (
                                 <NewAppointmentForm updateAppointmentsNew={updateAppointmentsNew} pet={pet} />
                             )}

@@ -26,7 +26,7 @@ export default function PageNavLinks() {
         <>
             <Navbar bg="dark" data-bs-theme="dark">
                 <Container>
-                    <Navbar.Brand href="/loggedinhome">PocketWalks</Navbar.Brand>
+                    <Navbar.Brand href="/">PocketWalks</Navbar.Brand>
                     <Nav className="me-auto">
                         <Nav.Link href="/petspage">Pets</Nav.Link>
                         <Nav.Link href="/todayswalkspage">Today</Nav.Link>

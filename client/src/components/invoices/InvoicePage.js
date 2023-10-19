@@ -20,18 +20,18 @@ export default function InvoicesPage() {
 
     if (pets) {
         return (
-            <Container className="m-3">
-                <Row>
-                    <Col>
-                        <h2 className="display-4">Invoices</h2>
-                    </Col>
-                </Row>
-                <Container fluid="md">
+            <>
+                <Container className="m-3">
+                    <Row>
+                        <Col>
+                            <h2 className="display-4">Invoices</h2>
+                        </Col>
+                    </Row>
                     {pets.map((pet) => (
                         <InvoicePetCard key={pet.id} pet={pet} />
                     ))}
                 </Container>
-            </Container>
+            </>
         )
     } else {
         return (

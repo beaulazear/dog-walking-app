@@ -65,9 +65,9 @@ export default function NewPetForm({ updateUserPets }) {
 
 
     return (
-        <Container className="m-3">
+        <Container>
             <h1 className="display-6">New Pet Form</h1>
-            <Form className="text-bg-light p-3" onSubmit={handleNewPet}>
+            <Form className="text-bg-light" onSubmit={handleNewPet}>
                 <Form.Group classsex="mb-3">
                     <Form.Label>Pet's Name</Form.Label>
                     <Form.Control onChange={(e) => setName(e.target.value)} value={name} type="text" placeholder="Enter name" />
@@ -121,10 +121,12 @@ export default function NewPetForm({ updateUserPets }) {
                             </Alert>))}
                     </ul>
                 )}
+                <br></br>
                 <Button variant="primary" type="submit">
                     Submit
                 </Button>
             </Form>
+            <br></br>
         </Container>
     )
 }
