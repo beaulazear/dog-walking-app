@@ -47,7 +47,7 @@ export default function Signup() {
     }
 
     return (
-        <Container>
+        <Container className="m-3">
             <h1 className="display-3">Create Your Account</h1>
             <Form onSubmit={handleSignup}>
                 <Form.Group className="mb-3">

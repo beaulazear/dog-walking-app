@@ -42,7 +42,7 @@ export default function Login() {
     }
 
     return (
-        <Container>
+        <Container className="m-3">
             <h1 className="display-5">User Login</h1>
             <Form onSubmit={handleLogin} className="mb-3">
                 <Form.Group className="mb-3">
