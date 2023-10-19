@@ -63,7 +63,7 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
     }
 
     return (
-        <Container className="m-3">
+        <Container>
             <h1 className="display-6">New Appointment for {pet.name}</h1>
             <Form className="text-bg-light p-3" onSubmit={handleNewAppointmentRequest}>
                 <Form.Group className="mb-3" controlId="formBasicappointmentDate">

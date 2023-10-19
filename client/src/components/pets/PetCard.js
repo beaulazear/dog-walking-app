@@ -204,11 +204,11 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                         </Form.Group>
                         <Form.Group classsex="mb-3" controlId="formBasicSuppliesLocation">
                             <Form.Label>Supplies Location</Form.Label>
-                            <Form.Control onChange={(e) => setSuppliesLocation(e.target.value)} value={suppliesLocation} type="text" placeholder="Leash location, treats, etc..." />
+                            <Form.Control as="textarea" rows={3} onChange={(e) => setSuppliesLocation(e.target.value)} value={suppliesLocation} type="text" placeholder="Leash location, treats, etc..." />
                         </Form.Group>
                         <Form.Group classsex="mb-3" controlId="formBasicBehaviorialNotes">
                             <Form.Label>Behaviorial Information</Form.Label>
-                            <Form.Control onChange={(e) => setbehavorialNotes(e.target.value)} value={behavorialNotes} type="text" placeholder="Leash reactivity, tries to eat trash, etc..." />
+                            <Form.Control as="textarea" rows={3} onChange={(e) => setbehavorialNotes(e.target.value)} value={behavorialNotes} type="text" placeholder="Leash reactivity, tries to eat trash, etc..." />
                         </Form.Group>
                         {errors?.length > 0 && (
                             <ul>

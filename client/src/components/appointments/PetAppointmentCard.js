@@ -83,8 +83,8 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                         </Card.Text>
                     </>
                 )}
-                <Button onClick={handleCancel} className="btn btn-danger">Cancel Appointment</Button>
             </Card.Body>
+            <Button onClick={handleCancel} className="btn btn-danger m-4">Cancel Appointment</Button>
         </Card>
     );
 }
