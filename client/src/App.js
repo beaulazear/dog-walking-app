@@ -37,9 +37,9 @@ function App() {
       <div>
         <PageNavLinksNotLoggedIn />
         <Routes>
-          <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signuppage" element={<Signup />} />
+          <Route path="/" element={<HomePage />} />
         </Routes>
       </div>
     )
