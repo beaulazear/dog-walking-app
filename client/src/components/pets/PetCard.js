@@ -6,15 +6,26 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import Alert from 'react-bootstrap/Alert';
+import Modal from 'react-bootstrap/Modal';
 import NewAppointmentForm from '../appointments/NewAppointmentForm';
 import PetAppointmentCard from '../appointments/PetAppointmentCard';
 
-export default function PetCard({ pet, updateUserPets }) {
+export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) {
+
+    function formatDate(inputDate) {
+        const date = new Date(inputDate);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+
+        const formattedDate = `${year}-${month}-${day}`;
+        return formattedDate;
+    }
 
     const [name, setName] = useState(pet.name)
     const [address, setAddress] = useState(pet.address)
     const [sex, setSex] = useState(pet.sex)
-    const [birthdate, setBirthdate] = useState(pet.birthdate)
+    const [birthdate, setBirthdate] = useState(formatDate(pet.birthdate))
     const [allergies, setAllergies] = useState(pet.allergies)
     const [suppliesLocation, setSuppliesLocation] = useState(pet.supplies_location)
     const [behavorialNotes, setbehavorialNotes] = useState(pet.behavorial_notes)
@@ -26,6 +37,22 @@ export default function PetCard({ pet, updateUserPets }) {
     const [errors, setErrors] = useState([])
 
     const [profilePic, setProfilePic] = useState(null)
+
+    const [show, setShow] = useState(false);
+
+    const handleClose = () => setShow(false);
+    const handleShow = () => setShow(true);
+
+
+    function handleDelete() {
+        fetch(`/pets/${pet.id}`, { method: 'DELETE' })
+            .then((response) => response.json())
+            .then((deletedPet) => {
+                console.log(deletedPet)
+                setShow(false)
+                updatePetsAfterDelete(deletedPet)
+            })
+    }
 
     function handleUpdatePet(e) {
 
@@ -111,12 +138,15 @@ export default function PetCard({ pet, updateUserPets }) {
                             <ListGroup.Item><b>Supplies:</b> {pet.supplies_location}</ListGroup.Item>
                             <ListGroup.Item><b>Notes:</b> {pet.behavorial_notes}</ListGroup.Item>
                             <ListGroup.Item><b>Allergies:</b> {pet.allergies}</ListGroup.Item>
-                            <ListGroup.Item><b>Appointments:</b> Upcoming appointments for {pet.name}
-                            </ListGroup.Item>
+                            <ListGroup.Item><b>Birthdate:</b> {formatDate(pet.birthdate)}</ListGroup.Item>
+                            <ListGroup.Item><b>Appointments:</b> View and create appointments for {pet.name}</ListGroup.Item>
+                            {appointments.length < 1 && (
+                                <h4 className='display-6 m-3'>There are currently no appointments booked for {pet.name}.</h4>
+                            )}
                             {appointments?.map((apt) => (
                                 <PetAppointmentCard updateAppointmentsDelete={updateAppointmentsDelete} apt={apt} key={apt.id}>Apt</PetAppointmentCard>
                             ))}
-                            <Button variant="primary" type="submit" onClick={handleNewAptRequest}>New Appointment</Button>
+                            <Button className='m-4' variant="primary" onClick={handleNewAptRequest}>Create new appointment for {pet.name}</Button>
                             {newAptButton === true && (
                                 <NewAppointmentForm updateAppointmentsNew={updateAppointmentsNew} pet={pet} />
                             )}
@@ -189,10 +219,21 @@ export default function PetCard({ pet, updateUserPets }) {
                             </ul>
                         )}
                         <br></br>
-                        <Button variant="primary" type="submit">
-                            Submit
-                        </Button>
+                        <Button className='p-2 m-2' variant="primary" type="submit">Update {pet.name}</Button>
+                        <Button className='p-2 m-2' variant="danger" onClick={handleShow}>Delete {pet.name}</Button>
                     </Form>
+                    <Modal show={show} onHide={handleClose}>
+                        <Modal.Header closeButton>
+                            <Modal.Title>Delete {pet.name}</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>Are you sure you want to delete pet information for {pet.name}? This will also destroy all associated invoices and appointments. This information will not be ale to be recovered after deletion.</Modal.Body>
+                        <Modal.Footer>
+                            <Button variant="secondary" onClick={handleClose}>
+                                Close
+                            </Button>
+                            <Button variant="danger" onClick={handleDelete}>Delete {pet.name}</Button>
+                        </Modal.Footer>
+                    </Modal>
                 </Accordion.Body>
             </Accordion.Item>
         </Accordion>

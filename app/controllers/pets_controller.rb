@@ -29,6 +29,16 @@ class PetsController < ApplicationController
         end
     end
 
+    def destroy
+        pet = @current_user.pets.find_by(id: params[:id])
+        if pet
+            pet.destroy
+            render json: pet 
+        else
+            render json: { error: "pet not found" }, status: :not_found
+        end
+    end
+
     private
 
     def pet_params

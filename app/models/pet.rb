@@ -1,7 +1,7 @@
 class Pet < ApplicationRecord
   belongs_to :user
-  has_many :appointments
-  has_many :invoices
+  has_many :appointments, dependent: :destroy
+  has_many :invoices, dependent: :destroy
 
   has_one_attached :profile_pic
 

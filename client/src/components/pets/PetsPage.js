@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-// import { UserContext } from "../../context/user";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
@@ -10,12 +9,10 @@ import PetCard from "./PetCard";
 
 export default function PetsPage() {
 
-    // const { user, setUser } = useContext(UserContext)
-    
     const [displayFormButton, setDisplayFormButton] = useState(false)
 
     const [pets, setPets] = useState([])
-    
+
     useEffect(() => {
         fetch("/pets").then((response) => {
             if (response.ok) {
@@ -25,7 +22,7 @@ export default function PetsPage() {
             }
         });
     }, []);
-    
+
     function updateDisplayButton() {
         setDisplayFormButton(!displayFormButton)
     }
@@ -38,6 +35,11 @@ export default function PetsPage() {
     function updateUserPets(newPet) {
         const newPets = pets.filter((pet) => pet.id !== newPet.id)
         setPets([newPet, ...newPets])
+    }
+
+    function updatePetsAfterDelete(oldPet) {
+        const newPets = pets.filter((pet) => pet.id !== oldPet.id)
+        setPets(newPets)
     }
 
     if (pets) {
@@ -57,9 +59,9 @@ export default function PetsPage() {
                     )}
                 </Container>
                 <Container fluid="md">
-                        {pets.map((pet) => (
-                            <PetCard updateUserPets={updateUserPets} key={pet.id} pet={pet} />
-                        ))}
+                    {pets.map((pet) => (
+                        <PetCard updatePetsAfterDelete={updatePetsAfterDelete} updateUserPets={updateUserPets} key={pet.id} pet={pet} />
+                    ))}
                 </Container>
             </Container>
         )
