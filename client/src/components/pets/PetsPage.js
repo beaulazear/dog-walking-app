@@ -50,7 +50,7 @@ export default function PetsPage() {
                         <h2 className="display-4">Pets</h2>
                     </Col>
                     <Col>
-                        <Button className="m-2" variant="primary" onClick={updateDisplayButton}>New Pet</Button>
+                        <Button className="m-1" variant="primary" onClick={updateDisplayButton}>New Pet</Button>
                     </Col>
                 </Row>
                 {displayFormButton === true && (

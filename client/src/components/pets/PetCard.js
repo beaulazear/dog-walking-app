@@ -121,7 +121,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     }
 
     return (
-        <Accordion>
+        <Accordion style={{ width: '90%' }}>
             <Accordion.Item className="text-bg-light p-3" eventKey="0">
                 <Accordion.Header>{pet.name}, {pet.address}</Accordion.Header>
                 <Accordion.Body>
