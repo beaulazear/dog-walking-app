@@ -54,7 +54,15 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
     }
 
     function handleCancel() {
-        fetch(`/appointments/${apt.id}/canceled`)
+        fetch(`/appointments/${apt.id}/canceled`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': "application/json"
+            },
+            body: JSON.stringify({
+                canceled: true
+            })
+        })
             .then((resp) => resp.json())
             .then((oldApt) => updateAppointmentsDelete(oldApt))
     }

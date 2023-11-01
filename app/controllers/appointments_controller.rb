@@ -13,7 +13,7 @@ class AppointmentsController < ApplicationController
     def canceled
         appointment = @current_user.appointments.find_by(id: params[:id])
         if appointment
-            appointment.update(canceled: true)
+            appointment.update(params_for_cancel)
             render json: appointment
         else
             render json: { error: "Appointment not found" }, status: :not_found
@@ -22,9 +22,10 @@ class AppointmentsController < ApplicationController
 
     def index
         appointments = @current_user.appointments
+        filteredCanceledAndCompletedApts = appointments.select { |apt| apt.canceled != true && apt.completed != true }
         todaysAppointments = []
 
-        for apt in appointments
+        for apt in filteredCanceledAndCompletedApts
             if apt.recurring == false && is_today?(apt.appointment_date)
                 todaysAppointments << apt
             elsif apt.recurring == true && day_of_the_week?(apt)
@@ -45,6 +46,9 @@ class AppointmentsController < ApplicationController
 
     def appointment_params
         params.require(:appointment).permit(:user_id, :pet_id, :appointment_date, :start_time, :end_time, :recurring, :duration, :monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday)
+    end
+    def params_for_cancel
+        params.require(:appointment).permit(:canceled)
     end
 
     def is_today?(date)

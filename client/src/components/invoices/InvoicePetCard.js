@@ -7,25 +7,28 @@ import Button from "react-bootstrap/Button";
 
 export default function InvoicePetCard({ pet, updateUserPets }) {
 
-    const [invoices, setInvoices] = useState(pet.invoices)
+    const [invoices, setInvoices] = useState(pet.invoices.filter((invoice) => invoice.paid !== true))
 
-    let currentInvoices = invoices.filter((invoice) => invoice.paid === false)
-
-    let paidInvoices = invoices.filter((invoice) => invoice.paid === true)
+    const [paidInvoices, setPaidInvoices] = useState(pet.invoices.filter((invoice) => invoice.paid === true))
 
     let currentTotal = 0
 
-    currentInvoices.forEach((invoice) => currentTotal += invoice.compensation)
+    invoices.forEach((invoice) => currentTotal += invoice.compensation)
 
     function UpdateCurrentInvoice() {
-        currentInvoices.forEach((invoice) => {
+
+        let newPaidInvoices = []
+
+        invoices.forEach((invoice) => {
             fetch(`/invoices/${invoice.id}/paid`)
             .then((response) => response.json())
             .then((newInvoice) => {
-                paidInvoices.push(newInvoice)
+                newPaidInvoices.push(newInvoice)
             })
         })
-        setInvoices(paidInvoices)
+
+        setInvoices(invoices.filter((invoice) => invoice.paid !== true))
+        setPaidInvoices([...paidInvoices, ...newPaidInvoices])
     }
 
     // fix the above function to update state for past appointments and current appointments
@@ -42,7 +45,7 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
                             <Card.Title>{pet.name}</Card.Title>
                         </Card.Body>
                         <ListGroup className="list-group-flush">
-                            {currentInvoices.map((invoice) => (
+                            {invoices.map((invoice) => (
                                 <ListGroup.Item key={invoice.id}>{invoice.date_completed}, ${invoice.compensation}</ListGroup.Item>
                             ))}
                         </ListGroup>

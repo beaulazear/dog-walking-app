@@ -21,6 +21,11 @@ class InvoicesController < ApplicationController
         end
     end
 
+    def index
+        invoices = Invoice.all
+        render json: invoices
+    end
+
     private
 
     def invoice_params

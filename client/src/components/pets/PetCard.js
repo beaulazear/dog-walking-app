@@ -43,7 +43,6 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
 
-
     function handleDelete() {
         fetch(`/pets/${pet.id}`, { method: 'DELETE' })
             .then((response) => response.json())
@@ -140,7 +139,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                             <ListGroup.Item><b>Allergies:</b> {pet.allergies}</ListGroup.Item>
                             <ListGroup.Item><b>Birthdate:</b> {formatDate(pet.birthdate)}</ListGroup.Item>
                             <ListGroup.Item><b>Appointments:</b> View and create appointments for {pet.name}</ListGroup.Item>
-                            {appointments.length < 1 && (
+                            {appointments.length < 0 && (
                                 <h4 className='display-6 m-3'>There are currently no appointments booked for {pet.name}.</h4>
                             )}
                             {appointments?.map((apt) => (

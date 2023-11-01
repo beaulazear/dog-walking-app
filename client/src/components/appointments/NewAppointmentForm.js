@@ -8,9 +8,10 @@ import Alert from 'react-bootstrap/Alert';
 export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
 
     const { user } = useContext(UserContext)
+    const today = new Date();
 
     const [recurring, setRecurring] = useState(false)
-    const [appointmentDate, setAppointmentDate] = useState("")
+    const [appointmentDate, setAppointmentDate] = useState(today)
     const [startTime, setStartTime] = useState("")
     const [endTime, setEndTime] = useState("")
     const [duration, setDuration] = useState("")
@@ -62,6 +63,16 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
             })
     }
 
+    // function updateToRecurringWalk(e) {
+    //     if (e.target.value === true) {
+    //         setRecurring(true)
+    //         const today = new Date();
+    //         setAppointmentDate(today);
+    //     } else {
+    //         setRecurring(false)
+    //     }
+    // }
+
     return (
         <Container>
             <h1 className="display-6">New Appointment for {pet.name}</h1>
@@ -91,7 +102,7 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
                 </Form.Group>
                 <Form.Group className="mb-3">
                     <Form.Label>Is this a recurring walk?</Form.Label>
-                    <Form.Select onChange={(e) => setRecurring(!recurring)} aria-label="Default select example">
+                    <Form.Select onChange={() => setRecurring(!recurring)} aria-label="Default select example">
                         <option value={false}>No</option>
                         <option value={true}>Yes</option>
                     </Form.Select>

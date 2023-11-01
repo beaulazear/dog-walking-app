@@ -17,8 +17,8 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
     function replaceDateWithToday(timestamp) {
         const today = new Date();
         const timePart = timestamp.substr(11); // Extract time part (HH:mm:ss.sssZ)
-        const todayDatePart = today.toISOString().substr(0, 10); // Get today's date in yyyy-mm-dd format
-
+        const todayDatePart = today.toISOString().split('T')[0]; // Get today's date in yyyy-mm-dd format
+    
         return `${todayDatePart}T${timePart}`;
     }
 
@@ -40,12 +40,6 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
             compensation = 27
         } else {
             compensation = 33
-        }
-
-        if (apt.recurring === false) {
-            fetch(`/appointments/${apt.id}/canceled`)
-                .then((resp) => resp.json())
-                .then((oldApt) => console.log(oldApt))
         }
 
         fetch('/invoices', {
