@@ -11,6 +11,7 @@ Rails.application.routes.draw do
   delete "/logout", to: "sessions#destroy"
 
   get "/invoices/:id/paid", to: "invoices#paid"
+  # switch to patch
 
   patch '/appointments/:id/canceled', to: 'appointments#canceled'
 

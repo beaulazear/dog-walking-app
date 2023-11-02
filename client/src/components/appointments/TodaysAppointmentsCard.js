@@ -57,8 +57,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
         })
             .then((response) => response.json())
             .then((newInvoice) => {
-                let newApt = apt
-                newApt.invoices.push(newInvoice)
+                const newApt = {...apt, invoices: [...apt.invoices, newInvoice]}
                 updateAppointments(newApt)
             })
     }

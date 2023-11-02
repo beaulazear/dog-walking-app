@@ -17,6 +17,8 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
 
     function UpdateCurrentInvoice() {
 
+        // create an array of ids of all invoices that need updated, send one fetch request with all of those ids. Do the loop on the backend, 
+
         let newPaidInvoices = []
 
         invoices.forEach((invoice) => {

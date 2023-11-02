@@ -4,6 +4,7 @@ import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from 'react-bootstrap/Col';
 import Button from "react-bootstrap/Button"
+import Card from 'react-bootstrap/Card';
 import NewPetForm from "./NewPetForm";
 import PetCard from "./PetCard";
 
@@ -42,7 +43,7 @@ export default function PetsPage() {
         setPets(newPets)
     }
 
-    if (pets) {
+    if (pets.length > 0) {
         return (
             <Container className="m-3">
                 <Row>
@@ -63,7 +64,30 @@ export default function PetsPage() {
         )
     } else {
         return (
-            <div>...loading</div>
+            <>
+                <Container className="m-3">
+                    <Row>
+                        <Col>
+                            <h2 className="display-4">Pets</h2>
+                        </Col>
+                        <Col>
+                            <Button className="m-1" variant="primary" onClick={updateDisplayButton}>New Pet</Button>
+                        </Col>
+                    </Row>
+                    {displayFormButton === true && (
+                        <NewPetForm updateUserPets={addNewPet} />
+                    )}
+                </Container>
+                <Card className="m-2">
+                    <Card.Header as="h5">No pets currently in database</Card.Header>
+                    <Card.Body>
+                        <Card.Title>Click "New Pet" button to create a pet</Card.Title>
+                        <Card.Text>
+                            Once a pet has been created, you can schedule appointments for said pet.
+                        </Card.Text>
+                    </Card.Body>
+                </Card>
+            </>
         )
     }
 }

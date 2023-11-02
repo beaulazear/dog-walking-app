@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 import { TodaysAppointmentsContext } from "../../context/appointments";
 import Container from "react-bootstrap/Container";
+import Card from 'react-bootstrap/Card';
 import TodaysAppointmentsCard from "./TodaysAppointmentsCard";
 
 export default function TodaysWalksPage() {
@@ -20,6 +21,7 @@ export default function TodaysWalksPage() {
 
     function updateAppointments(newApt) {
         const newAppointments = appointments.filter((apt) => apt.id !== newApt.id)
+        // map over apt, look for one with same id, replace apt with new apt, mapping retains order.
         setAppointments([...newAppointments, newApt])
     }
 
@@ -37,10 +39,20 @@ export default function TodaysWalksPage() {
         )
     } else {
         return (
-            <Container className="m-3">
-                <h2 className="display-4">Today's Appointments</h2>
-                <Container className="display-6">You currently have no appointments booked</Container>
-            </Container>
+            <>
+                <Container className="m-3">
+                    <h2 className="display-4">Today's Appointments</h2>
+                </Container>
+                <Card className="m-2">
+                    <Card.Header as="h5">No appointments scheduled for today</Card.Header>
+                    <Card.Body>
+                        <Card.Title>Visit the "Pets" page to create new appointments</Card.Title>
+                        <Card.Text>
+                            Appointments that are scheduled for today's date will be displayed here. You can complete them as you go, an invoice will be created for each completed walk.
+                        </Card.Text>
+                    </Card.Body>
+                </Card>
+            </>
         )
     }
 }
