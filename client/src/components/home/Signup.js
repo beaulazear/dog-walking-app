@@ -38,7 +38,7 @@ export default function Signup() {
                 if (response.ok) {
                     response.json().then((newUser) => {
                         setUser(newUser)
-                        navigate('/home')
+                        navigate('/')
                     })
                 } else {
                     response.json().then((errorData) => setErrors(errorData.errors))

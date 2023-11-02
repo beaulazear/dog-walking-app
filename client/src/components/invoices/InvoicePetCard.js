@@ -27,11 +27,16 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
             })
         })
 
+        console.log(newPaidInvoices)
+
         setInvoices(invoices.filter((invoice) => invoice.paid !== true))
         setPaidInvoices([...paidInvoices, ...newPaidInvoices])
+
+        console.log(paidInvoices)
+        console.log(invoices)
     }
 
-    // fix the above function to update state for past appointments and current appointments
+    // fix the above function to update state for past appointments and current appointments, is this possible with the current forEach I have in place? Will i need to learn how to do await / async?
 
     return (
         <Accordion style={{ width: '90%' }}>
