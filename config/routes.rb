@@ -10,7 +10,7 @@ Rails.application.routes.draw do
   post "/login", to: "sessions#create"
   delete "/logout", to: "sessions#destroy"
 
-  get "/invoices/:id/paid", to: "invoices#paid"
+  patch "/invoices/paid", to: "invoices#paid"
   # switch to patch
 
   patch '/appointments/:id/canceled', to: 'appointments#canceled'

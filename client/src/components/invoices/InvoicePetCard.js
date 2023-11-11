@@ -19,23 +19,41 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
 
         // create an array of ids of all invoices that need updated, send one fetch request with all of those ids. Do the loop on the backend, 
 
-        let newPaidInvoices = []
+        let arrayOfAppointmentIds = []
 
         invoices.forEach((invoice) => {
-            fetch(`/invoices/${invoice.id}/paid`)
-            .then((response) => response.json())
-            .then((newInvoice) => {
-                newPaidInvoices.push(newInvoice)
+            arrayOfAppointmentIds.push(invoice.id)
+        })
+        
+        console.log(arrayOfAppointmentIds)
+
+        fetch(`/invoices/paid`, {
+            method: 'PATCH',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                id_array: arrayOfAppointmentIds
             })
         })
+        .then((response) => response.json())
+        .then((data) => console.log(data))
 
-        console.log(newPaidInvoices)
+        // invoices.forEach((invoice) => {
+        //     fetch(`/invoices/${invoice.id}/paid`)
+        //     .then((response) => response.json())
+        //     .then((newInvoice) => {
+        //         newPaidInvoices.push(newInvoice)
+        //     })
+        // })
 
-        setInvoices(invoices.filter((invoice) => invoice.paid !== true))
-        setPaidInvoices([...paidInvoices, ...newPaidInvoices])
+        // console.log(newPaidInvoices)
 
-        console.log(paidInvoices)
-        console.log(invoices)
+        // setInvoices(invoices.filter((invoice) => invoice.paid !== true))
+        // setPaidInvoices([...paidInvoices, ...newPaidInvoices])
+
+        // console.log(paidInvoices)
+        // console.log(invoices)
     }
 
     // fix the above function to update state for past appointments and current appointments, is this possible with the current forEach I have in place? Will i need to learn how to do await / async?

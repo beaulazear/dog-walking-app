@@ -10,14 +10,33 @@ class InvoicesController < ApplicationController
             render json: { errors: invoice.errors.full_messages }, status: :unprocessable_entity
         end
     end
-
-    def paid
+    
+    def update
         invoice = Invoice.find_by(id: params[:id])
-        invoice.update(paid: true)
-        if invoice.valid?
+        if invoice
+            invoice.update(invoice_params)
             render json: invoice
         else
-            render json: { error: "not found" }, status: :not_found
+            render json: { errors: invoice.errors.full_messages }, status: :unprocessable_entity
+        end
+    end
+
+    def paid
+        id_array = params[:id_array]
+
+        id_array.each do |id|
+            
+            puts id
+            print id
+
+            invoice = Invoice.find_by(id: id.to_int)
+            invoice.update(id: id.to_int)
+
+            if invoice.valid?
+                render json: id_array
+            else
+                render json: { errors: invoice.errors.full_messages }, status: :unprocessable_entity
+            end
         end
     end
 
@@ -26,9 +45,10 @@ class InvoicesController < ApplicationController
         render json: invoices
     end
 
+
     private
 
     def invoice_params
-        params.permit(:appointment_id, :pet_id, :date_completed, :walk_duration, :compensation, :paid)
+        params.permit(:appointment_id, :pet_id, :date_completed, :walk_duration, :compensation, :paid, :id)
     end
 end

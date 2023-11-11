@@ -7,7 +7,6 @@ import { BrowserRouter } from 'react-router-dom';
 import { UserProvider } from './context/user';
 import { TodaysAppointmentsProvider } from './context/appointments';
 
-
 ReactDOM.render(
   <React.StrictMode>
     <BrowserRouter>
