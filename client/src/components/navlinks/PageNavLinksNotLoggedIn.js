@@ -18,7 +18,7 @@ export default function PageNavLinksNotLoggedIn() {
         <>
             <Navbar bg="primary" data-bs-theme="dark">
                 <Container>
-                    <Navbar.Brand>PocketWalks</Navbar.Brand>
+                    <Navbar.Brand><Link style={{textDecoration: 'none', color: 'white'}} to="/">PocketWalks</Link></Navbar.Brand>
                     <Nav className="me-auto">
                         <Link style={navLinkStyles} to='/'>Home</Link>
                         <Link style={navLinkStyles} to="/login">Login</Link>

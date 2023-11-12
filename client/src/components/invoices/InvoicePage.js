@@ -22,16 +22,10 @@ export default function InvoicesPage() {
     if (pets.length > 0) {
         return (
             <>
-                <Container className="m-3">
-                    <Row>
-                        <Col>
-                            <h2 className="display-4">Invoices</h2>
-                        </Col>
-                    </Row>
-                    {pets.map((pet) => (
-                        <InvoicePetCard key={pet.id} pet={pet} />
-                    ))}
-                </Container>
+                <h2 className="display-4 m-3">Invoices</h2>
+                {pets.map((pet) => (
+                    <InvoicePetCard key={pet.id} pet={pet} />
+                ))}
             </>
         )
     } else {

@@ -45,13 +45,13 @@ export default function PetsPage() {
 
     if (pets.length > 0) {
         return (
-            <Container className="m-3">
+            <Container>
                 <Row>
                     <Col>
-                        <h2 className="display-4">Pets</h2>
+                        <h2 className="display-4 m-3">Pets</h2>
                     </Col>
                     <Col>
-                        <Button className="m-1" variant="primary" onClick={updateDisplayButton}>New Pet</Button>
+                        <Button className="m-3" variant="primary" onClick={updateDisplayButton}>New Pet</Button>
                     </Col>
                 </Row>
                 {displayFormButton === true && (

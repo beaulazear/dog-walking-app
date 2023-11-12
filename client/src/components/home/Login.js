@@ -4,7 +4,6 @@ import { UserContext } from "../../context/user";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
-import Container from 'react-bootstrap/Container';
 import Card from 'react-bootstrap/Card';
 import Alert from 'react-bootstrap/Alert';
 
@@ -42,9 +41,9 @@ export default function Login() {
     }
 
     return (
-        <Container className="m-3">
-            <h1 className="display-5">User Login</h1>
-            <Form onSubmit={handleLogin} className="mb-3">
+        <>
+            <h1 className="display-5 m-3">User Login</h1>
+            <Form onSubmit={handleLogin} className="mb-3 m-3">
                 <Form.Group className="mb-3">
                     <Form.Label>Username</Form.Label>
                     <Form.Control type="input" placeholder="Enter username" value={username} onChange={(e) => { setUsername(e.target.value) }} />
@@ -75,6 +74,6 @@ export default function Login() {
                     <Button variant="primary" href="signuppage">Signup</Button>
                 </Card.Body>
             </Card>
-        </Container>
+        </>
     )
 }

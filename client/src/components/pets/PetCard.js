@@ -10,6 +10,8 @@ import Modal from 'react-bootstrap/Modal';
 import NewAppointmentForm from '../appointments/NewAppointmentForm';
 import PetAppointmentCard from '../appointments/PetAppointmentCard';
 
+// update state via use context so that a new appointment shows up on todays walks page!
+
 export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) {
 
     function formatDate(inputDate) {

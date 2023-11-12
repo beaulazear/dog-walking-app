@@ -1,6 +1,5 @@
 import React, { useContext } from "react";
 import { TodaysAppointmentsContext } from "../../context/appointments";
-import Container from "react-bootstrap/Container";
 import Card from 'react-bootstrap/Card';
 import TodaysAppointmentsCard from "./TodaysAppointmentsCard";
 
@@ -29,20 +28,18 @@ export default function TodaysWalksPage() {
 
     if (appointments?.length > 0) {
         return (
-            <Container className="m-3">
-                <h2 className="display-4">Today's Appointments</h2>
-                <h4 className="display-6">Current Date: {todayFormatted}</h4>
+            <>
+                <h2 className="display-4 m-3">Today's Appointments</h2>
+                <h4 className="display-6 m-3">Current Date: {todayFormatted}</h4>
                 {appointments.map((apt) => (
                     <TodaysAppointmentsCard updateAppointments={updateAppointments} key={apt.id} apt={apt} />
                 ))}
-            </Container>
+            </>
         )
     } else {
         return (
             <>
-                <Container className="m-3">
-                    <h2 className="display-4">Today's Appointments</h2>
-                </Container>
+                <h2 className="display-4 m-3">Today's Appointments</h2>
                 <Card className="m-2">
                     <Card.Header as="h5">No appointments scheduled for today</Card.Header>
                     <Card.Body>

@@ -98,7 +98,6 @@ export default function NewPetForm({ updateUserPets }) {
                 <Form.Group classsex="mb-3" controlId="formBasicbirthdate">
                     <Form.Label>Birthdate:</Form.Label>
                     <Form.Control value={birthdate} onChange={(e) => setBirthdate(e.target.value)} type="date">
-
                     </Form.Control>
                 </Form.Group>
                 <Form.Group classsex="mb-3" controlId="formBasicAllergies">

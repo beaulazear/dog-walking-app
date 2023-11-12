@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { UserContext } from "../../context/user"; import "bootstrap/dist/css/bootstrap.min.css";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
-import Container from 'react-bootstrap/Container';
 import Alert from 'react-bootstrap/Alert';
 
 export default function Signup() {
@@ -47,9 +46,9 @@ export default function Signup() {
     }
 
     return (
-        <Container className="m-3">
-            <h1 className="display-3">Create Your Account</h1>
-            <Form onSubmit={handleSignup}>
+        <>
+            <h1 className="display-3 m-3">Create Your Account</h1>
+            <Form  className="m-3" onSubmit={handleSignup}>
                 <Form.Group className="mb-3">
                     <Form.Label>Username</Form.Label>
                     <Form.Control onChange={(e) => setUsername(e.target.value)} value={username} type="text" placeholder="Enter Username" />
@@ -88,6 +87,6 @@ export default function Signup() {
                     Submit
                 </Button>
             </Form>
-        </Container>
+        </>
     )
 }

@@ -66,7 +66,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
     if (invoice.length > 0) {
         return (
-            <Card className="bg-success" style={{ width: '90%' }}>
+            <Card className="bg-success m-3" style={{ width: '90%' }}>
                 <Card.Body>
                     <img alt="Pet associated with appointment" style={photoStyles} src={apt.pet.profile_pic} />
                     <Card.Title>{apt.pet.name}, {apt.duration} minute walk between {startTime} & {endTime}.</Card.Title>
@@ -76,7 +76,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
         );
     } else {
         return (
-            <Card style={{ width: '90%' }}>
+            <Card className="m-3">
                 <Card.Body>
                     <img alt="Pet associated with appointment" style={photoStyles} src={apt.pet.profile_pic} />
                     <Card.Title>{apt.pet.name}</Card.Title>
