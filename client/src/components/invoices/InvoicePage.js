@@ -30,14 +30,8 @@ export default function InvoicesPage() {
         )
     } else {
         return (
-            <>
-                <Container className="m-3">
-                    <Row>
-                        <Col>
-                            <h2 className="display-4">Invoices</h2>
-                        </Col>
-                    </Row>
-                </Container>
+            <Container>
+                <h2 className="display-4 m-3">Invoices</h2>
                 <Card className="m-2">
                     <Card.Header as="h5">No pets currently in database</Card.Header>
                     <Card.Body>
@@ -47,7 +41,7 @@ export default function InvoicesPage() {
                         </Card.Text>
                     </Card.Body>
                 </Card>
-            </>
+            </Container>
         )
     }
 }

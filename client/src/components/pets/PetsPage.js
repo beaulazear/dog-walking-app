@@ -64,20 +64,18 @@ export default function PetsPage() {
         )
     } else {
         return (
-            <>
-                <Container className="m-3">
-                    <Row>
-                        <Col>
-                            <h2 className="display-4">Pets</h2>
-                        </Col>
-                        <Col>
-                            <Button className="m-1" variant="primary" onClick={updateDisplayButton}>New Pet</Button>
-                        </Col>
-                    </Row>
-                    {displayFormButton === true && (
-                        <NewPetForm updateUserPets={addNewPet} />
-                    )}
-                </Container>
+            <Container className="m-3">
+                <Row>
+                    <Col>
+                        <h2 className="display-4">Pets</h2>
+                    </Col>
+                    <Col>
+                        <Button className="m-1" variant="primary" onClick={updateDisplayButton}>New Pet</Button>
+                    </Col>
+                </Row>
+                {displayFormButton === true && (
+                    <NewPetForm updateUserPets={addNewPet} />
+                )}
                 <Card className="m-2">
                     <Card.Header as="h5">No pets currently in database</Card.Header>
                     <Card.Body>
@@ -87,7 +85,7 @@ export default function PetsPage() {
                         </Card.Text>
                     </Card.Body>
                 </Card>
-            </>
+            </Container>
         )
     }
 }
