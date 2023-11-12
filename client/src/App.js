@@ -54,6 +54,7 @@ function App() {
             color: 'white',
             textAlign: 'center',
             margin: '0',
+            marginTop: '20px',
             padding: '6px'
           }}
         >
