@@ -21,7 +21,7 @@ export default function InvoicesPage() {
 
     if (pets.length > 0) {
         return (
-            <Container>
+            <Container style={{marginBottom: '25px'}}>
                 <h2 className="display-4 m-3">Invoices</h2>
                 {pets.map((pet) => (
                     <InvoicePetCard key={pet.id} pet={pet} />

@@ -43,24 +43,23 @@ function App() {
             <Route path="/" element={<LoggedInHome />} />
           </Routes>
         </TodaysAppointmentsProvider>
-        <button
-          onClick={handleLogout}
-          style={{
-            position: 'fixed',
-            left: '0',
-            bottom: '0',
-            width: '100%',
-            backgroundColor: 'red',
-            color: 'white',
-            textAlign: 'center',
-            margin: '0',
-            marginTop: '20px',
-            padding: '6px'
-          }}
-        >
-          Logout Here
-        </button>
-
+        <div style={{ marginBottom: '30px' }}>
+          <button
+            onClick={handleLogout}
+            style={{
+              position: 'fixed',
+              left: '0',
+              bottom: '0',
+              width: '100%',
+              backgroundColor: 'red',
+              color: 'white',
+              textAlign: 'center',
+              margin: '0',
+            }}
+          >
+            Logout Here
+          </button>
+        </div>
       </div>
     );
   } else {
@@ -76,5 +75,7 @@ function App() {
     )
   }
 }
+
+//fix footer to have space between body
 
 export default App;
