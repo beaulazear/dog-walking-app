@@ -1,7 +1,7 @@
 import Card from 'react-bootstrap/Card';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Accordion from 'react-bootstrap/Accordion';
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
@@ -9,8 +9,7 @@ import Alert from 'react-bootstrap/Alert';
 import Modal from 'react-bootstrap/Modal';
 import NewAppointmentForm from '../appointments/NewAppointmentForm';
 import PetAppointmentCard from '../appointments/PetAppointmentCard';
-
-// update state via use context so that a new appointment shows up on todays walks page!
+import { TodaysAppointmentsContext } from "../../context/appointments";
 
 export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) {
 
@@ -24,6 +23,8 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
         return formattedDate;
     }
 
+    const { appointments, setAppointments } = useContext(TodaysAppointmentsContext)
+
     const [name, setName] = useState(pet.name)
     const [address, setAddress] = useState(pet.address)
     const [sex, setSex] = useState(pet.sex)
@@ -34,7 +35,6 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     const [spayedOrNeutered, setSpayedOrNeutered] = useState(pet.spayed_neutered)
 
     const [newAptButton, setNewAptButton] = useState(false)
-    const [appointments, setAppointments] = useState(pet.appointments.filter((apt) => apt.canceled !== true))
 
     const [errors, setErrors] = useState([])
 
@@ -74,7 +74,6 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
             headers: {
             }
         })
-
             .then(res => {
                 if (res.ok) {
                     res.json().then((newPet) => {
@@ -122,7 +121,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     }
 
     return (
-        <Accordion style={{ width: '90%' }}>
+        <Accordion>
             <Accordion.Item className="text-bg-light p-3" eventKey="0">
                 <Accordion.Header>{pet.name}, {pet.address}</Accordion.Header>
                 <Accordion.Body>
