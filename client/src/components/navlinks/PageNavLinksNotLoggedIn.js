@@ -20,7 +20,6 @@ export default function PageNavLinksNotLoggedIn() {
                 <Container>
                     <Navbar.Brand><Link style={{textDecoration: 'none', color: 'white'}} to="/">PocketWalks</Link></Navbar.Brand>
                     <Nav className="me-auto">
-                        <Link style={navLinkStyles} to='/'>Home</Link>
                         <Link style={navLinkStyles} to="/login">Login</Link>
                         <Link style={navLinkStyles} to="/signuppage">Signup</Link>
                     </Nav>

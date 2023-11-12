@@ -47,7 +47,7 @@ export default function Signup() {
 
     return (
         <>
-            <h1 className="display-3 m-3">Create Your Account</h1>
+            <h1 className="display-5 m-3">Create Your Account</h1>
             <Form  className="m-3" onSubmit={handleSignup}>
                 <Form.Group className="mb-3">
                     <Form.Label>Username</Form.Label>
