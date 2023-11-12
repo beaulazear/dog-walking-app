@@ -11,9 +11,6 @@ import TodaysWalksPage from "./components/appointments/TodaysWalksPage";
 import InvoicesPage from "./components/invoices/InvoicePage";
 import LoggedInHome from "./components/home/LoggedInHome";
 import { TodaysAppointmentsProvider } from './context/appointments';
-import { Layout } from 'antd';
-
-const { Footer } = Layout;
 
 function App() {
 
