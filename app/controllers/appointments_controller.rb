@@ -33,6 +33,8 @@ class AppointmentsController < ApplicationController
             end
         end
 
+        puts filteredCanceledAndCompletedApts
+
         sorted_appointments = todaysAppointments.sort { |a, b| a.start_time <=> b.start_time }
 
         if appointments

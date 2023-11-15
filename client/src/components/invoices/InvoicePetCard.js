@@ -17,16 +17,12 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
 
     function UpdateCurrentInvoice() {
 
-        // create an array of ids of all invoices that need updated, send one fetch request with all of those ids. Do the loop on the backend, 
-
         let arrayOfAppointmentIds = []
 
         invoices.forEach((invoice) => {
             arrayOfAppointmentIds.push(invoice.id)
         })
         
-        console.log(arrayOfAppointmentIds)
-
         fetch(`/invoices/paid`, {
             method: 'PATCH',
             headers: {
@@ -37,26 +33,17 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
             })
         })
         .then((response) => response.json())
-        .then((data) => console.log(data))
+        .then((newPaidInvoices) => {
 
-        // invoices.forEach((invoice) => {
-        //     fetch(`/invoices/${invoice.id}/paid`)
-        //     .then((response) => response.json())
-        //     .then((newInvoice) => {
-        //         newPaidInvoices.push(newInvoice)
-        //     })
-        // })
+            console.log(paidInvoices)
 
-        // console.log(newPaidInvoices)
+            setPaidInvoices([...paidInvoices, ...newPaidInvoices])
 
-        // setInvoices(invoices.filter((invoice) => invoice.paid !== true))
-        // setPaidInvoices([...paidInvoices, ...newPaidInvoices])
-
-        // console.log(paidInvoices)
-        // console.log(invoices)
+            setInvoices([])
+        })
     }
 
-    // fix the above function to update state for past appointments and current appointments, is this possible with the current forEach I have in place? Will i need to learn how to do await / async?
+    // fix the above function to update state for past appointments and current appointments
 
     return (
         <Accordion style={{ width: '90%' }}>

@@ -1,6 +1,8 @@
 class InvoicesController < ApplicationController
     before_action :current_user
 
+    # writes custom method that checks validaity, returns true or false... "check owner" argument is user ID, look at current user,  invoice, appointment, make sure theyre all connected.
+
     def create
         pet = @current_user.pets.find_by(id: params[:pet_id])
         invoice = pet.invoices.create(invoice_params)
@@ -10,34 +12,21 @@ class InvoicesController < ApplicationController
             render json: { errors: invoice.errors.full_messages }, status: :unprocessable_entity
         end
     end
-    
-    def update
-        invoice = Invoice.find_by(id: params[:id])
-        if invoice
-            invoice.update(invoice_params)
-            render json: invoice
-        else
-            render json: { errors: invoice.errors.full_messages }, status: :unprocessable_entity
-        end
-    end
 
     def paid
+        
         id_array = params[:id_array]
+    
+        invoices = Invoice.find(id_array)
 
-        id_array.each do |id|
-            
-            puts id
-            print id
+        invoices.each do |invoice|
 
-            invoice = Invoice.find_by(id: id.to_int)
-            invoice.update(id: id.to_int)
+            invoice.update(paid: true)
 
-            if invoice.valid?
-                render json: id_array
-            else
-                render json: { errors: invoice.errors.full_messages }, status: :unprocessable_entity
-            end
         end
+
+        render json: invoices
+
     end
 
     def index

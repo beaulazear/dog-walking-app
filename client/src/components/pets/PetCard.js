@@ -23,7 +23,9 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
         return formattedDate;
     }
 
-    const { appointments, setAppointments } = useContext(TodaysAppointmentsContext)
+    const { appointments } = useContext(TodaysAppointmentsContext)
+
+    const [currentPetAppointments, setCurrentPetAppointments] = useState(appointments.filter((apt) => apt.pet.id === pet.id))
 
     const [name, setName] = useState(pet.name)
     const [address, setAddress] = useState(pet.address)
@@ -111,13 +113,13 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     }
 
     function updateAppointmentsNew(newApt) {
-        setAppointments([...appointments, newApt])
+        setCurrentPetAppointments([...currentPetAppointments, newApt])
         changeAptFormView()
     }
 
     function updateAppointmentsDelete(oldApt) {
-        const newAppointments = appointments.filter((apt) => apt.id !== oldApt.id)
-        setAppointments(newAppointments)
+        const newAppointments = currentPetAppointments.filter((apt) => apt.id !== oldApt.id)
+        setCurrentPetAppointments(newAppointments)
     }
 
     return (
@@ -140,10 +142,10 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                             <ListGroup.Item><b>Allergies:</b> {pet.allergies}</ListGroup.Item>
                             <ListGroup.Item><b>Birthdate:</b> {formatDate(pet.birthdate)}</ListGroup.Item>
                             <ListGroup.Item><b>Appointments:</b> View and create appointments for {pet.name}</ListGroup.Item>
-                            {appointments.length < 0 && (
+                            {currentPetAppointments.length < 0 && (
                                 <h4 className='display-6 m-3'>There are currently no appointments booked for {pet.name}.</h4>
                             )}
-                            {appointments?.map((apt) => (
+                            {currentPetAppointments?.map((apt) => (
                                 <PetAppointmentCard updateAppointmentsDelete={updateAppointmentsDelete} apt={apt} key={apt.id}>Apt</PetAppointmentCard>
                             ))}
                             <Button className='m-4' variant="primary" onClick={handleNewAptRequest}>New Appointment</Button>
