@@ -18,6 +18,7 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
     }
 
     function extractHourAndMinutes(timestampString) {
+        console.log(timestampString)
         const date = new Date(timestampString);
         const hour = String(date.getUTCHours()).padStart(2, '0');
         const minutes = String(date.getUTCMinutes()).padStart(2, '0');

@@ -22,7 +22,7 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
         invoices.forEach((invoice) => {
             arrayOfAppointmentIds.push(invoice.id)
         })
-        
+
         fetch(`/invoices/paid`, {
             method: 'PATCH',
             headers: {
@@ -32,15 +32,15 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
                 id_array: arrayOfAppointmentIds
             })
         })
-        .then((response) => response.json())
-        .then((newPaidInvoices) => {
+            .then((response) => response.json())
+            .then((newPaidInvoices) => {
 
-            console.log(paidInvoices)
+                console.log(paidInvoices)
 
-            setPaidInvoices([...paidInvoices, ...newPaidInvoices])
+                setPaidInvoices([...paidInvoices, ...newPaidInvoices])
 
-            setInvoices([])
-        })
+                setInvoices([])
+            })
     }
 
     return (
