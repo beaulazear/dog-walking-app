@@ -43,8 +43,6 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
         })
     }
 
-    // fix the above function to update state for past appointments and current appointments
-
     return (
         <Accordion style={{ width: '90%' }}>
             <Accordion.Item className="text-bg-light p-3" eventKey="0">

@@ -28,17 +28,17 @@ export default function TodaysWalksPage() {
 
     if (appointments?.length > 0) {
         return (
-            <>
+            <div style={{marginBottom: '35px'}}>
                 <h2 className="display-4 m-3">Today's Appointments</h2>
                 <h4 className="display-6 m-3">Current Date: {todayFormatted}</h4>
                 {appointments.map((apt) => (
                     <TodaysAppointmentsCard updateAppointments={updateAppointments} key={apt.id} apt={apt} />
                 ))}
-            </>
+            </div>
         )
     } else {
         return (
-            <>
+            <div style={{marginBottom: '45px'}}>
                 <h2 className="display-4 m-3">Today's Appointments</h2>
                 <Card className="m-2">
                     <Card.Header as="h5">No appointments scheduled for today</Card.Header>
@@ -49,7 +49,7 @@ export default function TodaysWalksPage() {
                         </Card.Text>
                     </Card.Body>
                 </Card>
-            </>
+            </div>
         )
     }
 }

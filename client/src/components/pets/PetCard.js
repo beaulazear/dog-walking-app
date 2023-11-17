@@ -23,7 +23,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
         return formattedDate;
     }
 
-    const { appointments } = useContext(TodaysAppointmentsContext)
+    const { appointments, setAppointments } = useContext(TodaysAppointmentsContext)
 
     const [currentPetAppointments, setCurrentPetAppointments] = useState(appointments.filter((apt) => apt.pet.id === pet.id))
 
@@ -114,6 +114,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
 
     function updateAppointmentsNew(newApt) {
         setCurrentPetAppointments([...currentPetAppointments, newApt])
+        setAppointments([...appointments, newApt])
         changeAptFormView()
     }
 

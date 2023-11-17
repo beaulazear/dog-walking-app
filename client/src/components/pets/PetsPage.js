@@ -45,7 +45,7 @@ export default function PetsPage() {
 
     if (pets.length > 0) {
         return (
-            <Container>
+            <Container style={{marginBottom: '35px'}}>
                 <Row>
                     <Col>
                         <h2 className="display-4 m-3">Pets</h2>

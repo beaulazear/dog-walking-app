@@ -63,29 +63,30 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
             })
     }
 
-    // function updateToRecurringWalk(e) {
-    //     if (e.target.value === true) {
-    //         setRecurring(true)
-    //         const today = new Date();
-    //         setAppointmentDate(today);
-    //     } else {
-    //         setRecurring(false)
-    //     }
-    // }
-
     return (
         <Container>
-            <h1 className="display-6">New Appointment for {pet.name}</h1>
             <Form className="text-bg-light p-3" onSubmit={handleNewAppointmentRequest}>
+                {recurring === false &&
+                    <>
+                        <h1 className="display-6">One Time Appointment</h1>
+                        <p>This form is currently for a one time appointment, if you would like an appointment to repeat itself - change "Recurring" to yes.</p>
+                    </>
+                }
+                {recurring === true &&
+                    <>
+                        <h1 className="display-6">Recurring Appointment</h1>
+                        <p>This form is currently for a recurring appointment. Please select which day/days of the week you'd like the appointment to be repeated on.</p>
+                    </>
+                }
                 <Form.Group className="mb-3" controlId="formBasicappointmentDate">
-                    <Form.Label>Start Time</Form.Label>
+                    <Form.Label>Earliest Pickup Time</Form.Label>
                     <Form.Control onChange={(e) => setStartTime(e.target.value)} value={startTime} type="time" />
                     <Form.Text className="text-muted">
                         Enter the start time (beginning of pick up window)
                     </Form.Text>
                 </Form.Group>
                 <Form.Group className="mb-3">
-                    <Form.Label>End Time</Form.Label>
+                    <Form.Label>Latest Pickup Time</Form.Label>
                     <Form.Control type="time" onChange={(e) => setEndTime(e.target.value)} aria-label="Default select example" />
                     <Form.Text className="text-muted">
                         Enter the end time (end of pick up window)
