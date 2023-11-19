@@ -1,11 +1,11 @@
 import React, { useContext } from "react";
-import { TodaysAppointmentsContext } from "../../context/appointments";
+import { TodaysAppointmentsContext } from "../../context/todaysAppointments";
 import Card from 'react-bootstrap/Card';
 import TodaysAppointmentsCard from "./TodaysAppointmentsCard";
 
 export default function TodaysWalksPage() {
 
-    const { appointments, setAppointments } = useContext(TodaysAppointmentsContext)
+    const { todaysAppointments, setTodaysAppointments } = useContext(TodaysAppointmentsContext)
 
     function getCurrentDateFormatted() {
         const currentDate = new Date();
@@ -19,19 +19,26 @@ export default function TodaysWalksPage() {
     }
 
     function updateAppointments(newApt) {
-        const newAppointments = appointments.filter((apt) => apt.id !== newApt.id)
-        // map over apt, look for one with same id, replace apt with new apt, mapping retains order.
-        setAppointments([...newAppointments, newApt])
+        const newAppointments = todaysAppointments.map((apt) => {
+            if (apt.id === newApt.id) {
+                return newApt
+            } else {
+                return apt 
+            }
+        })
+        setTodaysAppointments(newAppointments)
+        console.log(todaysAppointments)
     }
 
+    console.log(todaysAppointments)
     const todayFormatted = getCurrentDateFormatted();
 
-    if (appointments?.length > 0) {
+    if (todaysAppointments?.length > 0) {
         return (
             <div style={{marginBottom: '35px'}}>
                 <h2 className="display-4 m-3">Today's Appointments</h2>
                 <h4 className="display-6 m-3">Current Date: {todayFormatted}</h4>
-                {appointments.map((apt) => (
+                {todaysAppointments.map((apt) => (
                     <TodaysAppointmentsCard updateAppointments={updateAppointments} key={apt.id} apt={apt} />
                 ))}
             </div>

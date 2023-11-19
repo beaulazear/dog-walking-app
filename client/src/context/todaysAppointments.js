@@ -4,17 +4,17 @@ const TodaysAppointmentsContext = React.createContext();
 
 function TodaysAppointmentsProvider({ children }) {
 
-    const [appointments, setAppointments] = useState(null)
+    const [todaysAppointments, setTodaysAppointments] = useState(null)
 
     useEffect(() => {
         fetch("/appointments").then((response) => {
             if (response.ok) {
-                response.json().then((appointments) => setAppointments(appointments));
+                response.json().then((appointments) => setTodaysAppointments(appointments));
             }
         });
     }, []);
 
-    return <TodaysAppointmentsContext.Provider value={{ appointments, setAppointments }}>{children}</TodaysAppointmentsContext.Provider>
+    return <TodaysAppointmentsContext.Provider value={{ todaysAppointments, setTodaysAppointments }}>{children}</TodaysAppointmentsContext.Provider>
 }
 
 export { TodaysAppointmentsContext, TodaysAppointmentsProvider };

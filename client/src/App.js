@@ -10,7 +10,9 @@ import PetsPage from "./components/pets/PetsPage";
 import TodaysWalksPage from "./components/appointments/TodaysWalksPage";
 import InvoicesPage from "./components/invoices/InvoicePage";
 import LoggedInHome from "./components/home/LoggedInHome";
-import { TodaysAppointmentsProvider } from './context/appointments';
+import { TodaysAppointmentsProvider } from './context/todaysAppointments';
+import { PetsAppointmentsProvider } from './context/petsAppointments';
+import { InvoicesProvider } from './context/invoices';
 
 function App() {
 
@@ -34,14 +36,18 @@ function App() {
       <div>
         <PageNavLinks />
         <TodaysAppointmentsProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/signuppage" element={<Signup />} />
-            <Route path="/petspage" element={<PetsPage />} />
-            <Route path="/todayswalkspage" element={<TodaysWalksPage />} />
-            <Route path="/invoicespage" element={<InvoicesPage />} />
-            <Route path="/" element={<LoggedInHome />} />
-          </Routes>
+          <PetsAppointmentsProvider>
+            <InvoicesProvider>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/signuppage" element={<Signup />} />
+                <Route path="/petspage" element={<PetsPage />} />
+                <Route path="/todayswalkspage" element={<TodaysWalksPage />} />
+                <Route path="/invoicespage" element={<InvoicesPage />} />
+                <Route path="/" element={<LoggedInHome />} />
+              </Routes>
+            </InvoicesProvider>
+          </PetsAppointmentsProvider>
         </TodaysAppointmentsProvider>
         <div style={{ marginBottom: '30px' }}>
           <button

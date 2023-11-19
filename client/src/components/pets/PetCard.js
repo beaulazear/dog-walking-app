@@ -9,7 +9,8 @@ import Alert from 'react-bootstrap/Alert';
 import Modal from 'react-bootstrap/Modal';
 import NewAppointmentForm from '../appointments/NewAppointmentForm';
 import PetAppointmentCard from '../appointments/PetAppointmentCard';
-import { TodaysAppointmentsContext } from "../../context/appointments";
+import { PetsAppointmentsContext } from "../../context/petsAppointments";
+import { TodaysAppointmentsContext } from "../../context/todaysAppointments";
 
 export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) {
 
@@ -23,9 +24,10 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
         return formattedDate;
     }
 
-    const { appointments, setAppointments } = useContext(TodaysAppointmentsContext)
+    const { petsAppointments, setPetsAppointments } = useContext(PetsAppointmentsContext)
+    const { setTodaysAppointments, todaysAppointments } = useContext(TodaysAppointmentsContext)
 
-    const [currentPetAppointments, setCurrentPetAppointments] = useState(appointments.filter((apt) => apt.pet.id === pet.id))
+    const [currentPetAppointments, setCurrentPetAppointments] = useState(petsAppointments?.filter((apt) => apt.pet.id === pet.id))
 
     const [name, setName] = useState(pet.name)
     const [address, setAddress] = useState(pet.address)
@@ -56,6 +58,8 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                 updatePetsAfterDelete(deletedPet)
             })
     }
+
+    // update context for todays appointments for canceled appointments, If not completed then get rid of the appointment but if invoice is there keep it for the day.
 
     function handleUpdatePet(e) {
 
@@ -103,24 +107,74 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
         }
     }
 
-    function handleNewAptRequest() {
-        console.log(pet.id)
-        changeAptFormView()
-    }
-
     function changeAptFormView() {
         setNewAptButton(!newAptButton)
     }
 
+    // const whatDay = new Date().getDay()
+
     function updateAppointmentsNew(newApt) {
         setCurrentPetAppointments([...currentPetAppointments, newApt])
-        setAppointments([...appointments, newApt])
+        setPetsAppointments([...petsAppointments, newApt])
+
+        if (newApt.recurring === true) {
+
+            switch (new Date().getDay()) {
+                case 0:
+                    if (newApt.sunday === true) {
+                        setTodaysAppointments([...todaysAppointments, newApt].sort((a, b) => new Date(a.start_time) - new Date(b.start_time)))
+                    }
+                    break;
+                case 1:
+                    if (newApt.monday === true) {
+                        setTodaysAppointments([...todaysAppointments, newApt].sort((a, b) => new Date(a.start_time) - new Date(b.start_time)))
+                    }
+                    break;
+                case 2:
+                    if (newApt.tuesday === true) {
+                        setTodaysAppointments([...todaysAppointments, newApt].sort((a, b) => new Date(a.start_time) - new Date(b.start_time)))
+                    }
+                    break;
+                case 3:
+                    if (newApt.wednesday === true) {
+                        setTodaysAppointments([...todaysAppointments, newApt].sort((a, b) => new Date(a.start_time) - new Date(b.start_time)))
+                    }
+                    break;
+                case 4:
+                    if (newApt.thursday === true) {
+                        setTodaysAppointments([...todaysAppointments, newApt].sort((a, b) => new Date(a.start_time) - new Date(b.start_time)))
+                    }
+                    break;
+                case 5:
+                    if (newApt.friday === true) {
+                        setTodaysAppointments([...todaysAppointments, newApt].sort((a, b) => new Date(a.start_time) - new Date(b.start_time)))
+                    }
+                    break;
+                case 6:
+                    if (newApt.sunday === true) {
+                        setTodaysAppointments([...todaysAppointments, newApt].sort((a, b) => new Date(a.start_time) - new Date(b.start_time)))
+                    }
+                    break;
+                default:
+                    console.log('error')
+            }
+
+        } else {
+
+            const isToday = new Date(newApt.appointment_date).toDateString() === new Date().toDateString();
+
+            if (isToday) {
+                setTodaysAppointments([...todaysAppointments, newApt].sort((a, b) => new Date(a.start_time) - new Date(b.start_time)))
+            }
+        }
+
         changeAptFormView()
     }
 
     function updateAppointmentsDelete(oldApt) {
         const newAppointments = currentPetAppointments.filter((apt) => apt.id !== oldApt.id)
-        setCurrentPetAppointments(newAppointments)
+        setCurrentPetAppointments([...newAppointments])
+        setPetsAppointments([...newAppointments])
     }
 
     return (
@@ -143,13 +197,13 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                             <ListGroup.Item><b>Allergies:</b> {pet.allergies}</ListGroup.Item>
                             <ListGroup.Item><b>Birthdate:</b> {formatDate(pet.birthdate)}</ListGroup.Item>
                             <ListGroup.Item><b>Appointments:</b> View and create appointments for {pet.name}</ListGroup.Item>
-                            {currentPetAppointments.length < 0 && (
+                            {currentPetAppointments?.length < 0 && (
                                 <h4 className='display-6 m-3'>There are currently no appointments booked for {pet.name}.</h4>
                             )}
                             {currentPetAppointments?.map((apt) => (
                                 <PetAppointmentCard updateAppointmentsDelete={updateAppointmentsDelete} apt={apt} key={apt.id}>Apt</PetAppointmentCard>
                             ))}
-                            <Button className='m-4' variant="primary" onClick={handleNewAptRequest}>New Appointment</Button>
+                            <Button className='m-4' variant="primary" onClick={changeAptFormView}>New Appointment</Button>
                             {newAptButton === true && (
                                 <NewAppointmentForm updateAppointmentsNew={updateAppointmentsNew} pet={pet} />
                             )}
@@ -231,9 +285,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                         </Modal.Header>
                         <Modal.Body>Are you sure you want to delete pet information for {pet.name}? This will also destroy all associated invoices and appointments. This information will not be ale to be recovered after deletion.</Modal.Body>
                         <Modal.Footer>
-                            <Button variant="secondary" onClick={handleClose}>
-                                Close
-                            </Button>
+                            <Button variant="secondary" onClick={handleClose}>Close</Button>
                             <Button variant="danger" onClick={handleDelete}>Delete {pet.name}</Button>
                         </Modal.Footer>
                     </Modal>

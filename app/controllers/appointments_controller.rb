@@ -33,14 +33,24 @@ class AppointmentsController < ApplicationController
             end
         end
 
-        puts filteredCanceledAndCompletedApts
-
         sorted_appointments = todaysAppointments.sort { |a, b| a.start_time <=> b.start_time }
 
         if appointments
             render json: sorted_appointments
         else
             render json: { error: "No appointments found" }, status: :not_found
+        end
+    end
+
+    def pet_appointments
+        appointments = @current_user.appointments
+        filteredCanceledAndCompletedApts = appointments.select { |apt| apt.canceled != true && apt.completed != true }
+
+
+        if appointments
+            render json: filteredCanceledAndCompletedApts
+        else
+            render json: { errors: appointments.errors.full_messages }, status: :not_found
         end
     end
 

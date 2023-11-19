@@ -5,7 +5,7 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 import { UserProvider } from './context/user';
-import { TodaysAppointmentsProvider } from './context/appointments';
+import { TodaysAppointmentsProvider } from './context/todaysAppointments';
 
 ReactDOM.render(
   <React.StrictMode>

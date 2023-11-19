@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { TodaysAppointmentsContext } from "../../context/appointments";
+import { TodaysAppointmentsContext } from "../../context/todaysAppointments";
 import { UserContext } from "../../context/user";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Button from 'react-bootstrap/Button';
@@ -7,7 +7,7 @@ import Card from 'react-bootstrap/Card';
 
 export default function LoggedInHome() {
 
-    const { appointments } = useContext(TodaysAppointmentsContext)
+    const { todaysAppointments } = useContext(TodaysAppointmentsContext)
     const { user } = useContext(UserContext)
 
     return (
@@ -16,8 +16,8 @@ export default function LoggedInHome() {
             <Card className="m-2">
                 <Card.Header as="h5">Today's Schedule</Card.Header>
                 <Card.Body>
-                    {appointments?.length > 0 && (
-                        <Card.Title>You have {appointments?.length} appointments today.</Card.Title>
+                    {todaysAppointments?.length > 0 && (
+                        <Card.Title>You have {todaysAppointments?.length} appointments today.</Card.Title>
                     )}
                     <Card.Text>
                         Visit the "Today" page to view appointments and mark them as completed as you go.

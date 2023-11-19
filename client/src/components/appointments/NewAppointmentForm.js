@@ -25,8 +25,6 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
 
     const [errors, setErrors] = useState([])
 
-    console.log(startTime)
-
     function handleNewAppointmentRequest(e) {
 
         e.preventDefault()
@@ -107,11 +105,17 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
                         <option value={false}>No</option>
                         <option value={true}>Yes</option>
                     </Form.Select>
+                    <Form.Text className="text-muted">
+                        If yes is selected, you'll be asked to pick which day/days of the week the appointment should occur. if no is selected, you'll be prompted to select a specific date for the appointment.
+                    </Form.Text>
                 </Form.Group>
                 {recurring === false && (
                     <Form.Group className="mb-3">
                         <Form.Label>Appointment Date</Form.Label>
                         <Form.Control onChange={(e) => setAppointmentDate(e.target.value)} value={appointmentDate} type="date" />
+                        <Form.Text className="text-muted">
+                            If no date is selected, the appointment will be scheduled for today.
+                        </Form.Text>
                     </Form.Group>
                 )}
                 {recurring === true && (
@@ -166,6 +170,7 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
                                 <option value={true}>Yes</option>
                             </Form.Select>
                         </Form.Group>
+                        <p>If no appointment date is selected, it will be defaulted to today!</p>
                     </>
                 )}
                 {errors?.length > 0 && (
