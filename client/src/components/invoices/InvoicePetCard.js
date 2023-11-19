@@ -4,12 +4,65 @@ import Accordion from 'react-bootstrap/Accordion';
 import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Button from "react-bootstrap/Button";
+import { DownOutlined } from '@ant-design/icons';
+import { Dropdown, Space } from 'antd';
+
 
 export default function InvoicePetCard({ pet, updateUserPets }) {
 
     const [invoices, setInvoices] = useState(pet.invoices.filter((invoice) => invoice.paid !== true))
 
     const [paidInvoices, setPaidInvoices] = useState(pet.invoices.filter((invoice) => invoice.paid === true))
+
+    const [allInvoicesSelected, setAllInvoicesSelected] = useState(true)
+    const [tenInvoicesSelected, setTenInvoicesSelected] = useState(true)
+    const [thirtyInvoicesSelected, setThirtyInvoicesSelected] = useState(true)
+
+    const lastTenInvoices = paidInvoices.slice(-10)
+    const lastThirtyInvoices = paidInvoices.slice(-10)
+
+    function changeToAllInvoices() {
+        setAllInvoicesSelected(true)
+        setTenInvoicesSelected(false)
+        setThirtyInvoicesSelected(false)
+    }
+    function changeToTenInvoices() {
+        setAllInvoicesSelected(false)
+        setTenInvoicesSelected(true)
+        setThirtyInvoicesSelected(false)
+    }
+    function changeTo30Invoices() {
+        setAllInvoicesSelected(false)
+        setTenInvoicesSelected(false)
+        setThirtyInvoicesSelected(true)
+    }
+
+    const items = [
+        {
+            key: '1',
+            label: (
+                <button rel="noopener noreferrer" onClick={changeToAllInvoices}>
+                    View all invoices
+                </button>
+            ),
+        },
+        {
+            key: '2',
+            label: (
+                <button rel="noopener noreferrer" onClick={changeToTenInvoices}>
+                    View past 10 invoices
+                </button>
+            ),
+        },
+        {
+            key: '3',
+            label: (
+                <button rel="noopener noreferrer" onClick={changeTo30Invoices}>
+                    View past 30 invoices
+                </button>
+            ),
+        }
+    ];
 
     let currentTotal = 0
 
@@ -43,12 +96,18 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
             })
     }
 
+    function formatDateTime(dateTime) {
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+        const formattedDateTime = new Date(dateTime).toLocaleDateString(undefined, options);
+        return formattedDateTime;
+    }
+
     return (
         <Accordion style={{ width: '90%' }}>
             <Accordion.Item className="text-bg-light p-3" eventKey="0">
                 <Accordion.Header>Current Invoice for {pet.name}</Accordion.Header>
                 <Accordion.Body>
-                    <h3 classsex="display-3">Current Invoice For "{pet.name}"</h3>
+                    <h3 classsex="display-3">Current Invoices For "{pet.name}"</h3>
                     <Card style={{ width: '100%' }}>
                         <Card.Img variant="top" src={pet.profile_pic} />
                         <Card.Body>
@@ -56,7 +115,7 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
                         </Card.Body>
                         <ListGroup className="list-group-flush">
                             {invoices.map((invoice) => (
-                                <ListGroup.Item key={invoice.id}>{invoice.date_completed}, ${invoice.compensation}</ListGroup.Item>
+                                <ListGroup.Item key={invoice.id}>{invoice.date_completed.toLocaleString()}, ${invoice.compensation}</ListGroup.Item>
                             ))}
                         </ListGroup>
                         <Card.Text className='m-3'>
@@ -69,11 +128,38 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
             <Accordion.Item className="text-bg-light p-3" eventKey="1">
                 <Accordion.Header>Past invoices for {pet.name}</Accordion.Header>
                 <Accordion.Body>
+                    <Card.Img variant="top" src={pet.profile_pic} />
                     <h3 classsex="display-3">Past Invoices For "{pet.name}"</h3>
+                    <Dropdown menu={{ items }}>
+                        <button onClick={(e) => e.preventDefault()}>
+                            <Space>
+                                Filter invoices
+                                <DownOutlined />
+                            </Space>
+                        </button>
+                    </Dropdown>
                     <ListGroup className="list-group-flush">
-                        {paidInvoices.map((invoice) => (
-                            <ListGroup.Item key={invoice.id}>{invoice.date_completed}, ${invoice.compensation}</ListGroup.Item>
-                        ))}
+                        {allInvoicesSelected === true && (
+                            <>
+                                {paidInvoices.map((invoice) => (
+                                    <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
+                                ))}
+                            </>
+                        )}
+                        {tenInvoicesSelected === true && (
+                            <>
+                                {lastTenInvoices.map((invoice) => (
+                                    <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
+                                ))}
+                            </>
+                        )}
+                        {thirtyInvoicesSelected === true && (
+                            <>
+                                {lastThirtyInvoices.map((invoice) => (
+                                    <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
+                                ))}
+                            </>
+                        )}
                     </ListGroup>
                 </Accordion.Body>
             </Accordion.Item>
