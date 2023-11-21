@@ -13,6 +13,7 @@ import LoggedInHome from "./components/home/LoggedInHome";
 import { TodaysAppointmentsProvider } from './context/todaysAppointments';
 import { PetsAppointmentsProvider } from './context/petsAppointments';
 import { InvoicesProvider } from './context/invoices';
+import { PetsProvider } from "./context/pets";
 
 function App() {
 
@@ -38,14 +39,16 @@ function App() {
         <TodaysAppointmentsProvider>
           <PetsAppointmentsProvider>
             <InvoicesProvider>
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/signuppage" element={<Signup />} />
-                <Route path="/petspage" element={<PetsPage />} />
-                <Route path="/todayswalkspage" element={<TodaysWalksPage />} />
-                <Route path="/invoicespage" element={<InvoicesPage />} />
-                <Route path="/" element={<LoggedInHome />} />
-              </Routes>
+              <PetsProvider>
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signuppage" element={<Signup />} />
+                  <Route path="/petspage" element={<PetsPage />} />
+                  <Route path="/todayswalkspage" element={<TodaysWalksPage />} />
+                  <Route path="/invoicespage" element={<InvoicesPage />} />
+                  <Route path="/" element={<LoggedInHome />} />
+                </Routes>
+              </PetsProvider>
             </InvoicesProvider>
           </PetsAppointmentsProvider>
         </TodaysAppointmentsProvider>

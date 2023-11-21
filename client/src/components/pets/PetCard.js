@@ -32,7 +32,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     
     const [errors, setErrors] = useState([])
     
-    const [profilePic, setProfilePic] = useState(null)
+    const [profilePic, setProfilePic] = useState(pet.profile_pic)
     
     const [show, setShow] = useState(false);
     
@@ -54,11 +54,9 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
             })
     }
 
-    // update context for todays appointments for canceled appointments, If not completed then get rid of the appointment but if invoice is there keep it for the day.
-
     function handleUpdatePet(e) {
 
-        // switch to using context for pets, this sbould update pets context so the today's walks page, and invoice page automatically show new updates to pets.
+        // only updating after i attach a photo? Because of AWS
 
         e.preventDefault()
         const formData = new FormData()

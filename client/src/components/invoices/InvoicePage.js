@@ -1,23 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext } from "react";
+import { PetsContext } from "../../context/pets";
 import Container from "react-bootstrap/Container";
 import Card from 'react-bootstrap/Card';
 import InvoicePetCard from "./InvoicePetCard";
 
 export default function InvoicesPage() {
 
-    const [pets, setPets] = useState([])
+    const { pets } = useContext(PetsContext)
 
-    useEffect(() => {
-        fetch("/pets").then((response) => {
-            if (response.ok) {
-                response.json().then((pets) => {
-                    setPets(pets)
-                });
-            }
-        });
-    }, []);
-
-    if (pets.length > 0) {
+    if (pets?.length > 0) {
         return (
             <Container style={{marginBottom: '35px'}}>
                 <h2 className="display-4 m-3">Invoices</h2>

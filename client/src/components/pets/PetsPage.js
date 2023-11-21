@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useContext } from "react";
+import { PetsContext } from "../../context/pets";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
@@ -10,19 +11,9 @@ import PetCard from "./PetCard";
 
 export default function PetsPage() {
 
+    const { pets, setPets } = useContext(PetsContext)
+
     const [displayFormButton, setDisplayFormButton] = useState(false)
-
-    const [pets, setPets] = useState([])
-
-    useEffect(() => {
-        fetch("/pets").then((response) => {
-            if (response.ok) {
-                response.json().then((pets) => {
-                    setPets(pets)
-                });
-            }
-        });
-    }, []);
 
     function updateDisplayButton() {
         setDisplayFormButton(!displayFormButton)
@@ -43,7 +34,7 @@ export default function PetsPage() {
         setPets(newPets)
     }
 
-    if (pets.length > 0) {
+    if (pets?.length > 0) {
         return (
             <Container style={{marginBottom: '35px'}}>
                 <Row>
