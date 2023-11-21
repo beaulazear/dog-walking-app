@@ -23,7 +23,7 @@ export default function TodaysWalksPage() {
             if (apt.id === newApt.id) {
                 return newApt
             } else {
-                return apt 
+                return apt
             }
         })
         setTodaysAppointments(newAppointments)
@@ -35,7 +35,7 @@ export default function TodaysWalksPage() {
 
     if (todaysAppointments?.length > 0) {
         return (
-            <div style={{marginBottom: '35px'}}>
+            <div style={{ marginBottom: '35px' }}>
                 <h2 className="display-4 m-3">Today's Appointments</h2>
                 <h4 className="display-6 m-3">Current Date: {todayFormatted}</h4>
                 {todaysAppointments.map((apt) => (
@@ -45,8 +45,9 @@ export default function TodaysWalksPage() {
         )
     } else {
         return (
-            <div style={{marginBottom: '45px'}}>
+            <div style={{ marginBottom: '45px' }}>
                 <h2 className="display-4 m-3">Today's Appointments</h2>
+                <h4 className="display-6 m-3">Current Date: {todayFormatted}</h4>
                 <Card className="m-2">
                     <Card.Header as="h5">No appointments scheduled for today</Card.Header>
                     <Card.Body>

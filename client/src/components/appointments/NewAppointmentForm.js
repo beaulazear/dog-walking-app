@@ -10,8 +10,19 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
     const { user } = useContext(UserContext)
     const today = new Date();
 
+    function formatDate(today) {
+        const date = new Date(today);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+
+        return `${year}-${month}-${day}`;
+    }
+
+    const formattedDate = formatDate(today)
+
     const [recurring, setRecurring] = useState(false)
-    const [appointmentDate, setAppointmentDate] = useState(today)
+    const [appointmentDate, setAppointmentDate] = useState(formattedDate)
     const [startTime, setStartTime] = useState("")
     const [endTime, setEndTime] = useState("")
     const [duration, setDuration] = useState("")
@@ -26,6 +37,8 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
     const [errors, setErrors] = useState([])
 
     function handleNewAppointmentRequest(e) {
+
+        console.log(appointmentDate)
 
         e.preventDefault()
         fetch("/appointments", {
@@ -53,6 +66,7 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
             .then((response) => {
                 if (response.ok) {
                     response.json().then((newApt) => {
+                        console.log(newApt)
                         updateAppointmentsNew(newApt)
                     })
                 } else {

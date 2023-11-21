@@ -14,9 +14,9 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
 
     const [paidInvoices, setPaidInvoices] = useState(pet.invoices.filter((invoice) => invoice.paid === true))
 
-    const [allInvoicesSelected, setAllInvoicesSelected] = useState(true)
+    const [allInvoicesSelected, setAllInvoicesSelected] = useState(false)
     const [tenInvoicesSelected, setTenInvoicesSelected] = useState(true)
-    const [thirtyInvoicesSelected, setThirtyInvoicesSelected] = useState(true)
+    const [thirtyInvoicesSelected, setThirtyInvoicesSelected] = useState(false)
 
     const lastTenInvoices = paidInvoices.slice(-10)
     const lastThirtyInvoices = paidInvoices.slice(-10)
@@ -115,7 +115,7 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
                         </Card.Body>
                         <ListGroup className="list-group-flush">
                             {invoices.map((invoice) => (
-                                <ListGroup.Item key={invoice.id}>{invoice.date_completed.toLocaleString()}, ${invoice.compensation}</ListGroup.Item>
+                                <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
                             ))}
                         </ListGroup>
                         <Card.Text className='m-3'>

@@ -14,21 +14,11 @@ import { TodaysAppointmentsContext } from "../../context/todaysAppointments";
 
 export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) {
 
-    function formatDate(inputDate) {
-        const date = new Date(inputDate);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-
-        const formattedDate = `${year}-${month}-${day}`;
-        return formattedDate;
-    }
-
     const { petsAppointments, setPetsAppointments } = useContext(PetsAppointmentsContext)
     const { setTodaysAppointments, todaysAppointments } = useContext(TodaysAppointmentsContext)
-
+    
     const [currentPetAppointments, setCurrentPetAppointments] = useState(petsAppointments?.filter((apt) => apt.pet.id === pet.id))
-
+    
     const [name, setName] = useState(pet.name)
     const [address, setAddress] = useState(pet.address)
     const [sex, setSex] = useState(pet.sex)
@@ -37,31 +27,38 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     const [suppliesLocation, setSuppliesLocation] = useState(pet.supplies_location)
     const [behavorialNotes, setbehavorialNotes] = useState(pet.behavorial_notes)
     const [spayedOrNeutered, setSpayedOrNeutered] = useState(pet.spayed_neutered)
-
+    
     const [newAptButton, setNewAptButton] = useState(false)
-
+    
     const [errors, setErrors] = useState([])
-
+    
     const [profilePic, setProfilePic] = useState(null)
-
+    
     const [show, setShow] = useState(false);
-
+    
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
+    
+    function formatDate(inputDate) {
+        const [year, month, day] = inputDate.split('T')[0].split('-');
+        return `${year}-${month}-${day}`;
+    }
 
     function handleDelete() {
         fetch(`/pets/${pet.id}`, { method: 'DELETE' })
-            .then((response) => response.json())
-            .then((deletedPet) => {
-                console.log(deletedPet)
-                setShow(false)
-                updatePetsAfterDelete(deletedPet)
+        .then((response) => response.json())
+        .then((deletedPet) => {
+            console.log(deletedPet)
+            setShow(false)
+            updatePetsAfterDelete(deletedPet)
             })
     }
 
     // update context for todays appointments for canceled appointments, If not completed then get rid of the appointment but if invoice is there keep it for the day.
 
     function handleUpdatePet(e) {
+
+        // switch to using context for pets, this sbould update pets context so the today's walks page, and invoice page automatically show new updates to pets.
 
         e.preventDefault()
         const formData = new FormData()
@@ -111,9 +108,8 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
         setNewAptButton(!newAptButton)
     }
 
-    // const whatDay = new Date().getDay()
-
     function updateAppointmentsNew(newApt) {
+        console.log(currentPetAppointments)
         setCurrentPetAppointments([...currentPetAppointments, newApt])
         setPetsAppointments([...petsAppointments, newApt])
 
@@ -161,7 +157,17 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
 
         } else {
 
-            const isToday = new Date(newApt.appointment_date).toDateString() === new Date().toDateString();
+            let today = new Date().toISOString()
+            console.log(today)
+            console.log(newApt.appointment_date)
+            const formattedToday = formatDate(today)
+            console.log(formattedToday)
+            const formattedAppointmentDate = formatDate(newApt.appointment_date)
+            console.log(formattedAppointmentDate)
+
+            const isToday = formattedAppointmentDate === formattedToday;
+
+            console.log(isToday)
 
             if (isToday) {
                 setTodaysAppointments([...todaysAppointments, newApt].sort((a, b) => new Date(a.start_time) - new Date(b.start_time)))
