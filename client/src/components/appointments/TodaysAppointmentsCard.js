@@ -1,9 +1,12 @@
-import React from "react";
+import React, { useContext } from "react";
+import { PetsContext } from "../../context/pets";
 import Card from 'react-bootstrap/Card';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Button from "react-bootstrap/Button";
 
 export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
+
+    const { pets, setPets } = useContext(PetsContext)
 
     function getHourAndMinutes(timestampString) {
         const date = new Date(timestampString);
@@ -60,6 +63,15 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
             .then((newInvoice) => {
                 const newApt = { ...apt, invoices: [...apt.invoices, newInvoice] }
                 console.log(newApt)
+                const newPets = pets.map((pet) => {
+                    if (pet.id === newInvoice.pet_id) {
+                        pet.invoices = [...pet.invoices, newInvoice]
+                        return pet
+                    } else {
+                        return pet
+                    }
+                })
+                setPets(newPets)
                 updateAppointments(newApt)
             })
     }
