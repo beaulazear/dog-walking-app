@@ -16,9 +16,9 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
 
     const { petsAppointments, setPetsAppointments } = useContext(PetsAppointmentsContext)
     const { setTodaysAppointments, todaysAppointments } = useContext(TodaysAppointmentsContext)
-    
+
     const [currentPetAppointments, setCurrentPetAppointments] = useState(petsAppointments?.filter((apt) => apt.pet.id === pet.id))
-    
+
     const [name, setName] = useState(pet.name)
     const [address, setAddress] = useState(pet.address)
     const [sex, setSex] = useState(pet.sex)
@@ -27,18 +27,18 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     const [suppliesLocation, setSuppliesLocation] = useState(pet.supplies_location)
     const [behavorialNotes, setbehavorialNotes] = useState(pet.behavorial_notes)
     const [spayedOrNeutered, setSpayedOrNeutered] = useState(pet.spayed_neutered)
-    
+
     const [newAptButton, setNewAptButton] = useState(false)
-    
+
     const [errors, setErrors] = useState([])
-    
+
     const [profilePic, setProfilePic] = useState(pet.profile_pic)
-    
+
     const [show, setShow] = useState(false);
-    
+
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
-    
+
     function formatDate(inputDate) {
         const [year, month, day] = inputDate.split('T')[0].split('-');
         return `${year}-${month}-${day}`;
@@ -46,20 +46,20 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
 
     function handleDelete() {
         fetch(`/pets/${pet.id}`, { method: 'DELETE' })
-        .then((response) => response.json())
-        .then((deletedPet) => {
-            console.log(deletedPet)
-            setShow(false)
-            updatePetsAfterDelete(deletedPet)
+            .then((response) => response.json())
+            .then((deletedPet) => {
+                console.log(deletedPet)
+                setShow(false)
+                updatePetsAfterDelete(deletedPet)
             })
     }
 
     function handleUpdatePet(e) {
 
-        // only updating after i attach a photo? Because of AWS
-
         e.preventDefault()
+
         const formData = new FormData()
+
         formData.append('name', name)
         formData.append('address', address)
         formData.append('sex', sex)
@@ -67,7 +67,10 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
         formData.append('supplies_location', suppliesLocation)
         formData.append('allergies', allergies)
         formData.append('behavorial_notes', behavorialNotes)
-        formData.append('profile_pic', profilePic)
+
+        if (profilePic instanceof File) {
+            formData.append('profile_pic', profilePic)
+        }
 
         fetch(`/pets/${pet.id}`, {
             method: 'PATCH',
@@ -219,7 +222,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                 <Accordion.Header>Update "{pet.name}"</Accordion.Header>
                 <Accordion.Body>
                     <h3 classsex="display-3">Update information for "{pet.name}"</h3>
-                    <Form className="text-bg-light p-3" onSubmit={handleUpdatePet}>
+                    <Form className="text-bg-light p-3" encType="multipart/form-data" onSubmit={handleUpdatePet}>
                         <Form.Group classsex="mb-3">
                             <Form.Label>Pet's Photo</Form.Label>
                             <Form.Control
