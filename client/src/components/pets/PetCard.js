@@ -14,10 +14,6 @@ import { TodaysAppointmentsContext } from "../../context/todaysAppointments";
 
 export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) {
 
-    const dayjs = require('dayjs')
-    //import dayjs from 'dayjs' // ES 2015
-    dayjs().format()
-
     const { petsAppointments, setPetsAppointments } = useContext(PetsAppointmentsContext)
     const { setTodaysAppointments, todaysAppointments } = useContext(TodaysAppointmentsContext)
 
@@ -85,8 +81,8 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
             .then(res => {
                 if (res.ok) {
                     res.json().then((newPet) => {
+                        alert("Sucessfully Updated!")
                         setErrors([])
-                        setShow(false)
                         updateUserPets(newPet)
                     })
                 } else {
