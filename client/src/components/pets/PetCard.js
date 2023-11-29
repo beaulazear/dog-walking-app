@@ -275,15 +275,15 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                         <Form.Group classsex="mb-3" controlId="formBasicBehaviorialNotes">
                             <Form.Label>Behaviorial Information</Form.Label>
                             <Form.Control as="textarea" rows={3} onChange={(e) => setbehavorialNotes(e.target.value)} value={behavorialNotes} type="text" placeholder="Leash reactivity, tries to eat trash, etc..." />
+                            {errors?.length > 0 && (
+                                <div>
+                                    {errors.map((error) => (
+                                        <Alert key={error} variant={'danger'}>
+                                            {error}
+                                        </Alert>))}
+                                </div>
+                            )}
                         </Form.Group>
-                        {errors?.length > 0 && (
-                            <ul>
-                                {errors.map((error) => (
-                                    <Alert key={error} variant={'danger'}>
-                                        {error}
-                                    </Alert>))}
-                            </ul>
-                        )}
                         <br></br>
                         <Button className='p-2 m-2' variant="primary" type="submit">Update {pet.name}</Button>
                         <Button className='p-2 m-2' variant="danger" onClick={handleShow}>Delete {pet.name}</Button>
