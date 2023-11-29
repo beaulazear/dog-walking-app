@@ -14,6 +14,10 @@ import { TodaysAppointmentsContext } from "../../context/todaysAppointments";
 
 export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) {
 
+    const dayjs = require('dayjs')
+    //import dayjs from 'dayjs' // ES 2015
+    dayjs().format()
+
     const { petsAppointments, setPetsAppointments } = useContext(PetsAppointmentsContext)
     const { setTodaysAppointments, todaysAppointments } = useContext(TodaysAppointmentsContext)
 
@@ -160,15 +164,20 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
 
         } else {
 
-            let today = new Date().toISOString()
-            console.log(today)
-            console.log(newApt.appointment_date)
-            const formattedToday = formatDate(today)
-            console.log(formattedToday)
+            // let today = new Date().toISOString()
+            // console.log(today)
+            // console.log(newApt.appointment_date)
+            // const formattedToday = formatDate(today)
+            // console.log(formattedToday)
+
+            const todayInDay = dayjs()
+            const formattedDateInDay = todayInDay.format('YYYY-MM-DD')
+            console.log(formattedDateInDay)
+
             const formattedAppointmentDate = formatDate(newApt.appointment_date)
             console.log(formattedAppointmentDate)
 
-            const isToday = formattedAppointmentDate === formattedToday;
+            const isToday = formattedAppointmentDate === formattedDateInDay;
 
             console.log(isToday)
 
