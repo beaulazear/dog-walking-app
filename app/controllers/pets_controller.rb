@@ -47,6 +47,6 @@ class PetsController < ApplicationController
 
 
     def pet_params_update
-        params.permit(:user_id, :name, :spayed_neutered, :supplies_location, :behavorial_notes, :birthdate, :sex, :allergies, :address, :profile_pic)
+        params.permit(:user_id, :name, :spayed_neutered, :supplies_location, :behavorial_notes, :birthdate, :sex, :allergies, :address, :profile_pic, :id)
     end
 end
