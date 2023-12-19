@@ -17,11 +17,12 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     const dayjs = require('dayjs')
     //import dayjs from 'dayjs' // ES 2015
     dayjs().format()
+    console.log(dayjs().format())
 
     const { petsAppointments, setPetsAppointments } = useContext(PetsAppointmentsContext)
     const { setTodaysAppointments, todaysAppointments } = useContext(TodaysAppointmentsContext)
 
-    const [currentPetAppointments, setCurrentPetAppointments] = useState(petsAppointments?.filter((apt) => apt.pet.id === pet.id))
+    const [currentPetAppointments, setCurrentPetAppointments] = useState(petsAppointments?.filter((apt) => apt.pet.id === pet.id && apt.appointment_date >= dayjs().format()))
 
     const [name, setName] = useState(pet.name)
     const [address, setAddress] = useState(pet.address)
