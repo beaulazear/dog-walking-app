@@ -110,7 +110,18 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
                 <Accordion.Body>
                     <h3 classsex="display-3">Current Invoices For "{pet.name}"</h3>
                     <Card style={{ width: '100%' }}>
-                        <Card.Img variant="top" src={pet.profile_pic} />
+                        <Card.Img
+                            variant="top"
+                            src={pet.profile_pic}
+                            style={{
+                                width: '150px', // Adjust the width as needed
+                                height: '150px', // Adjust the height as needed
+                                objectFit: 'cover',
+                                borderRadius: '50%',
+                                margin: '10px 0 0 10px', // Adjust the margin values as needed
+                                display: 'inline-block',
+                            }}
+                        />
                         <Card.Body>
                             <Card.Title>{pet.name}</Card.Title>
                         </Card.Body>
@@ -129,7 +140,18 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
             <Accordion.Item className="text-bg-light p-3" eventKey="1">
                 <Accordion.Header>Past invoices for {pet.name}</Accordion.Header>
                 <Accordion.Body>
-                    <Card.Img variant="top" src={pet.profile_pic} />
+                    <Card.Img
+                        variant="top"
+                        src={pet.profile_pic}
+                        style={{
+                            width: '150px', // Adjust the width as needed
+                            height: '150px', // Adjust the height as needed
+                            objectFit: 'cover',
+                            borderRadius: '50%',
+                            margin: '10px 0 0 10px', // Adjust the margin values as needed
+                            display: 'inline-block',
+                        }}
+                    />
                     <h3 classsex="display-3">Past Invoices For "{pet.name}"</h3>
                     <Dropdown menu={{ items }}>
                         <button onClick={(e) => e.preventDefault()}>

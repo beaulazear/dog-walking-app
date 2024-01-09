@@ -15,7 +15,6 @@ import { TodaysAppointmentsContext } from "../../context/todaysAppointments";
 export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) {
 
     const dayjs = require('dayjs')
-    //import dayjs from 'dayjs' // ES 2015
     dayjs().format()
     console.log(dayjs().format())
 
@@ -23,6 +22,8 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     const { setTodaysAppointments, todaysAppointments } = useContext(TodaysAppointmentsContext)
 
     const [currentPetAppointments, setCurrentPetAppointments] = useState(petsAppointments?.filter((apt) => apt.pet.id === pet.id && apt.appointment_date >= dayjs().format()))
+
+    console.log(currentPetAppointments, PetAppointmentCard)
 
     const [name, setName] = useState(pet.name)
     const [address, setAddress] = useState(pet.address)
@@ -164,13 +165,6 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
             }
 
         } else {
-
-            // let today = new Date().toISOString()
-            // console.log(today)
-            // console.log(newApt.appointment_date)
-            // const formattedToday = formatDate(today)
-            // console.log(formattedToday)
-
             const todayInDay = dayjs()
             const formattedDateInDay = todayInDay.format('YYYY-MM-DD')
             console.log(formattedDateInDay)
@@ -202,7 +196,19 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                 <Accordion.Header>{pet.name}, {pet.address}</Accordion.Header>
                 <Accordion.Body>
                     <Card style={{ width: '100%' }}>
-                        <Card.Img variant="top" src={pet.profile_pic} />
+                        <Card.Img
+                            variant="top"
+                            src={pet.profile_pic}
+                            style={{
+                                width: '150px', // Adjust the width as needed
+                                height: '150px', // Adjust the height as needed
+                                objectFit: 'cover',
+                                borderRadius: '50%',
+                                margin: '10px 20px 0 10px', // Adjust the margin values as needed
+                                display: 'inline-block',
+                            }}
+                        />
+
                         <Card.Body>
                             <Card.Title>{pet.name}</Card.Title>
                             <Card.Text>

@@ -21,8 +21,8 @@ export default function PageNavLinks() {
                 <Container>
                     <Navbar.Brand><Link style={{textDecoration: 'none', color: 'white'}} to="/">PocketWalks</Link></Navbar.Brand>
                     <Nav className="me-auto">
-                        <Link style={navLinkStyles} to="/petspage">Pets</Link>
                         <Link style={navLinkStyles} to="/todayswalkspage">Today</Link>
+                        <Link style={navLinkStyles} to="/petspage">Pets</Link>
                         <Link style={navLinkStyles} to="/invoicespage">Invoices</Link>
                     </Nav>
                 </Container>
