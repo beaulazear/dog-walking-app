@@ -21,9 +21,9 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     const { petsAppointments, setPetsAppointments } = useContext(PetsAppointmentsContext)
     const { setTodaysAppointments, todaysAppointments } = useContext(TodaysAppointmentsContext)
 
-    const [currentPetAppointments, setCurrentPetAppointments] = useState(petsAppointments?.filter((apt) => apt.pet.id === pet.id && apt.appointment_date >= dayjs().format()))
-
-    console.log(currentPetAppointments, PetAppointmentCard)
+    // const [currentPetAppointments, setCurrentPetAppointments] = useState(petsAppointments?.filter((apt) => apt.pet.id === pet.id && apt.appointment_date >= dayjs().format()))
+    const currentPetAppointments = petsAppointments.filter((apt) => apt.pet.id === pet.id)
+    console.log(currentPetAppointments)
 
     const [name, setName] = useState(pet.name)
     const [address, setAddress] = useState(pet.address)
@@ -119,7 +119,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
 
     function updateAppointmentsNew(newApt) {
         console.log(currentPetAppointments)
-        setCurrentPetAppointments([...currentPetAppointments, newApt])
+        // setCurrentPetAppointments([...currentPetAppointments, newApt])
         setPetsAppointments([...petsAppointments, newApt])
 
         if (newApt.recurring === true) {
@@ -186,7 +186,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
 
     function updateAppointmentsDelete(oldApt) {
         const newAppointments = currentPetAppointments.filter((apt) => apt.id !== oldApt.id)
-        setCurrentPetAppointments([...newAppointments])
+        // setCurrentPetAppointments([...newAppointments])
         setPetsAppointments([...newAppointments])
     }
 
