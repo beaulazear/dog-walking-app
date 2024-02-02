@@ -12,7 +12,7 @@ export default function HomePage() {
                 <Card.Body>
                     <Card.Title>Your Own Pet Database</Card.Title>
                     <Card.Text>
-                        the "Pets" page to view, edit, & delete these pets.
+                        Visit the "Pets" page to create, view, edit, & delete pets.
                     </Card.Text>
                 </Card.Body>
             </Card>
@@ -21,7 +21,7 @@ export default function HomePage() {
                 <Card.Body>
                     <Card.Title>Keep track of your pet care appointments</Card.Title>
                     <Card.Text>
-                        Add, edit, and delete appointments for pets in your database. Gain access to the "Today" page to view appointments scheduled for today and mark them as completed as you go. Invoices are created upon completion of appointment.
+                        Add, edit, and delete appointments for pets in your database. Go to the "Today" page to view appointments scheduled for today and mark them as completed as you go. Invoices are created upon completion of appointment.
                     </Card.Text>
                 </Card.Body>
             </Card>
