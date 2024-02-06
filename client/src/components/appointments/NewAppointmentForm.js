@@ -184,7 +184,6 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
                                 <option value={true}>Yes</option>
                             </Form.Select>
                         </Form.Group>
-                        <p>If no appointment date is selected, it will be defaulted to today!</p>
                     </>
                 )}
                 {errors?.length > 0 && (

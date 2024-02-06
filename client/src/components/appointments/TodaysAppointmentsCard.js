@@ -83,7 +83,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
     return (
         <>
             {invoices?.length > 0 && (
-                <Card className="bg-success m-3" style={{ width: '90%' }}>
+                <Card className="m-3" style={{ width: '90%', backgroundColor: '#6fd388' }}>
                     <Card.Body>
                         <img alt="Pet associated with appointment" style={photoStyles} src={apt.pet.profile_pic} />
                         <Card.Title>{apt.pet.name}, {apt.duration} minute walk between {startTime} & {endTime}.</Card.Title>

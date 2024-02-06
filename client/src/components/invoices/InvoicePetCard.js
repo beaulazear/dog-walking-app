@@ -104,7 +104,7 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
     }
 
     return (
-        <Accordion>
+        <Accordion style={{ marginBottom: '10px' }}>
             <Accordion.Item className="text-bg-light p-3" eventKey="0">
                 <Accordion.Header>Current Invoice for {pet.name}</Accordion.Header>
                 <Accordion.Body>
