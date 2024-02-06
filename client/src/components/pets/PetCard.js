@@ -22,7 +22,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     const { setTodaysAppointments, todaysAppointments } = useContext(TodaysAppointmentsContext)
 
     // const [currentPetAppointments, setCurrentPetAppointments] = useState(petsAppointments?.filter((apt) => apt.pet.id === pet.id && apt.appointment_date >= dayjs().format()))
-    const currentPetAppointments = petsAppointments.filter((apt) => apt.pet.id === pet.id)
+    const currentPetAppointments = petsAppointments?.filter((apt) => apt.pet.id === pet.id)
     console.log(currentPetAppointments)
 
     const [name, setName] = useState(pet.name)
