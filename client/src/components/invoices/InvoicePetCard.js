@@ -139,15 +139,22 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
                         <Card.Body>
                             <Card.Title>{pet.name}</Card.Title>
                         </Card.Body>
-                        <ListGroup className="list-group-flush">
-                            {invoices.map((invoice) => (
-                                <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
-                            ))}
-                        </ListGroup>
-                        <Card.Text className='m-3'>
-                            <b>Total = ${currentTotal}</b>
-                        </Card.Text>
-                        <Button onClick={UpdateCurrentInvoice}>Paid</Button>
+                        {invoices?.length > 0 && (
+                            <>
+                                <ListGroup className="list-group-flush">
+                                    {invoices.map((invoice) => (
+                                        <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
+                                    ))}
+                                </ListGroup>
+                                <Card.Text className='m-3'>
+                                    <b>Total = ${currentTotal}</b>
+                                </Card.Text>
+                                <Button onClick={UpdateCurrentInvoice}>Paid</Button>
+                            </>
+                        )}
+                        {invoices?.length < 1 && (
+                            <p style={{ padding: '10px' }}>There are currently no invoices for {pet.name}. Invoices will be displayed here as walks are completed on the Today page.</p>
+                        )}
                     </Card>
                 </Accordion.Body>
             </Accordion.Item>
@@ -166,38 +173,45 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
                             display: 'inline-block',
                         }}
                     />
-                    <h3 classsex="display-3">Past Invoices For "{pet.name}"</h3>
-                    <Dropdown menu={{ items }}>
-                        <button onClick={(e) => e.preventDefault()}>
-                            <Space>
-                                Filter invoices
-                                <DownOutlined />
-                            </Space>
-                        </button>
-                    </Dropdown>
-                    <ListGroup className="list-group-flush">
-                        {allInvoicesSelected === true && (
-                            <>
-                                {paidInvoices.map((invoice) => (
-                                    <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
-                                ))}
-                            </>
-                        )}
-                        {tenInvoicesSelected === true && (
-                            <>
-                                {lastTenInvoices.map((invoice) => (
-                                    <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
-                                ))}
-                            </>
-                        )}
-                        {thirtyInvoicesSelected === true && (
-                            <>
-                                {lastThirtyInvoices.map((invoice) => (
-                                    <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
-                                ))}
-                            </>
-                        )}
-                    </ListGroup>
+                    {paidInvoices?.length > 0 && (
+                        <>
+                            <h3 classsex="display-3">Past Invoices For "{pet.name}"</h3>
+                            <Dropdown menu={{ items }}>
+                                <button onClick={(e) => e.preventDefault()}>
+                                    <Space>
+                                        Filter invoices
+                                        <DownOutlined />
+                                    </Space>
+                                </button>
+                            </Dropdown>
+                            <ListGroup className="list-group-flush">
+                                {allInvoicesSelected === true && (
+                                    <>
+                                        {paidInvoices.map((invoice) => (
+                                            <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
+                                        ))}
+                                    </>
+                                )}
+                                {tenInvoicesSelected === true && (
+                                    <>
+                                        {lastTenInvoices.map((invoice) => (
+                                            <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
+                                        ))}
+                                    </>
+                                )}
+                                {thirtyInvoicesSelected === true && (
+                                    <>
+                                        {lastThirtyInvoices.map((invoice) => (
+                                            <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
+                                        ))}
+                                    </>
+                                )}
+                            </ListGroup>
+                        </>
+                    )}
+                    {paidInvoices?.length < 1 && (
+                        <p style={{ padding: '10px' }}>There are currently no past invoices for {pet.name}. Invoices will show up here once marked as paid.</p>
+                    )}
                 </Accordion.Body>
             </Accordion.Item>
         </Accordion>

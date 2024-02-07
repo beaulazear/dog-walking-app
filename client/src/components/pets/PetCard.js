@@ -16,7 +16,6 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
 
     const dayjs = require('dayjs')
     dayjs().format()
-    console.log(dayjs().format())
 
     const { petsAppointments, setPetsAppointments } = useContext(PetsAppointmentsContext)
     const { setTodaysAppointments, todaysAppointments } = useContext(TodaysAppointmentsContext)
@@ -116,7 +115,6 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     }
 
     function updateAppointmentsNew(newApt) {
-        console.log(currentPetAppointments)
         setPetsAppointments([...petsAppointments, newApt])
 
         if (newApt.recurring === true) {
@@ -164,14 +162,10 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
         } else {
             const todayInDay = dayjs()
             const formattedDateInDay = todayInDay.format('YYYY-MM-DD')
-            console.log(formattedDateInDay)
 
             const formattedAppointmentDate = formatDate(newApt.appointment_date)
-            console.log(formattedAppointmentDate)
 
             const isToday = formattedAppointmentDate === formattedDateInDay;
-
-            console.log(isToday)
 
             if (isToday) {
                 setTodaysAppointments([...todaysAppointments, newApt].sort((a, b) => new Date(a.start_time) - new Date(b.start_time)))

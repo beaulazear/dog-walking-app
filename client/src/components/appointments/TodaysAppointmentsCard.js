@@ -9,10 +9,6 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
     const { pets, setPets } = useContext(PetsContext)
 
     const dayjs = require('dayjs')
-    console.log(dayjs().format())
-    console.log(apt.start_time)
-    const today = dayjs().format();
-    console.log(today)
 
     function getHourAndMinutes(timestampString) {
         const date = new Date(timestampString);
@@ -31,9 +27,6 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
         return `${todayDatePart}T${timePart}`;
     }
-
-
-    console.log(replaceDateWithToday(apt.start_time))
 
     const photoStyles = {
         width: '100px',
@@ -56,7 +49,6 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
         }
 
         const newDate = replaceDateWithToday(apt.start_time)
-        console.log(newDate)
 
         fetch('/invoices', {
             method: 'POST',
@@ -74,7 +66,6 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
             .then((response) => response.json())
             .then((newInvoice) => {
                 const newApt = { ...apt, invoices: [...apt.invoices, newInvoice] }
-                console.log(newApt)
                 const newPets = pets.map((pet) => {
                     if (pet.id === newInvoice.pet_id) {
                         pet.invoices = [...pet.invoices, newInvoice]

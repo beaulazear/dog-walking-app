@@ -7,13 +7,11 @@ export default function TodaysWalksPage() {
 
     const { todaysAppointments, setTodaysAppointments } = useContext(TodaysAppointmentsContext)
 
-    function getCurrentDateFormatted() {
-        const currentDate = new Date();
-        const year = currentDate.getFullYear();
-        const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
-        const day = currentDate.getDate().toString().padStart(2, '0');
+    const dayjs = require('dayjs'); // Import day.js library
 
-        const formattedDate = `${year}-${month}-${day}`;
+    function getCurrentDateFormatted() {
+        const currentDate = dayjs(); // Get current date using day.js
+        const formattedDate = currentDate.format('YYYY-MM-DD'); // Format the date
 
         return formattedDate;
     }
@@ -27,10 +25,8 @@ export default function TodaysWalksPage() {
             }
         })
         setTodaysAppointments(newAppointments)
-        console.log(todaysAppointments)
     }
 
-    console.log(todaysAppointments)
     const todayFormatted = getCurrentDateFormatted();
 
     if (todaysAppointments?.length > 0) {

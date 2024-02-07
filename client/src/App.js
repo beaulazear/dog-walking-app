@@ -34,7 +34,7 @@ function App() {
 
   if (user) {
     return (
-      <div>
+      <div style={{paddingBottom: '25px'}}>
         <PageNavLinks />
         <TodaysAppointmentsProvider>
           <PetsAppointmentsProvider>
@@ -57,18 +57,17 @@ function App() {
             onClick={handleLogout}
             style={{
               position: 'fixed',
-              left: '0',
               bottom: '0',
               width: '100%',
               height: '40px',
               backgroundColor: 'red',
-              color: 'white',
+              color: 'black',
               textAlign: 'center',
-              margin: '0',
             }}
           >
-            Logout Here
+            Log Out
           </button>
+
         </div>
       </div>
     );

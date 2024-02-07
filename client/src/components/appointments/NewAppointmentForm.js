@@ -38,8 +38,6 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
 
     function handleNewAppointmentRequest(e) {
 
-        console.log(appointmentDate)
-
         e.preventDefault()
         fetch("/appointments", {
             method: "POST",
@@ -66,7 +64,6 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
             .then((response) => {
                 if (response.ok) {
                     response.json().then((newApt) => {
-                        console.log(newApt)
                         updateAppointmentsNew(newApt)
                     })
                 } else {
