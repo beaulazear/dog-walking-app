@@ -8,6 +8,12 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
     const { pets, setPets } = useContext(PetsContext)
 
+    const dayjs = require('dayjs')
+    console.log(dayjs().format())
+    console.log(apt.start_time)
+    const today = dayjs().format();
+    console.log(today)
+
     function getHourAndMinutes(timestampString) {
         const date = new Date(timestampString);
         const hour = String(date.getUTCHours()).padStart(2, '0');
@@ -19,12 +25,15 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
     const endTime = getHourAndMinutes(apt.end_time);
 
     function replaceDateWithToday(timestamp) {
-        const today = new Date();
+        const today = dayjs(); // Get current date and time using day.js
         const timePart = timestamp.substr(11); // Extract time part (HH:mm:ss.sssZ)
-        const todayDatePart = today.toISOString().split('T')[0]; // Get today's date in yyyy-mm-dd format
+        const todayDatePart = today.format('YYYY-MM-DD'); // Get today's date in yyyy-mm-dd format
 
         return `${todayDatePart}T${timePart}`;
     }
+
+
+    console.log(replaceDateWithToday(apt.start_time))
 
     const photoStyles = {
         width: '100px',
@@ -46,6 +55,9 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
             compensation = 33
         }
 
+        const newDate = replaceDateWithToday(apt.start_time)
+        console.log(newDate)
+
         fetch('/invoices', {
             method: 'POST',
             headers: {
@@ -54,7 +66,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
             body: JSON.stringify({
                 pet_id: apt.pet.id,
                 appointment_id: apt.id,
-                date_completed: replaceDateWithToday(apt.start_time),
+                date_completed: newDate,
                 paid: false,
                 compensation: compensation
             })
@@ -75,8 +87,6 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                 updateAppointments(newApt)
             })
     }
-
-    // stuck here !! trying to check for an invoice for the current walk based off of context
 
     let invoices = apt.invoices?.filter((invoice) => invoice.date_completed === replaceDateWithToday(apt.start_time))
 

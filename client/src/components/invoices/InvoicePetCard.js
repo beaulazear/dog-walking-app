@@ -98,9 +98,23 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
     }
 
     function formatDateTime(dateTime) {
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
-        const formattedDateTime = new Date(dateTime).toLocaleDateString(undefined, options);
+        // Split the timestamp string
+        const [datePart, timePart] = dateTime.split('T');
+        const [year, month, day] = datePart.split('-');
+        const [hour, minute] = timePart.split(':');
+
+        // Format the components as desired (without weekday)
+        const formattedDateTime = `${getMonthName(month)} ${day}, ${year} ${hour}:${minute}`;
         return formattedDateTime;
+    }
+
+    const dayjs = require('dayjs');
+
+    function getMonthName(month) {
+        // Create a day.js object to get month name
+        const dateObj = dayjs().month(parseInt(month, 10) - 1);
+        // Get the month name
+        return dateObj.format('MMMM');
     }
 
     return (

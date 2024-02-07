@@ -16,6 +16,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
 
     const dayjs = require('dayjs')
     dayjs().format()
+    console.log(dayjs().format())
 
     const { petsAppointments, setPetsAppointments } = useContext(PetsAppointmentsContext)
     const { setTodaysAppointments, todaysAppointments } = useContext(TodaysAppointmentsContext)
