@@ -44,13 +44,16 @@ class AppointmentsController < ApplicationController
 
     def pet_appointments
         appointments = @current_user.appointments
-        filteredCanceledAndCompletedApts = appointments.select { |apt| apt.canceled != true && apt.completed != true }
-
-
-        if appointments
-            render json: filteredCanceledAndCompletedApts
+        filtered_appointments = appointments.select do |apt|
+          apt.canceled != true &&
+          apt.completed != true &&
+          (apt.recurring || apt.appointment_date >= Date.today)
+        end
+      
+        if filtered_appointments.any?
+          render json: filtered_appointments
         else
-            render json: { errors: appointments.errors.full_messages }, status: :not_found
+          render json: { errors: "No upcoming appointments found" }, status: :not_found
         end
     end
 
