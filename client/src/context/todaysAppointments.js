@@ -20,7 +20,10 @@ function TodaysAppointmentsProvider({ children }) {
                 const filteredAppointments = appointments.filter(appointment => {
                     return isTodayOrRecurring(appointment);
                 });
-                setTodaysAppointments(filteredAppointments);
+                const sortedAppointments = filteredAppointments.sort((a, b) => {
+                    return dayjs(a.start_time).diff(dayjs(b.start_time));
+                });
+                setTodaysAppointments(sortedAppointments);
             })
             .catch(error => console.error(error));
     }, []);
