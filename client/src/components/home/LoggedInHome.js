@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 import { TodaysAppointmentsContext } from "../../context/todaysAppointments";
 import { UserContext } from "../../context/user";
+import { PetsContext } from "../../context/pets"
 import "bootstrap/dist/css/bootstrap.min.css";
 import Button from 'react-bootstrap/Button';
 import Card from 'react-bootstrap/Card';
@@ -9,6 +10,7 @@ export default function LoggedInHome() {
 
     const { todaysAppointments } = useContext(TodaysAppointmentsContext)
     const { user } = useContext(UserContext)
+    const { pets } = useContext(PetsContext)
 
     return (
         <>
@@ -28,7 +30,7 @@ export default function LoggedInHome() {
             <Card className="m-2">
                 <Card.Header as="h5">Current Pets</Card.Header>
                 <Card.Body>
-                    <Card.Title>You have {user.pets?.length} pets in your database!</Card.Title>
+                    <Card.Title>You have {pets?.length} pets in your database!</Card.Title>
                     <Card.Text>
                         Visit the "Pets" page to view, edit, & delete these pets.
                     </Card.Text>
