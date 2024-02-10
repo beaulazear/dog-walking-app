@@ -22,25 +22,14 @@ class AppointmentsController < ApplicationController
 
     def index
         appointments = @current_user.appointments
-        filteredCanceledAndCompletedApts = appointments.select { |apt| apt.canceled != true && apt.completed != true }
-        todaysAppointments = []
-
-        for apt in filteredCanceledAndCompletedApts
-            if apt.recurring == false && is_today?(apt.appointment_date)
-                todaysAppointments << apt
-            elsif apt.recurring == true && day_of_the_week?(apt)
-                todaysAppointments << apt
-            end
-        end
-
-        sorted_appointments = todaysAppointments.sort { |a, b| a.start_time <=> b.start_time }
-
+        
         if appointments
-            render json: sorted_appointments
+            render json: appointments
         else
             render json: { error: "No appointments found" }, status: :not_found
         end
     end
+    
 
     def pet_appointments
         appointments = @current_user.appointments
