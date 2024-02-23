@@ -33,7 +33,7 @@ function TodaysAppointmentsProvider({ children }) {
         const today = dayjs();
         if (!appointment.recurring & !appointment.canceled) {
             return appointmentDate.isSame(today, 'day');
-        } else {
+        } else if (appointment.recurring & !appointment.canceled) {
             const dayOfWeek = today.day();
             switch (dayOfWeek) {
                 case 0:
