@@ -1,7 +1,12 @@
 import Card from 'react-bootstrap/Card';
 import Button from "react-bootstrap/Button";
+import { useContext } from 'react';
+import { TodaysAppointmentsContext } from "../../context/todaysAppointments";
 
 export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
+
+    const { todaysAppointments, setTodaysAppointments } = useContext(TodaysAppointmentsContext)
+    console.log(todaysAppointments)
 
     let datetimeString = apt.appointment_date
 
@@ -26,11 +31,11 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
 
     function extractHourAndMinutes(timestampString) {
         const [, timePart] = timestampString.split("T"); // Splitting the string to extract the time part
-        const [time, ] = timePart.split(/[.+-]/); // Splitting the time part to separate time and offset
+        const [time,] = timePart.split(/[.+-]/); // Splitting the time part to separate time and offset
         const [hours, minutes] = time.split(":"); // Splitting the time to extract hours and minutes
         return `${hours}:${minutes}`;
     }
-    
+
 
     const startTime = extractHourAndMinutes(apt.start_time);
     const endTime = extractHourAndMinutes(apt.end_time);
@@ -72,7 +77,12 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
             })
         })
             .then((resp) => resp.json())
-            .then((oldApt) => updateAppointmentsDelete(oldApt))
+            .then((oldApt) => {
+                const newTodaysAppointments = todaysAppointments.filter((apt) => apt.id !== oldApt.id)
+                console.log(newTodaysAppointments)
+                updateAppointmentsDelete(oldApt)
+                setTodaysAppointments(newTodaysAppointments)
+            })
     }
 
     return (
