@@ -17,12 +17,20 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
         datetimeString = formatDateToYYYYMMDD(datetimeString);
     }
 
+    // function extractHourAndMinutes(timestampString) {
+    //     const date = new Date(timestampString);
+    //     const hour = String(date.getUTCHours()).padStart(2, '0');
+    //     const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+    //     return `${hour}:${minutes}`;
+    // }
+
     function extractHourAndMinutes(timestampString) {
-        const date = new Date(timestampString);
-        const hour = String(date.getUTCHours()).padStart(2, '0');
-        const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-        return `${hour}:${minutes}`;
+        const [, timePart] = timestampString.split("T"); // Splitting the string to extract the time part
+        const [time, ] = timePart.split(/[.+-]/); // Splitting the time part to separate time and offset
+        const [hours, minutes] = time.split(":"); // Splitting the time to extract hours and minutes
+        return `${hours}:${minutes}`;
     }
+    
 
     const startTime = extractHourAndMinutes(apt.start_time);
     const endTime = extractHourAndMinutes(apt.end_time);

@@ -31,7 +31,7 @@ function TodaysAppointmentsProvider({ children }) {
     const isTodayOrRecurring = (appointment) => {
         const appointmentDate = dayjs(appointment.appointment_date);
         const today = dayjs();
-        if (!appointment.recurring) {
+        if (!appointment.recurring & !appointment.canceled) {
             return appointmentDate.isSame(today, 'day');
         } else {
             const dayOfWeek = today.day();

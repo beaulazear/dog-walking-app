@@ -89,8 +89,6 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
             .then((response) => response.json())
             .then((newPaidInvoices) => {
 
-                console.log(paidInvoices)
-
                 setPaidInvoices([...paidInvoices, ...newPaidInvoices])
 
                 setInvoices([])
