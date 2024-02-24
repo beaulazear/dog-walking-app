@@ -11,10 +11,11 @@ export default function TodaysWalksPage() {
 
     function getCurrentDateFormatted() {
         const currentDate = dayjs(); // Get current date using day.js
-        const formattedDate = currentDate.format('YYYY-MM-DD'); // Format the date
-
+        const formattedDate = currentDate.format('MMMM DD, YYYY'); // Format the date to display month name, day, and year
+    
         return formattedDate;
     }
+    
 
     function updateAppointments(newApt) {
         const newAppointments = todaysAppointments.map((apt) => {

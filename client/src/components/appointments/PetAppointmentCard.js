@@ -6,7 +6,6 @@ import { TodaysAppointmentsContext } from "../../context/todaysAppointments";
 export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
 
     const { todaysAppointments, setTodaysAppointments } = useContext(TodaysAppointmentsContext)
-    console.log(todaysAppointments)
 
     let datetimeString = apt.appointment_date
 
@@ -21,13 +20,6 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
 
         datetimeString = formatDateToYYYYMMDD(datetimeString);
     }
-
-    // function extractHourAndMinutes(timestampString) {
-    //     const date = new Date(timestampString);
-    //     const hour = String(date.getUTCHours()).padStart(2, '0');
-    //     const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-    //     return `${hour}:${minutes}`;
-    // }
 
     function extractHourAndMinutes(timestampString) {
         const [, timePart] = timestampString.split("T"); // Splitting the string to extract the time part
