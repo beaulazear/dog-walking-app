@@ -10,7 +10,7 @@ function PetsProvider({ children }) {
         fetch("/pets").then((response) => {
             if (response.ok) {
                 response.json().then((pets) => {
-                    sortedPets = pets.sort()
+                    const sortedPets = pets.sort()
                     setPets(sortedPets)
                 });
             }
