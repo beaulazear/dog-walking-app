@@ -9,7 +9,10 @@ function PetsProvider({ children }) {
     useEffect(() => {
         fetch("/pets").then((response) => {
             if (response.ok) {
-                response.json().then((pets) => setPets(pets));
+                response.json().then((pets) => {
+                    sortedPets = pets.sort()
+                    setPets(sortedPets)
+                });
             }
         });
     }, []);
