@@ -74,7 +74,6 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
             .then((resp) => resp.json())
             .then((oldApt) => {
                 const newTodaysAppointments = todaysAppointments.filter((apt) => apt.id !== oldApt.id)
-                console.log(newTodaysAppointments)
                 updateAppointmentsDelete(oldApt)
                 setTodaysAppointments(newTodaysAppointments)
             })

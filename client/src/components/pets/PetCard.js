@@ -176,8 +176,8 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     }
 
     function updateAppointmentsDelete(oldApt) {
-        const newAppointments = currentPetAppointments.filter((apt) => apt.id !== oldApt.id)
-        setPetsAppointments([...newAppointments])
+        const newAppointments = petsAppointments.filter((apt) => apt.id !== oldApt.id)
+        setPetsAppointments(newAppointments)
     }
 
     return (
