@@ -6,8 +6,6 @@ function PetsProvider({ children }) {
 
     const [pets, setPets] = useState(null)
 
-    console.log(pets)
-
     function sortObjectsByName(objects) {
         return objects.sort((a, b) => {
             const nameA = a.name.toLowerCase();

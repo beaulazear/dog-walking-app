@@ -44,7 +44,7 @@ export default function TodaysWalksPage() {
         return (
             <div style={{ marginBottom: '45px' }}>
                 <h2 className="display-4 m-3">Today's Appointments</h2>
-                <h4 className="display-6 m-3">{todayFormatted}</h4>
+                <h4 className="display-6 m-4">{todayFormatted}</h4>
                 <Card className="m-2">
                     <Card.Header as="h5">No appointments scheduled for today</Card.Header>
                     <Card.Body>
