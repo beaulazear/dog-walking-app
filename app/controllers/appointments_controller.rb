@@ -46,6 +46,16 @@ class AppointmentsController < ApplicationController
         end
     end
 
+    def update
+        appointment = @current_user.appointments.find_by(id: params[:id])
+        if appointment
+            appointment.update(appointment_params)
+            render json: appointment
+        else
+            render json: { error: "appointment not found" }, status: :not_found
+        end
+    end
+
     private
 
     def appointment_params

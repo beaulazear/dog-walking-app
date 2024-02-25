@@ -1,9 +1,12 @@
 import Card from 'react-bootstrap/Card';
 import Button from "react-bootstrap/Button";
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { TodaysAppointmentsContext } from "../../context/todaysAppointments";
+import UpdateAppointmentForm from './UpdateAppointmentForm';
 
 export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
+
+    const [updateAptButton, setUpdateAptButton] = useState(false)
 
     const { todaysAppointments, setTodaysAppointments } = useContext(TodaysAppointmentsContext)
 
@@ -77,6 +80,10 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
             })
     }
 
+    function changeUpdateFormView() {
+        setUpdateAptButton(!updateAptButton)
+    }
+
     return (
         <Card className="border border-primary" style={{ width: '100%' }}>
             <Card.Body>
@@ -102,7 +109,20 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                     </>
                 )}
             </Card.Body>
-            <Button onClick={handleCancel} className="btn btn-danger m-4">Cancel Appointment</Button>
+            <div className="d-grid gap-2 mx-4 mb-3">
+                <Button onClick={changeUpdateFormView} className="btn-block">
+                    {updateAptButton === true && (
+                        "Close Update Form"
+                    )}
+                    {updateAptButton === false && (
+                        "Update Appointment"
+                    )}
+                </Button>
+                <Button onClick={handleCancel} className="btn btn-danger btn-block">Cancel Appointment</Button>
+            </div>
+            {updateAptButton === true && (
+                <UpdateAppointmentForm changeUpdateFormView={changeUpdateFormView} apt={apt} />
+            )}
         </Card>
     );
 }
