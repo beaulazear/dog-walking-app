@@ -211,7 +211,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                             <ListGroup.Item><b>Notes:</b> {pet.behavorial_notes}</ListGroup.Item>
                             <ListGroup.Item><b>Allergies:</b> {pet.allergies}</ListGroup.Item>
                             <ListGroup.Item><b>Birthdate:</b> {formatDate(pet.birthdate)}</ListGroup.Item>
-                            <ListGroup.Item><b>Appointments:</b> View and create appointments for {pet.name}</ListGroup.Item>
+                            <ListGroup.Item><b>Appointments:</b> View, edit, & create appointments for {pet.name}</ListGroup.Item>
                             {currentPetAppointments?.length < 0 && (
                                 <h4 className='display-6 m-3'>There are currently no appointments booked for {pet.name}.</h4>
                             )}

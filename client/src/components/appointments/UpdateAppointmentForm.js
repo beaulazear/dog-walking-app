@@ -45,6 +45,7 @@ export default function UpdateAppointmentForm({ apt, changeUpdateFormView }) {
                         setPetsAppointments([updatedApt, ...newPetAppointments])
                         setTodaysAppointments(newTodaysAppointments)
                         changeUpdateFormView()
+                        alert('Appointment successfully updated!')
                     })
                 } else {
                     response.json().then((errorData) => setErrors(errorData.errors))

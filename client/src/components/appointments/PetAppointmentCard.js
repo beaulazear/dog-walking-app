@@ -18,7 +18,7 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
             const year = datetimeString.slice(0, 4);
             const month = datetimeString.slice(5, 7);
             const day = datetimeString.slice(8, 10);
-            return datetimeString = `${year}-${month}-${day}`;
+            return datetimeString = `${month}-${day}-${year}`;
         }
 
         datetimeString = formatDateToYYYYMMDD(datetimeString);
@@ -85,15 +85,16 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
     }
 
     return (
-        <Card className="border border-primary" style={{ width: '100%' }}>
+        <Card className="border border-primary" style={{ width: '100%', marginBottom: '5px' }}>
             <Card.Body>
                 {apt.recurring === true && (
                     <>
                         <Card.Title>Recurring Appointment</Card.Title>
+                        <Card.Subtitle className="mb-2 text-muted"><b>Walk Duration:</b> {apt.duration} minutes</Card.Subtitle>
                         <Card.Subtitle className="mb-2 text-muted"><b>Earliest Pickup Time:</b> {startTime} </Card.Subtitle>
                         <Card.Subtitle className="mb-2 text-muted"><b>Latest Pickup Time:</b> {endTime} </Card.Subtitle>
                         <Card.Text>
-                            This walk is to be repeated every {daysOfWeekArr.join(', ')}
+                            This is a recurring appointment and will be repeated every {daysOfWeekArr.join(', ')}
                         </Card.Text>
                     </>
                 )}
@@ -101,10 +102,11 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                     <>
                         <Card.Title>One Time Appointment</Card.Title>
                         <Card.Subtitle className="mb-2 text-muted"><b>Date:</b> {datetimeString} </Card.Subtitle>
+                        <Card.Subtitle className="mb-2 text-muted"><b>Walk Duration:</b> {apt.duration} minutes</Card.Subtitle>
                         <Card.Subtitle className="mb-2 text-muted"><b>Earliest Pickup Time:</b> {startTime} </Card.Subtitle>
                         <Card.Subtitle className="mb-2 text-muted"><b>Latest Pickup Time:</b> {endTime} </Card.Subtitle>
                         <Card.Text>
-                            This is a one time appointment and will be displayed on the Appointments page on the date of the appointment.
+                            This is a one time appointment and will be displayed on the Today page on the date of the appointment.
                         </Card.Text>
                     </>
                 )}
