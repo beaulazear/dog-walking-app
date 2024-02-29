@@ -11,6 +11,8 @@
     "heroku-postbuild": "npm run clean && npm run build && npm run deploy"
   },
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.521.0",
+    "@react-email/render": "^0.0.12",
     "antd": "^5.11.1",
     "dayjs": "^1.11.10"
   }

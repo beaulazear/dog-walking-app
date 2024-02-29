@@ -34,6 +34,21 @@ class InvoicesController < ApplicationController
         render json: invoices
     end
 
+    def destroy
+
+        invoice = Invoice.find(params[:id])
+
+        if invoice
+
+            invoice.destroy
+
+            render json: invoice, status: :ok
+
+        else
+            render json: { error: 'invoice not found' }, status: :not_found
+        end
+    end
+
 
     private
 

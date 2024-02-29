@@ -1,9 +1,6 @@
-import Card from 'react-bootstrap/Card';
-import ListGroup from 'react-bootstrap/ListGroup';
-import Accordion from 'react-bootstrap/Accordion';
+import { Accordion, Button, Card, ListGroup, Modal } from 'react-bootstrap';
 import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import Button from "react-bootstrap/Button";
 import { DownOutlined } from '@ant-design/icons';
 import { Dropdown, Space } from 'antd';
 
@@ -19,8 +16,31 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
     const [tenInvoicesSelected, setTenInvoicesSelected] = useState(true)
     const [thirtyInvoicesSelected, setThirtyInvoicesSelected] = useState(false)
 
+    const [showEditModal, setShowEditModal] = useState(false);
+
     const lastTenInvoices = paidInvoices.slice(-10)
     const lastThirtyInvoices = paidInvoices.slice(-10)
+
+    // Function to handle deletion of an invoice
+    const deleteInvoice = (id) => {
+
+        fetch(`/invoices/${id}`, {
+            method: 'DELETE',
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+        .then((response) => response.json())
+        .then((deletedInvoice) => {
+            console.log(deletedInvoice)
+            const newPetInvoices = invoices.filter((invoice) => invoice.id !== deletedInvoice.id)
+            setInvoices(newPetInvoices)
+            // update the state somehow on today page so walk is marked as not completed? Not sure is this is neccesary even.
+        })
+    };
+
+    // Function to toggle the modal
+    const toggleEditModal = () => setShowEditModal(!showEditModal);
 
     function changeToAllInvoices() {
         setAllInvoicesSelected(true)
@@ -121,6 +141,36 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
                 <Accordion.Header>Current Invoice for {pet.name}</Accordion.Header>
                 <Accordion.Body>
                     <h3 classsex="display-3">Current Invoices For "{pet.name}"</h3>
+                    <Modal show={showEditModal} onHide={toggleEditModal}>
+                        <Modal.Header closeButton>
+                            <Modal.Title>Edit Invoices</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>
+                            <h4>Unpaid Invoices</h4>
+                            <ListGroup>
+                                {invoices?.map((invoice) => (
+                                    !invoice.paid && (
+                                        <ListGroup.Item key={invoice.id}>
+                                            {formatDateTime(invoice.date_completed)}, ${invoice.compensation}
+                                            <Button style={{marginLeft: '25px'}} variant="danger" onClick={() => {
+                                                if (window.confirm("Are you sure you want to delete this invoice? This can not be undone.")) {
+                                                    deleteInvoice(invoice.id);
+                                                }
+                                            }}>Delete</Button>
+                                        </ListGroup.Item>
+                                    )
+                                ))}
+                                {invoices.length < 1 && (
+                                    <ListGroup.Item>
+                                        There are currently no unpaid invoices for {pet.name}
+                                    </ListGroup.Item>
+                                )}
+                            </ListGroup>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button variant="secondary" onClick={toggleEditModal}>Close</Button>
+                        </Modal.Footer>
+                    </Modal>
                     <Card style={{ width: '100%' }}>
                         <Card.Img
                             variant="top"
@@ -147,7 +197,8 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
                                 <Card.Text className='m-3'>
                                     <b>Total = ${currentTotal}</b>
                                 </Card.Text>
-                                <Button onClick={UpdateCurrentInvoice}>Paid</Button>
+                                <Button style={{margin: '5px'}} onClick={toggleEditModal}>Edit Invoices</Button>
+                                <Button style={{margin: '5px'}} onClick={UpdateCurrentInvoice}>Mark all as Paid</Button>
                             </>
                         )}
                         {invoices?.length < 1 && (
