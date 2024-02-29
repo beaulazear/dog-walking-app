@@ -151,12 +151,12 @@ export default function InvoicePetCard({ pet, updateUserPets }) {
                                 {invoices?.map((invoice) => (
                                     !invoice.paid && (
                                         <ListGroup.Item key={invoice.id}>
-                                            {formatDateTime(invoice.date_completed)}, ${invoice.compensation}
-                                            <Button style={{marginLeft: '25px'}} variant="danger" onClick={() => {
+                                            <Button style={{marginRight: '10px'}} variant="danger" onClick={() => {
                                                 if (window.confirm("Are you sure you want to delete this invoice? This can not be undone.")) {
                                                     deleteInvoice(invoice.id);
                                                 }
                                             }}>Delete</Button>
+                                            {formatDateTime(invoice.date_completed)}, ${invoice.compensation}
                                         </ListGroup.Item>
                                     )
                                 ))}
