@@ -8,27 +8,33 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
     const { pets, setPets } = useContext(PetsContext)
 
-    const dayjs = require('dayjs')
-
     function getHourAndMinutes(timestampString) {
         const [, timePart] = timestampString.split("T"); // Splitting the string to extract the time part
-        const [time, ] = timePart.split(/[.+-]/); // Splitting the time part to separate time and offset
+        const [time,] = timePart.split(/[.+-]/); // Splitting the time part to separate time and offset
         const [hours, minutes] = time.split(":"); // Splitting the time to extract hours and minutes
         return `${hours}:${minutes}`;
     }
-    
-
 
     const startTime = getHourAndMinutes(apt.start_time);
     const endTime = getHourAndMinutes(apt.end_time);
 
     function replaceDateWithToday(timestamp) {
-        const today = dayjs(); // Get current date and time using day.js
-        const timePart = timestamp.substr(11); // Extract time part (HH:mm:ss.sssZ)
-        const todayDatePart = today.format('YYYY-MM-DD'); // Get today's date in yyyy-mm-dd format
+        const now = new Date(); // Get current date and time
+        const timePart = timestamp.substr(11, 8); // Extract time part (HH:mm:ss) from the timestamp
 
-        return `${todayDatePart}T${timePart}`;
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const timezoneOffset = (now.getTimezoneOffset() / 60) * -1; // Convert offset to hours and invert it
+        const timezoneSign = timezoneOffset >= 0 ? '+' : '-'; // Determine the sign of the timezone offset
+        const timezoneOffsetHours = String(Math.abs(timezoneOffset)).padStart(2, '0');
+
+        const todayDatePart = `${year}-${month}-${day}`;
+        const timezonePart = `${timezoneSign}${timezoneOffsetHours}00`;
+
+        return `${todayDatePart} ${timePart} ${timezonePart}`;
     }
+
 
     const photoStyles = {
         width: '100px',
@@ -67,6 +73,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
         })
             .then((response) => response.json())
             .then((newInvoice) => {
+                console.log(newInvoice)
                 const newApt = { ...apt, invoices: [...apt.invoices, newInvoice] }
                 const newPets = pets.map((pet) => {
                     if (pet.id === newInvoice.pet_id) {
@@ -81,7 +88,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
             })
     }
 
-    let invoices = apt.invoices?.filter((invoice) => invoice.date_completed === replaceDateWithToday(apt.start_time))
+    let invoices = apt.invoices?.filter((invoice) => replaceDateWithToday(invoice.date_completed) === replaceDateWithToday(apt.start_time))
 
     return (
         <>

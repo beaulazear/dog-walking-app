@@ -29,10 +29,13 @@ function TodaysAppointmentsProvider({ children }) {
     }, []);
 
     const isTodayOrRecurring = (appointment) => {
-        const appointmentDate = dayjs(appointment.appointment_date);
         const today = dayjs();
+
+        const datePart = appointment.appointment_date.slice(5, 7) + '/' + appointment.appointment_date.slice(8, 10) + '/' + appointment.appointment_date.slice(0, 4);
+        const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+
         if (!appointment.recurring & !appointment.canceled) {
-            return appointmentDate.isSame(today, 'day');
+            return datePart === currentDate;
         } else if (appointment.recurring & !appointment.canceled) {
             const dayOfWeek = today.day();
             switch (dayOfWeek) {
