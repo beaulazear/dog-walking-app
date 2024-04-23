@@ -88,11 +88,23 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
             })
     }
 
-    let invoices = apt.invoices?.filter((invoice) => replaceDateWithToday(invoice.date_completed) === replaceDateWithToday(apt.start_time))
+    function hasInvoiceForToday(appointmentStartTime, invoices) {
+        const today = new Date();
+        const todayString = today.toISOString().slice(0, 10); // Get today's date in format "YYYY-MM-DD"
+
+        const matchingInvoice = invoices.find(invoice => {
+            const invoiceDate = invoice.date_completed.slice(0,22)
+            return invoiceDate === todayString + appointmentStartTime.slice(10,22)
+        })
+
+        return !! matchingInvoice
+    }
+
+    let invoices = hasInvoiceForToday(apt.start_time, apt.invoices)
 
     return (
         <>
-            {invoices?.length > 0 && (
+            {invoices && (
                 <Card className="m-3" style={{ width: '90%', backgroundColor: '#6fd388' }}>
                     <Card.Body>
                         <img alt="Pet associated with appointment" style={photoStyles} src={apt.pet.profile_pic} />
@@ -101,7 +113,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                     </Card.Body>
                 </Card>
             )}
-            {invoices?.length < 1 && (
+            {!invoices && (
                 <Card className="m-3">
                     <Card.Body>
                         <img alt="Pet associated with appointment" style={photoStyles} src={apt.pet.profile_pic} />
