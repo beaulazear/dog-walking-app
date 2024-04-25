@@ -83,6 +83,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                         return pet
                     }
                 })
+                console.log(newPets)
                 setPets(newPets)
                 updateAppointments(newApt)
             })
@@ -90,15 +91,21 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
     function hasInvoiceForToday(appointmentStartTime, invoices) {
         const today = new Date();
-        const todayString = today.toISOString().slice(0, 10); // Get today's date in format "YYYY-MM-DD"
-
+        const offset = today.getTimezoneOffset(); // Get the current time zone offset in minutes
+        console.log(offset)
+        const todayAdjusted = new Date(today.getTime() - (offset * 60 * 1000)); // Adjust today's date by subtracting the offset
+        const todayString = todayAdjusted.toISOString().slice(0, 10); // Get today's adjusted date in format "YYYY-MM-DD"
+    
+        console.log(appointmentStartTime, todayString);
+    
         const matchingInvoice = invoices.find(invoice => {
-            const invoiceDate = invoice.date_completed.slice(0,22)
-            return invoiceDate === todayString + appointmentStartTime.slice(10,22)
-        })
-
-        return !! matchingInvoice
+            const invoiceDate = invoice.date_completed.slice(0, 22);
+            return invoiceDate === todayString + appointmentStartTime.slice(10, 22);
+        });
+    
+        return !!matchingInvoice;
     }
+    
 
     let invoices = hasInvoiceForToday(apt.start_time, apt.invoices)
 

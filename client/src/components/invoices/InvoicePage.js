@@ -1,5 +1,6 @@
 import React, { useContext } from "react";
 import { PetsContext } from "../../context/pets";
+import FinancePage from "../finances/FinancePage";
 import Container from "react-bootstrap/Container";
 import Card from 'react-bootstrap/Card';
 import InvoicePetCard from "./InvoicePetCard";
@@ -11,7 +12,8 @@ export default function InvoicesPage() {
     if (pets?.length > 0) {
         return (
             <Container style={{marginBottom: '35px'}}>
-                <h2 className="display-4 m-3">Invoices</h2>
+                <h2 className="display-4 m-3">Finances</h2>
+                <FinancePage />
                 {pets.map((pet) => (
                     <InvoicePetCard key={pet.id} pet={pet} />
                 ))}
@@ -20,7 +22,7 @@ export default function InvoicesPage() {
     } else {
         return (
             <Container>
-                <h2 className="display-4 m-3">Invoices</h2>
+                <h2 className="display-4 m-3">Finances</h2>
                 <Card className="m-2">
                     <Card.Header as="h5">No pets currently in database</Card.Header>
                     <Card.Body>
