@@ -137,7 +137,7 @@ export default function InvoicePetCard({ pet }) {
     })
 
     return (
-        <div style={{ marginLeft: '18px' }}>
+        <div>
             <h4>{pet.name}</h4>
             <Accordion style={{ marginBottom: '10px' }}>
                 <Accordion.Item className="text-bg-light p-3" eventKey="0">

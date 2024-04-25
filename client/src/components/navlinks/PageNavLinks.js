@@ -23,7 +23,7 @@ export default function PageNavLinks() {
                     <Nav className="me-auto">
                         <Link style={navLinkStyles} to="/todayswalkspage">Today</Link>
                         <Link style={navLinkStyles} to="/petspage">Pets</Link>
-                        <Link style={navLinkStyles} to="/invoicespage">Invoices</Link>
+                        <Link style={navLinkStyles} to="/invoicespage">Finances</Link>
                     </Nav>
                 </Container>
             </Navbar>

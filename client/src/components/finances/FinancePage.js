@@ -25,8 +25,6 @@ export default function FinancePage() {
         }
     }
 
-    // add functionality to sort through just this years and display income for said year.
-
     const { pets } = useContext(PetsContext)
 
     let totalIncome = 0
@@ -45,7 +43,7 @@ export default function FinancePage() {
     console.log(totalIncome)
 
     return (
-        <div style={{ marginBottom: '35px', marginLeft: '18px' }}>
+        <div style={{ marginBottom: '35px', marginLeft: '15px'}}>
             <h3>{thisYearStr} Income: ${totalIncome}</h3>
             {fifteen && (
                 <h3>Tax Estimate: ${Math.round(totalIncome * 0.15)}</h3>
