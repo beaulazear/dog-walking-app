@@ -16,6 +16,17 @@ class AdditionalIncomesController < ApplicationController
         end
     end
 
+    def destroy
+        income = AdditionalIncome.find(params[:id])
+        
+        if income
+            income.destroy
+            render json: income, status: :ok
+        else
+            render json: { error: 'income not found' }, status: :not_found
+        end
+    end
+
     private
 
     def additional_income_params

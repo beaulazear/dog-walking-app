@@ -127,6 +127,42 @@ export default function InvoicePetCard({ pet }) {
             });
     };
 
+    function handleIncomeDelete(id) {
+
+        fetch(`/additional_incomes/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.errors.join(', '));
+                    });
+                }
+                return response.json();
+            })
+            .then((oldIncome) => {
+                setPets(pets.map((p) => {
+                    if (p.id === pet.id) {
+                        p.additional_incomes = p.additional_incomes.map(income => {
+                            if (income.id !== oldIncome.id) {
+                                return income;
+                            } else {
+                                return null;
+                            }
+                        }).filter(income => income !== null);
+                        return p;
+                    } else {
+                        return p;
+                    }
+                }));
+                alert('Additional income removed successfully!');
+            })
+
+    }
+
     const deleteInvoice = (id) => {
 
         fetch(`/invoices/${id}`, {
@@ -241,10 +277,10 @@ export default function InvoicePetCard({ pet }) {
     }
 
     let grandTotal = 0
-    pet.invoices.forEach(inv => {
+    pet.invoices?.forEach(inv => {
         grandTotal += inv.compensation
     })
-    pet.additional_incomes.forEach((income) => grandTotal += income.compensation)
+    pet.additional_incomes?.forEach((income) => grandTotal += income.compensation)
 
     return (
         <div>
@@ -327,47 +363,19 @@ export default function InvoicePetCard({ pet }) {
                             variant="top"
                             src={pet.profile_pic}
                             style={{
-                                width: '150px', // Adjust the width as needed
-                                height: '150px', // Adjust the height as needed
+                                width: '150px',
+                                height: '150px',
                                 objectFit: 'cover',
                                 borderRadius: '50%',
-                                margin: '10px 0 0 10px', // Adjust the margin values as needed
+                                margin: '10px 0 0 10px',
                                 display: 'inline-block',
                             }}
                         />
-                        <h3 classsex="display-3">Total Income for {pet.name}: ${grandTotal}</h3>
+                        <h3 classsex="display-3">Total Income: ${grandTotal}</h3>
                         <p classsex="display-3">This includes both paid & unpaid invoices. Use the form below to add additional compensation from previous dates!</p>
-                        <Button onClick={toggleAddIncome}>Additional Income Form</Button>
-                        <Modal show={showNewIncomeModal} onHide={toggleAddIncome}>
-                            <Modal.Header closeButton>
-                                <Modal.Title>Add New Additional Income</Modal.Title>
-                            </Modal.Header>
-                            <Modal.Body>
-                                <h4>Add additional income</h4>
-                            </Modal.Body>
-                            <FormContainer>
-                                <FormTitle>Add Additional Income</FormTitle>
-                                {errors.length > 0 && <ErrorMessage>{errors[0]}</ErrorMessage>}
-                                <Form onSubmit={handleSubmitAdditionalIncome}>
-                                    <FormField>
-                                        <Label htmlFor="compensation">Compensation:</Label>
-                                        <Input placeholder='Amount paid in $USD' type="text" id="compensation" value={compensation} onChange={(e) => setCompensation(e.target.value)} />
-                                    </FormField>
-                                    <FormField>
-                                        <Label htmlFor="dateAdded">Date Added:</Label>
-                                        <Input type="date" id="dateAdded" value={dateAdded} onChange={(e) => setDateAdded(e.target.value)} />
-                                    </FormField>
-                                    <FormField>
-                                        <Label htmlFor="description">Description:</Label>
-                                        <Input type="text" id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
-                                    </FormField>
-                                    <FormButton type="submit">Add Additional Income</FormButton>
-                                </Form>
-                            </FormContainer>
-                        </Modal>
+                        <h3 classsex="display-3">Paid Invoices</h3>
                         {paidInvoices?.length > 0 && (
                             <>
-                                <h3 classsex="display-3">Paid Invoices</h3>
                                 <Dropdown menu={{ items }}>
                                     <button onClick={(e) => e.preventDefault()}>
                                         <Space>
@@ -404,8 +412,41 @@ export default function InvoicePetCard({ pet }) {
                         {paidInvoices?.length < 1 && (
                             <p style={{ padding: '10px' }}>There are currently no past invoices for {pet.name}. Invoices will show up here once marked as paid.</p>
                         )}
+                        <Modal show={showNewIncomeModal} onHide={toggleAddIncome}>
+                            <Modal.Header closeButton>
+                                <Modal.Title>Add New Additional Income</Modal.Title>
+                            </Modal.Header>
+                            <Modal.Body>
+                                <h4>Add additional income</h4>
+                            </Modal.Body>
+                            <FormContainer>
+                                <FormTitle>Add Additional Income</FormTitle>
+                                {errors.length > 0 && <ErrorMessage>{errors[0]}</ErrorMessage>}
+                                <Form onSubmit={handleSubmitAdditionalIncome}>
+                                    <FormField>
+                                        <Label htmlFor="compensation">Compensation:</Label>
+                                        <Input placeholder='Amount paid in $USD' type="text" id="compensation" value={compensation} onChange={(e) => setCompensation(e.target.value)} />
+                                    </FormField>
+                                    <FormField>
+                                        <Label htmlFor="dateAdded">Date Added:</Label>
+                                        <Input type="date" id="dateAdded" value={dateAdded} onChange={(e) => setDateAdded(e.target.value)} />
+                                    </FormField>
+                                    <FormField>
+                                        <Label htmlFor="description">Description:</Label>
+                                        <Input type="text" id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
+                                    </FormField>
+                                    <FormButton type="submit">Add Additional Income</FormButton>
+                                </Form>
+                            </FormContainer>
+                        </Modal>
+                        <h3 classsex="display-3">Add new payment</h3>
+                        <Button style={{ marginBottom: '10px' }} onClick={toggleAddIncome}>Additional Income Form</Button>
+
                         {pet.additional_incomes.length > 0 && (
-                            <AdditionalIncomeList items={pet.additional_incomes} />
+                            <AdditionalIncomeList handleIncomeDelete={handleIncomeDelete} items={pet.additional_incomes} />
+                        )}
+                        {pet.additional_incomes.length < 1 && (
+                            <p>Additional incomes will be displayed here once submitted.</p>
                         )}
                     </Accordion.Body>
                 </Accordion.Item>
