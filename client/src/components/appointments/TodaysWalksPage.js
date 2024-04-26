@@ -7,10 +7,10 @@ export default function TodaysWalksPage() {
 
     const { todaysAppointments, setTodaysAppointments } = useContext(TodaysAppointmentsContext)
 
-    const dayjs = require('dayjs'); // Import day.js library
+    const dayjs = require('dayjs');
 
     function getCurrentDateFormatted() {
-        const currentDate = dayjs(); // Get current date using day.js
+        const currentDate = dayjs();
         const formattedDate = currentDate.format('MMMM DD, YYYY'); // Format the date to display month name, day, and year
     
         return formattedDate;

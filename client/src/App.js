@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 import { UserContext } from "./context/user";
 import { Route, Routes, useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
 import PageNavLinks from "./components/navlinks/PageNavLinks";
 import PageNavLinksNotLoggedIn from "./components/navlinks/PageNavLinksNotLoggedIn";
 import HomePage from "./components/home/HomePage";
@@ -14,6 +15,27 @@ import { TodaysAppointmentsProvider } from './context/todaysAppointments';
 import { PetsAppointmentsProvider } from './context/petsAppointments';
 import { InvoicesProvider } from './context/invoices';
 import { PetsProvider } from "./context/pets";
+
+const StyledButton = styled.button`
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 40px;
+  background-color: red;
+  color: black;
+  text-align: center;
+  border: none;
+  cursor: pointer;
+  /* Additional styles */
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 0;
+  transition: background-color 0.3s ease;
+  
+  &:hover {
+    background-color: darkred;
+  }
+`;
 
 function App() {
 
@@ -34,7 +56,7 @@ function App() {
 
   if (user) {
     return (
-      <div style={{paddingBottom: '25px'}}>
+      <div style={{ paddingBottom: '25px' }}>
         <PageNavLinks />
         <TodaysAppointmentsProvider>
           <PetsAppointmentsProvider>
@@ -52,23 +74,7 @@ function App() {
             </InvoicesProvider>
           </PetsAppointmentsProvider>
         </TodaysAppointmentsProvider>
-        <div style={{ marginBottom: '30px' }}>
-          <button
-            onClick={handleLogout}
-            style={{
-              position: 'fixed',
-              bottom: '0',
-              width: '100%',
-              height: '40px',
-              backgroundColor: 'red',
-              color: 'black',
-              textAlign: 'center',
-            }}
-          >
-            Log Out
-          </button>
-
-        </div>
+        <StyledButton onClick={handleLogout}>Logout</StyledButton>
       </div>
     );
   } else {

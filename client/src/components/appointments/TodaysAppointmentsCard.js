@@ -19,14 +19,14 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
     const endTime = getHourAndMinutes(apt.end_time);
 
     function replaceDateWithToday(timestamp) {
-        const now = new Date(); // Get current date and time
-        const timePart = timestamp.substr(11, 8); // Extract time part (HH:mm:ss) from the timestamp
+        const now = new Date();
+        const timePart = timestamp.substr(11, 8);
 
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
-        const timezoneOffset = (now.getTimezoneOffset() / 60) * -1; // Convert offset to hours and invert it
-        const timezoneSign = timezoneOffset >= 0 ? '+' : '-'; // Determine the sign of the timezone offset
+        const timezoneOffset = (now.getTimezoneOffset() / 60) * -1;
+        const timezoneSign = timezoneOffset >= 0 ? '+' : '-';
         const timezoneOffsetHours = String(Math.abs(timezoneOffset)).padStart(2, '0');
 
         const todayDatePart = `${year}-${month}-${day}`;
@@ -34,7 +34,6 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
         return `${todayDatePart} ${timePart} ${timezonePart}`;
     }
-
 
     const photoStyles = {
         width: '100px',
@@ -73,7 +72,6 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
         })
             .then((response) => response.json())
             .then((newInvoice) => {
-                console.log(newInvoice)
                 const newApt = { ...apt, invoices: [...apt.invoices, newInvoice] }
                 const newPets = pets.map((pet) => {
                     if (pet.id === newInvoice.pet_id) {
@@ -83,7 +81,6 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                         return pet
                     }
                 })
-                console.log(newPets)
                 setPets(newPets)
                 updateAppointments(newApt)
             })
@@ -92,11 +89,8 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
     function hasInvoiceForToday(appointmentStartTime, invoices) {
         const today = new Date();
         const offset = today.getTimezoneOffset(); // Get the current time zone offset in minutes
-        console.log(offset)
         const todayAdjusted = new Date(today.getTime() - (offset * 60 * 1000)); // Adjust today's date by subtracting the offset
         const todayString = todayAdjusted.toISOString().slice(0, 10); // Get today's adjusted date in format "YYYY-MM-DD"
-    
-        console.log(appointmentStartTime, todayString);
     
         const matchingInvoice = invoices.find(invoice => {
             const invoiceDate = invoice.date_completed.slice(0, 22);

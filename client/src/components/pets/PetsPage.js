@@ -15,18 +15,41 @@ export default function PetsPage() {
 
     const [displayFormButton, setDisplayFormButton] = useState(false)
 
+    function sortObjectsByName(objects) {
+        return objects.sort((a, b) => {
+            const nameA = a.name.toLowerCase();
+            const nameB = b.name.toLowerCase();
+
+            if (nameA < nameB) {
+                return -1;
+            }
+            if (nameA > nameB) {
+                return 1;
+            }
+            return 0;
+        });
+    }
+
     function updateDisplayButton() {
         setDisplayFormButton(!displayFormButton)
     }
 
     function addNewPet(newPet) {
-        setPets([...pets, newPet])
+        const newPets = [...pets, newPet]
+        const sortedPets = sortObjectsByName(newPets)
+        setPets(sortedPets)
         setDisplayFormButton(false)
     }
 
     function updateUserPets(newPet) {
-        const newPets = pets.filter((pet) => pet.id !== newPet.id)
-        setPets([newPet, ...newPets])
+        const newPets = pets.map((pet) => {
+            if (pet.id === newPet.id) {
+                return newPet
+            } else {
+                return pet
+            }
+        })
+        setPets(newPets)
     }
 
     function updatePetsAfterDelete(oldPet) {
@@ -36,7 +59,7 @@ export default function PetsPage() {
 
     if (pets?.length > 0) {
         return (
-            <Container style={{marginBottom: '35px'}}>
+            <Container style={{ marginBottom: '35px' }}>
                 <Row>
                     <Col>
                         <h2 className="display-4 m-3">Pets</h2>

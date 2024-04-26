@@ -33,7 +33,6 @@ export default function FinancePage() {
 
     pets?.forEach(pet => {
         pet.invoices.forEach(inv => {
-            console.log(inv.date_completed.slice(0, 4))
             if (inv.date_completed.slice(0, 4) === thisYearStr) {
                 totalIncome += inv.compensation
             }
@@ -42,8 +41,6 @@ export default function FinancePage() {
             totalIncome += income.compensation
         })
     });
-
-    console.log(totalIncome)
 
     return (
         <div style={{ marginBottom: '35px', marginLeft: '15px' }}>

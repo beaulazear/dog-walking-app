@@ -26,11 +26,11 @@ export default function HomePage() {
                 </Card.Body>
             </Card>
             <Card className="m-2">
-                <Card.Header as="h5">View Invoices</Card.Header>
+                <Card.Header as="h5">Finances</Card.Header>
                 <Card.Body>
-                    <Card.Title>Current and past invoices for all pets</Card.Title>
+                    <Card.Title>Personal finance for all pets</Card.Title>
                     <Card.Text>
-                        Visit the "Invoice" page to view current invoices (unpaid), and past invoices (paid) for each pet in your database.
+                        Visit the "Finance" page to view current invoices (unpaid), and past invoices (paid) for each pet in your database. Here you can add additional incomes/past payments & view yearly income totals.
                     </Card.Text>
                 </Card.Body>
             </Card>

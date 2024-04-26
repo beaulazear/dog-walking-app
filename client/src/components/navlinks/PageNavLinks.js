@@ -14,7 +14,6 @@ const navLinkStyles = {
 
 export default function PageNavLinks() {
 
-
     return (
         <>
             <Navbar bg="dark" data-bs-theme="dark">

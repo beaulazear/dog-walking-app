@@ -38,6 +38,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     const [profilePic, setProfilePic] = useState(pet.profile_pic)
 
     const [show, setShow] = useState(false);
+    const [activeAccordionKey, setActiveAccordionKey] = useState(null); // State to control active key
 
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
@@ -51,8 +52,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
         fetch(`/pets/${pet.id}`, { method: 'DELETE' })
             .then((response) => response.json())
             .then((deletedPet) => {
-                console.log(deletedPet)
-                setShow(false)
+                handleClose()
                 updatePetsAfterDelete(deletedPet)
             })
     }
@@ -86,6 +86,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                     res.json().then((newPet) => {
                         alert("Sucessfully Updated!")
                         setErrors([])
+                        setActiveAccordionKey(null);
                         updateUserPets(newPet)
                     })
                 } else {
@@ -181,9 +182,9 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     }
 
     return (
-        <Accordion style={{marginBottom:  '10px'}}>
+        <Accordion style={{marginBottom:  '10px'}} activeKey={activeAccordionKey}>
             <Accordion.Item className="text-bg-light p-3" eventKey="0">
-                <Accordion.Header>{pet.name}, {pet.address}</Accordion.Header>
+                <Accordion.Header onClick={() => setActiveAccordionKey(activeAccordionKey === "0" ? null : "0")}>{pet.name}, {pet.address}</Accordion.Header>
                 <Accordion.Body>
                     <Card style={{ width: '100%' }}>
                         <Card.Img
@@ -227,7 +228,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                 </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item className="text-bg-light p-3" eventKey="1">
-                <Accordion.Header>Update "{pet.name}"</Accordion.Header>
+                <Accordion.Header onClick={() => setActiveAccordionKey(activeAccordionKey === "1" ? null : "1")}>Update "{pet.name}"</Accordion.Header>
                 <Accordion.Body>
                     <h3 classsex="display-3">Update information for "{pet.name}"</h3>
                     <Form className="text-bg-light p-3" encType="multipart/form-data" onSubmit={handleUpdatePet}>
@@ -291,8 +292,8 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                             )}
                         </Form.Group>
                         <br></br>
-                        <Button className='p-2 m-2' variant="primary" type="submit">Update {pet.name}</Button>
-                        <Button className='p-2 m-2' variant="danger" onClick={handleShow}>Delete {pet.name}</Button>
+                        <Button className='p-2 m-2' variant="primary" type="submit">Update</Button>
+                        <Button className='p-2 m-2' variant="danger" onClick={handleShow}>Delete</Button>
                     </Form>
                     <Modal show={show} onHide={handleClose}>
                         <Modal.Header closeButton>
