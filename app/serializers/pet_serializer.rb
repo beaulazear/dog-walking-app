@@ -4,6 +4,7 @@ class PetSerializer < ActiveModel::Serializer
   has_one :user
   has_many :appointments
   has_many :invoices
+  has_many :additional_incomes
 
   def profile_pic
     if object.profile_pic.attached?

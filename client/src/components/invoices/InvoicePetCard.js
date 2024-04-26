@@ -1,10 +1,68 @@
-import { Accordion, AccordionHeader, Button, Card, ListGroup, Modal } from 'react-bootstrap';
-import React, { useState } from "react";
+import { Accordion, Button, Card, ListGroup, Modal } from 'react-bootstrap';
+import React, { useContext, useState } from "react";
+import { PetsContext } from "../../context/pets";
+import styled from 'styled-components';
 import "bootstrap/dist/css/bootstrap.min.css";
 import { DownOutlined } from '@ant-design/icons';
 import { Dropdown, Space } from 'antd';
+import AdditionalIncomeList from '../finances/AdditionalIncomeList';
+
+const FormContainer = styled.div`
+  max-width: 400px;
+  margin: 0 auto;
+  margin-bottom: 15px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const FormTitle = styled.h2`
+  text-align: center;
+`;
+
+const ErrorMessage = styled.div`
+  color: red;
+  margin-bottom: 10px;
+`;
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+`;
+
+const FormField = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+`;
+
+const Label = styled.label`
+  margin-bottom: 5px;
+`;
+
+const Input = styled.input`
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+`;
+
+const FormButton = styled.button`
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
 
 export default function InvoicePetCard({ pet }) {
+
+    const { pets, setPets } = useContext(PetsContext)
 
     const [invoices, setInvoices] = useState(pet.invoices.filter((invoice) => invoice.paid !== true))
 
@@ -14,10 +72,60 @@ export default function InvoicePetCard({ pet }) {
     const [tenInvoicesSelected, setTenInvoicesSelected] = useState(true)
     const [thirtyInvoicesSelected, setThirtyInvoicesSelected] = useState(false)
 
+    const [compensation, setCompensation] = useState('');
+    const [dateAdded, setDateAdded] = useState('');
+    const [description, setDescription] = useState('');
+    const [errors, setErrors] = useState([]);
+
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showNewIncomeModal, setShowNewIncomeModal] = useState(false)
 
     const lastTenInvoices = paidInvoices.slice(-10)
     const lastThirtyInvoices = paidInvoices.slice(-10)
+
+    const handleSubmitAdditionalIncome = (e) => {
+        e.preventDefault();
+
+        fetch('/additional_incomes', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                pet_id: pet.id,
+                date_added: dateAdded,
+                description: description,
+                compensation: compensation
+            }),
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.errors.join(', '));
+                    });
+                }
+                return response.json();
+            })
+            .then((newIncome) => {
+                setCompensation('');
+                setDateAdded('');
+                setDescription('');
+                setErrors([]);
+                setPets(pets.map((p) => {
+                    if (p.id === pet.id) {
+                        p.additional_incomes = [...p.additional_incomes, newIncome]
+                        return p
+                    } else {
+                        return p
+                    }
+                }))
+                toggleAddIncome()
+                alert('Additional income added successfully!');
+            })
+            .catch(error => {
+                setErrors([error.message]);
+            });
+    };
 
     const deleteInvoice = (id) => {
 
@@ -37,6 +145,7 @@ export default function InvoicePetCard({ pet }) {
     };
 
     const toggleEditModal = () => setShowEditModal(!showEditModal);
+    const toggleAddIncome = () => setShowNewIncomeModal(!showNewIncomeModal)
 
     function changeToAllInvoices() {
         setAllInvoicesSelected(true)
@@ -135,6 +244,7 @@ export default function InvoicePetCard({ pet }) {
     pet.invoices.forEach(inv => {
         grandTotal += inv.compensation
     })
+    pet.additional_incomes.forEach((income) => grandTotal += income.compensation)
 
     return (
         <div>
@@ -225,8 +335,36 @@ export default function InvoicePetCard({ pet }) {
                                 display: 'inline-block',
                             }}
                         />
-                        <h3 classsex="display-3">Total Income: ${grandTotal}</h3>
-                        <p classsex="display-3">This includes both paid & unpaid invoices.</p>
+                        <h3 classsex="display-3">Total Income for {pet.name}: ${grandTotal}</h3>
+                        <p classsex="display-3">This includes both paid & unpaid invoices. Use the form below to add additional compensation from previous dates!</p>
+                        <Button onClick={toggleAddIncome}>Additional Income Form</Button>
+                        <Modal show={showNewIncomeModal} onHide={toggleAddIncome}>
+                            <Modal.Header closeButton>
+                                <Modal.Title>Add New Additional Income</Modal.Title>
+                            </Modal.Header>
+                            <Modal.Body>
+                                <h4>Add additional income</h4>
+                            </Modal.Body>
+                            <FormContainer>
+                                <FormTitle>Add Additional Income</FormTitle>
+                                {errors.length > 0 && <ErrorMessage>{errors[0]}</ErrorMessage>}
+                                <Form onSubmit={handleSubmitAdditionalIncome}>
+                                    <FormField>
+                                        <Label htmlFor="compensation">Compensation:</Label>
+                                        <Input placeholder='Amount paid in $USD' type="text" id="compensation" value={compensation} onChange={(e) => setCompensation(e.target.value)} />
+                                    </FormField>
+                                    <FormField>
+                                        <Label htmlFor="dateAdded">Date Added:</Label>
+                                        <Input type="date" id="dateAdded" value={dateAdded} onChange={(e) => setDateAdded(e.target.value)} />
+                                    </FormField>
+                                    <FormField>
+                                        <Label htmlFor="description">Description:</Label>
+                                        <Input type="text" id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
+                                    </FormField>
+                                    <FormButton type="submit">Add Additional Income</FormButton>
+                                </Form>
+                            </FormContainer>
+                        </Modal>
                         {paidInvoices?.length > 0 && (
                             <>
                                 <h3 classsex="display-3">Paid Invoices</h3>
@@ -265,6 +403,9 @@ export default function InvoicePetCard({ pet }) {
                         )}
                         {paidInvoices?.length < 1 && (
                             <p style={{ padding: '10px' }}>There are currently no past invoices for {pet.name}. Invoices will show up here once marked as paid.</p>
+                        )}
+                        {pet.additional_incomes.length > 0 && (
+                            <AdditionalIncomeList items={pet.additional_incomes} />
                         )}
                     </Accordion.Body>
                 </Accordion.Item>

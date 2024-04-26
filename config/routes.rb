@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
   
+  resources :additional_incomes
   resources :invoices, except: :update
   resources :appointments
   resources :pets

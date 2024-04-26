@@ -6,12 +6,7 @@ class InvoicesController < ApplicationController
     def create
         pet = @current_user.pets.find_by(id: params[:pet_id])
 
-        puts params 
-        puts invoice_params
-        puts "Date before creating: #{params[:date_completed]}" # Add this line to log the date before saving
         invoice = pet.invoices.build(invoice_params)
-        
-        puts "Date before saving: #{invoice.date_completed}" # Add this line to log the date before saving
         
         if invoice.save
             render json: invoice, status: :created
