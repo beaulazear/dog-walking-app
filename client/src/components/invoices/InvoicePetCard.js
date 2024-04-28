@@ -369,7 +369,7 @@ export default function InvoicePetCard({ pet }) {
                                     height: '150px', // Adjust the height as needed
                                     objectFit: 'cover',
                                     borderRadius: '50%',
-                                    margin: '10px 0 0 10px', // Adjust the margin values as needed
+                                    margin: '10px 0 10px 10px', // Adjust the margin values as needed
                                     display: 'inline-block',
                                 }}
                             />
@@ -424,7 +424,7 @@ export default function InvoicePetCard({ pet }) {
                                 height: '150px',
                                 objectFit: 'cover',
                                 borderRadius: '50%',
-                                margin: '10px 0 0 10px',
+                                margin: '10px 0 10px 10px',
                                 display: 'inline-block',
                             }}
                         />
