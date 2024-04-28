@@ -174,10 +174,10 @@ export default function InvoicePetCard({ pet }) {
         })
             .then((response) => response.json())
             .then((deletedInvoice) => {
-                console.log(deletedInvoice)
-                const newPetInvoices = invoices.filter((invoice) => invoice.id !== deletedInvoice.id)
-                setInvoices(newPetInvoices)
-                // update the state somehow on today page so walk is marked as not completed? Not sure is this is neccesary even.
+                const petNewInvoices = invoices.filter((invoice) => invoice.id !== deletedInvoice.id)
+                setInvoices(petNewInvoices)
+                const petPendingInvoices = invoices.filter((invoice) => invoice.id !== deletedInvoice.id)
+                setPendingInvoices(petPendingInvoices)
             })
     };
 
@@ -337,7 +337,19 @@ export default function InvoicePetCard({ pet }) {
                                             </ListGroup.Item>
                                         )
                                     ))}
-                                    {invoices.length < 1 && (
+                                    {pendingInvoices?.map((invoice) => (
+                                        !invoice.paid && (
+                                            <ListGroup.Item key={invoice.id}>
+                                                <Button style={{ marginRight: '10px' }} variant="danger" onClick={() => {
+                                                    if (window.confirm("Are you sure you want to delete this invoice? This can not be undone.")) {
+                                                        deleteInvoice(invoice.id);
+                                                    }
+                                                }}>Delete</Button>
+                                                {formatDateTime(invoice.date_completed)}, ${invoice.compensation}
+                                            </ListGroup.Item>
+                                        )
+                                    ))}
+                                    {invoices.length < 1 && pendingInvoices.length < 1 && (
                                         <ListGroup.Item>
                                             There are currently no unpaid invoices for {pet.name}
                                         </ListGroup.Item>
@@ -362,9 +374,9 @@ export default function InvoicePetCard({ pet }) {
                                 }}
                             />
                             <Card.Title style={{ marginLeft: '16px' }}>{pet.name}'s New Invoices:</Card.Title>
-                            <p style={{ marginLeft: '16px' }}>New invoices are from recently completed walks. Once you send the invoices to the client, mark as pending until payment is complete.</p>
                             {invoices?.length > 0 && (
                                 <>
+                                    <p style={{ marginLeft: '16px' }}>New invoices are from recently completed walks. Once you send the invoices to the client, mark as pending until payment is complete.</p>
                                     <ListGroup className="list-group-flush">
                                         {invoices.map((invoice) => (
                                             <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
@@ -377,12 +389,12 @@ export default function InvoicePetCard({ pet }) {
                                 </>
                             )}
                             {invoices?.length < 1 && (
-                                <p style={{ padding: '16px' }}>There are currently no invoices for {pet.name}. Invoices will be displayed here as walks are completed on the Today page.</p>
+                                <p style={{ padding: '16px' }}>There are currently no new invoices for {pet.name}. Invoices will be displayed here as walks are completed on the Today page.</p>
                             )}
                             <Card.Title style={{ marginLeft: '16px' }}>{pet.name}'s Pending Invoices:</Card.Title>
-                            <p style={{ marginLeft: '16px' }}>Pending invoices have been sent to client for payment! Once payment is collected, mark as paid.</p>
                             {pendingInvoices?.length > 0 && (
                                 <>
+                                    <p style={{ marginLeft: '16px' }}>Pending invoices have been sent to client for payment! Once payment is collected, mark as paid.</p>
                                     <ListGroup className="list-group-flush">
                                         {pendingInvoices.map((invoice) => (
                                             <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
@@ -455,7 +467,7 @@ export default function InvoicePetCard({ pet }) {
                             </>
                         )}
                         {paidInvoices?.length < 1 && (
-                            <p style={{ padding: '10px' }}>There are currently no past invoices for {pet.name}. Invoices will show up here once marked as paid.</p>
+                            <p>There are currently no past invoices for {pet.name}. Invoices will show up here once marked as paid.</p>
                         )}
                         <Modal show={showNewIncomeModal} onHide={toggleAddIncome}>
                             <Modal.Header closeButton>

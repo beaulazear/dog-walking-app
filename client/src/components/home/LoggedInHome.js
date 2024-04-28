@@ -50,7 +50,7 @@ export default function LoggedInHome() {
                     <Card.Text>
                         Visit the "Finance" page to view current invoices (unpaid), and past invoices (paid) for each pet in your database. Here you can add additional incomes/past payments & view yearly income totals.
                     </Card.Text>
-                    <Button variant="primary" href="/invoicespage">Invoices Page</Button>
+                    <Button variant="primary" href="/invoicespage">Finances Page</Button>
                 </Card.Body>
             </Card>
         </>
