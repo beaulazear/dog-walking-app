@@ -24,7 +24,23 @@ class InvoicesController < ApplicationController
 
         invoices.each do |invoice|
 
-            invoice.update(paid: true)
+            invoice.update(paid: true, pending: false)
+
+        end
+
+        render json: invoices
+
+    end
+
+    def pending
+        
+        id_array = params[:id_array]
+    
+        invoices = Invoice.find(id_array)
+
+        invoices.each do |invoice|
+
+            invoice.update(pending: true)
 
         end
 

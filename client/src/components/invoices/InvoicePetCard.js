@@ -64,9 +64,10 @@ export default function InvoicePetCard({ pet }) {
 
     const { pets, setPets } = useContext(PetsContext)
 
-    const [invoices, setInvoices] = useState(pet.invoices.filter((invoice) => invoice.paid !== true))
+    const [invoices, setInvoices] = useState(pet.invoices.filter((invoice) => invoice.paid !== true && invoice.pending !== true))
 
     const [paidInvoices, setPaidInvoices] = useState(pet.invoices.filter((invoice) => invoice.paid === true))
+    const [pendingInvoices, setPendingInvoices] = useState(pet.invoices.filter((invoice) => invoice.pending === true))
 
     const [allInvoicesSelected, setAllInvoicesSelected] = useState(false)
     const [tenInvoicesSelected, setTenInvoicesSelected] = useState(true)
@@ -226,15 +227,43 @@ export default function InvoicePetCard({ pet }) {
         }
     ];
 
-    let currentTotal = 0
+    let currentTotalNewInvoices = 0
+    invoices.forEach((invoice) => currentTotalNewInvoices += invoice.compensation)
 
-    invoices.forEach((invoice) => currentTotal += invoice.compensation)
+    let currentTotalPendingInvoices = 0
+    pendingInvoices.forEach((invoice) => currentTotalPendingInvoices += invoice.compensation)
 
-    function UpdateCurrentInvoice() {
+    function markInvoicesAsPending() {
 
         let arrayOfAppointmentIds = []
 
         invoices.forEach((invoice) => {
+            arrayOfAppointmentIds.push(invoice.id)
+        })
+
+        fetch(`/invoices/pending`, {
+            method: 'PATCH',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                id_array: arrayOfAppointmentIds
+            })
+        })
+            .then((response) => response.json())
+            .then((newPendingInvoices) => {
+
+                setPendingInvoices([...pendingInvoices, ...newPendingInvoices])
+
+                setInvoices([])
+            })
+    }
+
+    function markInvoicesAsPaid() {
+
+        let arrayOfAppointmentIds = []
+
+        pendingInvoices.forEach((invoice) => {
             arrayOfAppointmentIds.push(invoice.id)
         })
 
@@ -252,7 +281,7 @@ export default function InvoicePetCard({ pet }) {
 
                 setPaidInvoices([...paidInvoices, ...newPaidInvoices])
 
-                setInvoices([])
+                setPendingInvoices([])
             })
     }
 
@@ -289,7 +318,6 @@ export default function InvoicePetCard({ pet }) {
                 <Accordion.Item className="text-bg-light p-3" eventKey="0">
                     <Accordion.Header>Unpaid Invoices</Accordion.Header>
                     <Accordion.Body>
-                        <h3 classsex="display-3">Unpaid Invoices For "{pet.name}"</h3>
                         <Modal show={showEditModal} onHide={toggleEditModal}>
                             <Modal.Header closeButton>
                                 <Modal.Title>Edit Invoices</Modal.Title>
@@ -333,9 +361,8 @@ export default function InvoicePetCard({ pet }) {
                                     display: 'inline-block',
                                 }}
                             />
-                            <Card.Body>
-                                <Card.Title>{pet.name}</Card.Title>
-                            </Card.Body>
+                            <Card.Title style={{ marginLeft: '16px' }}>{pet.name}'s New Invoices:</Card.Title>
+                            <p style={{ marginLeft: '16px' }}>New invoices are from recently completed walks. Once you send the invoices to the client, mark as pending until payment is complete.</p>
                             {invoices?.length > 0 && (
                                 <>
                                     <ListGroup className="list-group-flush">
@@ -344,15 +371,33 @@ export default function InvoicePetCard({ pet }) {
                                         ))}
                                     </ListGroup>
                                     <Card.Text className='m-3'>
-                                        <b>Total = ${currentTotal}</b>
+                                        <b>Total = ${currentTotalNewInvoices}</b>
                                     </Card.Text>
-                                    <Button style={{ margin: '5px' }} onClick={toggleEditModal}>Edit Invoices</Button>
-                                    <Button style={{ margin: '5px' }} onClick={UpdateCurrentInvoice}>Mark all as Paid</Button>
+                                    <Button style={{ margin: '5px' }} onClick={markInvoicesAsPending}>Mark new invoices as pending</Button>
                                 </>
                             )}
                             {invoices?.length < 1 && (
-                                <p style={{ padding: '10px' }}>There are currently no invoices for {pet.name}. Invoices will be displayed here as walks are completed on the Today page.</p>
+                                <p style={{ padding: '16px' }}>There are currently no invoices for {pet.name}. Invoices will be displayed here as walks are completed on the Today page.</p>
                             )}
+                            <Card.Title style={{ marginLeft: '16px' }}>{pet.name}'s Pending Invoices:</Card.Title>
+                            <p style={{ marginLeft: '16px' }}>Pending invoices have been sent to client for payment! Once payment is collected, mark as paid.</p>
+                            {pendingInvoices?.length > 0 && (
+                                <>
+                                    <ListGroup className="list-group-flush">
+                                        {pendingInvoices.map((invoice) => (
+                                            <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
+                                        ))}
+                                    </ListGroup>
+                                    <Card.Text className='m-3'>
+                                        <b>Total = ${currentTotalPendingInvoices}</b>
+                                    </Card.Text>
+                                    <Button style={{ margin: '5px' }} onClick={markInvoicesAsPaid}>Mark pending as Paid</Button>
+                                </>
+                            )}
+                            {pendingInvoices?.length < 1 && (
+                                <p style={{ padding: '16px' }}>There are currently no invoices for {pet.name}. Invoices will be displayed here as walks are completed on the Today page.</p>
+                            )}
+                            <Button style={{ margin: '5px' }} onClick={toggleEditModal}>Edit Invoices</Button>
                         </Card>
                     </Accordion.Body>
                 </Accordion.Item>
