@@ -18,6 +18,9 @@ export default function LoggedInHome() {
             <Card className="m-2">
                 <Card.Header as="h5">Today's Schedule</Card.Header>
                 <Card.Body>
+                    {todaysAppointments?.length === 0 && (
+                        <Card.Title>You have no appointments scheduled for today.</Card.Title>
+                    )}
                     {todaysAppointments?.length === 1 && (
                         <Card.Title>You have {todaysAppointments?.length} appointment today.</Card.Title>
                     )}
