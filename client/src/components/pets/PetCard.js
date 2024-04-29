@@ -299,7 +299,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                         <Modal.Header closeButton>
                             <Modal.Title>Delete {pet.name}</Modal.Title>
                         </Modal.Header>
-                        <Modal.Body>Are you sure you want to delete pet information for {pet.name}? This will also destroy all associated invoices and appointments. This information will not be ale to be recovered after deletion.</Modal.Body>
+                        <Modal.Body>Are you sure you want to delete pet information for {pet.name}? This will also destroy all associated invoices and appointments. This information will not be able to be recovered after deletion.</Modal.Body>
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>Close</Button>
                             <Button variant="danger" onClick={handleDelete}>Delete {pet.name}</Button>
