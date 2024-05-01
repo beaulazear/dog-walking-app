@@ -381,7 +381,7 @@ export default function InvoicePetCard({ pet }) {
                                     <Card.Text className='m-3'>
                                         <b>Total = ${currentTotalNewInvoices}</b>
                                     </Card.Text>
-                                    <Button style={{ margin: '5px' }} onClick={markInvoicesAsPending}>Mark new invoices as pending</Button>
+                                    <FormButton style={{ margin: '5px' }} onClick={markInvoicesAsPending}>Mark as pending</FormButton>
                                 </>
                             )}
                             {invoices?.length < 1 && (
@@ -399,13 +399,13 @@ export default function InvoicePetCard({ pet }) {
                                     <Card.Text className='m-3'>
                                         <b>Total = ${currentTotalPendingInvoices}</b>
                                     </Card.Text>
-                                    <Button style={{ margin: '5px' }} onClick={markInvoicesAsPaid}>Mark pending as Paid</Button>
+                                    <FormButton style={{ margin: '5px' }} onClick={markInvoicesAsPaid}>Mark pending as Paid</FormButton>
                                 </>
                             )}
                             {pendingInvoices?.length < 1 && (
                                 <p style={{ padding: '16px' }}>There are currently no pending invoices for {pet.name}. Invoices will be displayed here as new invoices are marked as pending.</p>
                             )}
-                            <Button style={{ margin: '5px' }} onClick={toggleEditModal}>Edit Invoices</Button>
+                            <FormButton style={{ margin: '5px' }} onClick={toggleEditModal}>Edit Invoices</FormButton>
                         </Card>
                     </Accordion.Body>
                 </Accordion.Item>
