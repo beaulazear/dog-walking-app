@@ -286,12 +286,10 @@ export default function InvoicePetCard({ pet }) {
     }
 
     function formatDateTime(dateTime) {
-        // Split the timestamp string
         const [datePart, timePart] = dateTime.split('T');
         const [year, month, day] = datePart.split('-');
         const [hour, minute] = timePart.split(':');
 
-        // Format the components as desired (without weekday)
         const formattedDateTime = `${getMonthName(month)} ${day}, ${year} ${hour}:${minute}`;
         return formattedDateTime;
     }
@@ -299,9 +297,7 @@ export default function InvoicePetCard({ pet }) {
     const dayjs = require('dayjs');
 
     function getMonthName(month) {
-        // Create a day.js object to get month name
         const dateObj = dayjs().month(parseInt(month, 10) - 1);
-        // Get the month name
         return dateObj.format('MMMM');
     }
 
@@ -407,7 +403,7 @@ export default function InvoicePetCard({ pet }) {
                                 </>
                             )}
                             {pendingInvoices?.length < 1 && (
-                                <p style={{ padding: '16px' }}>There are currently no invoices for {pet.name}. Invoices will be displayed here as walks are completed on the Today page.</p>
+                                <p style={{ padding: '16px' }}>There are currently no pending invoices for {pet.name}. Invoices will be displayed here as new invoices are marked as pending.</p>
                             )}
                             <Button style={{ margin: '5px' }} onClick={toggleEditModal}>Edit Invoices</Button>
                         </Card>
