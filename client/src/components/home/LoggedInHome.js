@@ -5,12 +5,18 @@ import { PetsContext } from "../../context/pets"
 import "bootstrap/dist/css/bootstrap.min.css";
 import Button from 'react-bootstrap/Button';
 import Card from 'react-bootstrap/Card';
+import Rates from "./Rates";
 
 export default function LoggedInHome() {
 
     const { todaysAppointments } = useContext(TodaysAppointmentsContext)
-    const { user } = useContext(UserContext)
+    const { user, setUser } = useContext(UserContext)
     const { pets } = useContext(PetsContext)
+
+    const updateUserRates = (rates) => {
+        setUser({ ...user, ...rates });
+        window.alert("Rates have been updated!")
+    };
 
     return (
         <>
@@ -31,6 +37,23 @@ export default function LoggedInHome() {
                         Visit the "Today" page to view appointments and mark them as completed as you go. Invoices will be created as you go and can be viewed on the "Finances" Page
                     </Card.Text>
                     <Button variant="primary" href="/todayswalkspage">Today's Walks</Button>
+                </Card.Body>
+            </Card>
+            <Card className="m-2">
+                <Card.Header as="h5">Set Your Rates</Card.Header>
+                <Card.Body>
+                    <Card.Title>Your current rates for appointments.</Card.Title>
+                    {user.thirty === null && user.fourty === null && user.sixty === null && (
+                        <Card.Text>
+                            You have not yet set your rates! This means walks will be defaulted to $22 for 30 minute walks, $28 for 45 minute walks, & $33 for 60 minute walks. Use the form below to update your rates.
+                        </Card.Text>
+                    )}
+                    {user.thirty !== null && user.fourty !== null && user.sixty !== null && (
+                        <Card.Text>
+                            Use the form below to update your rates. This wll be reflected on new invoices.
+                        </Card.Text>
+                    )}
+                    <Rates user={user} updateUserRates={updateUserRates} />
                 </Card.Body>
             </Card>
             <Card className="m-2">
@@ -56,4 +79,3 @@ export default function LoggedInHome() {
         </>
     )
 }
-

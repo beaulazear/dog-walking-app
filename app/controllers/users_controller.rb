@@ -1,4 +1,6 @@
 class UsersController < ApplicationController
+    before_action :current_user
+
     skip_before_action :authorized, only: :create
 
     def create
@@ -21,7 +23,7 @@ class UsersController < ApplicationController
     end
 
     def show
-        user = User.find(session[:user_id])
+        user = @current_user
         if user
             render json: user
         else
@@ -29,9 +31,26 @@ class UsersController < ApplicationController
         end
     end
 
+    def change_rates
+
+        user = User.find(session[:user_id])
+
+        user.update(rates_params)
+
+        if user.valid?
+            render json: user
+        else
+            render json: {errors: user.errors.full_messages}, status: :unprocessable_entity
+        end
+    end
+
     private
 
     def user_params
-        params.permit(:username, :password, :password_confirmation, :name, :email_address, :pets)
+        params.permit(:username, :password, :password_confirmation, :name, :email_address, :pets, :thirty, :fourty, :sixty)
+    end
+
+    def rates_params
+        params.permit(:thirty, :fourty, :sixty)
     end
 end

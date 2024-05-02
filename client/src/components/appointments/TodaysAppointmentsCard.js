@@ -1,5 +1,6 @@
 import React, { useContext } from "react";
 import { PetsContext } from "../../context/pets";
+import { UserContext } from "../../context/user";
 import Card from 'react-bootstrap/Card';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Button from "react-bootstrap/Button";
@@ -7,6 +8,7 @@ import Button from "react-bootstrap/Button";
 export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
     const { pets, setPets } = useContext(PetsContext)
+    const { user } = useContext(UserContext)
 
     function getHourAndMinutes(timestampString) {
         const [, timePart] = timestampString.split("T"); // Splitting the string to extract the time part
@@ -47,12 +49,22 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
         let compensation = 0
 
-        if (apt.duration === 30) {
-            compensation = 22
-        } else if (apt.duration === 45) {
-            compensation = 27
+        if (user.thirty !== null) {
+            if (apt.duration === 30) {
+                compensation = user.thirty
+            } else if (apt.duration === 45) {
+                compensation = user.fourty
+            } else {
+                compensation = user.sixty
+            }
         } else {
-            compensation = 33
+            if (apt.duration === 30) {
+                compensation = 22
+            } else if (apt.duration === 45) {
+                compensation = 27
+            } else {
+                compensation = 33
+            }
         }
 
         const newDate = replaceDateWithToday(apt.start_time)
@@ -88,18 +100,18 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
     function hasInvoiceForToday(appointmentStartTime, invoices) {
         const today = new Date();
-        const offset = today.getTimezoneOffset(); // Get the current time zone offset in minutes
-        const todayAdjusted = new Date(today.getTime() - (offset * 60 * 1000)); // Adjust today's date by subtracting the offset
-        const todayString = todayAdjusted.toISOString().slice(0, 10); // Get today's adjusted date in format "YYYY-MM-DD"
-    
+        const offset = today.getTimezoneOffset();
+        const todayAdjusted = new Date(today.getTime() - (offset * 60 * 1000));
+        const todayString = todayAdjusted.toISOString().slice(0, 10);
+
         const matchingInvoice = invoices.find(invoice => {
             const invoiceDate = invoice.date_completed.slice(0, 22);
             return invoiceDate === todayString + appointmentStartTime.slice(10, 22);
         });
-    
+
         return !!matchingInvoice;
     }
-    
+
 
     let invoices = hasInvoiceForToday(apt.start_time, apt.invoices)
 
