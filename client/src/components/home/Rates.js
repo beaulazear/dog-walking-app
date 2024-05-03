@@ -60,7 +60,7 @@ export default function Rates({ user, updateUserRates }) {
                     onChange={(e) => setSixty(e.target.value)}
                 />
             </Form.Group>
-            <Button variant="primary" type="submit">Update Rates</Button>
+            <Button style={{marginTop: '10px'}} variant="primary" type="submit">Update Rates</Button>
         </Form>
     );
 }
