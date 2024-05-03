@@ -90,6 +90,7 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                     <>
                         <Card.Title>Recurring Appointment</Card.Title>
                         <Card.Subtitle className="mb-2 text-muted"><b>Walk Duration:</b> {apt.duration} minutes</Card.Subtitle>
+                        <Card.Subtitle className="mb-2 text-muted"><b>Walk Type:</b> {apt.solo ? 'Solo' : 'Group'} Walk</Card.Subtitle>
                         <Card.Subtitle className="mb-2 text-muted"><b>Earliest Pickup Time:</b> {startTime} </Card.Subtitle>
                         <Card.Subtitle className="mb-2 text-muted"><b>Latest Pickup Time:</b> {endTime} </Card.Subtitle>
                         <Card.Text>
@@ -102,6 +103,7 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                         <Card.Title>One Time Appointment</Card.Title>
                         <Card.Subtitle className="mb-2 text-muted"><b>Date:</b> {datetimeString} </Card.Subtitle>
                         <Card.Subtitle className="mb-2 text-muted"><b>Walk Duration:</b> {apt.duration} minutes</Card.Subtitle>
+                        <Card.Subtitle className="mb-2 text-muted"><b>Walk Type:</b> {apt.solo ? 'Solo' : 'Group'} Walk</Card.Subtitle>
                         <Card.Subtitle className="mb-2 text-muted"><b>Earliest Pickup Time:</b> {startTime} </Card.Subtitle>
                         <Card.Subtitle className="mb-2 text-muted"><b>Latest Pickup Time:</b> {endTime} </Card.Subtitle>
                         <Card.Text>

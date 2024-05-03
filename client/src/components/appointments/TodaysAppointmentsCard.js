@@ -125,7 +125,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                 <Card className="m-3" style={{ backgroundColor: '#6fd388' }}>
                     <Card.Body>
                         <img alt="Pet associated with appointment" style={photoStyles} src={apt.pet.profile_pic} />
-                        <Card.Title>{apt.pet.name}, {apt.duration} minute walk between {startTime} & {endTime}.</Card.Title>
+                        <Card.Title>{apt.pet.name}, {apt.duration} minute {apt.solo ? 'solo' : 'group'} walk between {startTime} & {endTime}.</Card.Title>
                         <Card.Text className='display-6'>Walk Completed</Card.Text>
                     </Card.Body>
                 </Card>
