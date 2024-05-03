@@ -6,6 +6,7 @@ export default function Rates({ user, updateUserRates }) {
     const [thirty, setThirty] = useState(user.thirty || 22);
     const [fourty, setFourty] = useState(user.fourty || 28);
     const [sixty, setSixty] = useState(user.sixty || 33);
+    const [solo, setSolo] = useState(user.solo_rate || 0)
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -19,7 +20,8 @@ export default function Rates({ user, updateUserRates }) {
                 body: JSON.stringify({
                     thirty,
                     fourty,
-                    sixty
+                    sixty,
+                    solo_rate: solo,
                 })
             });
 
@@ -60,7 +62,15 @@ export default function Rates({ user, updateUserRates }) {
                     onChange={(e) => setSixty(e.target.value)}
                 />
             </Form.Group>
-            <Button style={{marginTop: '10px'}} variant="primary" type="submit">Update Rates</Button>
+            <Form.Group controlId="sixtyRate">
+                <Form.Label>Solo-walk upcharge</Form.Label>
+                <Form.Control
+                    type="number"
+                    value={solo}
+                    onChange={(e) => setSolo(e.target.value)}
+                />
+            </Form.Group>
+            <Button style={{ marginTop: '10px' }} variant="primary" type="submit">Update Rates</Button>
         </Form>
     );
 }

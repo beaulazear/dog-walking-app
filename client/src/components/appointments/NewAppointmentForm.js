@@ -19,13 +19,11 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
         const minutes = String(date.getUTCMinutes()).padStart(2, '0');
         const seconds = String(date.getUTCSeconds()).padStart(2, '0');
         const milliseconds = String(date.getUTCMilliseconds()).padStart(3, '0');
-    
+
         return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}Z`;
     }
 
-
     const formattedDate = formatDate(today)
-    console.log(formattedDate)
 
     const [recurring, setRecurring] = useState(false)
     const [appointmentDate, setAppointmentDate] = useState(formattedDate)
@@ -39,6 +37,7 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
     const [friday, setFriday] = useState(false)
     const [saturday, setSaturday] = useState(false)
     const [sunday, setSunday] = useState(false)
+    const [solo, setSolo] = useState(false)
 
     const [errors, setErrors] = useState([])
 
@@ -58,6 +57,7 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
                 appointment_date: appointmentDate,
                 end_time: endTime,
                 duration: duration,
+                solo: solo,
                 monday: monday,
                 tuesday: tuesday,
                 wednesday: wednesday,
@@ -114,6 +114,13 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
                         <option value="30">30 Minutes</option>
                         <option value="45">45 Minutes</option>
                         <option value="60">60 Minutes</option>
+                    </Form.Select>
+                </Form.Group>
+                <Form.Group className="mb-3">
+                    <Form.Label>Is this a solo walk?</Form.Label>
+                    <Form.Select onChange={() => setSolo(!solo)} aria-label="Default select example">
+                        <option value={false}>No</option>
+                        <option value={true}>Yes</option>
                     </Form.Select>
                 </Form.Group>
                 <Form.Group className="mb-3">

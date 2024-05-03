@@ -67,6 +67,10 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
             }
         }
 
+        if (apt.solo && user.solo_rate) {
+            compensation += user.solo_rate
+        }
+
         const newDate = replaceDateWithToday(apt.start_time)
 
         fetch('/invoices', {
@@ -143,6 +147,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                         <ListGroup.Item><b>Latest pick up time:</b> {endTime}</ListGroup.Item>
                         <ListGroup.Item><b>Address:</b> {apt.pet.address}</ListGroup.Item>
                         <ListGroup.Item><b>Walk Duration:</b> {apt.duration} minutes</ListGroup.Item>
+                        <ListGroup.Item><b>Walk Type:</b> {apt.solo ? 'Solo Walk' : 'Group Walk'}</ListGroup.Item>
                     </ListGroup>
                     <Card.Body>
                         <Button onClick={handleNewInvoice}>Complete Walk</Button>

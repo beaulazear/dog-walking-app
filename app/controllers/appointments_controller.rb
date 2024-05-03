@@ -59,7 +59,7 @@ class AppointmentsController < ApplicationController
     private
 
     def appointment_params
-        params.require(:appointment).permit(:user_id, :pet_id, :appointment_date, :start_time, :end_time, :recurring, :duration, :monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday)
+        params.require(:appointment).permit(:user_id, :pet_id, :appointment_date, :start_time, :end_time, :recurring, :solo, :duration, :monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday)
     end
     
     def params_for_cancel
