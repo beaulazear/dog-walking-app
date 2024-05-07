@@ -1,6 +1,7 @@
 import { Accordion, Button, Card, ListGroup, Modal } from 'react-bootstrap';
 import React, { useContext, useState } from "react";
 import { PetsContext } from "../../context/pets";
+import { TodaysAppointmentsContext } from '../../context/todaysAppointments';
 import styled from 'styled-components';
 import "bootstrap/dist/css/bootstrap.min.css";
 import { DownOutlined } from '@ant-design/icons';
@@ -63,6 +64,7 @@ const FormButton = styled.button`
 export default function InvoicePetCard({ pet }) {
 
     const { pets, setPets } = useContext(PetsContext)
+    const { todaysAppointments, setTodaysAppointments } = useContext(TodaysAppointmentsContext)
 
     const [invoices, setInvoices] = useState(pet.invoices.filter((invoice) => invoice.paid !== true && invoice.pending !== true))
 
@@ -176,8 +178,28 @@ export default function InvoicePetCard({ pet }) {
             .then((deletedInvoice) => {
                 const petNewInvoices = invoices.filter((invoice) => invoice.id !== deletedInvoice.id)
                 setInvoices(petNewInvoices)
-                const petPendingInvoices = invoices.filter((invoice) => invoice.id !== deletedInvoice.id)
+                const petPendingInvoices = pendingInvoices.filter((invoice) => invoice.id !== deletedInvoice.id)
                 setPendingInvoices(petPendingInvoices)
+
+                setTodaysAppointments(todaysAppointments.map((apt) => {
+                    apt.invoices = invoices.filter((invoice) => invoice.id !== deletedInvoice.id)
+                    return apt
+                }))
+
+                setPets(pets.map((p) => {
+                    if (p.id === pet.id) {
+                        p.invoices = p.invoices.map((invoice) => {
+                            if (invoice.id !== deletedInvoice.id) {
+                                return invoice
+                            } else {
+                                return null
+                            }
+                        }).filter(invoice => invoice !== null)
+                        return p
+                    } else {
+                        return p
+                    }
+                }))
             })
     };
 
@@ -492,7 +514,7 @@ export default function InvoicePetCard({ pet }) {
                                 </Form>
                             </FormContainer>
                         </Modal>
-                        <h3 style={{marginTop: '16px'}} classsex="display-3">Add new payment</h3>
+                        <h3 style={{ marginTop: '16px' }} classsex="display-3">Add new payment</h3>
                         <Button style={{ marginBottom: '10px' }} onClick={toggleAddIncome}>Additional Income Form</Button>
 
                         {pet.additional_incomes.length > 0 && (
