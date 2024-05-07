@@ -11,7 +11,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
     const { user } = useContext(UserContext)
 
     const [offset, setOffset] = useState(0)
-    const [selectedOption, setSelectedOption] = useState("");
+    const [selectedOption, setSelectedOption] = useState("Upcharge");
 
     const handleChange = (event) => {
         setSelectedOption(event.target.value);
