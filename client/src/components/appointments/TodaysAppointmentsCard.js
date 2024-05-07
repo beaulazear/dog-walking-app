@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { PetsContext } from "../../context/pets";
 import { UserContext } from "../../context/user";
 import Card from 'react-bootstrap/Card';
@@ -9,6 +9,14 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
     const { pets, setPets } = useContext(PetsContext)
     const { user } = useContext(UserContext)
+
+    const [offset, setOffset] = useState(0)
+    const [selectedOption, setSelectedOption] = useState("");
+
+    const handleChange = (event) => {
+        setSelectedOption(event.target.value);
+    };
+
 
     function getHourAndMinutes(timestampString) {
         const [, timePart] = timestampString.split("T"); // Splitting the string to extract the time part
@@ -69,6 +77,14 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
         if (apt.solo && user.solo_rate) {
             compensation += user.solo_rate
+        }
+
+        if (offset > 0) {
+            if (selectedOption === "Upcharge") {
+                compensation += offset
+            } else {
+                compensation -= offset
+            }
         }
 
         const newDate = replaceDateWithToday(apt.start_time)
@@ -148,6 +164,20 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                         <ListGroup.Item><b>Address:</b> {apt.pet.address}</ListGroup.Item>
                         <ListGroup.Item><b>Walk Duration:</b> {apt.duration} minutes</ListGroup.Item>
                         <ListGroup.Item><b>Walk Type:</b> {apt.solo ? 'Solo Walk' : 'Group Walk'}</ListGroup.Item>
+                        <ListGroup.Item for="offset">
+                            <b>Add a discount or upcharge here:</b>
+                            <input style={{ marginLeft: '10px' }} type='text' name="offset" maxLength={3} value={offset} onChange={(e) => setOffset(e.target.value)} />
+                        </ListGroup.Item>
+                        {offset > 0 && (
+                            <ListGroup.Item>
+                                <b>Is this an upcharge or a discount?</b>
+                                <select onChange={handleChange} value={selectedOption} style={{marginLeft: '10px'}}>
+                                    <option value="Upcharge">Upcharge</option>
+                                    <option value="Discount">Discount</option>
+                                </select>
+
+                            </ListGroup.Item>
+                        )}
                     </ListGroup>
                     <Card.Body>
                         <Button onClick={handleNewInvoice}>Complete Walk</Button>
