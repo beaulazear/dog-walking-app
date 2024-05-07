@@ -182,131 +182,134 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     }
 
     return (
-        <Accordion style={{marginBottom:  '10px'}} activeKey={activeAccordionKey}>
-            <Accordion.Item className="text-bg-light p-3" eventKey="0">
-                <Accordion.Header onClick={() => setActiveAccordionKey(activeAccordionKey === "0" ? null : "0")}>{pet.name}, {pet.address}</Accordion.Header>
-                <Accordion.Body>
-                    <Card style={{ width: '100%' }}>
-                        <Card.Img
-                            variant="top"
-                            src={pet.profile_pic}
-                            style={{
-                                width: '150px', // Adjust the width as needed
-                                height: '150px', // Adjust the height as needed
-                                objectFit: 'cover',
-                                borderRadius: '50%',
-                                margin: '10px 20px 0 10px', // Adjust the margin values as needed
-                                display: 'inline-block',
-                            }}
-                        />
+        <>
+            <h4>{pet.name}</h4>
+            <Accordion style={{ marginBottom: '10px' }} activeKey={activeAccordionKey}>
+                <Accordion.Item className="text-bg-light p-3" eventKey="0">
+                    <Accordion.Header onClick={() => setActiveAccordionKey(activeAccordionKey === "0" ? null : "0")}>Information & Appointments</Accordion.Header>
+                    <Accordion.Body>
+                        <Card style={{ width: '100%' }}>
+                            <Card.Img
+                                variant="top"
+                                src={pet.profile_pic}
+                                style={{
+                                    width: '150px', // Adjust the width as needed
+                                    height: '150px', // Adjust the height as needed
+                                    objectFit: 'cover',
+                                    borderRadius: '50%',
+                                    margin: '10px 20px 0 10px', // Adjust the margin values as needed
+                                    display: 'inline-block',
+                                }}
+                            />
 
-                        <Card.Body>
-                            <Card.Title>{pet.name}</Card.Title>
-                            <Card.Text>
-                                {pet.address}
-                            </Card.Text>
-                        </Card.Body>
-                        <ListGroup className="list-group-flush">
-                            <ListGroup.Item><b>Sex:</b> {pet.sex}, {pet.spayed_neutered ? "fixed" : "Not fixed"}</ListGroup.Item>
-                            <ListGroup.Item><b>Supplies:</b> {pet.supplies_location}</ListGroup.Item>
-                            <ListGroup.Item><b>Notes:</b> {pet.behavorial_notes}</ListGroup.Item>
-                            <ListGroup.Item><b>Allergies:</b> {pet.allergies}</ListGroup.Item>
-                            <ListGroup.Item><b>Birthdate:</b> {formatDate(pet.birthdate)}</ListGroup.Item>
-                            <ListGroup.Item><b>Appointments:</b> View, edit, & create appointments for {pet.name}</ListGroup.Item>
-                            {currentPetAppointments?.length < 0 && (
-                                <h4 className='display-6 m-3'>There are currently no appointments booked for {pet.name}.</h4>
-                            )}
-                            {currentPetAppointments?.map((apt) => (
-                                <PetAppointmentCard updateAppointmentsDelete={updateAppointmentsDelete} apt={apt} key={apt.id}>Apt</PetAppointmentCard>
-                            ))}
-                            <Button className='m-4' variant="primary" onClick={changeAptFormView}>New Appointment</Button>
-                            {newAptButton === true && (
-                                <NewAppointmentForm updateAppointmentsNew={updateAppointmentsNew} pet={pet} />
-                            )}
-                        </ListGroup>
-                    </Card>
-                </Accordion.Body>
-            </Accordion.Item>
-            <Accordion.Item className="text-bg-light p-3" eventKey="1">
-                <Accordion.Header onClick={() => setActiveAccordionKey(activeAccordionKey === "1" ? null : "1")}>Update "{pet.name}"</Accordion.Header>
-                <Accordion.Body>
-                    <h3 classsex="display-3">Update information for "{pet.name}"</h3>
-                    <Form className="text-bg-light p-3" encType="multipart/form-data" onSubmit={handleUpdatePet}>
-                        <Form.Group classsex="mb-3">
-                            <Form.Label>Pet's Photo</Form.Label>
-                            <Form.Control
-                                id='file-upload'
-                                type='file' accept='image/*'
-                                onChange={(e) => {
-                                    setProfilePic(e.target.files[0])
-                                }} />
-                            <Form.Label>Pet's Name</Form.Label>
-                            <Form.Control onChange={(e) => setName(e.target.value)} value={name} type="text" placeholder="Enter name" />
-                        </Form.Group>
-                        <Form.Group classsex="mb-3" controlId="formBasicaddress">
-                            <Form.Label>Address</Form.Label>
-                            <Form.Control onChange={(e) => setAddress(e.target.value)} value={address} type="text" placeholder="Enter address" />
-                            <Form.Text classsex="text-muted">
-                                Please enter the address of the pet. Make sure to specify an apartment number if there is one.
-                            </Form.Text>
-                        </Form.Group>
-                        <Form.Group classsex="mb-3">
-                            <Form.Label>Sex</Form.Label>
-                            <Form.Select onChange={(updateSex)} aria-label="Default select example" value={sex.toLowerCase()}>
-                                <option>Open this select menu</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                            </Form.Select>
-                        </Form.Group>
-                        <Form.Group classsex="mb-3">
-                            <Form.Label>Spayed or Neutered?</Form.Label>
-                            <Form.Select onChange={(updateSpayedOrNeutered)} aria-label="Default select example" value={spayedOrNeutered} >
-                                <option>Open this select menu</option>
-                                <option value="true">Yes</option>
-                                <option value="false">No</option>
-                            </Form.Select>
-                        </Form.Group>
-                        <Form.Group classsex="mb-3" controlId="formBasicbirthdate">
-                            <Form.Label>Birthdate:</Form.Label>
-                            <Form.Control value={birthdate} onChange={(e) => setBirthdate(e.target.value)} type="date">
-                            </Form.Control>
-                        </Form.Group>
-                        <Form.Group classsex="mb-3" controlId="formBasicAllergies">
-                            <Form.Label>Allergies</Form.Label>
-                            <Form.Control onChange={(e) => setAllergies(e.target.value)} value={allergies} type="text" placeholder="Does your dog have any known allergies? If not, please type none" />
-                        </Form.Group>
-                        <Form.Group classsex="mb-3" controlId="formBasicSuppliesLocation">
-                            <Form.Label>Supplies Location</Form.Label>
-                            <Form.Control as="textarea" rows={3} onChange={(e) => setSuppliesLocation(e.target.value)} value={suppliesLocation} type="text" placeholder="Leash location, treats, etc..." />
-                        </Form.Group>
-                        <Form.Group classsex="mb-3" controlId="formBasicBehaviorialNotes">
-                            <Form.Label>Behaviorial Information</Form.Label>
-                            <Form.Control as="textarea" rows={3} onChange={(e) => setbehavorialNotes(e.target.value)} value={behavorialNotes} type="text" placeholder="Leash reactivity, tries to eat trash, etc..." />
-                            {errors?.length > 0 && (
-                                <div>
-                                    {errors.map((error) => (
-                                        <Alert key={error} variant={'danger'}>
-                                            {error}
-                                        </Alert>))}
-                                </div>
-                            )}
-                        </Form.Group>
-                        <br></br>
-                        <Button className='p-2 m-2' variant="primary" type="submit">Update</Button>
-                        <Button className='p-2 m-2' variant="danger" onClick={handleShow}>Delete</Button>
-                    </Form>
-                    <Modal show={show} onHide={handleClose}>
-                        <Modal.Header closeButton>
-                            <Modal.Title>Delete {pet.name}</Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>Are you sure you want to delete pet information for {pet.name}? This will also destroy all associated invoices and appointments. This information will not be able to be recovered after deletion.</Modal.Body>
-                        <Modal.Footer>
-                            <Button variant="secondary" onClick={handleClose}>Close</Button>
-                            <Button variant="danger" onClick={handleDelete}>Delete {pet.name}</Button>
-                        </Modal.Footer>
-                    </Modal>
-                </Accordion.Body>
-            </Accordion.Item>
-        </Accordion>
+                            <Card.Body>
+                                <Card.Title>{pet.name}</Card.Title>
+                                <Card.Text>
+                                    {pet.address}
+                                </Card.Text>
+                            </Card.Body>
+                            <ListGroup className="list-group-flush">
+                                <ListGroup.Item><b>Sex:</b> {pet.sex}, {pet.spayed_neutered ? "fixed" : "Not fixed"}</ListGroup.Item>
+                                <ListGroup.Item><b>Supplies:</b> {pet.supplies_location}</ListGroup.Item>
+                                <ListGroup.Item><b>Notes:</b> {pet.behavorial_notes}</ListGroup.Item>
+                                <ListGroup.Item><b>Allergies:</b> {pet.allergies}</ListGroup.Item>
+                                <ListGroup.Item><b>Birthdate:</b> {formatDate(pet.birthdate)}</ListGroup.Item>
+                                <ListGroup.Item><b>Appointments:</b> View, edit, & create appointments for {pet.name}</ListGroup.Item>
+                                {currentPetAppointments?.length < 0 && (
+                                    <h4 className='display-6 m-3'>There are currently no appointments booked for {pet.name}.</h4>
+                                )}
+                                {currentPetAppointments?.map((apt) => (
+                                    <PetAppointmentCard updateAppointmentsDelete={updateAppointmentsDelete} apt={apt} key={apt.id}>Apt</PetAppointmentCard>
+                                ))}
+                                <Button className='m-4' variant="primary" onClick={changeAptFormView}>New Appointment</Button>
+                                {newAptButton === true && (
+                                    <NewAppointmentForm updateAppointmentsNew={updateAppointmentsNew} pet={pet} />
+                                )}
+                            </ListGroup>
+                        </Card>
+                    </Accordion.Body>
+                </Accordion.Item>
+                <Accordion.Item className="text-bg-light p-3" eventKey="1">
+                    <Accordion.Header onClick={() => setActiveAccordionKey(activeAccordionKey === "1" ? null : "1")}>Update {pet.name}</Accordion.Header>
+                    <Accordion.Body>
+                        <h3 classsex="display-3">Update information for "{pet.name}"</h3>
+                        <Form className="text-bg-light p-3" encType="multipart/form-data" onSubmit={handleUpdatePet}>
+                            <Form.Group classsex="mb-3">
+                                <Form.Label>Pet's Photo</Form.Label>
+                                <Form.Control
+                                    id='file-upload'
+                                    type='file' accept='image/*'
+                                    onChange={(e) => {
+                                        setProfilePic(e.target.files[0])
+                                    }} />
+                                <Form.Label>Pet's Name</Form.Label>
+                                <Form.Control onChange={(e) => setName(e.target.value)} value={name} type="text" placeholder="Enter name" />
+                            </Form.Group>
+                            <Form.Group classsex="mb-3" controlId="formBasicaddress">
+                                <Form.Label>Address</Form.Label>
+                                <Form.Control onChange={(e) => setAddress(e.target.value)} value={address} type="text" placeholder="Enter address" />
+                                <Form.Text classsex="text-muted">
+                                    Please enter the address of the pet. Make sure to specify an apartment number if there is one.
+                                </Form.Text>
+                            </Form.Group>
+                            <Form.Group classsex="mb-3">
+                                <Form.Label>Sex</Form.Label>
+                                <Form.Select onChange={(updateSex)} aria-label="Default select example" value={sex.toLowerCase()}>
+                                    <option>Open this select menu</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </Form.Select>
+                            </Form.Group>
+                            <Form.Group classsex="mb-3">
+                                <Form.Label>Spayed or Neutered?</Form.Label>
+                                <Form.Select onChange={(updateSpayedOrNeutered)} aria-label="Default select example" value={spayedOrNeutered} >
+                                    <option>Open this select menu</option>
+                                    <option value="true">Yes</option>
+                                    <option value="false">No</option>
+                                </Form.Select>
+                            </Form.Group>
+                            <Form.Group classsex="mb-3" controlId="formBasicbirthdate">
+                                <Form.Label>Birthdate:</Form.Label>
+                                <Form.Control value={birthdate} onChange={(e) => setBirthdate(e.target.value)} type="date">
+                                </Form.Control>
+                            </Form.Group>
+                            <Form.Group classsex="mb-3" controlId="formBasicAllergies">
+                                <Form.Label>Allergies</Form.Label>
+                                <Form.Control onChange={(e) => setAllergies(e.target.value)} value={allergies} type="text" placeholder="Does your dog have any known allergies? If not, please type none" />
+                            </Form.Group>
+                            <Form.Group classsex="mb-3" controlId="formBasicSuppliesLocation">
+                                <Form.Label>Supplies Location</Form.Label>
+                                <Form.Control as="textarea" rows={3} onChange={(e) => setSuppliesLocation(e.target.value)} value={suppliesLocation} type="text" placeholder="Leash location, treats, etc..." />
+                            </Form.Group>
+                            <Form.Group classsex="mb-3" controlId="formBasicBehaviorialNotes">
+                                <Form.Label>Behaviorial Information</Form.Label>
+                                <Form.Control as="textarea" rows={3} onChange={(e) => setbehavorialNotes(e.target.value)} value={behavorialNotes} type="text" placeholder="Leash reactivity, tries to eat trash, etc..." />
+                                {errors?.length > 0 && (
+                                    <div>
+                                        {errors.map((error) => (
+                                            <Alert key={error} variant={'danger'}>
+                                                {error}
+                                            </Alert>))}
+                                    </div>
+                                )}
+                            </Form.Group>
+                            <br></br>
+                            <Button className='p-2 m-2' variant="primary" type="submit">Update</Button>
+                            <Button className='p-2 m-2' variant="danger" onClick={handleShow}>Delete</Button>
+                        </Form>
+                        <Modal show={show} onHide={handleClose}>
+                            <Modal.Header closeButton>
+                                <Modal.Title>Delete {pet.name}</Modal.Title>
+                            </Modal.Header>
+                            <Modal.Body>Are you sure you want to delete pet information for {pet.name}? This will also destroy all associated invoices and appointments. This information will not be able to be recovered after deletion.</Modal.Body>
+                            <Modal.Footer>
+                                <Button variant="secondary" onClick={handleClose}>Close</Button>
+                                <Button variant="danger" onClick={handleDelete}>Delete {pet.name}</Button>
+                            </Modal.Footer>
+                        </Modal>
+                    </Accordion.Body>
+                </Accordion.Item>
+            </Accordion>
+        </>
     );
 }

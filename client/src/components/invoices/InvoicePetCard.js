@@ -387,7 +387,7 @@ export default function InvoicePetCard({ pet }) {
                             {invoices?.length < 1 && (
                                 <p style={{ padding: '16px' }}>There are currently no new invoices for {pet.name}. Invoices will be displayed here as walks are completed on the Today page.</p>
                             )}
-                            <Card.Title style={{ marginLeft: '16px' }}>{pet.name}'s Pending Invoices:</Card.Title>
+                            <Card.Title style={{ marginTop: '10px', marginLeft: '16px' }}>{pet.name}'s Pending Invoices:</Card.Title>
                             {pendingInvoices?.length > 0 && (
                                 <>
                                     <p style={{ marginLeft: '16px' }}>Pending invoices have been sent to client for payment! Once payment is collected, mark as paid.</p>
@@ -492,7 +492,7 @@ export default function InvoicePetCard({ pet }) {
                                 </Form>
                             </FormContainer>
                         </Modal>
-                        <h3 classsex="display-3">Add new payment</h3>
+                        <h3 style={{marginTop: '16px'}} classsex="display-3">Add new payment</h3>
                         <Button style={{ marginBottom: '10px' }} onClick={toggleAddIncome}>Additional Income Form</Button>
 
                         {pet.additional_incomes.length > 0 && (
