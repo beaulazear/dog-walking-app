@@ -81,9 +81,9 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
         if (offset > 0) {
             if (selectedOption === "Upcharge") {
-                compensation += offset
+                compensation += parseFloat(offset)
             } else {
-                compensation -= offset
+                compensation -= parseFloat(offset)
             }
         }
 
