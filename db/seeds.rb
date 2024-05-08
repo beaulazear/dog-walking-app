@@ -1,5 +1,5 @@
 puts "seeding testing user"
-User.create(username: "testing", password: "flatiron", password_confirmation: "flatiron", name: "Test Account", email_address: "testing@gmail.com", pets: [])
+User.create(username: "testing", password: "flatiron", password_confirmation: "flatiron", name: "Test Account", email_address: "testing@gmail.com", pets: [], thirty: 22, fourty: 28, sixty: 33, solo_rate: 5)
 puts "seeding testing pets"
 Pet.create(user_id: 1, name: "Sage", spayed_neutered: true, birthdate: "2020-02-04T05:00:00.000Z", behavorial_notes: "Usually a good boy... can nip if you scratch the wrong spot. Usually around his butt", supplies_location: "Wet food is in the cabinet to the right of the stove, dry food on the bar cart, two litter boxes down stairs and one upstairs", allergies: "none that we are aware of", sex: "male", address: "827 Monroe St")
 Pet.create(user_id: 1, name: "Moose Zelenetz", spayed_neutered: true, birthdate: "2020-02-04T05:00:00.000Z", behavorial_notes: "Leash reactivity towards other dogs and sometimes people, be extra careful and do not put your guard down. He has often times lunged at people or other dogs.", supplies_location: "Leash in closet as you walk in, treats in jar on kitchen counter.", allergies: "Chicken", sex: "male", address: "262 Bond St")

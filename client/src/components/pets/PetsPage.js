@@ -59,8 +59,8 @@ export default function PetsPage() {
 
     if (pets?.length > 0) {
         return (
-            <div style={{marginBottom: '35px', marginLeft: '10px', marginRight: '10px'}}>
-                <Row style={{marginBottom: '16px'}}>
+            <div style={{ marginBottom: '35px', marginLeft: '10px', marginRight: '10px' }}>
+                <Row style={{ marginBottom: '16px' }}>
                     <Col>
                         <h2 className="display-4 m-3">Pets</h2>
                     </Col>
@@ -78,7 +78,7 @@ export default function PetsPage() {
         )
     } else {
         return (
-            <Container>
+            <div style={{ marginBottom: '35px', marginLeft: '10px', marginRight: '10px' }}>
                 <Row>
                     <Col>
                         <h2 className="display-4 m-3">Pets</h2>
@@ -99,7 +99,7 @@ export default function PetsPage() {
                         </Card.Text>
                     </Card.Body>
                 </Card>
-            </Container>
+            </div>
         )
     }
 }

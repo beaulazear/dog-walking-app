@@ -116,7 +116,12 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     }
 
     function updateAppointmentsNew(newApt) {
-        setPetsAppointments([...petsAppointments, newApt])
+
+        if (petsAppointments === null) {
+            setPetsAppointments([newApt])
+        } else {
+            setPetsAppointments([...petsAppointments, newApt])
+        }
 
         if (newApt.recurring === true) {
 
