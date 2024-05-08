@@ -5,7 +5,7 @@ import Form from "react-bootstrap/Form";
 import Container from 'react-bootstrap/Container';
 import Alert from 'react-bootstrap/Alert';
 
-const StyledFormContainer = styled(Container)`
+const StyledContainer = styled(Container)`
     padding: 20px;
     background-color: #f8f9fa;
     border-radius: 10px;
@@ -18,11 +18,15 @@ const StyledTitle = styled.h1`
     margin-bottom: 20px;
 `;
 
+const StyledForm = styled(Form)`
+    color: #333;
+`;
+
 const StyledFormGroup = styled(Form.Group)`
     margin-bottom: 20px;
 `;
 
-const StyledLabel = styled(Form.Label)`
+const StyledFormLabel = styled(Form.Label)`
     font-weight: bold;
 `;
 
@@ -43,13 +47,15 @@ export default function NewPetForm({ updateUserPets }) {
     const [birthdate, setBirthdate] = useState("");
     const [allergies, setAllergies] = useState("");
     const [suppliesLocation, setSuppliesLocation] = useState("");
-    const [behavioralNotes, setBehavioralNotes] = useState("");
+    const [behavorialNotes, setBehavorialNotes] = useState("");
     const [spayedOrNeutered, setSpayedOrNeutered] = useState(false);
 
     const [errors, setErrors] = useState([]);
 
     function handleNewPet(e) {
+
         e.preventDefault();
+        console.log(behavorialNotes)
         fetch("/pets", {
             method: "POST",
             headers: {
@@ -61,7 +67,7 @@ export default function NewPetForm({ updateUserPets }) {
                 address: address,
                 birthdate: birthdate,
                 allergies: allergies,
-                behavioral_notes: behavioralNotes,
+                behavorial_notes: behavorialNotes,
                 supplies_location: suppliesLocation,
                 spayed_neutered: spayedOrNeutered
             })
@@ -86,22 +92,22 @@ export default function NewPetForm({ updateUserPets }) {
     }
 
     return (
-        <StyledFormContainer>
+        <StyledContainer>
             <StyledTitle>New Pet Form</StyledTitle>
-            <Form onSubmit={handleNewPet}>
+            <StyledForm onSubmit={handleNewPet}>
                 <StyledFormGroup>
-                    <StyledLabel>Pet's Name</StyledLabel>
+                    <StyledFormLabel>Pet's Name</StyledFormLabel>
                     <Form.Control onChange={(e) => setName(e.target.value)} value={name} type="text" placeholder="Enter name" />
                 </StyledFormGroup>
                 <StyledFormGroup controlId="formBasicAddress">
-                    <StyledLabel>Address</StyledLabel>
+                    <StyledFormLabel>Address</StyledFormLabel>
                     <Form.Control onChange={(e) => setAddress(e.target.value)} value={address} type="text" placeholder="Enter address" />
                     <Form.Text className="text-muted">
                         Please enter the address of the pet. Make sure to specify an apartment number if there is one.
                     </Form.Text>
                 </StyledFormGroup>
                 <StyledFormGroup>
-                    <StyledLabel>Sex</StyledLabel>
+                    <StyledFormLabel>Sex</StyledFormLabel>
                     <Form.Select onChange={updateSex} aria-label="Select sex">
                         <option>Select sex</option>
                         <option value="Male">Male</option>
@@ -109,7 +115,7 @@ export default function NewPetForm({ updateUserPets }) {
                     </Form.Select>
                 </StyledFormGroup>
                 <StyledFormGroup>
-                    <StyledLabel>Spayed or Neutered?</StyledLabel>
+                    <StyledFormLabel>Spayed or Neutered?</StyledFormLabel>
                     <Form.Select onChange={updateSpayedOrNeutered} aria-label="Select spayed or neutered">
                         <option>Select</option>
                         <option value="true">Yes</option>
@@ -117,25 +123,25 @@ export default function NewPetForm({ updateUserPets }) {
                     </Form.Select>
                 </StyledFormGroup>
                 <StyledFormGroup controlId="formBasicBirthdate">
-                    <StyledLabel>Birthdate:</StyledLabel>
+                    <StyledFormLabel>Birthdate:</StyledFormLabel>
                     <Form.Control value={birthdate} onChange={(e) => setBirthdate(e.target.value)} type="date" />
                 </StyledFormGroup>
                 <StyledFormGroup controlId="formBasicAllergies">
-                    <StyledLabel>Allergies</StyledLabel>
+                    <StyledFormLabel>Allergies</StyledFormLabel>
                     <Form.Control onChange={(e) => setAllergies(e.target.value)} value={allergies} type="text" placeholder="Does your dog have any known allergies? If not, please type none" />
                 </StyledFormGroup>
                 <StyledFormGroup controlId="formBasicSuppliesLocation">
-                    <StyledLabel>Supplies Location</StyledLabel>
+                    <StyledFormLabel>Supplies Location</StyledFormLabel>
                     <Form.Control onChange={(e) => setSuppliesLocation(e.target.value)} value={suppliesLocation} type="text" placeholder="Leash location, treats, etc..." />
                 </StyledFormGroup>
-                <StyledFormGroup controlId="formBasicBehavioralNotes">
-                    <StyledLabel>Behavioral / Additional Information</StyledLabel>
-                    <Form.Control onChange={(e) => setBehavioralNotes(e.target.value)} value={behavioralNotes} type="text" placeholder="Leash reactivity, tries to eat trash, etc..." />
+                <StyledFormGroup controlId="formBasicbehavorialNotes">
+                    <StyledFormLabel>Behavioral Information</StyledFormLabel>
+                    <Form.Control onChange={(e) => setBehavorialNotes(e.target.value)} value={behavorialNotes} type="text" placeholder="Leash reactivity, tries to eat trash, etc..." />
                 </StyledFormGroup>
                 {errors?.length > 0 && (
                     <ul>
-                        {errors.map((error, index) => (
-                            <Alert key={index} variant="danger">
+                        {errors.map((error) => (
+                            <Alert key={error} variant={'danger'}>
                                 {error}
                             </Alert>
                         ))}
@@ -144,7 +150,7 @@ export default function NewPetForm({ updateUserPets }) {
                 <StyledButton variant="primary" type="submit">
                     Submit
                 </StyledButton>
-            </Form>
-        </StyledFormContainer>
+            </StyledForm>
+        </StyledContainer>
     );
 }
