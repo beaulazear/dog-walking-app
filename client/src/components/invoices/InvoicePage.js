@@ -20,7 +20,7 @@ export default function InvoicesPage() {
         )
     } else {
         return (
-            <div>
+            <div style={{marginBottom: '35px', marginLeft: '10px', marginRight: '10px'}}>
                 <h2 className="display-4 m-3">Finances</h2>
                 <Card className="m-2">
                     <Card.Header as="h5">No pets currently in database</Card.Header>
