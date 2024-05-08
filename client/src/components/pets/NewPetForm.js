@@ -1,25 +1,55 @@
 import React, { useState } from "react";
+import styled from "styled-components";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import Container from 'react-bootstrap/Container';
 import Alert from 'react-bootstrap/Alert';
 
+const StyledFormContainer = styled(Container)`
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+`;
+
+const StyledTitle = styled.h1`
+    font-size: 2em;
+    color: #333;
+    margin-bottom: 20px;
+`;
+
+const StyledFormGroup = styled(Form.Group)`
+    margin-bottom: 20px;
+`;
+
+const StyledLabel = styled(Form.Label)`
+    font-weight: bold;
+`;
+
+const StyledButton = styled(Button)`
+    background-color: #007bff;
+    border-color: #007bff;
+    &:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+    }
+`;
+
 export default function NewPetForm({ updateUserPets }) {
 
-    const [name, setName] = useState("")
-    const [address, setAddress] = useState("")
-    const [sex, setSex] = useState("")
-    const [birthdate, setBirthdate] = useState("")
-    const [allergies, setAllergies] = useState("")
-    const [suppliesLocation, setSuppliesLocation] = useState("")
-    const [behavorialNotes, setbehavorialNotes] = useState("")
-    const [spayedOrNeutered, setSpayedOrNeutered] = useState(false)
+    const [name, setName] = useState("");
+    const [address, setAddress] = useState("");
+    const [sex, setSex] = useState("");
+    const [birthdate, setBirthdate] = useState("");
+    const [allergies, setAllergies] = useState("");
+    const [suppliesLocation, setSuppliesLocation] = useState("");
+    const [behavioralNotes, setBehavioralNotes] = useState("");
+    const [spayedOrNeutered, setSpayedOrNeutered] = useState(false);
 
-    const [errors, setErrors] = useState([])
+    const [errors, setErrors] = useState([]);
 
     function handleNewPet(e) {
-
-        e.preventDefault()
+        e.preventDefault();
         fetch("/pets", {
             method: "POST",
             headers: {
@@ -31,7 +61,7 @@ export default function NewPetForm({ updateUserPets }) {
                 address: address,
                 birthdate: birthdate,
                 allergies: allergies,
-                behavorial_notes: behavorialNotes,
+                behavioral_notes: behavioralNotes,
                 supplies_location: suppliesLocation,
                 spayed_neutered: spayedOrNeutered
             })
@@ -39,93 +69,82 @@ export default function NewPetForm({ updateUserPets }) {
             .then((response) => {
                 if (response.ok) {
                     response.json().then((newPet) => {
-                        updateUserPets(newPet)
-                    })
+                        updateUserPets(newPet);
+                    });
                 } else {
-                    response.json().then((errorData) => setErrors(errorData.errors))
+                    response.json().then((errorData) => setErrors(errorData.errors));
                 }
-            })
+            });
     }
 
     function updateSpayedOrNeutered(e) {
-        if (e.target.value === "true") {
-            setSpayedOrNeutered(true)
-        } else {
-            setSpayedOrNeutered(false)
-        }
+        setSpayedOrNeutered(e.target.value === "true");
     }
 
     function updateSex(e) {
-        if (e.target.value === "Male") {
-            setSex("Male")
-        } else {
-            setSex("Female")
-        }
+        setSex(e.target.value);
     }
 
-
     return (
-        <Container>
-            <h1 className="display-6">New Pet Form</h1>
-            <Form className="text-bg-light" onSubmit={handleNewPet}>
-                <Form.Group classsex="mb-3">
-                    <Form.Label>Pet's Name</Form.Label>
+        <StyledFormContainer>
+            <StyledTitle>New Pet Form</StyledTitle>
+            <Form onSubmit={handleNewPet}>
+                <StyledFormGroup>
+                    <StyledLabel>Pet's Name</StyledLabel>
                     <Form.Control onChange={(e) => setName(e.target.value)} value={name} type="text" placeholder="Enter name" />
-                </Form.Group>
-                <Form.Group classsex="mb-3" controlId="formBasicaddress">
-                    <Form.Label>Address</Form.Label>
+                </StyledFormGroup>
+                <StyledFormGroup controlId="formBasicAddress">
+                    <StyledLabel>Address</StyledLabel>
                     <Form.Control onChange={(e) => setAddress(e.target.value)} value={address} type="text" placeholder="Enter address" />
-                    <Form.Text classsex="text-muted">
+                    <Form.Text className="text-muted">
                         Please enter the address of the pet. Make sure to specify an apartment number if there is one.
                     </Form.Text>
-                </Form.Group>
-                <Form.Group classsex="mb-3">
-                    <Form.Label>Sex</Form.Label>
-                    <Form.Select onChange={(updateSex)} aria-label="Default select example">
-                        <option>Open this select menu</option>
+                </StyledFormGroup>
+                <StyledFormGroup>
+                    <StyledLabel>Sex</StyledLabel>
+                    <Form.Select onChange={updateSex} aria-label="Select sex">
+                        <option>Select sex</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                     </Form.Select>
-                </Form.Group>
-                <Form.Group classsex="mb-3">
-                    <Form.Label>Spayed or Neutered?</Form.Label>
-                    <Form.Select onChange={(updateSpayedOrNeutered)} aria-label="Default select example">
-                        <option>Open this select menu</option>
+                </StyledFormGroup>
+                <StyledFormGroup>
+                    <StyledLabel>Spayed or Neutered?</StyledLabel>
+                    <Form.Select onChange={updateSpayedOrNeutered} aria-label="Select spayed or neutered">
+                        <option>Select</option>
                         <option value="true">Yes</option>
                         <option value="false">No</option>
                     </Form.Select>
-                </Form.Group>
-                <Form.Group classsex="mb-3" controlId="formBasicbirthdate">
-                    <Form.Label>Birthdate:</Form.Label>
-                    <Form.Control value={birthdate} onChange={(e) => setBirthdate(e.target.value)} type="date">
-                    </Form.Control>
-                </Form.Group>
-                <Form.Group classsex="mb-3" controlId="formBasicAllergies">
-                    <Form.Label>Allergies</Form.Label>
+                </StyledFormGroup>
+                <StyledFormGroup controlId="formBasicBirthdate">
+                    <StyledLabel>Birthdate:</StyledLabel>
+                    <Form.Control value={birthdate} onChange={(e) => setBirthdate(e.target.value)} type="date" />
+                </StyledFormGroup>
+                <StyledFormGroup controlId="formBasicAllergies">
+                    <StyledLabel>Allergies</StyledLabel>
                     <Form.Control onChange={(e) => setAllergies(e.target.value)} value={allergies} type="text" placeholder="Does your dog have any known allergies? If not, please type none" />
-                </Form.Group>
-                <Form.Group classsex="mb-3" controlId="formBasicSuppliesLocation">
-                    <Form.Label>Supplies Location</Form.Label>
+                </StyledFormGroup>
+                <StyledFormGroup controlId="formBasicSuppliesLocation">
+                    <StyledLabel>Supplies Location</StyledLabel>
                     <Form.Control onChange={(e) => setSuppliesLocation(e.target.value)} value={suppliesLocation} type="text" placeholder="Leash location, treats, etc..." />
-                </Form.Group>
-                <Form.Group classsex="mb-3" controlId="formBasicBehaviorialNotes">
-                    <Form.Label>Behaviorial Information</Form.Label>
-                    <Form.Control onChange={(e) => setbehavorialNotes(e.target.value)} value={behavorialNotes} type="text" placeholder="Leash reactivity, tries to eat trash, etc..." />
-                </Form.Group>
+                </StyledFormGroup>
+                <StyledFormGroup controlId="formBasicBehavioralNotes">
+                    <StyledLabel>Behavioral / Additional Information</StyledLabel>
+                    <Form.Control onChange={(e) => setBehavioralNotes(e.target.value)} value={behavioralNotes} type="text" placeholder="Leash reactivity, tries to eat trash, etc..." />
+                </StyledFormGroup>
                 {errors?.length > 0 && (
                     <ul>
-                        {errors.map((error) => (
-                            <Alert key={error} variant={'danger'}>
+                        {errors.map((error, index) => (
+                            <Alert key={index} variant="danger">
                                 {error}
-                            </Alert>))}
+                            </Alert>
+                        ))}
                     </ul>
                 )}
-                <br></br>
-                <Button variant="primary" type="submit">
+                <StyledButton variant="primary" type="submit">
                     Submit
-                </Button>
+                </StyledButton>
             </Form>
-            <br></br>
-        </Container>
-    )
+        </StyledFormContainer>
+    );
 }

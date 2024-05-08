@@ -24,7 +24,6 @@ export default function Signup() {
     function handleSignup(e) {
         e.preventDefault();
 
-        console.log(parseFloat(fourty))
         fetch("/users", {
             method: "POST",
             headers: {
@@ -81,7 +80,7 @@ export default function Signup() {
                     <Form.Label>Password</Form.Label>
                     <Form.Control onChange={(e) => setPassword(e.target.value)} value={password} type="password" placeholder="Password" />
                 </Form.Group>
-                <Form.Group className="mb-3" controlId="formBasicPassword">
+                <Form.Group className="mb-3" controlId="formBasicPasswordConfirmation">
                     <Form.Label>Password Confirmation</Form.Label>
                     <Form.Control onChange={(e) => setPasswordConfirmation(e.target.value)} value={passwordConfirmation} type="password" placeholder="Password Confirmation" />
                 </Form.Group>
