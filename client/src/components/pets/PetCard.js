@@ -88,6 +88,14 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                         setErrors([])
                         setActiveAccordionKey(null);
                         updateUserPets(newPet)
+                        setTodaysAppointments(todaysAppointments.map((apt) => {
+                            if (apt.pet.id === pet.id) {
+                                apt.pet = newPet
+                                return apt
+                            } else {
+                                return apt
+                            }
+                        }))
                     })
                 } else {
                     res.json().then((errorData) => setErrors(errorData.errors))
