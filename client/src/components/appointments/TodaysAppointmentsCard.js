@@ -164,13 +164,13 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                         <ListGroup.Item><b>Address:</b> {apt.pet.address}</ListGroup.Item>
                         <ListGroup.Item><b>Walk Duration:</b> {apt.duration} minutes</ListGroup.Item>
                         <ListGroup.Item><b>Walk Type:</b> {apt.solo ? 'Solo Walk' : 'Group Walk'}</ListGroup.Item>
-                        <ListGroup.Item for="offset">
-                            <b>Add a discount or upcharge here:</b>
+                        <ListGroup.Item>
+                            <b>Offset walk price $</b>
                             <input style={{ marginLeft: '10px' }} type='text' name="offset" maxLength={3} value={offset} onChange={(e) => setOffset(e.target.value)} />
                         </ListGroup.Item>
                         {offset > 0 && (
                             <ListGroup.Item>
-                                <b>Is this an upcharge or a discount?</b>
+                                <b>Upcharge or Discount?</b>
                                 <select onChange={handleChange} value={selectedOption} style={{marginLeft: '10px'}}>
                                     <option value="Upcharge">Upcharge</option>
                                     <option value="Discount">Discount</option>
