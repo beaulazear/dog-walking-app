@@ -64,6 +64,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
     function handleNewInvoice() {
 
+
         let compensation = 0
 
         if (user.thirty !== null) {
@@ -98,33 +99,39 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
         const newDate = replaceDateWithToday(apt.start_time)
 
-        fetch('/invoices', {
-            method: 'POST',
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                pet_id: apt.pet.id,
-                appointment_id: apt.id,
-                date_completed: newDate,
-                paid: false,
-                compensation: compensation
-            })
-        })
-            .then((response) => response.json())
-            .then((newInvoice) => {
-                const newApt = { ...apt, invoices: [...apt.invoices, newInvoice] }
-                const newPets = pets.map((pet) => {
-                    if (pet.id === newInvoice.pet_id) {
-                        pet.invoices = [...pet.invoices, newInvoice]
-                        return pet
-                    } else {
-                        return pet
-                    }
+        const confirm = window.confirm(`Mark walk as completed? An invoice will be created for $${compensation}.`)
+
+        if (confirm) {
+            fetch('/invoices', {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    pet_id: apt.pet.id,
+                    appointment_id: apt.id,
+                    date_completed: newDate,
+                    paid: false,
+                    compensation: compensation
                 })
-                setPets(newPets)
-                updateAppointments(newApt)
             })
+                .then((response) => response.json())
+                .then((newInvoice) => {
+                    const newApt = { ...apt, invoices: [...apt.invoices, newInvoice] }
+                    const newPets = pets.map((pet) => {
+                        if (pet.id === newInvoice.pet_id) {
+                            pet.invoices = [...pet.invoices, newInvoice]
+                            return pet
+                        } else {
+                            return pet
+                        }
+                    })
+                    setPets(newPets)
+                    updateAppointments(newApt)
+                })
+        } else {
+            console.log("Walk not completed")
+        }
     }
 
     function handleNewCancelInvoice() {

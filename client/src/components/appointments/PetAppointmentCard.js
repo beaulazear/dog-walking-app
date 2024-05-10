@@ -62,21 +62,28 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
     }
 
     function handleCancel() {
-        fetch(`/appointments/${apt.id}/canceled`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': "application/json"
-            },
-            body: JSON.stringify({
-                canceled: true
+
+        const confirmed = window.confirm("Are you sure you want to cancel this appointment? This can not be undone!");
+
+        if (confirmed) {
+            fetch(`/appointments/${apt.id}/canceled`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': "application/json"
+                },
+                body: JSON.stringify({
+                    canceled: true
+                })
             })
-        })
-            .then((resp) => resp.json())
-            .then((oldApt) => {
-                const newTodaysAppointments = todaysAppointments.filter((apt) => apt.id !== oldApt.id)
-                updateAppointmentsDelete(oldApt)
-                setTodaysAppointments(newTodaysAppointments)
-            })
+                .then((resp) => resp.json())
+                .then((oldApt) => {
+                    const newTodaysAppointments = todaysAppointments.filter((apt) => apt.id !== oldApt.id)
+                    updateAppointmentsDelete(oldApt)
+                    setTodaysAppointments(newTodaysAppointments)
+                });
+        } else {
+            console.log("Cancellation canceled.");
+        }
     }
 
     function changeUpdateFormView() {
