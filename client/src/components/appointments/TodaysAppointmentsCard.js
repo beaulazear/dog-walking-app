@@ -4,6 +4,7 @@ import { UserContext } from "../../context/user";
 import Card from 'react-bootstrap/Card';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Button from "react-bootstrap/Button";
+import Modal from 'react-bootstrap/Modal';
 
 export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
@@ -12,11 +13,19 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
     const [offset, setOffset] = useState(0)
     const [selectedOption, setSelectedOption] = useState("Upcharge");
+    const [showModal, setShowModal] = useState(false);
+    const [cancelledCompensation, setCancelledCompensation] = useState(0);
 
     const handleChange = (event) => {
         setSelectedOption(event.target.value);
     };
 
+    const handleCompensationChange = (event) => {
+        setCancelledCompensation(event.target.value);
+    };
+
+    const handleShowModal = () => setShowModal(true);
+    const handleCloseModal = () => setShowModal(false);
 
     function getHourAndMinutes(timestampString) {
         const [, timePart] = timestampString.split("T"); // Splitting the string to extract the time part
@@ -118,6 +127,45 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
             })
     }
 
+    function handleNewCancelInvoice() {
+        handleShowModal();
+    }
+
+    function confirmCancelWalk() {
+
+        const newDate = replaceDateWithToday(apt.start_time);
+        const newCancelledCompensation = parseFloat(cancelledCompensation) || 0;
+
+        fetch('/invoices', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                pet_id: apt.pet.id,
+                appointment_id: apt.id,
+                date_completed: newDate,
+                paid: false,
+                compensation: newCancelledCompensation
+            })
+        })
+            .then((response) => response.json())
+            .then((newInvoice) => {
+                const newApt = { ...apt, invoices: [...apt.invoices, newInvoice] }
+                const newPets = pets.map((pet) => {
+                    if (pet.id === newInvoice.pet_id) {
+                        pet.invoices = [...pet.invoices, newInvoice]
+                        return pet
+                    } else {
+                        return pet
+                    }
+                })
+                setPets(newPets)
+                updateAppointments(newApt)
+            });
+        setShowModal(false);
+    }
+
     function hasInvoiceForToday(appointmentStartTime, invoices) {
         const today = new Date();
         const offset = today.getTimezoneOffset();
@@ -171,7 +219,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                         {offset > 0 && (
                             <ListGroup.Item>
                                 <b>Upcharge or Discount?</b>
-                                <select onChange={handleChange} value={selectedOption} style={{marginLeft: '10px'}}>
+                                <select onChange={handleChange} value={selectedOption} style={{ marginLeft: '10px' }}>
                                     <option value="Upcharge">Upcharge</option>
                                     <option value="Discount">Discount</option>
                                 </select>
@@ -181,9 +229,24 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                     </ListGroup>
                     <Card.Body>
                         <Button onClick={handleNewInvoice}>Complete Walk</Button>
+                        <Button style={{ marginLeft: '5px', background: 'red' }} onClick={handleNewCancelInvoice}>Cancel Walk</Button>
                     </Card.Body>
                 </Card>
             )}
+            <Modal show={showModal} onHide={handleCloseModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirm Walk Cancellation</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p>Please confirm the cancellation of the walk.</p>
+                    <p>Cancellation Fee:</p>
+                    <input type="number" placeholder="Amount in $USD" value={cancelledCompensation} onChange={handleCompensationChange} />
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseModal}>Close</Button>
+                    <Button variant="primary" onClick={confirmCancelWalk}>Confirm</Button>
+                </Modal.Footer>
+            </Modal>
         </>
     )
 }
