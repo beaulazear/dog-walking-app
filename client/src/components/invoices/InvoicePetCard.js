@@ -257,54 +257,66 @@ export default function InvoicePetCard({ pet }) {
 
     function markInvoicesAsPending() {
 
-        let arrayOfAppointmentIds = []
+        const confirmation = window.confirm("Would you like to mark new invoices as pending? This can not be undone.")
 
-        invoices.forEach((invoice) => {
-            arrayOfAppointmentIds.push(invoice.id)
-        })
+        if (confirmation) {
+            let arrayOfAppointmentIds = []
 
-        fetch(`/invoices/pending`, {
-            method: 'PATCH',
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                id_array: arrayOfAppointmentIds
+            invoices.forEach((invoice) => {
+                arrayOfAppointmentIds.push(invoice.id)
             })
-        })
-            .then((response) => response.json())
-            .then((newPendingInvoices) => {
 
-                setPendingInvoices([...pendingInvoices, ...newPendingInvoices])
-
-                setInvoices([])
+            fetch(`/invoices/pending`, {
+                method: 'PATCH',
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id_array: arrayOfAppointmentIds
+                })
             })
+                .then((response) => response.json())
+                .then((newPendingInvoices) => {
+
+                    setPendingInvoices([...pendingInvoices, ...newPendingInvoices])
+
+                    setInvoices([])
+                })
+        } else {
+            console.log("Invoices not marked as pending")
+        }
     }
 
     function markInvoicesAsPaid() {
 
-        let arrayOfAppointmentIds = []
+        const confirmation = window.confirm("Are you sure you would like to mark all pending invoices as paid? This can not be undone.")
 
-        pendingInvoices.forEach((invoice) => {
-            arrayOfAppointmentIds.push(invoice.id)
-        })
+        if (confirmation) {
+            let arrayOfAppointmentIds = []
 
-        fetch(`/invoices/paid`, {
-            method: 'PATCH',
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                id_array: arrayOfAppointmentIds
+            pendingInvoices.forEach((invoice) => {
+                arrayOfAppointmentIds.push(invoice.id)
             })
-        })
-            .then((response) => response.json())
-            .then((newPaidInvoices) => {
 
-                setPaidInvoices([...paidInvoices, ...newPaidInvoices])
-
-                setPendingInvoices([])
+            fetch(`/invoices/paid`, {
+                method: 'PATCH',
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id_array: arrayOfAppointmentIds
+                })
             })
+                .then((response) => response.json())
+                .then((newPaidInvoices) => {
+
+                    setPaidInvoices([...paidInvoices, ...newPaidInvoices])
+
+                    setPendingInvoices([])
+                })
+        } else {
+            console.log("Invoices not marked as paid")
+        }
     }
 
     function formatDateTime(dateTime) {
