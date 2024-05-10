@@ -397,7 +397,8 @@ export default function InvoicePetCard({ pet }) {
                                     <p style={{ marginLeft: '16px' }}>New invoices are from recently completed walks. Once you send the invoices to the client, mark as pending until payment is complete.</p>
                                     <ListGroup className="list-group-flush">
                                         {invoices.map((invoice) => (
-                                            <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
+                                            <ListGroup.Item key={invoice.id}><b>{invoice.title ? invoice.title : 'New Invoice'}</b>
+                                                <br />{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
                                         ))}
                                     </ListGroup>
                                     <Card.Text className='m-3'>
@@ -415,8 +416,8 @@ export default function InvoicePetCard({ pet }) {
                                     <p style={{ marginLeft: '16px' }}>Pending invoices have been sent to client for payment! Once payment is collected, mark as paid.</p>
                                     <ListGroup className="list-group-flush">
                                         {pendingInvoices.map((invoice) => (
-                                            <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
-                                        ))}
+                                            <ListGroup.Item key={invoice.id}><b>{invoice.title ? invoice.title : 'New Invoice'}</b>
+                                                <br />{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>))}
                                     </ListGroup>
                                     <Card.Text className='m-3'>
                                         <b>Total = ${currentTotalPendingInvoices}</b>
@@ -463,22 +464,22 @@ export default function InvoicePetCard({ pet }) {
                                     {allInvoicesSelected === true && (
                                         <>
                                             {paidInvoices.map((invoice) => (
-                                                <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
-                                            ))}
+                                                <ListGroup.Item key={invoice.id}><b>{invoice.title ? invoice.title : 'New Invoice'}</b>
+                                                    <br />{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>))}
                                         </>
                                     )}
                                     {tenInvoicesSelected === true && (
                                         <>
                                             {lastTenInvoices.map((invoice) => (
-                                                <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
-                                            ))}
+                                                <ListGroup.Item key={invoice.id}><b>{invoice.title ? invoice.title : 'New Invoice'}</b>
+                                                    <br />{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>))}
                                         </>
                                     )}
                                     {thirtyInvoicesSelected === true && (
                                         <>
                                             {lastThirtyInvoices.map((invoice) => (
-                                                <ListGroup.Item key={invoice.id}>{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
-                                            ))}
+                                                <ListGroup.Item key={invoice.id}><b>{invoice.title ? invoice.title : 'New Invoice'}</b>
+                                                    <br />{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>))}
                                         </>
                                     )}
                                 </ListGroup>

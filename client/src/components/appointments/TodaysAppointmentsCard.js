@@ -64,6 +64,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
     function handleNewInvoice() {
 
+        const title = `${apt.duration} minute ${apt.solo ? 'solo' : 'group'} walk.`
 
         let compensation = 0
 
@@ -112,7 +113,8 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                     appointment_id: apt.id,
                     date_completed: newDate,
                     paid: false,
-                    compensation: compensation
+                    compensation: compensation,
+                    title
                 })
             })
                 .then((response) => response.json())
@@ -143,6 +145,8 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
         const newDate = replaceDateWithToday(apt.start_time);
         const newCancelledCompensation = parseFloat(cancelledCompensation) || 0;
 
+        const title = `Canceled ${apt.duration} minute ${apt.solo ? 'solo' : 'group'} walk.`
+
         fetch('/invoices', {
             method: 'POST',
             headers: {
@@ -153,7 +157,8 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                 appointment_id: apt.id,
                 date_completed: newDate,
                 paid: false,
-                compensation: newCancelledCompensation
+                compensation: newCancelledCompensation,
+                title
             })
         })
             .then((response) => response.json())
