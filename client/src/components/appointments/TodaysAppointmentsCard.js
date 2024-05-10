@@ -100,7 +100,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
         const newDate = replaceDateWithToday(apt.start_time)
 
-        const confirm = window.confirm(`Mark walk as completed? An invoice will be created for $${compensation}.`)
+        const confirm = window.confirm(`Mark walk as completed? An invoice will be created for $${compensation}`)
 
         if (confirm) {
             fetch('/invoices', {
@@ -145,7 +145,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
         const newDate = replaceDateWithToday(apt.start_time);
         const newCancelledCompensation = parseFloat(cancelledCompensation) || 0;
 
-        const title = `Canceled ${apt.duration} minute ${apt.solo ? 'solo' : 'group'} walk.`
+        const title = `Canceled ${apt.duration} minute ${apt.solo ? 'solo' : 'group'} walk`
 
         fetch('/invoices', {
             method: 'POST',
