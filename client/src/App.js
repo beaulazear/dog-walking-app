@@ -46,12 +46,19 @@ function App() {
   const navigate = useNavigate()
 
   function handleLogout() {
-    fetch("/logout", {
-      method: "DELETE",
-    }).then(() => {
-      setUser(null)
-      navigate('/')
-    })
+
+    const confirmation = window.confirm("Are you sure you want to log out?")
+
+    if (confirmation) {
+      fetch("/logout", {
+        method: "DELETE",
+      }).then(() => {
+        setUser(null)
+        navigate('/')
+      })
+    } else {
+      console.log("Log out aborted")
+    }
   }
 
   if (user) {
