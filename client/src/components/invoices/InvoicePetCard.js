@@ -182,24 +182,17 @@ export default function InvoicePetCard({ pet }) {
                 setPendingInvoices(petPendingInvoices)
 
                 setTodaysAppointments(todaysAppointments.map((apt) => {
-                    apt.invoices = invoices.filter((invoice) => invoice.id !== deletedInvoice.id)
-                    return apt
-                }))
+                    apt.invoices = apt.invoices.filter((invoice) => invoice.id !== deletedInvoice.id);
+                    return apt;
+                }));
 
                 setPets(pets.map((p) => {
                     if (p.id === pet.id) {
-                        p.invoices = p.invoices.map((invoice) => {
-                            if (invoice.id !== deletedInvoice.id) {
-                                return invoice
-                            } else {
-                                return null
-                            }
-                        }).filter(invoice => invoice !== null)
-                        return p
-                    } else {
-                        return p
+                        p.invoices = p.invoices.filter((invoice) => invoice.id !== deletedInvoice.id);
                     }
-                }))
+                    return p;
+                }));
+
             })
     };
 

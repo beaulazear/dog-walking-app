@@ -5,6 +5,57 @@ import Card from 'react-bootstrap/Card';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Button from "react-bootstrap/Button";
 import Modal from 'react-bootstrap/Modal';
+import styled from 'styled-components';
+
+const StyledCard = styled(Card)`
+    margin: 3px auto;
+    max-width: 450px;
+    text-align: center;
+`;
+
+const StyledImage = styled.img`
+    width: 75%;
+    height: auto;
+`;
+
+const StyledTitle = styled(Card.Title)`
+    font-size: 1.2em;
+`;
+
+const StyledText = styled(Card.Text)`
+    font-size: 1.1em;
+    text-align: left;
+`;
+
+const StyledButton = styled(Button)`
+    margin: 5px;
+`;
+
+const StyledListGroup = styled(ListGroup)`
+    background-color: #FFFF99;
+`;
+
+const StyledListItem = styled(ListGroup.Item)`
+    background-color: #FFFF99;
+    text-align: left;
+`;
+
+const StyledListItemNew = styled(ListGroup.Item)`
+    background-color: #E6F7FF;
+    text-align: left;
+`;
+
+const StyledModal = styled(Modal)`
+    text-align: center;
+`;
+
+const StyledModalBody = styled(Modal.Body)`
+    text-align: left;
+`;
+
+const StyledInput = styled.input`
+    width: 100%;
+`;
 
 export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
@@ -52,14 +103,6 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
         const timezonePart = `${timezoneSign}${timezoneOffsetHours}00`;
 
         return `${todayDatePart} ${timePart} ${timezonePart}`;
-    }
-
-    const photoStyles = {
-        width: '100px',
-        height: '100px',
-        margin: '15px',
-        borderRadius: '50%',
-        objectFit: 'cover',
     }
 
     function handleNewInvoice() {
@@ -185,6 +228,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
         const todayAdjusted = new Date(today.getTime() - (offset * 60 * 1000));
         const todayString = todayAdjusted.toISOString().slice(0, 10);
 
+        console.log(invoices)
         const matchingInvoice = invoices.map(invoice => {
             const invoiceDate = invoice.date_completed.slice(0, 22);
             if (invoiceDate === todayString + appointmentStartTime.slice(10, 22)) {
@@ -198,79 +242,116 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
     let invoices = hasInvoiceForToday(apt.start_time, apt.invoices)
 
-    console.log(invoices)
+    function isTimestampInPast(timestamp) {
+        const date = new Date(timestamp);
+
+        const timestampTime = date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds();
+
+        const currentTime = new Date();
+
+        const currentTimeInSeconds = currentTime.getHours() * 3600 + currentTime.getMinutes() * 60 + currentTime.getSeconds();
+
+        return timestampTime < currentTimeInSeconds;
+    }
+
+    const isAptLate = isTimestampInPast(apt.end_time)
 
     return (
         <>
             {invoices && invoices.cancelled !== true && (
-                <Card className="m-3" style={{ backgroundColor: '#6fd388' }}>
+                <StyledCard style={{ backgroundColor: '#6fd388' }}>
                     <Card.Body>
-                        <img alt="Pet associated with appointment" style={photoStyles} src={apt.pet.profile_pic} />
-                        <Card.Title>{apt.pet.name}, {apt.duration} minute {apt.solo ? 'solo' : 'group'} walk between {startTime} & {endTime}.</Card.Title>
-                        <Card.Text className='display-6'>Walk Completed</Card.Text>
+                        <StyledTitle>{apt.pet.name} Walk Completed</StyledTitle>
+                        <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
+                        <StyledTitle>{apt.duration} minute {apt.solo ? 'solo' : 'group'} walk between {startTime} & {endTime}.</StyledTitle>
                     </Card.Body>
-                </Card>
+                </StyledCard>
             )}
             {invoices.cancelled && (
-                <Card className="m-3" style={{ backgroundColor: '#FF2400' }}>
+                <StyledCard style={{ backgroundColor: '#FFB6C1' }}>
                     <Card.Body>
-                        <img alt="Pet associated with appointment" style={photoStyles} src={apt.pet.profile_pic} />
-                        <Card.Title>{apt.pet.name}, {apt.duration} minute {apt.solo ? 'solo' : 'group'} walk between {startTime} & {endTime}.</Card.Title>
-                        <Card.Text className='display-6'>Walk Canceled</Card.Text>
+                        <StyledTitle>{apt.pet.name} Walk Canceled</StyledTitle>
+                        <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
+                        <StyledTitle>{apt.duration} minute {apt.solo ? 'solo' : 'group'} walk between {startTime} & {endTime}.</StyledTitle>
                     </Card.Body>
-                </Card>
+                </StyledCard>
             )}
-            {!invoices && (
-                <Card className="m-3">
+            {!invoices && isAptLate && (
+                <StyledCard style={{ backgroundColor: '#FFFF99' }}>
                     <Card.Body>
-                        <img alt="Pet associated with appointment" style={photoStyles} src={apt.pet.profile_pic} />
-                        <Card.Title>{apt.pet.name}</Card.Title>
-                        <Card.Text>
-                            {apt.pet.supplies_location}
-                        </Card.Text>
-                        <Card.Text>
-                            {apt.pet.behavorial_notes}
-                        </Card.Text>
+                        <StyledTitle>{apt.pet.name} Walk Overdue</StyledTitle>
+                        <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
+                        <StyledText>
+                            {apt.pet.supplies_location} {apt.pet.behavorial_notes}
+                        </StyledText>
+                        <StyledListGroup>
+                            <StyledListItem><b>Earliest pick up time:</b> {startTime}</StyledListItem>
+                            <StyledListItem><b>Latest pick up time:</b> {endTime}</StyledListItem>
+                            <StyledListItem><b>Address:</b> {apt.pet.address}</StyledListItem>
+                            <StyledListItem><b>Walk Duration:</b> {apt.duration} minutes</StyledListItem>
+                            <StyledListItem><b>Walk Type:</b> {apt.solo ? 'Solo Walk' : 'Group Walk'}</StyledListItem>
+                            <StyledListItem><b>Add an Upcharge or Discount:</b></StyledListItem>
+                            <StyledListItem><StyledInput type='text' name="offset" maxLength={3} value={"$" + offset} onChange={(e) => setOffset(e.target.value.substring(1))} /></StyledListItem>
+                            {offset > 0 && (
+                                <StyledListItem>
+                                    <b>Upcharge or Discount?</b>
+                                    <select onChange={handleChange} value={selectedOption} style={{ marginLeft: '10px' }}>
+                                        <option value="Upcharge">Upcharge</option>
+                                        <option value="Discount">Discount</option>
+                                    </select>
+                                </StyledListItem>
+                            )}
+                        </StyledListGroup>
+                        <StyledButton onClick={handleNewInvoice}>Complete Walk</StyledButton>
+                        <StyledButton className="btn btn-danger" onClick={handleNewCancelInvoice}>Cancel Walk</StyledButton>
                     </Card.Body>
-                    <ListGroup className="list-group-flush">
-                        <ListGroup.Item><b>Earliest pick up time:</b> {startTime}</ListGroup.Item>
-                        <ListGroup.Item><b>Latest pick up time:</b> {endTime}</ListGroup.Item>
-                        <ListGroup.Item><b>Address:</b> {apt.pet.address}</ListGroup.Item>
-                        <ListGroup.Item><b>Walk Duration:</b> {apt.duration} minutes</ListGroup.Item>
-                        <ListGroup.Item><b>Walk Type:</b> {apt.solo ? 'Solo Walk' : 'Group Walk'}</ListGroup.Item>
-                        <ListGroup.Item><b>Add an Upcharge or Discount:</b></ListGroup.Item>
-                        <ListGroup.Item><input type='text' name="offset" maxLength={3} value={"$" + offset} onChange={(e) => setOffset(e.target.value.substring(1))} /></ListGroup.Item>
-                        {offset > 0 && (
-                            <ListGroup.Item>
-                                <b>Upcharge or Discount?</b>
-                                <select onChange={handleChange} value={selectedOption} style={{ marginLeft: '10px' }}>
-                                    <option value="Upcharge">Upcharge</option>
-                                    <option value="Discount">Discount</option>
-                                </select>
-
-                            </ListGroup.Item>
-                        )}
-                    </ListGroup>
-                    <Card.Body>
-                        <Button onClick={handleNewInvoice}>Complete Walk</Button>
-                        <Button style={{marginLeft: '5px'}} className="btn btn-danger" onClick={handleNewCancelInvoice}>Cancel Walk</Button>
-                    </Card.Body>
-                </Card>
+                </StyledCard>
             )}
-            <Modal show={showModal} onHide={handleCloseModal}>
+            {!invoices && !isAptLate && (
+                <StyledCard style={{ backgroundColor: '#E6F7FF' }}>
+                    <Card.Body>
+                        <StyledTitle>{apt.pet.name} New Walk</StyledTitle>
+                        <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
+                        <StyledText>
+                            {apt.pet.supplies_location} : {apt.pet.behavorial_notes}
+                        </StyledText>
+                        <StyledListGroup>
+                            <StyledListItemNew><b>Earliest pick up time:</b> {startTime}</StyledListItemNew>
+                            <StyledListItemNew><b>Latest pick up time:</b> {endTime}</StyledListItemNew>
+                            <StyledListItemNew><b>Address:</b> {apt.pet.address}</StyledListItemNew>
+                            <StyledListItemNew><b>Walk Duration:</b> {apt.duration} minutes</StyledListItemNew>
+                            <StyledListItemNew><b>Walk Type:</b> {apt.solo ? 'Solo Walk' : 'Group Walk'}</StyledListItemNew>
+                            <StyledListItemNew><b>Add an Upcharge or Discount:</b></StyledListItemNew>
+                            <StyledListItemNew><StyledInput type='text' name="offset" maxLength={3} value={"$" + offset} onChange={(e) => setOffset(e.target.value.substring(1))} /></StyledListItemNew>
+                            {offset > 0 && (
+                                <StyledListItemNew>
+                                    <b>Upcharge or Discount?</b>
+                                    <select onChange={handleChange} value={selectedOption} style={{ marginLeft: '10px' }}>
+                                        <option value="Upcharge">Upcharge</option>
+                                        <option value="Discount">Discount</option>
+                                    </select>
+                                </StyledListItemNew>
+                            )}
+                        </StyledListGroup>
+                        <StyledButton onClick={handleNewInvoice}>Complete Walk</StyledButton>
+                        <StyledButton className="btn btn-danger" onClick={handleNewCancelInvoice}>Cancel Walk</StyledButton>
+                    </Card.Body>
+                </StyledCard>
+            )}
+            <StyledModal show={showModal} onHide={handleCloseModal}>
                 <Modal.Header closeButton>
                     <Modal.Title>Confirm Walk Cancellation</Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
+                <StyledModalBody>
                     <p>Please confirm the cancellation of the walk.</p>
                     <p>Cancellation Fee: $</p>
-                    <input type="number" placeholder="Amount in $USD" value={cancelledCompensation} onChange={handleCompensationChange} />
-                </Modal.Body>
+                    <StyledInput type="number" placeholder="Amount in $USD" value={cancelledCompensation} onChange={handleCompensationChange} />
+                </StyledModalBody>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={handleCloseModal}>Close</Button>
                     <Button variant="primary" onClick={confirmCancelWalk}>Confirm</Button>
                 </Modal.Footer>
-            </Modal>
+            </StyledModal>
         </>
     )
 }
