@@ -32,7 +32,7 @@ export default function TodaysWalksPage() {
 
     if (todaysAppointments?.length > 0) {
         return (
-            <div style={{ marginBottom: '35px' }}>
+            <div style={{ marginBottom: '35px', textAlign: 'center' }}>
                 <h2 className="display-4 m-3">Today's Appointments</h2>
                 <h4 className="display-6 m-4">{todayFormatted}</h4>
                 {todaysAppointments.map((apt) => (
