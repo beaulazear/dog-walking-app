@@ -72,6 +72,6 @@ class InvoicesController < ApplicationController
     private
 
     def invoice_params
-        params.permit(:appointment_id, :pet_id, :date_completed, :walk_duration, :compensation, :paid, :id, :title)
+        params.permit(:appointment_id, :pet_id, :date_completed, :walk_duration, :compensation, :paid, :id, :title, :cancelled)
     end
 end

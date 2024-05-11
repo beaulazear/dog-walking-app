@@ -158,7 +158,8 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                 date_completed: newDate,
                 paid: false,
                 compensation: newCancelledCompensation,
-                title
+                title,
+                cancelled: true
             })
         })
             .then((response) => response.json())
@@ -184,25 +185,38 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
         const todayAdjusted = new Date(today.getTime() - (offset * 60 * 1000));
         const todayString = todayAdjusted.toISOString().slice(0, 10);
 
-        const matchingInvoice = invoices.find(invoice => {
+        const matchingInvoice = invoices.map(invoice => {
             const invoiceDate = invoice.date_completed.slice(0, 22);
-            return invoiceDate === todayString + appointmentStartTime.slice(10, 22);
-        });
+            if (invoiceDate === todayString + appointmentStartTime.slice(10, 22)) {
+                return invoice;
+            }
+            return false;
+        }).filter(invoice => invoice);
 
-        return !!matchingInvoice;
+        return matchingInvoice.length ? matchingInvoice[0] : false;
     }
-
 
     let invoices = hasInvoiceForToday(apt.start_time, apt.invoices)
 
+    console.log(invoices)
+
     return (
         <>
-            {invoices && (
+            {invoices && invoices.cancelled !== true && (
                 <Card className="m-3" style={{ backgroundColor: '#6fd388' }}>
                     <Card.Body>
                         <img alt="Pet associated with appointment" style={photoStyles} src={apt.pet.profile_pic} />
                         <Card.Title>{apt.pet.name}, {apt.duration} minute {apt.solo ? 'solo' : 'group'} walk between {startTime} & {endTime}.</Card.Title>
                         <Card.Text className='display-6'>Walk Completed</Card.Text>
+                    </Card.Body>
+                </Card>
+            )}
+            {invoices.cancelled && (
+                <Card className="m-3" style={{ backgroundColor: '#FF2400' }}>
+                    <Card.Body>
+                        <img alt="Pet associated with appointment" style={photoStyles} src={apt.pet.profile_pic} />
+                        <Card.Title>{apt.pet.name}, {apt.duration} minute {apt.solo ? 'solo' : 'group'} walk between {startTime} & {endTime}.</Card.Title>
+                        <Card.Text className='display-6'>Walk Canceled</Card.Text>
                     </Card.Body>
                 </Card>
             )}
