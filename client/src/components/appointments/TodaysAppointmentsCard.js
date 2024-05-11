@@ -8,14 +8,16 @@ import Modal from 'react-bootstrap/Modal';
 import styled from 'styled-components';
 
 const StyledCard = styled(Card)`
-    margin: 3px auto;
-    max-width: 450px;
+    margin: 10px auto;
+    max-width: 425px;
     text-align: center;
 `;
 
 const StyledImage = styled.img`
-    width: 75%;
+    width: 50%;
     height: auto;
+    margin-bottom: 8px;
+    border-radius: 50%;
 `;
 
 const StyledTitle = styled(Card.Title)`
@@ -261,7 +263,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
             {invoices && invoices.cancelled !== true && (
                 <StyledCard style={{ backgroundColor: '#6fd388' }}>
                     <Card.Body>
-                        <StyledTitle>{apt.pet.name} Walk Completed</StyledTitle>
+                        <StyledTitle>{apt.pet.name}: Completed Walk</StyledTitle>
                         <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
                         <StyledTitle>{apt.duration} minute {apt.solo ? 'solo' : 'group'} walk between {startTime} & {endTime}.</StyledTitle>
                     </Card.Body>
@@ -270,7 +272,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
             {invoices.cancelled && (
                 <StyledCard style={{ backgroundColor: '#FFB6C1' }}>
                     <Card.Body>
-                        <StyledTitle>{apt.pet.name} Walk Canceled</StyledTitle>
+                        <StyledTitle>{apt.pet.name}: Canceled Walk</StyledTitle>
                         <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
                         <StyledTitle>{apt.duration} minute {apt.solo ? 'solo' : 'group'} walk between {startTime} & {endTime}.</StyledTitle>
                     </Card.Body>
@@ -279,7 +281,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
             {!invoices && isAptLate && (
                 <StyledCard style={{ backgroundColor: '#FFFF99' }}>
                     <Card.Body>
-                        <StyledTitle>{apt.pet.name} Walk Overdue</StyledTitle>
+                        <StyledTitle>{apt.pet.name}: Overdue Walk</StyledTitle>
                         <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
                         <StyledText>
                             {apt.pet.supplies_location} {apt.pet.behavorial_notes}
@@ -310,7 +312,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
             {!invoices && !isAptLate && (
                 <StyledCard style={{ backgroundColor: '#E6F7FF' }}>
                     <Card.Body>
-                        <StyledTitle>{apt.pet.name} New Walk</StyledTitle>
+                        <StyledTitle>{apt.pet.name}: Uncompleted Walk</StyledTitle>
                         <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
                         <StyledText>
                             {apt.pet.supplies_location} : {apt.pet.behavorial_notes}
