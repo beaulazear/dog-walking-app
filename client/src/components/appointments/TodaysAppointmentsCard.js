@@ -238,10 +238,8 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                         <ListGroup.Item><b>Address:</b> {apt.pet.address}</ListGroup.Item>
                         <ListGroup.Item><b>Walk Duration:</b> {apt.duration} minutes</ListGroup.Item>
                         <ListGroup.Item><b>Walk Type:</b> {apt.solo ? 'Solo Walk' : 'Group Walk'}</ListGroup.Item>
-                        <ListGroup.Item>
-                            <b>Offset walk price $</b>
-                            <input style={{ marginLeft: '10px' }} type='text' name="offset" maxLength={3} value={offset} onChange={(e) => setOffset(e.target.value)} />
-                        </ListGroup.Item>
+                        <ListGroup.Item><b>Add an Upcharge or Discount:</b></ListGroup.Item>
+                        <ListGroup.Item><input type='text' name="offset" maxLength={3} value={"$" + offset} onChange={(e) => setOffset(e.target.value.substring(1))} /></ListGroup.Item>
                         {offset > 0 && (
                             <ListGroup.Item>
                                 <b>Upcharge or Discount?</b>
@@ -255,7 +253,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                     </ListGroup>
                     <Card.Body>
                         <Button onClick={handleNewInvoice}>Complete Walk</Button>
-                        <Button style={{ marginLeft: '5px', background: 'red' }} onClick={handleNewCancelInvoice}>Cancel Walk</Button>
+                        <Button style={{marginLeft: '5px'}} className="btn btn-danger" onClick={handleNewCancelInvoice}>Cancel Walk</Button>
                     </Card.Body>
                 </Card>
             )}
