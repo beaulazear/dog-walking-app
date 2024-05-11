@@ -64,7 +64,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
     function handleNewInvoice() {
 
-        const title = `${apt.duration} minute ${apt.solo ? 'solo' : 'group'} walk.`
+        const title = `${apt.duration} minute ${apt.solo ? 'solo' : 'group'} walk`
 
         let compensation = 0
 
