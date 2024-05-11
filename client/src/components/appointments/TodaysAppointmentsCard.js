@@ -263,7 +263,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                 </Modal.Header>
                 <Modal.Body>
                     <p>Please confirm the cancellation of the walk.</p>
-                    <p>Cancellation Fee:</p>
+                    <p>Cancellation Fee: $</p>
                     <input type="number" placeholder="Amount in $USD" value={cancelledCompensation} onChange={handleCompensationChange} />
                 </Modal.Body>
                 <Modal.Footer>

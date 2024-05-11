@@ -39,37 +39,50 @@ export default function Rates({ user, updateUserRates }) {
     return (
         <Form onSubmit={handleSubmit}>
             <Form.Group controlId="thirtyRate">
-                <Form.Label>30-minute walk rate</Form.Label>
+                <Form.Label>30-minute walk</Form.Label>
                 <Form.Control
-                    type="number"
-                    value={thirty}
-                    onChange={(e) => setThirty(e.target.value)}
+                    type="text"
+                    value={"$" + thirty}
+                    onChange={(e) => {
+                        const newValue = e.target.value.replace(/^\$/, ''); // Remove $ if it's entered
+                        setThirty(newValue);
+                    }}
                 />
             </Form.Group>
             <Form.Group controlId="fourtyRate">
-                <Form.Label>45-minute walk rate</Form.Label>
+                <Form.Label>45-minute walk</Form.Label>
                 <Form.Control
-                    type="number"
-                    value={fourty}
-                    onChange={(e) => setFourty(e.target.value)}
+                    type="text"
+                    value={"$" + fourty}
+                    onChange={(e) => {
+                        const newValue = e.target.value.replace(/^\$/, ''); // Remove $ if it's entered
+                        setFourty(newValue);
+                    }}
                 />
             </Form.Group>
             <Form.Group controlId="sixtyRate">
-                <Form.Label>60-minute walk rate</Form.Label>
+                <Form.Label>60-minute walk</Form.Label>
                 <Form.Control
-                    type="number"
-                    value={sixty}
-                    onChange={(e) => setSixty(e.target.value)}
+                    type="text"
+                    value={"$" + sixty}
+                    onChange={(e) => {
+                        const newValue = e.target.value.replace(/^\$/, ''); // Remove $ if it's entered
+                        setSixty(newValue);
+                    }}
                 />
             </Form.Group>
             <Form.Group controlId="sixtyRate">
                 <Form.Label>Solo-walk upcharge</Form.Label>
                 <Form.Control
-                    type="number"
-                    value={solo}
-                    onChange={(e) => setSolo(e.target.value)}
+                    type="text"
+                    value={"$" + solo}
+                    onChange={(e) => {
+                        const newValue = e.target.value.replace(/^\$/, ''); // Remove $ if it's entered
+                        setSolo(newValue);
+                    }}
                 />
             </Form.Group>
+
             <Button style={{ marginTop: '10px' }} variant="primary" type="submit">Update Rates</Button>
         </Form>
     );
