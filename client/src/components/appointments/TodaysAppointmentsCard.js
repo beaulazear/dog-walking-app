@@ -11,6 +11,8 @@ const StyledCard = styled(Card)`
     margin: 10px auto;
     max-width: 425px;
     text-align: center;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
 `;
 
 const StyledImage = styled.img`
@@ -21,12 +23,14 @@ const StyledImage = styled.img`
 `;
 
 const StyledTitle = styled(Card.Title)`
-    font-size: 1.2em;
+    font-size: 1.5em;
+    color: #333;
 `;
 
 const StyledText = styled(Card.Text)`
     font-size: 1.1em;
     text-align: left;
+    color: #555;
 `;
 
 const StyledButton = styled(Button)`
@@ -34,16 +38,19 @@ const StyledButton = styled(Button)`
 `;
 
 const StyledListGroup = styled(ListGroup)`
-    background-color: #FFFF99;
+    background-color: #f9f9f9;
+    border: none;
 `;
 
 const StyledListItem = styled(ListGroup.Item)`
-    background-color: #FFFF99;
+    background-color: #f9f9f9;
+    border: none;
     text-align: left;
 `;
 
 const StyledListItemNew = styled(ListGroup.Item)`
-    background-color: #E6F7FF;
+    background-color: #f1f1f1;
+    border: none;
     text-align: left;
 `;
 
@@ -57,6 +64,10 @@ const StyledModalBody = styled(Modal.Body)`
 
 const StyledInput = styled.input`
     width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-top: 5px;
 `;
 
 export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
