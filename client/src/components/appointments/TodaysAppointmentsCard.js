@@ -40,10 +40,11 @@ const StyledButton = styled(Button)`
 const StyledListGroup = styled(ListGroup)`
     background-color: #f9f9f9;
     border: none;
+    margin-bottom: 12px;
 `;
 
 const StyledListItem = styled(ListGroup.Item)`
-    background-color: #CCCCFF;
+    background-color: #FFFFB2;
     border: none;
     text-align: left;
 `;
@@ -51,7 +52,7 @@ const StyledListItem = styled(ListGroup.Item)`
 const StyledListItemNew = styled(ListGroup.Item)`
     border: none;
     text-align: left;
-    background-color: #FFE5CC;
+    background-color: #F0FAFF;
 `;
 
 const StyledModal = styled(Modal)`
