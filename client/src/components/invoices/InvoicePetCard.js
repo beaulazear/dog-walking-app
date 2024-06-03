@@ -429,13 +429,9 @@ export default function InvoicePetCard({ pet }) {
                         )}
                         <Modal show={showNewIncomeModal} onHide={toggleAddIncome}>
                             <Modal.Header closeButton>
-                                <Modal.Title>Add New Additional Income</Modal.Title>
-                            </Modal.Header>
-                            <Modal.Body>
-                                <h4>Add additional income</h4>
-                            </Modal.Body>
-                            <FormContainer>
                                 <FormTitle>Add Additional Income</FormTitle>
+                            </Modal.Header>
+                            <FormContainer>
                                 {errors.length > 0 && (
                                     <div>
                                         {errors.map((error, index) => (

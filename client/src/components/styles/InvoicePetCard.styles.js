@@ -5,7 +5,7 @@ export const FormContainer = styled.div`
 `;
 
 export const FormTitle = styled.h3`
-  margin-bottom: 10px;
+  margin-right: 5px;
 `;
 
 export const ErrorMessage = styled.div`
@@ -16,6 +16,9 @@ export const ErrorMessage = styled.div`
 export const Form = styled.form`
   display: flex;
   flex-direction: column;
+  margin-left: 5px;
+  margin-right: 5px;
+  padding: 5px;
 `;
 
 export const FormField = styled.div`
@@ -28,6 +31,7 @@ export const Label = styled.label`
 
 export const Input = styled.input`
   padding: 8px;
+  margin-left: 4px;
   font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 4px;
