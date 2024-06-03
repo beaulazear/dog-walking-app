@@ -2,74 +2,31 @@ import { Accordion, Button, Card, ListGroup, Modal } from 'react-bootstrap';
 import React, { useContext, useState } from "react";
 import { PetsContext } from "../../context/pets";
 import { TodaysAppointmentsContext } from '../../context/todaysAppointments';
-import styled from 'styled-components';
 import "bootstrap/dist/css/bootstrap.min.css";
 import { DownOutlined } from '@ant-design/icons';
 import { Dropdown, Space } from 'antd';
 import AdditionalIncomeList from '../finances/AdditionalIncomeList';
-
-const FormContainer = styled.div`
-  max-width: 400px;
-  margin: 0 auto;
-  margin-bottom: 15px;
-  padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-`;
-
-const FormTitle = styled.h2`
-  text-align: center;
-`;
-
-const ErrorMessage = styled.div`
-  color: red;
-  margin-bottom: 10px;
-`;
-
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-`;
-
-const FormField = styled.div`
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 10px;
-`;
-
-const Label = styled.label`
-  margin-bottom: 5px;
-`;
-
-const Input = styled.input`
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-`;
-
-const FormButton = styled.button`
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #0056b3;
-  }
-`;
+import {
+    FormContainer,
+    FormTitle,
+    ErrorMessage,
+    Form,
+    FormField,
+    Label,
+    Input,
+    FormButton
+} from '../styles/InvoicePetCard.styles';
 
 export default function InvoicePetCard({ pet }) {
 
     const { pets, setPets } = useContext(PetsContext)
     const { todaysAppointments, setTodaysAppointments } = useContext(TodaysAppointmentsContext)
 
-    const [invoices, setInvoices] = useState(pet.invoices.filter((invoice) => invoice.paid !== true && invoice.pending !== true))
+    const [invoices, setInvoices] = useState(pet.invoices);
 
-    const [paidInvoices, setPaidInvoices] = useState(pet.invoices.filter((invoice) => invoice.paid === true))
-    const [pendingInvoices, setPendingInvoices] = useState(pet.invoices.filter((invoice) => invoice.pending === true))
+    const unpaidInvoices = invoices.filter((invoice) => !invoice.paid && !invoice.pending);
+    const paidInvoices = invoices.filter((invoice) => invoice.paid);
+    const pendingInvoices = invoices.filter((invoice) => invoice.pending);
 
     const [allInvoicesSelected, setAllInvoicesSelected] = useState(false)
     const [tenInvoicesSelected, setTenInvoicesSelected] = useState(true)
@@ -167,7 +124,6 @@ export default function InvoicePetCard({ pet }) {
     }
 
     const deleteInvoice = (id) => {
-
         fetch(`/invoices/${id}`, {
             method: 'DELETE',
             headers: {
@@ -176,10 +132,8 @@ export default function InvoicePetCard({ pet }) {
         })
             .then((response) => response.json())
             .then((deletedInvoice) => {
-                const petNewInvoices = invoices.filter((invoice) => invoice.id !== deletedInvoice.id)
-                setInvoices(petNewInvoices)
-                const petPendingInvoices = pendingInvoices.filter((invoice) => invoice.id !== deletedInvoice.id)
-                setPendingInvoices(petPendingInvoices)
+                const updatedInvoices = invoices.filter((invoice) => invoice.id !== deletedInvoice.id);
+                setInvoices(updatedInvoices);
 
                 setTodaysAppointments(todaysAppointments.map((apt) => {
                     apt.invoices = apt.invoices.filter((invoice) => invoice.id !== deletedInvoice.id);
@@ -192,9 +146,9 @@ export default function InvoicePetCard({ pet }) {
                     }
                     return p;
                 }));
-
             })
     };
+
 
     const toggleEditModal = () => setShowEditModal(!showEditModal);
     const toggleAddIncome = () => setShowNewIncomeModal(!showNewIncomeModal)
@@ -249,15 +203,14 @@ export default function InvoicePetCard({ pet }) {
     pendingInvoices.forEach((invoice) => currentTotalPendingInvoices += invoice.compensation)
 
     function markInvoicesAsPending() {
-
-        const confirmation = window.confirm("Would you like to mark new invoices as pending? This can not be undone.")
+        const confirmation = window.confirm("Would you like to mark new invoices as pending? This can not be undone.");
 
         if (confirmation) {
-            let arrayOfAppointmentIds = []
+            let arrayOfAppointmentIds = [];
 
-            invoices.forEach((invoice) => {
-                arrayOfAppointmentIds.push(invoice.id)
-            })
+            unpaidInvoices.forEach((invoice) => {
+                arrayOfAppointmentIds.push(invoice.id);
+            });
 
             fetch(`/invoices/pending`, {
                 method: 'PATCH',
@@ -270,26 +223,23 @@ export default function InvoicePetCard({ pet }) {
             })
                 .then((response) => response.json())
                 .then((newPendingInvoices) => {
-
-                    setPendingInvoices([...pendingInvoices, ...newPendingInvoices])
-
-                    setInvoices([])
-                })
+                    setInvoices([...pendingInvoices, ...newPendingInvoices]);
+                });
         } else {
-            console.log("Invoices not marked as pending")
+            console.log("Invoices not marked as pending");
         }
     }
 
-    function markInvoicesAsPaid() {
 
-        const confirmation = window.confirm("Are you sure you would like to mark all pending invoices as paid? This can not be undone.")
+    function markInvoicesAsPaid() {
+        const confirmation = window.confirm("Are you sure you would like to mark all pending invoices as paid? This can not be undone.");
 
         if (confirmation) {
-            let arrayOfAppointmentIds = []
+            let arrayOfAppointmentIds = [];
 
             pendingInvoices.forEach((invoice) => {
-                arrayOfAppointmentIds.push(invoice.id)
-            })
+                arrayOfAppointmentIds.push(invoice.id);
+            });
 
             fetch(`/invoices/paid`, {
                 method: 'PATCH',
@@ -302,15 +252,13 @@ export default function InvoicePetCard({ pet }) {
             })
                 .then((response) => response.json())
                 .then((newPaidInvoices) => {
-
-                    setPaidInvoices([...paidInvoices, ...newPaidInvoices])
-
-                    setPendingInvoices([])
-                })
+                    setInvoices([...paidInvoices, ...newPaidInvoices]);
+                });
         } else {
-            console.log("Invoices not marked as paid")
+            console.log("Invoices not marked as paid");
         }
     }
+
 
     function formatDateTime(dateTime) {
         const [datePart, timePart] = dateTime.split('T');
@@ -348,31 +296,17 @@ export default function InvoicePetCard({ pet }) {
                             <Modal.Body>
                                 <h4>Unpaid Invoices</h4>
                                 <ListGroup>
-                                    {invoices?.map((invoice) => (
-                                        !invoice.paid && (
-                                            <ListGroup.Item key={invoice.id}>
-                                                <Button style={{ marginRight: '10px' }} variant="danger" onClick={() => {
-                                                    if (window.confirm("Are you sure you want to delete this invoice? This can not be undone.")) {
-                                                        deleteInvoice(invoice.id);
-                                                    }
-                                                }}>Delete</Button>
-                                                {formatDateTime(invoice.date_completed)}, ${invoice.compensation}
-                                            </ListGroup.Item>
-                                        )
+                                    {unpaidInvoices.concat(pendingInvoices).map((invoice) => (
+                                        <ListGroup.Item key={invoice.id}>
+                                            <Button style={{ marginRight: '10px' }} variant="danger" onClick={() => {
+                                                if (window.confirm("Are you sure you want to delete this invoice? This can not be undone.")) {
+                                                    deleteInvoice(invoice.id);
+                                                }
+                                            }}>Delete</Button>
+                                            {formatDateTime(invoice.date_completed)}, ${invoice.compensation}
+                                        </ListGroup.Item>
                                     ))}
-                                    {pendingInvoices?.map((invoice) => (
-                                        !invoice.paid && (
-                                            <ListGroup.Item key={invoice.id}>
-                                                <Button style={{ marginRight: '10px' }} variant="danger" onClick={() => {
-                                                    if (window.confirm("Are you sure you want to delete this invoice? This can not be undone.")) {
-                                                        deleteInvoice(invoice.id);
-                                                    }
-                                                }}>Delete</Button>
-                                                {formatDateTime(invoice.date_completed)}, ${invoice.compensation}
-                                            </ListGroup.Item>
-                                        )
-                                    ))}
-                                    {invoices.length < 1 && pendingInvoices.length < 1 && (
+                                    {unpaidInvoices.length < 1 && pendingInvoices.length < 1 && (
                                         <ListGroup.Item>
                                             There are currently no unpaid invoices for {pet.name}
                                         </ListGroup.Item>
@@ -397,11 +331,11 @@ export default function InvoicePetCard({ pet }) {
                                 }}
                             />
                             <Card.Title style={{ marginLeft: '16px' }}>{pet.name}'s New Invoices:</Card.Title>
-                            {invoices?.length > 0 && (
+                            {unpaidInvoices.length > 0 && (
                                 <>
                                     <p style={{ marginLeft: '16px' }}>New invoices are from recently completed walks. Once you send the invoices to the client, mark as pending until payment is complete.</p>
                                     <ListGroup className="list-group-flush">
-                                        {invoices.map((invoice) => (
+                                        {unpaidInvoices.map((invoice) => (
                                             <ListGroup.Item key={invoice.id}><b>{invoice.title ? invoice.title : 'New Invoice'}</b>
                                                 <br />{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>
                                         ))}
@@ -412,7 +346,7 @@ export default function InvoicePetCard({ pet }) {
                                     <FormButton style={{ margin: '5px' }} onClick={markInvoicesAsPending}>Mark as pending</FormButton>
                                 </>
                             )}
-                            {invoices?.length < 1 && (
+                            {unpaidInvoices.length < 1 && (
                                 <p style={{ padding: '16px' }}>There are currently no new invoices for {pet.name}. Invoices will be displayed here as walks are completed on the Today page.</p>
                             )}
                             <Card.Title style={{ marginTop: '10px', marginLeft: '16px' }}>{pet.name}'s Pending Invoices:</Card.Title>
@@ -502,7 +436,13 @@ export default function InvoicePetCard({ pet }) {
                             </Modal.Body>
                             <FormContainer>
                                 <FormTitle>Add Additional Income</FormTitle>
-                                {errors.length > 0 && <ErrorMessage>{errors[0]}</ErrorMessage>}
+                                {errors.length > 0 && (
+                                    <div>
+                                        {errors.map((error, index) => (
+                                            <ErrorMessage key={index}>{error}</ErrorMessage>
+                                        ))}
+                                    </div>
+                                )}
                                 <Form onSubmit={handleSubmitAdditionalIncome}>
                                     <FormField>
                                         <Label htmlFor="compensation">Compensation:</Label>
