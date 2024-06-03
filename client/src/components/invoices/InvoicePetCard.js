@@ -197,7 +197,7 @@ export default function InvoicePetCard({ pet }) {
     ];
 
     let currentTotalNewInvoices = 0
-    invoices.forEach((invoice) => currentTotalNewInvoices += invoice.compensation)
+    unpaidInvoices.forEach((invoice) => currentTotalNewInvoices += invoice.compensation)
 
     let currentTotalPendingInvoices = 0
     pendingInvoices.forEach((invoice) => currentTotalPendingInvoices += invoice.compensation)
