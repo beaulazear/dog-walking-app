@@ -1,33 +1,10 @@
 import React from 'react';
-import styled from 'styled-components';
-
-const ListContainer = styled.div`
-  max-width: 600px;
-  margin: 0 auto;
-`;
-
-const ListItem = styled.div`
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 10px;
-  margin-bottom: 10px;
-`;
-
-const ItemHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 5px;
-`;
-
-const DeleteButton = styled.button`
-  background-color: #ff4d4f;
-  color: white;
-  border: none;
-  border-radius: 3px;
-  padding: 5px 10px;
-  cursor: pointer;
-`;
+import {
+    ListContainer,
+    ListItem,
+    ItemHeader,
+    DeleteButton
+} from '../styles/AdditionalIncomeList.styles';
 
 const AdditionalIncomeList = ({ items, handleIncomeDelete }) => {
 
