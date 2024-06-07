@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
   
+  resources :cancellations
   resources :additional_incomes
   resources :invoices, except: :update
   resources :appointments

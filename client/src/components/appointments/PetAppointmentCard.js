@@ -1,68 +1,52 @@
+import React, { useContext, useState } from 'react';
 import Card from 'react-bootstrap/Card';
-import Button from "react-bootstrap/Button";
-import { useContext, useState } from 'react';
-import { TodaysAppointmentsContext } from "../../context/todaysAppointments";
+import Button from 'react-bootstrap/Button';
+import ListGroup from 'react-bootstrap/ListGroup';
+import { PetsAppointmentsContext } from "../../context/petsAppointments";
 import UpdateAppointmentForm from './UpdateAppointmentForm';
+import CancelAppointmentModal from './CancelAppointmentModal';
 
 export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
+    const [updateAptButton, setUpdateAptButton] = useState(false);
+    const [showModal, setShowModal] = useState(false);
 
-    const [updateAptButton, setUpdateAptButton] = useState(false)
+    const { petsAppointments, setPetsAppointments } = useContext(PetsAppointmentsContext);
 
-    const { todaysAppointments, setTodaysAppointments } = useContext(TodaysAppointmentsContext)
-
-    let datetimeString = apt.appointment_date
+    let datetimeString = apt.appointment_date;
 
     if (datetimeString) {
-
         function formatDateToYYYYMMDD(datetimeString) {
             const year = datetimeString.slice(0, 4);
             const month = datetimeString.slice(5, 7);
             const day = datetimeString.slice(8, 10);
             return datetimeString = `${month}-${day}-${year}`;
         }
-
         datetimeString = formatDateToYYYYMMDD(datetimeString);
     }
 
     function extractHourAndMinutes(timestampString) {
-        const [, timePart] = timestampString.split("T"); // Splitting the string to extract the time part
-        const [time,] = timePart.split(/[.+-]/); // Splitting the time part to separate time and offset
-        const [hours, minutes] = time.split(":"); // Splitting the time to extract hours and minutes
+        const [, timePart] = timestampString.split("T");
+        const [time,] = timePart.split(/[.+-]/);
+        const [hours, minutes] = time.split(":");
         return `${hours}:${minutes}`;
     }
-
 
     const startTime = extractHourAndMinutes(apt.start_time);
     const endTime = extractHourAndMinutes(apt.end_time);
 
-    let daysOfWeekArr = []
+    let daysOfWeekArr = [];
 
     if (apt.recurring) {
-        if (apt.monday) {
-            daysOfWeekArr.push("Monday")
-        }
-        if (apt.tuesday) {
-            daysOfWeekArr.push("Tuesday")
-        }
-        if (apt.wednesday) {
-            daysOfWeekArr.push("Wednesday")
-        }
-        if (apt.thursday) {
-            daysOfWeekArr.push("Thursday")
-        }
-        if (apt.friday) {
-            daysOfWeekArr.push("Friday")
-        }
-        if (apt.saturday) {
-            daysOfWeekArr.push("Saturday")
-        }
-        if (apt.sunday) {
-            daysOfWeekArr.push("Sunday")
-        }
+        if (apt.monday) daysOfWeekArr.push("Monday");
+        if (apt.tuesday) daysOfWeekArr.push("Tuesday");
+        if (apt.wednesday) daysOfWeekArr.push("Wednesday");
+        if (apt.thursday) daysOfWeekArr.push("Thursday");
+        if (apt.friday) daysOfWeekArr.push("Friday");
+        if (apt.saturday) daysOfWeekArr.push("Saturday");
+        if (apt.sunday) daysOfWeekArr.push("Sunday");
     }
 
     function handleCancel() {
-
         const confirmed = window.confirm("Are you sure you want to cancel this appointment? This can not be undone!");
 
         if (confirmed) {
@@ -77,9 +61,9 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
             })
                 .then((resp) => resp.json())
                 .then((oldApt) => {
-                    const newTodaysAppointments = todaysAppointments.filter((apt) => apt.id !== oldApt.id)
-                    updateAppointmentsDelete(oldApt)
-                    setTodaysAppointments(newTodaysAppointments)
+                    const newPetsAppointments = petsAppointments.filter((appointment) => appointment.id !== oldApt.id);
+                    updateAppointmentsDelete(oldApt);
+                    setPetsAppointments(newPetsAppointments);
                 });
         } else {
             console.log("Cancellation canceled.");
@@ -87,13 +71,65 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
     }
 
     function changeUpdateFormView() {
-        setUpdateAptButton(!updateAptButton)
+        setUpdateAptButton(!updateAptButton);
     }
+
+    function handleModalShow() {
+        setShowModal(true);
+    }
+
+    function handleModalClose() {
+        setShowModal(false);
+    }
+
+    function handleModalSubmit(date) {
+        fetch('/cancellations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                appointment_id: apt.id,
+                date: date
+            })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Invalid date, date must be in the future.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Cancellation added:', data);
+                const updatedAppointments = petsAppointments.map(appointment => {
+                    if (appointment.id === apt.id) {
+                        return {
+                            ...appointment,
+                            cancellations: [...appointment.cancellations, data]
+                        };
+                    }
+                    return appointment;
+                });
+                setPetsAppointments(updatedAppointments);
+                handleModalClose();
+            })
+            .catch(error => {
+                console.error('Error:', error.message);
+            });
+    }
+
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    const cancellations = apt.cancellations || [];
 
     return (
         <Card className="border border-primary" style={{ width: '100%', marginBottom: '5px' }}>
             <Card.Body>
-                {apt.recurring === true && (
+                {apt.recurring ? (
                     <>
                         <Card.Title>Recurring Appointment</Card.Title>
                         <Card.Subtitle className="mb-2 text-muted"><b>Walk Duration:</b> {apt.duration} minutes</Card.Subtitle>
@@ -103,9 +139,21 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                         <Card.Text>
                             This is a recurring appointment and will be repeated every {daysOfWeekArr.join(', ')}
                         </Card.Text>
+                        <Card.Subtitle className="mb-2 text-muted"><b>Canceled Dates:</b></Card.Subtitle>
+                        <Card.Text>
+                            <ListGroup variant="flush">
+                                {cancellations.length < 1 && (
+                                    <Card.Text>
+                                        No cancellations currently, use button below to submit date that the appointment is to be skipped.
+                                    </Card.Text>
+                                )}
+                                {cancellations.map(cancellation => (
+                                    <ListGroup.Item key={cancellation.id}>{formatDate(cancellation.date)}</ListGroup.Item>
+                                ))}
+                            </ListGroup>
+                        </Card.Text>
                     </>
-                )}
-                {apt.recurring === false && (
+                ) : (
                     <>
                         <Card.Title>One Time Appointment</Card.Title>
                         <Card.Subtitle className="mb-2 text-muted"><b>Date:</b> {datetimeString} </Card.Subtitle>
@@ -120,19 +168,21 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                 )}
             </Card.Body>
             <div className="d-grid gap-2 mx-4 mb-3">
+                <Button onClick={handleModalShow} className="btn btn-secondary btn-block">Add Cancellations</Button>
                 <Button onClick={changeUpdateFormView} className="btn-block">
-                    {updateAptButton === true && (
-                        "Close Update Form"
-                    )}
-                    {updateAptButton === false && (
-                        "Update Appointment"
-                    )}
+                    {updateAptButton ? "Close Update Form" : "Update Appointment"}
                 </Button>
+                {updateAptButton && (
+                    <UpdateAppointmentForm changeUpdateFormView={changeUpdateFormView} apt={apt} />
+                )}
                 <Button onClick={handleCancel} className="btn btn-danger btn-block">Cancel Appointment</Button>
+                <CancelAppointmentModal
+                    show={showModal}
+                    handleClose={handleModalClose}
+                    appointmentId={apt.id}
+                    onSubmit={handleModalSubmit}
+                />
             </div>
-            {updateAptButton === true && (
-                <UpdateAppointmentForm changeUpdateFormView={changeUpdateFormView} apt={apt} />
-            )}
         </Card>
     );
 }
