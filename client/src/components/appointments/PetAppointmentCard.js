@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
 import ListGroup from 'react-bootstrap/ListGroup';
@@ -126,6 +126,38 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
 
     const cancellations = apt.cancellations || [];
 
+    useEffect(() => {
+        const now = new Date();
+        const oneDayBefore = new Date(now);
+        oneDayBefore.setDate(oneDayBefore.getDate() - 1);
+
+        const pastCancellations = cancellations.filter(cancellation => new Date(cancellation.date) < oneDayBefore);
+
+        if (pastCancellations.length > 0) {
+            pastCancellations.forEach(cancellation => {
+                fetch(`/cancellations/${cancellation.id}`, {
+                    method: 'DELETE'
+                })
+                    .then(response => response.json())
+                    .then(() => {
+                        const updatedAppointments = petsAppointments.map(appointment => {
+                            if (appointment.id === apt.id) {
+                                return {
+                                    ...appointment,
+                                    cancellations: appointment.cancellations.filter(c => c.id !== cancellation.id)
+                                };
+                            }
+                            return appointment;
+                        });
+                        setPetsAppointments(updatedAppointments);
+                    })
+                    .catch(error => {
+                        console.error('Error deleting cancellation:', error);
+                    });
+            });
+        }
+    }, [cancellations, apt.id, petsAppointments, setPetsAppointments]);
+    
     return (
         <Card className="border border-primary" style={{ width: '100%', marginBottom: '5px' }}>
             <Card.Body>

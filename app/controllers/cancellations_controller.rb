@@ -9,6 +9,18 @@ class CancellationsController < ApplicationController
         end
     end
 
+    def destroy
+        cancellation = Cancellation.find(params[:id])
+
+        if cancellation
+            cancellation.destroy
+            render json: cancellation, status: :ok
+        else
+            render json: { error: 'Not found' }, status: :not_found
+        end
+        
+    end
+
     private
 
     def cancellation_params
