@@ -4,47 +4,40 @@ import dayjs from 'dayjs';
 const TodaysAppointmentsContext = React.createContext();
 
 const isTodayOrRecurring = (appointment) => {
-    const today = dayjs();
-
-    const datePart = appointment.appointment_date.slice(5, 7) + '/' + appointment.appointment_date.slice(8, 10) + '/' + appointment.appointment_date.slice(0, 4);
-    const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
-
+    const today = dayjs().format('YYYY-MM-DD');
+    
     const hasCancellations = appointment.hasOwnProperty('cancellations');
     const isNotCanceled = !appointment.canceled;
     const noCancellationToday = hasCancellations ? !hasCancellationToday(appointment.cancellations) : true;
 
     if (!appointment.recurring && isNotCanceled) {
-        return datePart === currentDate && noCancellationToday;
-    } else if (appointment.recurring && isNotCanceled) {
-        const dayOfWeek = today.day();
-        switch (dayOfWeek) {
-            case 0:
-                return appointment.sunday === true && noCancellationToday;
-            case 1:
-                return appointment.monday === true && noCancellationToday;
-            case 2:
-                return appointment.tuesday === true && noCancellationToday;
-            case 3:
-                return appointment.wednesday === true && noCancellationToday;
-            case 4:
-                return appointment.thursday === true && noCancellationToday;
-            case 5:
-                return appointment.friday === true && noCancellationToday;
-            case 6:
-                return appointment.saturday === true && noCancellationToday;
-            default:
-                return false;
+        if (appointment.appointment_date) {
+            const appointmentDate = dayjs(appointment.appointment_date).format('YYYY-MM-DD');
+            return appointmentDate === today && noCancellationToday;
         }
+        return false;
+    } else if (appointment.recurring && isNotCanceled) {
+        const dayOfWeek = dayjs().day();
+        const recurringDays = {
+            0: appointment.sunday,
+            1: appointment.monday,
+            2: appointment.tuesday,
+            3: appointment.wednesday,
+            4: appointment.thursday,
+            5: appointment.friday,
+            6: appointment.saturday
+        };
+        return recurringDays[dayOfWeek] && noCancellationToday;
     }
+    return false;
 };
 
 const hasCancellationToday = (cancellations) => {
-    const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
-    return cancellations.some(cancellation => cancellation.slice(0, 10) === today);
+    const today = dayjs().format('YYYY-MM-DD');
+    return cancellations.some(cancellation => dayjs(cancellation).format('YYYY-MM-DD') === today);
 };
 
 function TodaysAppointmentsProvider({ children }) {
-
     const [todaysAppointments, setTodaysAppointments] = useState([]);
 
     useEffect(() => {
