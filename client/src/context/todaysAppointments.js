@@ -5,7 +5,7 @@ const TodaysAppointmentsContext = React.createContext();
 
 const isTodayOrRecurring = (appointment) => {
     const today = dayjs().format('YYYY-MM-DD');
-    
+
     const hasCancellations = appointment.hasOwnProperty('cancellations');
     const isNotCanceled = !appointment.canceled;
     const noCancellationToday = hasCancellations ? !hasCancellationToday(appointment.cancellations) : true;
