@@ -7,6 +7,10 @@ const isTodayOrRecurring = (appointment) => {
     const today = dayjs().format('YYYY-MM-DD');
     const dayOfWeek = dayjs().day();
 
+    if (appointment.canceled) {
+        return false;
+    }
+
     const hasCancellations = appointment.hasOwnProperty('cancellations');
     const noCancellationToday = hasCancellations ? !appointment.cancellations.some(cancellation => dayjs(cancellation).format('YYYY-MM-DD') === today) : true;
 
