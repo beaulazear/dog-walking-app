@@ -5,19 +5,18 @@ const TodaysAppointmentsContext = React.createContext();
 
 const isTodayOrRecurring = (appointment) => {
     const today = dayjs().format('YYYY-MM-DD');
-    
-    const hasCancellations = appointment.hasOwnProperty('cancellations');
-    const isNotCanceled = !appointment.canceled;
-    const noCancellationToday = hasCancellations ? !hasCancellationToday(appointment.cancellations) : true;
+    const dayOfWeek = dayjs().day();
 
-    if (!appointment.recurring && isNotCanceled) {
+    const hasCancellations = appointment.hasOwnProperty('cancellations');
+    const noCancellationToday = hasCancellations ? !appointment.cancellations.some(cancellation => dayjs(cancellation).format('YYYY-MM-DD') === today) : true;
+
+    if (!appointment.recurring) {
         if (appointment.appointment_date) {
             const appointmentDate = dayjs(appointment.appointment_date).format('YYYY-MM-DD');
             return appointmentDate === today && noCancellationToday;
         }
         return false;
-    } else if (appointment.recurring && isNotCanceled && noCancellationToday) {
-        const dayOfWeek = dayjs().day();
+    } else if (appointment.recurring) {
         const recurringDays = {
             0: appointment.sunday,
             1: appointment.monday,
@@ -27,17 +26,9 @@ const isTodayOrRecurring = (appointment) => {
             5: appointment.friday,
             6: appointment.saturday
         };
-        return recurringDays[dayOfWeek];
+        return recurringDays[dayOfWeek] && noCancellationToday;
     }
     return false;
-};
-
-const hasCancellationToday = (cancellations) => {
-    const today = dayjs().format('YYYY-MM-DD');
-    return cancellations.some(cancellation => {
-        const cancellationDate = dayjs(cancellation).format('YYYY-MM-DD');
-        return cancellationDate === today;
-    });
 };
 
 function TodaysAppointmentsProvider({ children }) {
@@ -53,12 +44,8 @@ function TodaysAppointmentsProvider({ children }) {
                 }
             })
             .then((appointments) => {
-                const filteredAppointments = appointments.filter(appointment => {
-                    return isTodayOrRecurring(appointment);
-                });
-                const sortedAppointments = filteredAppointments.sort((a, b) => {
-                    return dayjs(a.start_time).diff(dayjs(b.start_time));
-                });
+                const filteredAppointments = appointments.filter(isTodayOrRecurring);
+                const sortedAppointments = filteredAppointments.sort((a, b) => dayjs(a.start_time).diff(dayjs(b.start_time)));
                 setTodaysAppointments(sortedAppointments);
             })
             .catch(error => console.error(error));
