@@ -12,7 +12,7 @@ const isTodayOrRecurring = (appointment) => {
     }
 
     let noCancellationToday = true;
-    if (appointment.hasOwnProperty('cancellations')) {
+    if (Array.isArray(appointment.cancellations)) {
         for (const cancellation of appointment.cancellations) {
             if (dayjs(cancellation).format('YYYY-MM-DD') === today) {
                 noCancellationToday = false;
