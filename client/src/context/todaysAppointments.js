@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, createContext, useCallback } from "react";
 import dayjs from 'dayjs';
 
-const TodaysAppointmentsContext = React.createContext();
+const TodaysAppointmentsContext = createContext();
 
 const isTodayOrRecurring = (appointment) => {
     const today = dayjs().format('YYYY-MM-DD');
@@ -14,7 +14,7 @@ const isTodayOrRecurring = (appointment) => {
     let noCancellationToday = true;
     if (appointment.cancellations) {
         for (const cancellation of appointment.cancellations) {
-            if (dayjs(cancellation).format('YYYY-MM-DD') === today) {
+            if (dayjs(cancellation.date).format('YYYY-MM-DD') === today) {
                 noCancellationToday = false;
                 break; // Exit the loop since we found a cancellation for today
             }
@@ -42,24 +42,26 @@ const isTodayOrRecurring = (appointment) => {
     return false;
 };
 
-function TodaysAppointmentsProvider({ children }) {
+const TodaysAppointmentsProvider = ({ children }) => {
     const [todaysAppointments, setTodaysAppointments] = useState([]);
 
     useEffect(() => {
-        fetch("/appointments")
-            .then((response) => {
-                if (response.ok) {
-                    return response.json();
-                } else {
+        const fetchAppointments = async () => {
+            try {
+                const response = await fetch("/appointments");
+                if (!response.ok) {
                     throw new Error('Failed to fetch appointments');
                 }
-            })
-            .then((appointments) => {
+                const appointments = await response.json();
                 const filteredAppointments = appointments.filter(isTodayOrRecurring);
                 const sortedAppointments = filteredAppointments.sort((a, b) => dayjs(a.start_time).diff(dayjs(b.start_time)));
                 setTodaysAppointments(sortedAppointments);
-            })
-            .catch(error => console.error(error));
+            } catch (error) {
+                console.error('Error fetching appointments:', error);
+            }
+        };
+
+        fetchAppointments();
     }, []);
 
     return (
@@ -67,6 +69,6 @@ function TodaysAppointmentsProvider({ children }) {
             {children}
         </TodaysAppointmentsContext.Provider>
     );
-}
+};
 
 export { TodaysAppointmentsContext, TodaysAppointmentsProvider };
