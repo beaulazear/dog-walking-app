@@ -11,8 +11,15 @@ const isTodayOrRecurring = (appointment) => {
         return false;
     }
 
-    const hasCancellations = appointment.hasOwnProperty('cancellations');
-    const noCancellationToday = hasCancellations ? !appointment.cancellations.some(cancellation => dayjs(cancellation).format('YYYY-MM-DD') === today) : true;
+    let noCancellationToday = true;
+    if (appointment.hasOwnProperty('cancellations')) {
+        for (const cancellation of appointment.cancellations) {
+            if (dayjs(cancellation).format('YYYY-MM-DD') === today) {
+                noCancellationToday = false;
+                break; // Exit the loop since we found a cancellation for today
+            }
+        }
+    }
 
     if (!appointment.recurring) {
         if (appointment.appointment_date) {
