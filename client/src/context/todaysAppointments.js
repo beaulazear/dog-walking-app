@@ -16,7 +16,7 @@ const isTodayOrRecurring = (appointment) => {
             return appointmentDate === today && noCancellationToday;
         }
         return false;
-    } else if (appointment.recurring && isNotCanceled) {
+    } else if (appointment.recurring && isNotCanceled && noCancellationToday) {
         const dayOfWeek = dayjs().day();
         const recurringDays = {
             0: appointment.sunday,
@@ -27,7 +27,7 @@ const isTodayOrRecurring = (appointment) => {
             5: appointment.friday,
             6: appointment.saturday
         };
-        return recurringDays[dayOfWeek] && noCancellationToday;
+        return recurringDays[dayOfWeek];
     }
     return false;
 };
