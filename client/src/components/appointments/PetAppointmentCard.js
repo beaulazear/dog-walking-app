@@ -5,12 +5,45 @@ import ListGroup from 'react-bootstrap/ListGroup';
 import { PetsAppointmentsContext } from "../../context/petsAppointments";
 import UpdateAppointmentForm from './UpdateAppointmentForm';
 import CancelAppointmentModal from './CancelAppointmentModal';
+import EditCancellationsModal from './EditCancellationsModal'; // Import the new modal
 
 export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
     const [updateAptButton, setUpdateAptButton] = useState(false);
     const [showModal, setShowModal] = useState(false);
 
     const { petsAppointments, setPetsAppointments } = useContext(PetsAppointmentsContext);
+
+    const [showEditModal, setShowEditModal] = useState(false); // Add new state for Edit Modal
+
+    function handleEditModalShow() {
+        setShowEditModal(true);
+    }
+
+    function handleEditModalClose() {
+        setShowEditModal(false);
+    }
+
+    function deleteCancellation(cancellationId) {
+        fetch(`/cancellations/${cancellationId}`, {
+            method: 'DELETE'
+        })
+            .then(response => response.json())
+            .then(() => {
+                const updatedAppointments = petsAppointments.map(appointment => {
+                    if (appointment.id === apt.id) {
+                        return {
+                            ...appointment,
+                            cancellations: appointment.cancellations.filter(c => c.id !== cancellationId)
+                        };
+                    }
+                    return appointment;
+                });
+                setPetsAppointments(updatedAppointments);
+            })
+            .catch(error => {
+                console.error('Error deleting cancellation:', error);
+            });
+    }
 
     let datetimeString = apt.appointment_date;
 
@@ -157,7 +190,7 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
             });
         }
     }, [cancellations, apt.id, petsAppointments, setPetsAppointments]);
-    
+
     return (
         <Card className="border border-primary" style={{ width: '100%', marginBottom: '5px' }}>
             <Card.Body>
@@ -181,6 +214,7 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                                 )}
                                 {cancellations.map(cancellation => (
                                     <ListGroup.Item key={cancellation.id}>{formatDate(cancellation.date)}</ListGroup.Item>
+
                                 ))}
                             </ListGroup>
                         </Card.Text>
@@ -200,7 +234,19 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                 )}
             </Card.Body>
             <div className="d-grid gap-2 mx-4 mb-3">
+
                 <Button onClick={handleModalShow} className="btn btn-secondary btn-block">Add Cancellations</Button>
+                {cancellations.length > 0 && (
+                    <>
+                        <Button onClick={handleEditModalShow} className="btn btn-warning btn-block">Edit Cancellations</Button>
+                        <EditCancellationsModal
+                            show={showEditModal}
+                            handleClose={handleEditModalClose}
+                            cancellations={cancellations}
+                            deleteCancellation={deleteCancellation}
+                        />
+                    </>
+                )}
                 <Button onClick={changeUpdateFormView} className="btn-block">
                     {updateAptButton ? "Close Update Form" : "Update Appointment"}
                 </Button>
