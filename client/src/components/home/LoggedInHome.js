@@ -20,7 +20,7 @@ export default function LoggedInHome() {
 
     return (
         <>
-            <h1 className="display-4 m-3">Welcome, {user.name} :)</h1>
+            <h1 className="display-4 m-3">Welcome, {user.name}</h1>
             <Card className="m-2">
                 <Card.Header as="h5">Today's Schedule</Card.Header>
                 <Card.Body>
