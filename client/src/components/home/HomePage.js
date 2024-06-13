@@ -4,7 +4,7 @@ import Card from 'react-bootstrap/Card';
 
 export default function HomePage() {
     return (
-        <>
+        <div>
             <h1 className="display-4 m-3">Welcome to PocketWalks</h1>
             <h2 className="m-3">Login or Signup to gain access to the following:</h2>
             <Card className="m-2">
@@ -34,6 +34,6 @@ export default function HomePage() {
                     </Card.Text>
                 </Card.Body>
             </Card>
-        </>
+        </div>
     )
 }

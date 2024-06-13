@@ -1,11 +1,12 @@
-import React, { useState, useEffect, createContext, useCallback } from "react";
+import React, { useState, useEffect, createContext } from "react";
 import dayjs from 'dayjs';
 
-const TodaysAppointmentsContext = createContext();
+const AppointmentsContext = createContext();
 
 const isTodayOrRecurring = (appointment) => {
     const today = dayjs().format('YYYY-MM-DD');
     const dayOfWeek = dayjs().day();
+    console.log(today)
 
     if (appointment.canceled) {
         return false;
@@ -14,9 +15,10 @@ const isTodayOrRecurring = (appointment) => {
     let noCancellationToday = true;
     if (appointment.cancellations) {
         for (const cancellation of appointment.cancellations) {
+            console.log(today, dayjs(cancellation.date).format('YYYY-MM-DD'))
             if (dayjs(cancellation.date).format('YYYY-MM-DD') === today) {
                 noCancellationToday = false;
-                break; // Exit the loop since we found a cancellation for today
+                break;
             }
         }
     }
@@ -42,8 +44,9 @@ const isTodayOrRecurring = (appointment) => {
     return false;
 };
 
-const TodaysAppointmentsProvider = ({ children }) => {
+const AppointmentsProvider = ({ children }) => {
     const [todaysAppointments, setTodaysAppointments] = useState([]);
+    const [petsAppointments, setPetsAppointments] = useState(null);
 
     useEffect(() => {
         const fetchAppointments = async () => {
@@ -64,11 +67,28 @@ const TodaysAppointmentsProvider = ({ children }) => {
         fetchAppointments();
     }, []);
 
+    useEffect(() => {
+        const fetchPetsAppointments = async () => {
+            try {
+                const response = await fetch("/pets_appointments");
+                if (!response.ok) {
+                    throw new Error('Failed to fetch pets appointments');
+                }
+                const appointments = await response.json();
+                setPetsAppointments(appointments);
+            } catch (error) {
+                console.error('Error fetching pets appointments:', error);
+            }
+        };
+
+        fetchPetsAppointments();
+    }, []);
+
     return (
-        <TodaysAppointmentsContext.Provider value={{ todaysAppointments, setTodaysAppointments }}>
+        <AppointmentsContext.Provider value={{ todaysAppointments, petsAppointments, setTodaysAppointments, setPetsAppointments }}>
             {children}
-        </TodaysAppointmentsContext.Provider>
+        </AppointmentsContext.Provider>
     );
 };
 
-export { TodaysAppointmentsContext, TodaysAppointmentsProvider };
+export { AppointmentsContext, AppointmentsProvider };

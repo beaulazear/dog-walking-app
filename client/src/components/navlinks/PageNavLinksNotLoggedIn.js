@@ -15,7 +15,7 @@ const navLinkStyles = {
 export default function PageNavLinksNotLoggedIn() {
 
     return (
-        <>
+        <div>
             <Navbar bg="primary" data-bs-theme="dark">
                 <Container>
                     <Navbar.Brand><Link style={{textDecoration: 'none', color: 'white'}} to="/">PocketWalks</Link></Navbar.Brand>
@@ -25,6 +25,6 @@ export default function PageNavLinksNotLoggedIn() {
                     </Nav>
                 </Container>
             </Navbar>
-        </>
+        </div>
     );
 }

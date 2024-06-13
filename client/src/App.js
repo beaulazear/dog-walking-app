@@ -11,8 +11,7 @@ import PetsPage from "./components/pets/PetsPage";
 import TodaysWalksPage from "./components/appointments/TodaysWalksPage";
 import InvoicesPage from "./components/invoices/InvoicePage";
 import LoggedInHome from "./components/home/LoggedInHome";
-import { TodaysAppointmentsProvider } from './context/todaysAppointments';
-import { PetsAppointmentsProvider } from './context/petsAppointments';
+import { AppointmentsProvider } from './context/appointments';
 import { InvoicesProvider } from './context/invoices';
 import { PetsProvider } from "./context/pets";
 
@@ -65,22 +64,20 @@ function App() {
     return (
       <div style={{ paddingBottom: '25px' }}>
         <PageNavLinks />
-        <TodaysAppointmentsProvider>
-          <PetsAppointmentsProvider>
-            <InvoicesProvider>
-              <PetsProvider>
-                <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signuppage" element={<Signup />} />
-                  <Route path="/petspage" element={<PetsPage />} />
-                  <Route path="/todayswalkspage" element={<TodaysWalksPage />} />
-                  <Route path="/invoicespage" element={<InvoicesPage />} />
-                  <Route path="/" element={<LoggedInHome />} />
-                </Routes>
-              </PetsProvider>
-            </InvoicesProvider>
-          </PetsAppointmentsProvider>
-        </TodaysAppointmentsProvider>
+        <AppointmentsProvider>
+          <InvoicesProvider>
+            <PetsProvider>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/signuppage" element={<Signup />} />
+                <Route path="/petspage" element={<PetsPage />} />
+                <Route path="/todayswalkspage" element={<TodaysWalksPage />} />
+                <Route path="/invoicespage" element={<InvoicesPage />} />
+                <Route path="/" element={<LoggedInHome />} />
+              </Routes>
+            </PetsProvider>
+          </InvoicesProvider>
+        </AppointmentsProvider>
         <StyledButton onClick={handleLogout}>Logout</StyledButton>
       </div>
     );
@@ -97,7 +94,5 @@ function App() {
     )
   }
 }
-
-//fix footer to have space between body
 
 export default App;

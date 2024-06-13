@@ -15,7 +15,7 @@ const navLinkStyles = {
 export default function PageNavLinks() {
 
     return (
-        <>
+        <div>
             <Navbar bg="dark" data-bs-theme="dark">
                 <Container>
                     <Navbar.Brand><Link style={{textDecoration: 'none', color: 'white'}} to="/">PocketWalks</Link></Navbar.Brand>
@@ -26,7 +26,7 @@ export default function PageNavLinks() {
                     </Nav>
                 </Container>
             </Navbar>
-        </>
+        </div>
     );
 
 }

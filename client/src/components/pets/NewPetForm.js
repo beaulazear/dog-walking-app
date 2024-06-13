@@ -47,15 +47,14 @@ export default function NewPetForm({ updateUserPets }) {
     const [birthdate, setBirthdate] = useState("");
     const [allergies, setAllergies] = useState("");
     const [suppliesLocation, setSuppliesLocation] = useState("");
-    const [behavorialNotes, setBehavorialNotes] = useState("");
+    const [behavioralNotes, setBehavioralNotes] = useState("");
     const [spayedOrNeutered, setSpayedOrNeutered] = useState(false);
 
     const [errors, setErrors] = useState([]);
 
     function handleNewPet(e) {
-
         e.preventDefault();
-        console.log(behavorialNotes)
+
         fetch("/pets", {
             method: "POST",
             headers: {
@@ -67,7 +66,7 @@ export default function NewPetForm({ updateUserPets }) {
                 address: address,
                 birthdate: birthdate,
                 allergies: allergies,
-                behavorial_notes: behavorialNotes,
+                behavioral_notes: behavioralNotes,
                 supplies_location: suppliesLocation,
                 spayed_neutered: spayedOrNeutered
             })
@@ -134,14 +133,14 @@ export default function NewPetForm({ updateUserPets }) {
                     <StyledFormLabel>Supplies Location</StyledFormLabel>
                     <Form.Control onChange={(e) => setSuppliesLocation(e.target.value)} value={suppliesLocation} type="text" placeholder="Leash location, treats, etc..." />
                 </StyledFormGroup>
-                <StyledFormGroup controlId="formBasicbehavorialNotes">
+                <StyledFormGroup controlId="formBasicBehavioralNotes">
                     <StyledFormLabel>Behavioral Information</StyledFormLabel>
-                    <Form.Control onChange={(e) => setBehavorialNotes(e.target.value)} value={behavorialNotes} type="text" placeholder="Leash reactivity, tries to eat trash, etc..." />
+                    <Form.Control onChange={(e) => setBehavioralNotes(e.target.value)} value={behavioralNotes} type="text" placeholder="Leash reactivity, tries to eat trash, etc..." />
                 </StyledFormGroup>
                 {errors?.length > 0 && (
                     <ul>
-                        {errors.map((error) => (
-                            <Alert key={error} variant={'danger'}>
+                        {errors.map((error, index) => (
+                            <Alert key={index} variant={'danger'}>
                                 {error}
                             </Alert>
                         ))}

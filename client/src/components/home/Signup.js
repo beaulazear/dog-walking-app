@@ -54,7 +54,7 @@ export default function Signup() {
     }
 
     return (
-        <>
+        <div>
             <h1 className="display-5 m-3">Create Your Account</h1>
             <Form className="m-3" onSubmit={handleSignup}>
                 <h4 style={{marginBottom: '15px'}}>User Information:</h4>
@@ -126,6 +126,6 @@ export default function Signup() {
                     Submit
                 </Button>
             </Form>
-        </>
+        </div>
     );
 }

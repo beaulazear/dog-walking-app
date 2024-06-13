@@ -241,7 +241,6 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
         const todayAdjusted = new Date(today.getTime() - (offset * 60 * 1000));
         const todayString = todayAdjusted.toISOString().slice(0, 10);
 
-        console.log(invoices)
         const matchingInvoice = invoices.map(invoice => {
             const invoiceDate = invoice.date_completed.slice(0, 22);
             if (invoiceDate === todayString + appointmentStartTime.slice(10, 22)) {
@@ -270,7 +269,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
     const isAptLate = isTimestampInPast(apt.end_time)
 
     return (
-        <>
+        <div>
             {invoices && invoices.cancelled !== true && (
                 <StyledCard style={{ backgroundColor: '#6fd388' }}>
                     <Card.Body>
@@ -369,6 +368,6 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                     <Button variant="primary" onClick={confirmCancelWalk}>Confirm</Button>
                 </Modal.Footer>
             </StyledModal>
-        </>
+        </div>
     )
 }

@@ -1,17 +1,17 @@
 import React, { useContext } from "react";
-import { TodaysAppointmentsContext } from "../../context/todaysAppointments";
+import { AppointmentsContext } from "../../context/appointments";
 import Card from 'react-bootstrap/Card';
 import TodaysAppointmentsCard from "./TodaysAppointmentsCard";
 
 export default function TodaysWalksPage() {
 
-    const { todaysAppointments, setTodaysAppointments } = useContext(TodaysAppointmentsContext)
+    const { todaysAppointments, setTodaysAppointments } = useContext(AppointmentsContext)
 
     const dayjs = require('dayjs');
 
     function getCurrentDateFormatted() {
         const currentDate = dayjs();
-        const formattedDate = currentDate.format('MMMM DD, YYYY'); // Format the date to display month name, day, and year
+        const formattedDate = currentDate.format('MMMM DD, YYYY');
     
         return formattedDate;
     }

@@ -1,7 +1,7 @@
 import { Accordion, Button, Card, ListGroup, Modal } from 'react-bootstrap';
 import React, { useContext, useState } from "react";
 import { PetsContext } from "../../context/pets";
-import { TodaysAppointmentsContext } from '../../context/todaysAppointments';
+import { AppointmentsContext } from '../../context/appointments';
 import "bootstrap/dist/css/bootstrap.min.css";
 import { DownOutlined } from '@ant-design/icons';
 import { Dropdown, Space } from 'antd';
@@ -20,7 +20,7 @@ import {
 export default function InvoicePetCard({ pet }) {
 
     const { pets, setPets } = useContext(PetsContext)
-    const { todaysAppointments, setTodaysAppointments } = useContext(TodaysAppointmentsContext)
+    const { todaysAppointments, setTodaysAppointments } = useContext(AppointmentsContext)
 
     const [invoices, setInvoices] = useState(pet.invoices);
 
@@ -332,7 +332,7 @@ export default function InvoicePetCard({ pet }) {
                             />
                             <Card.Title style={{ marginLeft: '16px' }}>{pet.name}'s New Invoices:</Card.Title>
                             {unpaidInvoices.length > 0 && (
-                                <>
+                                <div>
                                     <p style={{ marginLeft: '16px' }}>New invoices are from recently completed walks. Once you send the invoices to the client, mark as pending until payment is complete.</p>
                                     <ListGroup className="list-group-flush">
                                         {unpaidInvoices.map((invoice) => (
@@ -343,15 +343,17 @@ export default function InvoicePetCard({ pet }) {
                                     <Card.Text className='m-3'>
                                         <b>Total = ${currentTotalNewInvoices}</b>
                                     </Card.Text>
-                                    <FormButton style={{ margin: '5px' }} onClick={markInvoicesAsPending}>Mark as pending</FormButton>
-                                </>
+                                </div>
+                            )}
+                            {unpaidInvoices.length > 0 && (
+                                <FormButton style={{ margin: '5px' }} onClick={markInvoicesAsPending}>Mark as pending</FormButton>
                             )}
                             {unpaidInvoices.length < 1 && (
                                 <p style={{ padding: '16px' }}>There are currently no new invoices for {pet.name}. Invoices will be displayed here as walks are completed on the Today page.</p>
                             )}
                             <Card.Title style={{ marginTop: '10px', marginLeft: '16px' }}>{pet.name}'s Pending Invoices:</Card.Title>
                             {pendingInvoices?.length > 0 && (
-                                <>
+                                <div>
                                     <p style={{ marginLeft: '16px' }}>Pending invoices have been sent to client for payment! Once payment is collected, mark as paid.</p>
                                     <ListGroup className="list-group-flush">
                                         {pendingInvoices.map((invoice) => (
@@ -361,8 +363,10 @@ export default function InvoicePetCard({ pet }) {
                                     <Card.Text className='m-3'>
                                         <b>Total = ${currentTotalPendingInvoices}</b>
                                     </Card.Text>
-                                    <FormButton style={{ margin: '5px' }} onClick={markInvoicesAsPaid}>Mark pending as Paid</FormButton>
-                                </>
+                                </div>
+                            )}
+                            {pendingInvoices?.length > 0 && (
+                                <FormButton style={{ margin: '5px' }} onClick={markInvoicesAsPaid}>Mark pending as Paid</FormButton>
                             )}
                             {pendingInvoices?.length < 1 && (
                                 <p style={{ padding: '16px' }}>There are currently no pending invoices for {pet.name}. Invoices will be displayed here as new invoices are marked as pending.</p>
@@ -374,97 +378,98 @@ export default function InvoicePetCard({ pet }) {
                 <Accordion.Item className="text-bg-light p-3" eventKey="1">
                     <Accordion.Header>Paid Invoices / Personal Finance</Accordion.Header>
                     <Accordion.Body>
-                        <Card.Img
-                            variant="top"
-                            src={pet.profile_pic}
-                            style={{
-                                width: '150px',
-                                height: '150px',
-                                objectFit: 'cover',
-                                borderRadius: '50%',
-                                margin: '10px 0 10px 10px',
-                                display: 'inline-block',
-                            }}
-                        />
-                        <h3 classsex="display-3">Total Income: ${grandTotal}</h3>
-                        <p classsex="display-3">This includes both paid & unpaid invoices. Use the form below to add additional compensation from previous dates!</p>
-                        <h3 classsex="display-3">Paid Invoices</h3>
-                        {paidInvoices?.length > 0 && (
-                            <>
-                                <Dropdown menu={{ items }}>
-                                    <button onClick={(e) => e.preventDefault()}>
-                                        <Space>
-                                            Filter
-                                            <DownOutlined />
-                                        </Space>
-                                    </button>
-                                </Dropdown>
-                                <ListGroup className="list-group-flush">
-                                    {allInvoicesSelected === true && (
-                                        <>
-                                            {paidInvoices.map((invoice) => (
-                                                <ListGroup.Item key={invoice.id}><b>{invoice.title ? invoice.title : 'New Invoice'}</b>
-                                                    <br />{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>))}
-                                        </>
+                        <Card style={{ width: '100%' }}>
+                            <Card.Img
+                                variant="top"
+                                src={pet.profile_pic}
+                                style={{
+                                    width: '150px',
+                                    height: '150px',
+                                    objectFit: 'cover',
+                                    borderRadius: '50%',
+                                    margin: '10px 0 10px 10px',
+                                    display: 'inline-block',
+                                }}
+                            />
+                            <h3 classsex="display-3">Total Income: ${grandTotal}</h3>
+                            <p classsex="display-3">This includes both paid & unpaid invoices. Use the form below to add additional compensation from previous dates!</p>
+                            <h3 classsex="display-3">Paid Invoices</h3>
+                            {paidInvoices?.length > 0 && (
+                                <div>
+                                    <Dropdown menu={{ items }}>
+                                        <button onClick={(e) => e.preventDefault()}>
+                                            <Space>
+                                                Filter
+                                                <DownOutlined />
+                                            </Space>
+                                        </button>
+                                    </Dropdown>
+                                    <ListGroup className="list-group-flush">
+                                        {allInvoicesSelected === true && (
+                                            <div>
+                                                {paidInvoices.map((invoice) => (
+                                                    <ListGroup.Item key={invoice.id}><b>{invoice.title ? invoice.title : 'New Invoice'}</b>
+                                                        <br />{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>))}
+                                            </div>
+                                        )}
+                                        {tenInvoicesSelected === true && (
+                                            <div>
+                                                {lastTenInvoices.map((invoice) => (
+                                                    <ListGroup.Item key={invoice.id}><b>{invoice.title ? invoice.title : 'New Invoice'}</b>
+                                                        <br />{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>))}
+                                            </div>
+                                        )}
+                                        {thirtyInvoicesSelected === true && (
+                                            <div>
+                                                {lastThirtyInvoices.map((invoice) => (
+                                                    <ListGroup.Item key={invoice.id}><b>{invoice.title ? invoice.title : 'New Invoice'}</b>
+                                                        <br />{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>))}
+                                            </div>
+                                        )}
+                                    </ListGroup>
+                                </div>
+                            )}
+                            {paidInvoices?.length < 1 && (
+                                <p>There are currently no past invoices for {pet.name}. Invoices will show up here once marked as paid.</p>
+                            )}
+                            <Modal show={showNewIncomeModal} onHide={toggleAddIncome}>
+                                <Modal.Header closeButton>
+                                    <FormTitle>Add Additional Income</FormTitle>
+                                </Modal.Header>
+                                <FormContainer>
+                                    {errors.length > 0 && (
+                                        <div>
+                                            {errors.map((error, index) => (
+                                                <ErrorMessage key={index}>{error}</ErrorMessage>
+                                            ))}
+                                        </div>
                                     )}
-                                    {tenInvoicesSelected === true && (
-                                        <>
-                                            {lastTenInvoices.map((invoice) => (
-                                                <ListGroup.Item key={invoice.id}><b>{invoice.title ? invoice.title : 'New Invoice'}</b>
-                                                    <br />{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>))}
-                                        </>
-                                    )}
-                                    {thirtyInvoicesSelected === true && (
-                                        <>
-                                            {lastThirtyInvoices.map((invoice) => (
-                                                <ListGroup.Item key={invoice.id}><b>{invoice.title ? invoice.title : 'New Invoice'}</b>
-                                                    <br />{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>))}
-                                        </>
-                                    )}
-                                </ListGroup>
-                            </>
-                        )}
-                        {paidInvoices?.length < 1 && (
-                            <p>There are currently no past invoices for {pet.name}. Invoices will show up here once marked as paid.</p>
-                        )}
-                        <Modal show={showNewIncomeModal} onHide={toggleAddIncome}>
-                            <Modal.Header closeButton>
-                                <FormTitle>Add Additional Income</FormTitle>
-                            </Modal.Header>
-                            <FormContainer>
-                                {errors.length > 0 && (
-                                    <div>
-                                        {errors.map((error, index) => (
-                                            <ErrorMessage key={index}>{error}</ErrorMessage>
-                                        ))}
-                                    </div>
-                                )}
-                                <Form onSubmit={handleSubmitAdditionalIncome}>
-                                    <FormField>
-                                        <Label htmlFor="compensation">Compensation:</Label>
-                                        <Input placeholder='Amount paid in $USD' type="text" id="compensation" value={compensation} onChange={(e) => setCompensation(e.target.value)} />
-                                    </FormField>
-                                    <FormField>
-                                        <Label htmlFor="dateAdded">Date Added:</Label>
-                                        <Input type="date" id="dateAdded" value={dateAdded} onChange={(e) => setDateAdded(e.target.value)} />
-                                    </FormField>
-                                    <FormField>
-                                        <Label htmlFor="description">Description:</Label>
-                                        <Input type="text" id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
-                                    </FormField>
-                                    <FormButton type="submit">Add Additional Income</FormButton>
-                                </Form>
-                            </FormContainer>
-                        </Modal>
-                        <h3 style={{ marginTop: '16px' }} classsex="display-3">Add new payment</h3>
-                        <Button style={{ marginBottom: '10px' }} onClick={toggleAddIncome}>Additional Income Form</Button>
-
-                        {pet.additional_incomes.length > 0 && (
-                            <AdditionalIncomeList handleIncomeDelete={handleIncomeDelete} items={pet.additional_incomes} />
-                        )}
-                        {pet.additional_incomes.length < 1 && (
-                            <p>Additional incomes will be displayed here once submitted.</p>
-                        )}
+                                    <Form onSubmit={handleSubmitAdditionalIncome}>
+                                        <FormField>
+                                            <Label htmlFor="compensation">Compensation:</Label>
+                                            <Input placeholder='Amount paid in $USD' type="text" id="compensation" value={compensation} onChange={(e) => setCompensation(e.target.value)} />
+                                        </FormField>
+                                        <FormField>
+                                            <Label htmlFor="dateAdded">Date Added:</Label>
+                                            <Input type="date" id="dateAdded" value={dateAdded} onChange={(e) => setDateAdded(e.target.value)} />
+                                        </FormField>
+                                        <FormField>
+                                            <Label htmlFor="description">Description:</Label>
+                                            <Input type="text" id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
+                                        </FormField>
+                                        <FormButton type="submit">Add Additional Income</FormButton>
+                                    </Form>
+                                </FormContainer>
+                            </Modal>
+                            <h3 style={{ marginTop: '16px' }} classsex="display-3">Add new payment</h3>
+                            {pet.additional_incomes.length > 0 && (
+                                <AdditionalIncomeList handleIncomeDelete={handleIncomeDelete} items={pet.additional_incomes} />
+                            )}
+                            {pet.additional_incomes.length < 1 && (
+                                <p>Additional incomes will be displayed here once submitted.</p>
+                            )}
+                            <FormButton style={{ marginBottom: '6px' }} onClick={toggleAddIncome}>Additional Income Form</FormButton>
+                        </Card>
                     </Accordion.Body>
                 </Accordion.Item>
             </Accordion>

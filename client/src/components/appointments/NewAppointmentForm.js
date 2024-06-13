@@ -82,16 +82,16 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
         <Container>
             <Form className="text-bg-light p-3" onSubmit={handleNewAppointmentRequest}>
                 {recurring === false &&
-                    <>
+                    <div>
                         <h1 className="display-6">One Time Appointment</h1>
                         <p>This form is currently for a one time appointment, if you would like an appointment to repeat itself - change "Recurring" to yes.</p>
-                    </>
+                    </div>
                 }
                 {recurring === true &&
-                    <>
+                    <div>
                         <h1 className="display-6">Recurring Appointment</h1>
                         <p>This form is currently for a recurring appointment. Please select which day/days of the week you'd like the appointment to be repeated on.</p>
-                    </>
+                    </div>
                 }
                 <Form.Group className="mb-3" controlId="formBasicappointmentDate">
                     <Form.Label>Earliest Pickup Time</Form.Label>
@@ -143,7 +143,7 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
                     </Form.Group>
                 )}
                 {recurring === true && (
-                    <>
+                    <div>
                         <h3>Please select which days of the week you would like this walk to be repeated.</h3>
                         <Form.Group className="mb-3">
                             <Form.Label>Monday</Form.Label>
@@ -194,15 +194,17 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
                                 <option value={true}>Yes</option>
                             </Form.Select>
                         </Form.Group>
-                    </>
+                    </div>
                 )}
                 {errors?.length > 0 && (
-                    <ul>
-                        {errors.map((error) => (
-                            <Alert key={error} variant={'danger'}>
-                                {error}
-                            </Alert>))}
-                    </ul>
+                    <div>
+                        <ul>
+                            {errors.map((error) => (
+                                <Alert key={error} variant={'danger'}>
+                                    {error}
+                                </Alert>))}
+                        </ul>
+                    </div>
                 )}
                 <Button variant="primary" type="submit">
                     Submit

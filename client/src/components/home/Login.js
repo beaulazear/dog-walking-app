@@ -41,7 +41,7 @@ export default function Login() {
     }
 
     return (
-        <>
+        <div>
             <h1 className="display-5 m-3">User Login</h1>
             <Form onSubmit={handleLogin} className="mb-3 m-3">
                 <Form.Group className="mb-3">
@@ -74,6 +74,6 @@ export default function Login() {
                     <Button variant="primary" href="signuppage">Signup</Button>
                 </Card.Body>
             </Card>
-        </>
+        </div>
     )
 }

@@ -1,7 +1,6 @@
 import React, { useState, useContext } from "react";
 import { UserContext } from "../../context/user";
-import { PetsAppointmentsContext } from "../../context/petsAppointments";
-import { TodaysAppointmentsContext } from "../../context/todaysAppointments";
+import { AppointmentsContext } from "../../context/appointments";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import Container from 'react-bootstrap/Container';
@@ -9,8 +8,7 @@ import Alert from 'react-bootstrap/Alert';
 
 export default function UpdateAppointmentForm({ apt, changeUpdateFormView }) {
     const { user } = useContext(UserContext);
-    const { setPetsAppointments, petsAppointments } = useContext(PetsAppointmentsContext)
-    const { setTodaysAppointments, todaysAppointments } = useContext(TodaysAppointmentsContext)
+    const { setPetsAppointments, petsAppointments, todaysAppointments, setTodaysAppointments } = useContext(AppointmentsContext)
 
     const [startTime, setStartTime] = useState(apt.start_time);
     const [endTime, setEndTime] = useState(apt.end_time);
@@ -54,39 +52,41 @@ export default function UpdateAppointmentForm({ apt, changeUpdateFormView }) {
     }
 
     return (
-        <Container>
-            <Form className="text-bg-light p-3" onSubmit={handleUpdateAppointmentRequest}>
-                <h1 className="display-6">Update Appointment</h1>
-                <Form.Group className="mb-3" controlId="formBasicStartTime">
-                    <Form.Label>Start Time</Form.Label>
-                    <Form.Control onChange={(e) => setStartTime(e.target.value)} value={startTime} type="time" />
-                </Form.Group>
-                <Form.Group className="mb-3" controlId="formBasicEndTime">
-                    <Form.Label>End Time</Form.Label>
-                    <Form.Control onChange={(e) => setEndTime(e.target.value)} value={endTime} type="time" />
-                </Form.Group>
-                <Form.Group className="mb-3" controlId="formBasicDuration">
-                    <Form.Label>Walk Duration</Form.Label>
-                    <Form.Select value={duration} onChange={(e) => setDuration(e.target.value)} type="date">
-                        <option>Open this select menu</option>
-                        <option value="30">30 Minutes</option>
-                        <option value="45">45 Minutes</option>
-                        <option value="60">60 Minutes</option>
-                    </Form.Select>
-                </Form.Group>
-                {errors?.length > 0 && (
-                    <ul>
-                        {errors.map((error, index) => (
-                            <Alert key={index} variant={'danger'}>
-                                {error}
-                            </Alert>
-                        ))}
-                    </ul>
-                )}
-                <Button variant="primary" type="submit">
-                    Update
-                </Button>
-            </Form>
-        </Container>
+        <div>
+            <Container>
+                <Form className="text-bg-light p-3" onSubmit={handleUpdateAppointmentRequest}>
+                    <h1 className="display-6">Update Appointment</h1>
+                    <Form.Group className="mb-3" controlId="formBasicStartTime">
+                        <Form.Label>Start Time</Form.Label>
+                        <Form.Control onChange={(e) => setStartTime(e.target.value)} value={startTime} type="time" />
+                    </Form.Group>
+                    <Form.Group className="mb-3" controlId="formBasicEndTime">
+                        <Form.Label>End Time</Form.Label>
+                        <Form.Control onChange={(e) => setEndTime(e.target.value)} value={endTime} type="time" />
+                    </Form.Group>
+                    <Form.Group className="mb-3" controlId="formBasicDuration">
+                        <Form.Label>Walk Duration</Form.Label>
+                        <Form.Select value={duration} onChange={(e) => setDuration(e.target.value)} type="date">
+                            <option>Open this select menu</option>
+                            <option value="30">30 Minutes</option>
+                            <option value="45">45 Minutes</option>
+                            <option value="60">60 Minutes</option>
+                        </Form.Select>
+                    </Form.Group>
+                    {errors?.length > 0 && (
+                        <ul>
+                            {errors.map((error, index) => (
+                                <Alert key={index} variant={'danger'}>
+                                    {error}
+                                </Alert>
+                            ))}
+                        </ul>
+                    )}
+                    <Button variant="primary" type="submit">
+                        Update
+                    </Button>
+                </Form>
+            </Container>
+        </div>
     )
 }

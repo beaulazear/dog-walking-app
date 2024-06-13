@@ -1,19 +1,22 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useMemo } from 'react';
 import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
 import ListGroup from 'react-bootstrap/ListGroup';
-import { PetsAppointmentsContext } from "../../context/petsAppointments";
+import { AppointmentsContext } from "../../context/appointments";
 import UpdateAppointmentForm from './UpdateAppointmentForm';
 import CancelAppointmentModal from './CancelAppointmentModal';
 import EditCancellationsModal from './EditCancellationsModal'; // Import the new modal
 
 export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
+
     const [updateAptButton, setUpdateAptButton] = useState(false);
     const [showModal, setShowModal] = useState(false);
 
-    const { petsAppointments, setPetsAppointments } = useContext(PetsAppointmentsContext);
+    const { petsAppointments, setPetsAppointments } = useContext(AppointmentsContext);
 
     const [showEditModal, setShowEditModal] = useState(false); // Add new state for Edit Modal
+
+    const cancellations = useMemo(() => apt.cancellations || [], [apt.cancellations]);
 
     function handleEditModalShow() {
         setShowEditModal(true);
@@ -157,8 +160,6 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
         return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     }
 
-    const cancellations = apt.cancellations || [];
-
     useEffect(() => {
         const now = new Date();
         const oneDayBefore = new Date(now);
@@ -195,7 +196,7 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
         <Card className="border border-primary" style={{ width: '100%', marginBottom: '5px' }}>
             <Card.Body>
                 {apt.recurring ? (
-                    <>
+                    <div>
                         <Card.Title>Recurring Appointment</Card.Title>
                         <Card.Subtitle className="mb-2 text-muted"><b>Walk Duration:</b> {apt.duration} minutes</Card.Subtitle>
                         <Card.Subtitle className="mb-2 text-muted"><b>Walk Type:</b> {apt.solo ? 'Solo' : 'Group'} Walk</Card.Subtitle>
@@ -205,22 +206,19 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                             This is a recurring appointment and will be repeated every {daysOfWeekArr.join(', ')}
                         </Card.Text>
                         <Card.Subtitle className="mb-2 text-muted"><b>Canceled Dates:</b></Card.Subtitle>
-                        <Card.Text>
+                        {cancellations.length < 1 && (
+                            <Card.Text>No cancellations currently, use button below to submit date that the appointment is to be skipped.</Card.Text>
+                        )}
+                        {cancellations.length > 0 && (
                             <ListGroup variant="flush">
-                                {cancellations.length < 1 && (
-                                    <Card.Text>
-                                        No cancellations currently, use button below to submit date that the appointment is to be skipped.
-                                    </Card.Text>
-                                )}
                                 {cancellations.map(cancellation => (
                                     <ListGroup.Item key={cancellation.id}>{formatDate(cancellation.date)}</ListGroup.Item>
-
                                 ))}
                             </ListGroup>
-                        </Card.Text>
-                    </>
+                        )}
+                    </div>
                 ) : (
-                    <>
+                    <div>
                         <Card.Title>One Time Appointment</Card.Title>
                         <Card.Subtitle className="mb-2 text-muted"><b>Date:</b> {datetimeString} </Card.Subtitle>
                         <Card.Subtitle className="mb-2 text-muted"><b>Walk Duration:</b> {apt.duration} minutes</Card.Subtitle>
@@ -230,22 +228,13 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                         <Card.Text>
                             This is a one time appointment and will be displayed on the Today page on the date of the appointment.
                         </Card.Text>
-                    </>
+                    </div>
                 )}
             </Card.Body>
             <div className="d-grid gap-2 mx-4 mb-3">
-
                 <Button onClick={handleModalShow} className="btn btn-secondary btn-block">Add Cancellations</Button>
                 {cancellations.length > 0 && (
-                    <>
-                        <Button onClick={handleEditModalShow} className="btn btn-warning btn-block">Edit Cancellations</Button>
-                        <EditCancellationsModal
-                            show={showEditModal}
-                            handleClose={handleEditModalClose}
-                            cancellations={cancellations}
-                            deleteCancellation={deleteCancellation}
-                        />
-                    </>
+                    <Button onClick={handleEditModalShow} className="btn btn-warning btn-block">Edit Cancellations</Button>
                 )}
                 <Button onClick={changeUpdateFormView} className="btn-block">
                     {updateAptButton ? "Close Update Form" : "Update Appointment"}
@@ -259,6 +248,12 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                     handleClose={handleModalClose}
                     appointmentId={apt.id}
                     onSubmit={handleModalSubmit}
+                />
+                <EditCancellationsModal
+                    show={showEditModal}
+                    handleClose={handleEditModalClose}
+                    cancellations={cancellations}
+                    deleteCancellation={deleteCancellation}
                 />
             </div>
         </Card>

@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { TodaysAppointmentsContext } from "../../context/todaysAppointments";
+import { AppointmentsContext } from "../../context/appointments";
 import { UserContext } from "../../context/user";
 import { PetsContext } from "../../context/pets"
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -9,7 +9,7 @@ import Rates from "./Rates";
 
 export default function LoggedInHome() {
 
-    const { todaysAppointments } = useContext(TodaysAppointmentsContext)
+    const { todaysAppointments } = useContext(AppointmentsContext)
     const { user, setUser } = useContext(UserContext)
     const { pets } = useContext(PetsContext)
 
@@ -19,7 +19,7 @@ export default function LoggedInHome() {
     };
 
     return (
-        <>
+        <div>
             <h1 className="display-4 m-3">Welcome, {user.name}</h1>
             <Card className="m-2">
                 <Card.Header as="h5">Today's Schedule</Card.Header>
@@ -76,6 +76,6 @@ export default function LoggedInHome() {
                     <Button variant="primary" href="/invoicespage">Finances Page</Button>
                 </Card.Body>
             </Card>
-        </>
+        </div>
     )
 }

@@ -5,15 +5,12 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 import { UserProvider } from './context/user';
-import { TodaysAppointmentsProvider } from './context/todaysAppointments';
 
 ReactDOM.render(
   <React.StrictMode>
     <BrowserRouter>
       <UserProvider>
-        <TodaysAppointmentsProvider>
-          <App />
-        </TodaysAppointmentsProvider>
+        <App />
       </UserProvider>
     </BrowserRouter>
   </React.StrictMode>,
