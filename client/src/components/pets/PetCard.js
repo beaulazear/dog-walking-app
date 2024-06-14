@@ -65,7 +65,8 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
         formData.append('birthdate', birthdate);
         formData.append('supplies_location', suppliesLocation);
         formData.append('allergies', allergies);
-        formData.append('behavioral_notes', behavioralNotes);
+        formData.append('behavorial_notes', behavioralNotes);
+        // please note spelling of behavioral is wrong in the database
 
         if (profilePic instanceof File) {
             formData.append('profile_pic', profilePic);
