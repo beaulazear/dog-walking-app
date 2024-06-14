@@ -16,7 +16,7 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
 
     const [showEditModal, setShowEditModal] = useState(false); // Add new state for Edit Modal
 
-    const cancellations = useMemo(() => apt.cancellations || [], [apt.cancellations]);
+    const cancellations = useMemo(() => (apt.cancellations || []).sort((a, b) => new Date(a.date) - new Date(b.date)), [apt.cancellations]);
 
     function handleEditModalShow() {
         setShowEditModal(true);
@@ -34,9 +34,10 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
             .then(() => {
                 const updatedAppointments = petsAppointments.map(appointment => {
                     if (appointment.id === apt.id) {
+                        const updatedCancellations = appointment.cancellations.filter(c => c.id !== cancellationId);
                         return {
                             ...appointment,
-                            cancellations: appointment.cancellations.filter(c => c.id !== cancellationId)
+                            cancellations: updatedCancellations.sort((a, b) => new Date(a.date) - new Date(b.date))
                         };
                     }
                     return appointment;
@@ -102,7 +103,7 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                     setPetsAppointments(newPetsAppointments);
                 });
         } else {
-            console.log("Cancellation canceled.");
+            console.log("Appointment cancelled.");
         }
     }
 
@@ -117,43 +118,6 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
     function handleModalClose() {
         setShowModal(false);
     }
-
-    function handleModalSubmit(date) {
-        fetch('/cancellations', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                appointment_id: apt.id,
-                date: date
-            })
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Invalid date, date must be in the future.');
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Cancellation added:', data);
-                const updatedAppointments = petsAppointments.map(appointment => {
-                    if (appointment.id === apt.id) {
-                        return {
-                            ...appointment,
-                            cancellations: [...appointment.cancellations, data]
-                        };
-                    }
-                    return appointment;
-                });
-                setPetsAppointments(updatedAppointments);
-                handleModalClose();
-            })
-            .catch(error => {
-                console.error('Error:', error.message);
-            });
-    }
-
 
     function formatDate(dateString) {
         const date = new Date(dateString);
@@ -247,7 +211,6 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                     show={showModal}
                     handleClose={handleModalClose}
                     appointmentId={apt.id}
-                    onSubmit={handleModalSubmit}
                 />
                 <EditCancellationsModal
                     show={showEditModal}

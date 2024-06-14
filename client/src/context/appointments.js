@@ -6,7 +6,6 @@ const AppointmentsContext = createContext();
 const isTodayOrRecurring = (appointment) => {
     const today = dayjs().format('YYYY-MM-DD');
     const dayOfWeek = dayjs().day();
-    console.log(today)
 
     if (appointment.canceled) {
         return false;
@@ -15,7 +14,6 @@ const isTodayOrRecurring = (appointment) => {
     let noCancellationToday = true;
     if (appointment.cancellations) {
         for (const cancellation of appointment.cancellations) {
-            console.log(today, dayjs(cancellation.date).format('YYYY-MM-DD'))
             if (dayjs(cancellation.date).format('YYYY-MM-DD') === today) {
                 noCancellationToday = false;
                 break;

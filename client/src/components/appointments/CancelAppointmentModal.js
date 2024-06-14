@@ -1,35 +1,73 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Modal, Button, Form, Alert } from 'react-bootstrap';
+import { AppointmentsContext } from "../../context/appointments";
 
-export default function CancelAppointmentModal({ show, handleClose, appointmentId, onSubmit }) {
+export default function CancelAppointmentModal({ show, handleClose, appointmentId }) {
     const [selectedDate, setSelectedDate] = useState('');
     const [error, setError] = useState('');
 
+    const { petsAppointments, setPetsAppointments } = useContext(AppointmentsContext);
+
     const handleDateChange = (event) => {
         setSelectedDate(event.target.value);
-        setError('');  // Clear the error when the user starts typing
+        setError('');
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
 
-        // Validate the selected date
-        const currentDate = new Date();
-        const chosenDate = new Date(selectedDate);
+        try {
+            const currentDate = new Date();
+            const chosenDate = new Date(selectedDate);
 
-        if (chosenDate <= currentDate) {
-            setError('The selected date must be in the future.');
-            return;
+            if (chosenDate <= currentDate) {
+                setError('The selected date must be in the future.');
+                return;
+            }
+
+            const response = await fetch('/cancellations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    appointment_id: appointmentId,
+                    date: selectedDate
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                setError(errorData.errors ? errorData.errors.join(', ') : 'An error occurred. Please try again.');
+                return;
+            }
+
+            const data = await response.json();
+            console.log('Cancellation added:', data);
+            const updatedAppointments = petsAppointments.map(appointment => {
+                if (appointment.id === appointmentId) {
+                    return {
+                        ...appointment,
+                        cancellations: [...appointment.cancellations, data]
+                    };
+                }
+                return appointment;
+            });
+            setPetsAppointments(updatedAppointments);
+            handleClose();
+        } catch (err) {
+            setError('An error occurred while submitting your request. Please try again.');
         }
+    };
 
-        // If no error, call onSubmit and close the modal
-        onSubmit(selectedDate);
+    const handleModalClose = () => {
+        setError(''); // Clear error when modal is closed
         handleClose();
     };
 
     return (
         <div>
-            <Modal show={show} onHide={handleClose}>
+            <Modal show={show} onHide={handleModalClose}>
                 <Modal.Header closeButton>
                     <Modal.Title>Select Date to Skip Appointment</Modal.Title>
                 </Modal.Header>

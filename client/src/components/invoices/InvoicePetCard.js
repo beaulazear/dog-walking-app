@@ -24,9 +24,17 @@ export default function InvoicePetCard({ pet }) {
 
     const [invoices, setInvoices] = useState(pet.invoices);
 
-    const unpaidInvoices = invoices.filter((invoice) => !invoice.paid && !invoice.pending);
-    const paidInvoices = invoices.filter((invoice) => invoice.paid);
-    const pendingInvoices = invoices.filter((invoice) => invoice.pending);
+    const unpaidInvoices = invoices
+        .filter((invoice) => !invoice.paid && !invoice.pending)
+        .sort((a, b) => new Date(a.date_completed) - new Date(b.date_completed));
+
+    const paidInvoices = invoices
+        .filter((invoice) => invoice.paid)
+        .sort((a, b) => new Date(a.date_completed) - new Date(b.date_completed));
+
+    const pendingInvoices = invoices
+        .filter((invoice) => invoice.pending)
+        .sort((a, b) => new Date(a.date_completed) - new Date(b.date_completed));
 
     const [allInvoicesSelected, setAllInvoicesSelected] = useState(false)
     const [tenInvoicesSelected, setTenInvoicesSelected] = useState(true)

@@ -66,7 +66,7 @@ export default function NewPetForm({ updateUserPets }) {
                 address: address,
                 birthdate: birthdate,
                 allergies: allergies,
-                behavioral_notes: behavioralNotes,
+                behavorial_notes: behavioralNotes,
                 supplies_location: suppliesLocation,
                 spayed_neutered: spayedOrNeutered
             })
