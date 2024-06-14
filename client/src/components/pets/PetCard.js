@@ -25,7 +25,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     const [birthdate, setBirthdate] = useState(formatDate(pet.birthdate));
     const [allergies, setAllergies] = useState(pet.allergies);
     const [suppliesLocation, setSuppliesLocation] = useState(pet.supplies_location);
-    const [behavioralNotes, setBehavioralNotes] = useState(pet.behavioral_notes);
+    const [behavioralNotes, setBehavioralNotes] = useState(pet.behavorial_notes);
     const [spayedOrNeutered, setSpayedOrNeutered] = useState(pet.spayed_neutered);
 
     const [newAptButton, setNewAptButton] = useState(false);
@@ -203,7 +203,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                             <ListGroup className="list-group-flush">
                                 <ListGroup.Item><b>Sex:</b> {pet.sex}, {pet.spayed_neutered ? "fixed" : "Not fixed"}</ListGroup.Item>
                                 <ListGroup.Item><b>Supplies:</b> {pet.supplies_location}</ListGroup.Item>
-                                <ListGroup.Item><b>Notes:</b> {pet.behavioral_notes}</ListGroup.Item>
+                                <ListGroup.Item><b>Notes:</b> {pet.behavorial_notes}</ListGroup.Item>
                                 <ListGroup.Item><b>Allergies:</b> {pet.allergies}</ListGroup.Item>
                                 <ListGroup.Item><b>Birthdate:</b> {formatDate(pet.birthdate)}</ListGroup.Item>
                                 <ListGroup.Item><b>Appointments:</b> View, edit, & create appointments for {pet.name}</ListGroup.Item>
