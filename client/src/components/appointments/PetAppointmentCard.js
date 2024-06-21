@@ -5,7 +5,8 @@ import ListGroup from 'react-bootstrap/ListGroup';
 import { AppointmentsContext } from "../../context/appointments";
 import UpdateAppointmentForm from './UpdateAppointmentForm';
 import CancelAppointmentModal from './CancelAppointmentModal';
-import EditCancellationsModal from './EditCancellationsModal'; // Import the new modal
+import EditCancellationsModal from './EditCancellationsModal';
+import InvoiceForm from '../invoices/InvoiceForm';
 
 export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
 
@@ -14,7 +15,7 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
 
     const { petsAppointments, setPetsAppointments } = useContext(AppointmentsContext);
 
-    const [showEditModal, setShowEditModal] = useState(false); // Add new state for Edit Modal
+    const [showEditModal, setShowEditModal] = useState(false);
 
     const cancellations = useMemo(() => (apt.cancellations || []).sort((a, b) => new Date(a.date) - new Date(b.date)), [apt.cancellations]);
 
@@ -196,6 +197,7 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                 )}
             </Card.Body>
             <div className="d-grid gap-2 mx-4 mb-3">
+                <InvoiceForm apt={apt} />
                 <Button onClick={handleModalShow} className="btn btn-secondary btn-block">Add Cancellations</Button>
                 {cancellations.length > 0 && (
                     <Button onClick={handleEditModalShow} className="btn btn-warning btn-block">Edit Cancellations</Button>
