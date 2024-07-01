@@ -35,10 +35,22 @@ export default function LoggedInHome() {
         return recurringDays[dayOfWeek];
     };
 
+    const hasNoCancellationsOnDate = (appointment, date) => {
+        if (!appointment.cancellations) return true;
+        const formattedDate = dayjs(date).format('YYYY-MM-DD');
+        for (const cancellation of appointment.cancellations) {
+            if (dayjs(cancellation.date).format('YYYY-MM-DD') === formattedDate) {
+                return false;
+            }
+        }
+        return true;
+    };
+
     const getAppointmentsForDate = (date) => {
         const formattedDate = dayjs(date).format('YYYY-MM-DD');
         return petsAppointments?.filter(appointment => {
             if (appointment.canceled) return false;
+            if (!hasNoCancellationsOnDate(appointment, formattedDate)) return false;
             if (appointment.recurring) {
                 return isRecurringOnDate(appointment, formattedDate);
             } else {
@@ -51,7 +63,7 @@ export default function LoggedInHome() {
     const futureAppointments = getAppointmentsForDate(selectedDate);
 
     return (
-        <div style={{marginBottom: '25px'}}>
+        <div>
             <h1 className="display-4 m-3">Welcome, {user.name}</h1>
             <Card className="m-2">
                 <Card.Header as="h5">Today's Schedule</Card.Header>
@@ -124,7 +136,7 @@ export default function LoggedInHome() {
                         )}
                         {futureAppointments.length > 0 && (
                             futureAppointments.map((appointment, index) => (
-                                <ListGroup.Item key={index}>
+                                <ListGroup.Item key={index} className="appointment-item">
                                     <div><strong>Pet:</strong> {appointment.pet.name}</div>
                                     <div><strong>Time:</strong> {dayjs(appointment.start_time).format('h:mm A')} - {dayjs(appointment.end_time).format('h:mm A')}</div>
                                     <div><strong>Duration:</strong> {appointment.duration} minutes</div>
