@@ -240,14 +240,10 @@ export default function InvoicePetCard({ pet }) {
 
 
     function markInvoicesAsPaid() {
-        const confirmation = window.confirm("Are you sure you would like to mark all pending invoices as paid? This can not be undone.");
+        const confirmation = window.confirm("Are you sure you would like to mark all pending invoices as paid? This cannot be undone.");
 
         if (confirmation) {
-            let arrayOfAppointmentIds = [];
-
-            pendingInvoices.forEach((invoice) => {
-                arrayOfAppointmentIds.push(invoice.id);
-            });
+            let arrayOfAppointmentIds = pendingInvoices.map((invoice) => invoice.id);
 
             fetch(`/invoices/paid`, {
                 method: 'PATCH',
@@ -259,14 +255,18 @@ export default function InvoicePetCard({ pet }) {
                 })
             })
                 .then((response) => response.json())
-                .then((newPaidInvoices) => {
-                    setInvoices([...paidInvoices, ...newPaidInvoices]);
+                .then((updatedInvoices) => {
+                    // Update the invoices state with the new paid status
+                    const newInvoices = invoices.map((invoice) => {
+                        const updatedInvoice = updatedInvoices.find((updated) => updated.id === invoice.id);
+                        return updatedInvoice ? { ...invoice, paid: true, pending: false } : invoice;
+                    });
+                    setInvoices(newInvoices);
                 });
         } else {
             console.log("Invoices not marked as paid");
         }
     }
-
 
     function formatDateTime(dateTime) {
         const [datePart, timePart] = dateTime.split('T');
