@@ -79,9 +79,15 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
     const [selectedOption, setSelectedOption] = useState("Upcharge");
     const [showModal, setShowModal] = useState(false);
     const [cancelledCompensation, setCancelledCompensation] = useState(0);
+    const [duration, setDuration] = useState(apt.duration)
 
     const handleChange = (event) => {
         setSelectedOption(event.target.value);
+    };
+
+    const handleDurationChange = (event) => {
+        const number = parseFloat(event.target.value)
+        setDuration(number);
     };
 
     const handleCompensationChange = (event) => {
@@ -120,22 +126,22 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
     function handleNewInvoice() {
 
-        const title = `${apt.duration} minute ${apt.solo ? 'solo' : 'group'} walk`
+        const title = `${duration} minute ${apt.solo ? 'solo' : 'group'} walk`
 
         let compensation = 0
 
         if (user.thirty !== null) {
-            if (apt.duration === 30) {
+            if (duration === 30) {
                 compensation = user.thirty
-            } else if (apt.duration === 45) {
+            } else if (duration === 45) {
                 compensation = user.fourty
             } else {
                 compensation = user.sixty
             }
         } else {
-            if (apt.duration === 30) {
+            if (duration === 30) {
                 compensation = 22
-            } else if (apt.duration === 45) {
+            } else if (duration === 45) {
                 compensation = 27
             } else {
                 compensation = 33
@@ -303,7 +309,14 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                             <StyledListItem><b>Earliest pick up time:</b> {startTime}</StyledListItem>
                             <StyledListItem><b>Latest pick up time:</b> {endTime}</StyledListItem>
                             <StyledListItem><b>Address:</b> {apt.pet.address}</StyledListItem>
-                            <StyledListItem><b>Walk Duration:</b> {apt.duration} minutes</StyledListItem>
+                            <StyledListItem>
+                                <b>Walk Duration:</b>
+                                <select onChange={handleDurationChange} value={duration} style={{ marginLeft: '10px' }}>
+                                    <option value="30">30 Minutes</option>
+                                    <option value="45">45 Minutes</option>
+                                    <option value="60">60 Minutes</option>
+                                </select>
+                            </StyledListItem>
                             <StyledListItem><b>Walk Type:</b> {apt.solo ? 'Solo Walk' : 'Group Walk'}</StyledListItem>
                             <StyledListItem><b>Add an Upcharge or Discount:</b></StyledListItem>
                             <StyledListItem><StyledInput type='text' name="offset" maxLength={3} value={"$" + offset} onChange={(e) => setOffset(e.target.value.substring(1))} /></StyledListItem>
@@ -335,8 +348,14 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                             <StyledListItemNew><b>Earliest pick up time:</b> {startTime}</StyledListItemNew>
                             <StyledListItemNew><b>Latest pick up time:</b> {endTime}</StyledListItemNew>
                             <StyledListItemNew><b>Address:</b> {apt.pet.address}</StyledListItemNew>
-                            <StyledListItemNew><b>Walk Duration:</b> {apt.duration} minutes</StyledListItemNew>
-                            <StyledListItemNew><b>Walk Type:</b> {apt.solo ? 'Solo Walk' : 'Group Walk'}</StyledListItemNew>
+                            <StyledListItemNew>
+                                <b>Walk Duration:</b>
+                                <select onChange={handleDurationChange} value={duration} style={{ marginLeft: '10px' }}>
+                                    <option value="30">30 Minutes</option>
+                                    <option value="45">45 Minutes</option>
+                                    <option value="60">60 Minutes</option>
+                                </select>
+                            </StyledListItemNew>                            <StyledListItemNew><b>Walk Type:</b> {apt.solo ? 'Solo Walk' : 'Group Walk'}</StyledListItemNew>
                             <StyledListItemNew><b>Add an Upcharge or Discount:</b></StyledListItemNew>
                             <StyledListItemNew><StyledInput type='text' name="offset" maxLength={3} value={"$" + offset} onChange={(e) => setOffset(e.target.value.substring(1))} /></StyledListItemNew>
                             {offset > 0 && (
