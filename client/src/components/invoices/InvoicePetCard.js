@@ -469,7 +469,7 @@ export default function InvoicePetCard({ pet }) {
                                     </Form>
                                 </FormContainer>
                             </Modal>
-                            <h3 style={{ marginTop: '16px' }} classsex="display-3">Add new payment</h3>
+                            <h3 style={{ marginTop: '16px' }} classsex="display-3">Additional Income</h3>
                             {pet.additional_incomes.length > 0 && (
                                 <AdditionalIncomeList handleIncomeDelete={handleIncomeDelete} items={pet.additional_incomes} />
                             )}
