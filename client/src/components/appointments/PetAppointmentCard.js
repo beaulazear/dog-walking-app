@@ -198,9 +198,9 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
             </Card.Body>
             <div className="d-grid gap-2 mx-4 mb-3">
                 <InvoiceForm apt={apt} />
-                <Button onClick={handleModalShow} className="btn btn-secondary btn-block">Add Cancellations</Button>
+                <Button onClick={handleModalShow} className="btn btn-success btn-block">Add Cancellations</Button>
                 {cancellations.length > 0 && (
-                    <Button onClick={handleEditModalShow} className="btn btn-warning btn-block">Edit Cancellations</Button>
+                    <Button onClick={handleEditModalShow} className="btn btn-secondary btn-block">Edit Cancellations</Button>
                 )}
                 <Button onClick={changeUpdateFormView} className="btn-block">
                     {updateAptButton ? "Close Update Form" : "Update Appointment"}

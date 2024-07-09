@@ -85,7 +85,7 @@ export default function InvoiceForm({ apt }) { // Removed updateAppointments pro
 
     return (
         <div>
-            <Button style={{width: '100%'}} variant="primary" onClick={handleShowModal} className="btn btn-secondary btn-block">
+            <Button style={{width: '100%'}} variant="primary" onClick={handleShowModal} className="btn btn-info btn-block">
                 Create New Invoice
             </Button>
 
