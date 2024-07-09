@@ -307,7 +307,7 @@ export default function InvoicePetCard({ pet }) {
                                     {unpaidInvoices.concat(pendingInvoices).map((invoice) => (
                                         <ListGroup.Item key={invoice.id}>
                                             <Button style={{ marginRight: '10px' }} variant="danger" onClick={() => {
-                                                if (window.confirm("Are you sure you want to delete this invoice? This can not be undone.")) {
+                                                if (window.confirm("Are you sure you want to delete this invoice? This cannot be undone.")) {
                                                     deleteInvoice(invoice.id);
                                                 }
                                             }}>Delete</Button>
@@ -330,11 +330,11 @@ export default function InvoicePetCard({ pet }) {
                                 variant="top"
                                 src={pet.profile_pic}
                                 style={{
-                                    width: '150px', // Adjust the width as needed
-                                    height: '150px', // Adjust the height as needed
+                                    width: '150px',
+                                    height: '150px',
                                     objectFit: 'cover',
                                     borderRadius: '50%',
-                                    margin: '10px 0 10px 10px', // Adjust the margin values as needed
+                                    margin: '10px 0 10px 10px',
                                     display: 'inline-block',
                                 }}
                             />
@@ -399,9 +399,11 @@ export default function InvoicePetCard({ pet }) {
                                     display: 'inline-block',
                                 }}
                             />
-                            <h3 classsex="display-3">Total Income: ${grandTotal}</h3>
-                            <p classsex="display-3">This includes both paid & unpaid invoices. Use the form below to add additional compensation from previous dates!</p>
-                            <h3 classsex="display-3">Paid Invoices</h3>
+                            <Card.Title style={{ marginLeft: '16px' }}>Total Income: ${grandTotal}</Card.Title>
+                            <Card.Text style={{ marginLeft: '16px' }}>
+                                This includes both paid & unpaid invoices. Use the form below to add additional compensation from previous dates!
+                            </Card.Text>
+                            <Card.Title style={{ marginLeft: '16px' }}>Paid Invoices</Card.Title>
                             {paidInvoices?.length > 0 && (
                                 <div>
                                     <Dropdown menu={{ items }}>
@@ -413,21 +415,21 @@ export default function InvoicePetCard({ pet }) {
                                         </button>
                                     </Dropdown>
                                     <ListGroup className="list-group-flush">
-                                        {allInvoicesSelected === true && (
+                                        {allInvoicesSelected && (
                                             <div>
                                                 {paidInvoices.map((invoice) => (
                                                     <ListGroup.Item key={invoice.id}><b>{invoice.title ? invoice.title : 'New Invoice'}</b>
                                                         <br />{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>))}
                                             </div>
                                         )}
-                                        {tenInvoicesSelected === true && (
+                                        {tenInvoicesSelected && (
                                             <div>
                                                 {lastTenInvoices.map((invoice) => (
                                                     <ListGroup.Item key={invoice.id}><b>{invoice.title ? invoice.title : 'New Invoice'}</b>
                                                         <br />{formatDateTime(invoice.date_completed)}, ${invoice.compensation}</ListGroup.Item>))}
                                             </div>
                                         )}
-                                        {thirtyInvoicesSelected === true && (
+                                        {thirtyInvoicesSelected && (
                                             <div>
                                                 {lastThirtyInvoices.map((invoice) => (
                                                     <ListGroup.Item key={invoice.id}><b>{invoice.title ? invoice.title : 'New Invoice'}</b>
@@ -438,7 +440,7 @@ export default function InvoicePetCard({ pet }) {
                                 </div>
                             )}
                             {paidInvoices?.length < 1 && (
-                                <p>There are currently no past invoices for {pet.name}. Invoices will show up here once marked as paid.</p>
+                                <p style={{ marginLeft: '16px' }}>There are currently no past invoices for {pet.name}. Invoices will show up here once marked as paid.</p>
                             )}
                             <Modal show={showNewIncomeModal} onHide={toggleAddIncome}>
                                 <Modal.Header closeButton>
@@ -469,14 +471,14 @@ export default function InvoicePetCard({ pet }) {
                                     </Form>
                                 </FormContainer>
                             </Modal>
-                            <h3 style={{ marginTop: '16px' }} classsex="display-3">Additional Income</h3>
+                            <Card.Title style={{ marginLeft: '16px', marginTop: '16px' }}>Add new payment</Card.Title>
                             {pet.additional_incomes.length > 0 && (
                                 <AdditionalIncomeList handleIncomeDelete={handleIncomeDelete} items={pet.additional_incomes} />
                             )}
                             {pet.additional_incomes.length < 1 && (
-                                <p>Additional incomes will be displayed here once submitted.</p>
+                                <p style={{ marginLeft: '16px' }}>Additional incomes will be displayed here once submitted.</p>
                             )}
-                            <FormButton style={{ marginBottom: '6px' }} onClick={toggleAddIncome}>Additional Income Form</FormButton>
+                            <FormButton style={{ margin: '5px' }} onClick={toggleAddIncome}>Additional Income Form</FormButton>
                         </Card>
                     </Accordion.Body>
                 </Accordion.Item>
