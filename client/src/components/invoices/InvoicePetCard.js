@@ -1,4 +1,4 @@
-import { Accordion, Button, Card, ListGroup, Modal } from 'react-bootstrap';
+ import { Accordion, Button, Card, ListGroup, Modal } from 'react-bootstrap';
 import React, { useContext, useState } from "react";
 import { PetsContext } from "../../context/pets";
 import { AppointmentsContext } from '../../context/appointments';
@@ -406,7 +406,7 @@ export default function InvoicePetCard({ pet }) {
                             <Card.Title style={{ marginLeft: '16px' }}>Paid Invoices</Card.Title>
                             {paidInvoices?.length > 0 && (
                                 <div style={{padding: "13px"}}>
-                                    <Dropdown menu={{ items }}>
+                                    <Dropdown style={{marginBottom: "3px"}} menu={{ items }}>
                                         <button onClick={(e) => e.preventDefault()}>
                                             <Space>
                                                 Filter
