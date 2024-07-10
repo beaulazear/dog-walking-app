@@ -1,26 +1,15 @@
 import React, { useContext, useState } from "react";
-import { Link } from 'react-router-dom';
 import { AppointmentsContext } from "../../context/appointments";
 import { UserContext } from "../../context/user";
-import { PetsContext } from "../../context/pets";
 import "bootstrap/dist/css/bootstrap.min.css";
-import Button from 'react-bootstrap/Button';
 import Card from 'react-bootstrap/Card';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Rates from "./Rates";
 import dayjs from 'dayjs';
 
-const navLinkStyles = {
-    textDecoration: 'none',
-    color: 'white',
-    transition: 'color 0.3s ease-in-out',
-    padding: '10px'
-}
-
 export default function LoggedInHome() {
     const { todaysAppointments, petsAppointments } = useContext(AppointmentsContext);
     const { user, setUser } = useContext(UserContext);
-    const { pets } = useContext(PetsContext);
 
     const [selectedDate, setSelectedDate] = useState(dayjs().format('YYYY-MM-DD'));
 
@@ -74,7 +63,7 @@ export default function LoggedInHome() {
         <div>
             <h1 className="display-4 m-3">Welcome, {user.name}</h1>
             <Card className="m-2">
-                <Card.Header as="h5">Today's Schedule</Card.Header>
+                <Card.Header as="h5">Your Schedule</Card.Header>
                 <Card.Body>
                     {todaysAppointments?.length === 0 && (
                         <Card.Title>You have no appointments scheduled for today.</Card.Title>
@@ -86,52 +75,12 @@ export default function LoggedInHome() {
                         <Card.Title>You have {todaysAppointments?.length} appointments today.</Card.Title>
                     )}
                     <Card.Text>
-                        Visit the "Today" page to view appointments and mark them as completed as you go. Invoices will be created as you go and can be viewed on the "Finances" Page.
+                        Visit the Today page to mark them as completed as you finish them. Invoices will be created upon walk completion.
                     </Card.Text>
-                    <Link style={navLinkStyles} to="/todayswalkspage">Today's Walks</Link>
-                </Card.Body>
-            </Card>
-            <Card className="m-2">
-                <Card.Header as="h5">Set Your Rates</Card.Header>
-                <Card.Body>
-                    <Card.Title>Your current rates for appointments.</Card.Title>
-                    {user.thirty === null && user.fourty === null && user.sixty === null && (
-                        <Card.Text>
-                            You have not yet set your rates! This means walks will be defaulted to $22 for 30 minute walks, $28 for 45 minute walks, & $33 for 60 minute walks. Use the form below to update your rates.
-                        </Card.Text>
-                    )}
-                    {user.thirty !== null && user.fourty !== null && user.sixty !== null && (
-                        <Card.Text>
-                            Use the form below to update your rates. This will be reflected on new invoices.
-                        </Card.Text>
-                    )}
-                    <Rates user={user} updateUserRates={updateUserRates} />
-                </Card.Body>
-            </Card>
-            <Card className="m-2">
-                <Card.Header as="h5">Current Pets</Card.Header>
-                <Card.Body>
-                    <Card.Title>You have {pets?.length} pets in your database!</Card.Title>
+                    <Card.Title>View future dates</Card.Title>
                     <Card.Text>
-                        Visit the "Pets" page to view, edit, & delete these pets. Here you can create appointments for each pet as well.
+                        Select a date in the future to see what walks are scheduled for that date.
                     </Card.Text>
-                    <Button variant="primary" href="/petspage">Pets Page</Button>
-                </Card.Body>
-            </Card>
-            <Card className="m-2">
-                <Card.Header as="h5">Finances</Card.Header>
-                <Card.Body>
-                    <Card.Title>Personal finances for all pets</Card.Title>
-                    <Card.Text>
-                        Visit the "Finance" page to view current invoices (unpaid), and past invoices (paid) for each pet in your database. Here you can add additional incomes/past payments & view yearly income totals.
-                    </Card.Text>
-                    <Button variant="primary" href="/invoicespage">Finances Page</Button>
-                </Card.Body>
-            </Card>
-            <Card className="m-2">
-                <Card.Header as="h5">Select Future Date for Walks</Card.Header>
-                <Card.Body>
-                    <Card.Title>Select a date to view scheduled walks</Card.Title>
                     <input
                         type="date"
                         value={selectedDate}
@@ -152,6 +101,23 @@ export default function LoggedInHome() {
                             ))
                         )}
                     </ListGroup>
+                </Card.Body>
+            </Card>
+            <Card className="m-2">
+                <Card.Header as="h5">Set Your Rates</Card.Header>
+                <Card.Body>
+                    <Card.Title>Your current rates for appointments.</Card.Title>
+                    {user.thirty === null && user.fourty === null && user.sixty === null && (
+                        <Card.Text>
+                            You have not yet set your rates! This means walks will be defaulted to $22 for 30 minute walks, $28 for 45 minute walks, & $33 for 60 minute walks. Use the form below to update your rates.
+                        </Card.Text>
+                    )}
+                    {user.thirty !== null && user.fourty !== null && user.sixty !== null && (
+                        <Card.Text>
+                            Use the form below to update your rates. This will be reflected on new invoices.
+                        </Card.Text>
+                    )}
+                    <Rates user={user} updateUserRates={updateUserRates} />
                 </Card.Body>
             </Card>
         </div>
