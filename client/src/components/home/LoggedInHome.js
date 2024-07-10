@@ -1,4 +1,5 @@
 import React, { useContext, useState } from "react";
+import { Link } from 'react-router-dom';
 import { AppointmentsContext } from "../../context/appointments";
 import { UserContext } from "../../context/user";
 import { PetsContext } from "../../context/pets";
@@ -8,6 +9,13 @@ import Card from 'react-bootstrap/Card';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Rates from "./Rates";
 import dayjs from 'dayjs';
+
+const navLinkStyles = {
+    textDecoration: 'none',
+    color: 'white',
+    transition: 'color 0.3s ease-in-out',
+    padding: '10px'
+}
 
 export default function LoggedInHome() {
     const { todaysAppointments, petsAppointments } = useContext(AppointmentsContext);
@@ -80,7 +88,7 @@ export default function LoggedInHome() {
                     <Card.Text>
                         Visit the "Today" page to view appointments and mark them as completed as you go. Invoices will be created as you go and can be viewed on the "Finances" Page.
                     </Card.Text>
-                    <Button variant="primary" href="/todayswalkspage">Today's Walks</Button>
+                    <Link style={navLinkStyles} to="/todayswalkspage">Today's Walks</Link>
                 </Card.Body>
             </Card>
             <Card className="m-2">

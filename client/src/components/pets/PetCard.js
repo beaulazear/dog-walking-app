@@ -45,16 +45,17 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
         return `${year}-${month}-${day}`;
     }
 
-function handleDelete() {
-    fetch(`/pets/${pet.id}`, { method: 'DELETE' })
-        .then((response) => response.json())
-        .then((deletedPet) => {
-            updatePetsAfterDelete(deletedPet); // Update the state first
-            handleClose(); // Close the modal after updating the state
-        })
-        .catch((error) => {
-            console.error('Error deleting pet:', error);
-        });
+    function handleDelete() {
+        fetch(`/pets/${pet.id}`, { method: 'DELETE' })
+            .then((response) => response.json())
+            .then((deletedPet) => {
+                updatePetsAfterDelete(deletedPet); // Update the state first
+                handleClose(); // Close the modal after updating the state
+            })
+            .catch((error) => {
+                console.error('Error deleting pet:', error);
+            });
+    }
 
     function handleUpdatePet(e) {
         e.preventDefault();
@@ -197,25 +198,25 @@ function handleDelete() {
                                 }}
                             />
                             <Card.Body>
-                                <Card.Title>{pet.name}</Card.Title>
+                                <Card.Title style={{fontSize: '25px', fontWeight: 'bold'}}>{pet.name}</Card.Title>
                                 <Card.Text>
+                                    {pet.sex}, {pet.spayed_neutered ? "fixed" : "Not fixed"}
+                                    <br></br>
                                     {pet.address}
                                 </Card.Text>
                             </Card.Body>
                             <ListGroup className="list-group-flush">
-                                <ListGroup.Item><b>Sex:</b> {pet.sex}, {pet.spayed_neutered ? "fixed" : "Not fixed"}</ListGroup.Item>
                                 <ListGroup.Item><b>Supplies:</b> {pet.supplies_location}</ListGroup.Item>
                                 <ListGroup.Item><b>Notes:</b> {pet.behavorial_notes}</ListGroup.Item>
                                 <ListGroup.Item><b>Allergies:</b> {pet.allergies}</ListGroup.Item>
                                 <ListGroup.Item><b>Birthdate:</b> {formatDate(pet.birthdate)}</ListGroup.Item>
-                                <ListGroup.Item><b>Appointments:</b> View, edit, & create appointments for {pet.name}</ListGroup.Item>
                                 {currentPetAppointments?.length === 0 && (
-                                    <h4 className='display-5 m-3'>No scheduled appointments for {pet.name}.</h4>
+                                    <h4 className='display-6 m-2' style={{ textAlign: 'center' }}>No scheduled appointments for {pet.name}.</h4>
                                 )}
                                 {currentPetAppointments?.map((apt) => (
                                     <PetAppointmentCard updateAppointmentsDelete={updateAppointmentsDelete} apt={apt} key={apt.id}>Apt</PetAppointmentCard>
                                 ))}
-                                <Button className='m-4' variant="primary" onClick={changeAptFormView}>New Appointment</Button>
+                                <Button className='m-2' variant="primary" onClick={changeAptFormView}>New Appointment</Button>
                                 {newAptButton && (
                                     <NewAppointmentForm updateAppointmentsNew={updateAppointmentsNew} pet={pet} />
                                 )}
@@ -226,7 +227,7 @@ function handleDelete() {
                 <Accordion.Item className="text-bg-light p-3" eventKey="1">
                     <Accordion.Header onClick={() => setActiveAccordionKey(activeAccordionKey === "1" ? null : "1")}>Update {pet.name}</Accordion.Header>
                     <Accordion.Body>
-                        <h3 className="display-3">Update information for "{pet.name}"</h3>
+                        <h4 className="display-6 m-2">Update information for "{pet.name}"</h4>
                         <Form className="text-bg-light p-3" encType="multipart/form-data" onSubmit={handleUpdatePet}>
                             <Form.Group className="mb-3">
                                 <Form.Label>Pet's Photo</Form.Label>
