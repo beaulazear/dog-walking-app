@@ -208,7 +208,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                                 <ListGroup.Item><b>Birthdate:</b> {formatDate(pet.birthdate)}</ListGroup.Item>
                                 <ListGroup.Item><b>Appointments:</b> View, edit, & create appointments for {pet.name}</ListGroup.Item>
                                 {currentPetAppointments?.length === 0 && (
-                                    <h4 className='display-6 m-3'>There are currently no appointments booked for {pet.name}.</h4>
+                                    <h4 className='display-5 m-3'>No scheduled appointments for {pet.name}.</h4>
                                 )}
                                 {currentPetAppointments?.map((apt) => (
                                     <PetAppointmentCard updateAppointmentsDelete={updateAppointmentsDelete} apt={apt} key={apt.id}>Apt</PetAppointmentCard>
