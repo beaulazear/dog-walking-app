@@ -1,11 +1,77 @@
 import React, { useContext, useState } from "react";
+import styled from "styled-components";
 import { AppointmentsContext } from "../../context/appointments";
 import { UserContext } from "../../context/user";
-import "bootstrap/dist/css/bootstrap.min.css";
-import Card from 'react-bootstrap/Card';
-import ListGroup from 'react-bootstrap/ListGroup';
 import Rates from "./Rates";
 import dayjs from 'dayjs';
+
+// Styled Components
+const Container = styled.div`
+    background: #f8f9fa;
+    min-height: 100vh;
+    padding: 20px;
+`;
+
+const Header = styled.h1`
+    font-size: 3em;
+    margin: 5px;
+    text-align: center;
+    color: #6c757d;
+`;
+
+const StyledCard = styled.div`
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 20px;
+    padding: 20px;
+`;
+
+const CardHeader = styled.h5`
+    font-size: 1.5em;
+    color: #343a40;
+`;
+
+const CardBody = styled.div`
+    margin-top: 1em;
+`;
+
+const CardTitle = styled.h6`
+    font-size: 1.25em;
+    color: #495057;
+`;
+
+const CardText = styled.p`
+    color: #6c757d;
+`;
+
+const DateInput = styled.input`
+    width: 100%;
+    padding: 10px;
+    margin-top: 1em;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+`;
+
+const ListGroup = styled.ul`
+    list-style: none;
+    padding: 0;
+`;
+
+const ListGroupItem = styled.li`
+    background: #e9ecef;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    padding: 15px;
+`;
+
+const AppointmentItem = styled.div`
+    display: flex;
+    flex-direction: column;
+    font-size: 1em;
+    color: #495057;
+    margin: 0.5em 0;
+`;
 
 export default function LoggedInHome() {
     const { todaysAppointments, petsAppointments } = useContext(AppointmentsContext);
@@ -57,69 +123,67 @@ export default function LoggedInHome() {
         }) || [];
     };
 
-    const futureAppointments = getAppointmentsForDate(selectedDate);
-
+    const futureAppointments = getAppointmentsForDate(selectedDate).sort((a, b) => {
+        return dayjs(a.start_time).isAfter(dayjs(b.start_time)) ? 1 : -1;
+    });
+    
     return (
-        <div>
-            <h1 className="display-4 m-3">Welcome, {user.name}</h1>
-            <Card className="m-2">
-                <Card.Header as="h5">Your Schedule</Card.Header>
-                <Card.Body>
-                    {todaysAppointments?.length === 0 && (
-                        <Card.Title>You have no appointments scheduled for today.</Card.Title>
-                    )}
-                    {todaysAppointments?.length === 1 && (
-                        <Card.Title>You have {todaysAppointments?.length} appointment today.</Card.Title>
-                    )}
-                    {todaysAppointments?.length > 1 && (
-                        <Card.Title>You have {todaysAppointments?.length} appointments today.</Card.Title>
-                    )}
-                    <Card.Text>
-                        Visit the Today page to mark them as completed as you finish them. Invoices will be created upon walk completion.
-                    </Card.Text>
-                    <Card.Title>View future dates</Card.Title>
-                    <Card.Text>
-                        Select a date in the future to see what walks are scheduled for that date.
-                    </Card.Text>
-                    <input
+        <Container>
+            <Header>Welcome, {user.name}</Header>
+            <StyledCard>
+                <CardHeader>Your Schedule</CardHeader>
+                <CardBody>
+                    <CardTitle>
+                        {todaysAppointments?.length === 0 ? "No appointments today." : `You have ${todaysAppointments.length} appointment${todaysAppointments.length > 1 ? 's' : ''} today.`}
+                    </CardTitle>
+                    <CardText>
+                        Visit the Today page to complete them. Invoices will be generated automatically.
+                    </CardText>
+                    <CardTitle>View Future Appointments</CardTitle>
+                    <CardText>
+                        Select a future date to see scheduled walks.
+                    </CardText>
+                    <DateInput
+                        style={{ marginBottom: '5px', marginTop: '2px' }}
                         type="date"
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
-                        className="form-control mb-3"
                     />
                     <ListGroup>
                         {futureAppointments.length === 0 && (
-                            <ListGroup.Item>No walks scheduled for the selected date.</ListGroup.Item>
+                            <ListGroupItem>No walks scheduled for the selected date.</ListGroupItem>
                         )}
                         {futureAppointments.length > 0 && (
                             futureAppointments.map((appointment, index) => (
-                                <ListGroup.Item key={index} className="appointment-item">
-                                    <div><strong>Pet:</strong> {appointment.pet.name}</div>
-                                    <div><strong>Time:</strong> {dayjs(appointment.start_time).format('h:mm A')} - {dayjs(appointment.end_time).format('h:mm A')}</div>
-                                    <div><strong>Duration:</strong> {appointment.duration} minutes</div>
-                                </ListGroup.Item>
+                                <ListGroupItem key={index}>
+                                    <AppointmentItem>
+                                        <div><strong>Pet:</strong> {appointment.pet.name}</div>
+                                        <div><strong>Time:</strong> {dayjs(appointment.start_time).format('h:mm A')} - {dayjs(appointment.end_time).format('h:mm A')}</div>
+                                        <div><strong>Duration:</strong> {appointment.duration} minutes</div>
+                                    </AppointmentItem>
+                                </ListGroupItem>
                             ))
                         )}
                     </ListGroup>
-                </Card.Body>
-            </Card>
-            <Card className="m-2">
-                <Card.Header as="h5">Set Your Rates</Card.Header>
-                <Card.Body>
-                    <Card.Title>Your current rates for appointments.</Card.Title>
+                </CardBody>
+            </StyledCard>
+            <StyledCard>
+                <CardHeader>Set Your Rates</CardHeader>
+                <CardBody>
+                    <CardTitle>Your current rates for appointments.</CardTitle>
                     {user.thirty === null && user.fourty === null && user.sixty === null && (
-                        <Card.Text>
+                        <CardText>
                             You have not yet set your rates! This means walks will be defaulted to $22 for 30 minute walks, $28 for 45 minute walks, & $33 for 60 minute walks. Use the form below to update your rates.
-                        </Card.Text>
+                        </CardText>
                     )}
                     {user.thirty !== null && user.fourty !== null && user.sixty !== null && (
-                        <Card.Text>
+                        <CardText>
                             Use the form below to update your rates. This will be reflected on new invoices.
-                        </Card.Text>
+                        </CardText>
                     )}
                     <Rates user={user} updateUserRates={updateUserRates} />
-                </Card.Body>
-            </Card>
-        </div>
+                </CardBody>
+            </StyledCard>
+        </Container>
     );
 }
