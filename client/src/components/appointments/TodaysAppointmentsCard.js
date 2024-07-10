@@ -8,67 +8,89 @@ import Modal from 'react-bootstrap/Modal';
 import styled from 'styled-components';
 
 const StyledCard = styled(Card)`
-    margin: 10px auto;
-    max-width: 425px;
+    margin: 20px auto;
+    max-width: 450px;
     text-align: center;
-    border-radius: 10px;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 15px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+    background-color: #f1f1f1; /* Light gray background */
 `;
 
 const StyledImage = styled.img`
-    width: 50%;
+    width: 60%;
     height: auto;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
     border-radius: 50%;
+    border: 3px solid #4CAF50; /* Green border */
 `;
 
 const StyledTitle = styled(Card.Title)`
-    font-size: 1.5em;
-    color: #333;
+    font-size: 1.75em;
+    color: #444;
 `;
 
 const StyledText = styled(Card.Text)`
-    font-size: 1.1em;
+    font-size: 1.15em;
     text-align: left;
-    color: #555;
+    color: #666;
 `;
 
 const StyledButton = styled(Button)`
-    margin: 5px;
+    margin: 10px;
+    padding: 10px 20px;
+    font-size: 1em;
+    background-color: #4CAF50; /* Green button */
+    border-color: #4CAF50;
+    color: #fff; /* White text */
 `;
 
 const StyledListGroup = styled(ListGroup)`
-    background-color: #f9f9f9;
     border: none;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
+    padding: 10px;
+    border-radius: 10px;
 `;
 
 const StyledListItem = styled(ListGroup.Item)`
-    background-color: #FFFFB2;
+    background-color: #FFD700; /* Gold */
     border: none;
     text-align: left;
+    margin-bottom: 5px;
+    padding: 10px;
+    border-radius: 5px;
 `;
 
 const StyledListItemNew = styled(ListGroup.Item)`
+    background-color: #87CEEB; /* Sky blue */
     border: none;
     text-align: left;
-    background-color: #F0FAFF;
+    margin-bottom: 5px;
+    padding: 10px;
+    border-radius: 5px;
 `;
 
 const StyledModal = styled(Modal)`
     text-align: center;
+    .modal-content {
+        border-radius: 15px;
+        background-color: #f1f1f1; /* Light gray modal background */
+    }
 `;
 
 const StyledModalBody = styled(Modal.Body)`
     text-align: left;
+    padding: 20px;
 `;
 
 const StyledInput = styled.input`
-    width: 65%;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 5px;
+    width: 70%;
+    border: 2px solid #4CAF50; /* Green border */
+    border-radius: 8px;
+    padding: 8px;
+    font-size: 1em;
+    margin-top: 10px;
 `;
+
 
 export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
@@ -279,10 +301,10 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
             {invoices && invoices.cancelled !== true && (
                 <StyledCard style={{ backgroundColor: '#6fd388' }}>
                     <Card.Body>
-                        <StyledTitle>Completed Walk</StyledTitle>
+                        <StyledTitle style={{ fontSize: '2em', fontWeight: 'bold' }}>Completed Walk</StyledTitle>
                         <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
-                        <StyledTitle>{apt.pet.name}</StyledTitle>
-                        <StyledTitle>{apt.duration} minute {apt.solo ? 'solo' : 'group'} walk</StyledTitle>
+                        <StyledTitle style={{ fontSize: '1.5em', fontWeight: 'bold' }}>{apt.pet.name}</StyledTitle>
+                        <StyledTitle style={{ fontSize: '1.2em', fontWeight: 'bold' }}>{apt.duration} minute {apt.solo ? 'solo' : 'group'} walk</StyledTitle>
                     </Card.Body>
                 </StyledCard>
             )}
@@ -306,8 +328,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                             {apt.pet.supplies_location} {apt.pet.behavorial_notes}
                         </StyledText>
                         <StyledListGroup>
-                            <StyledListItem><b>Earliest pick up time:</b> {startTime}</StyledListItem>
-                            <StyledListItem><b>Latest pick up time:</b> {endTime}</StyledListItem>
+                            <StyledListItem><b>Pickup Window:</b> {startTime} - {endTime}</StyledListItem>
                             <StyledListItem><b>Address:</b> {apt.pet.address}</StyledListItem>
                             <StyledListItem>
                                 <b>Walk Duration:</b>
@@ -318,8 +339,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                                 </select>
                             </StyledListItem>
                             <StyledListItem><b>Walk Type:</b> {apt.solo ? 'Solo Walk' : 'Group Walk'}</StyledListItem>
-                            <StyledListItem><b>Add an Upcharge or Discount:</b></StyledListItem>
-                            <StyledListItem><StyledInput type='text' name="offset" maxLength={3} value={"$" + offset} onChange={(e) => setOffset(e.target.value.substring(1))} /></StyledListItem>
+                            <StyledListItem><b>Offset walk price:</b> <input size="3" type='text' name="offset" maxLength={3} value={"$" + offset} onChange={(e) => setOffset(e.target.value.substring(1))} /></StyledListItem>
                             {offset > 0 && (
                                 <StyledListItem>
                                     <b>Upcharge or Discount?</b>
@@ -345,8 +365,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                             {apt.pet.supplies_location} : {apt.pet.behavorial_notes}
                         </StyledText>
                         <StyledListGroup>
-                            <StyledListItemNew><b>Earliest pick up time:</b> {startTime}</StyledListItemNew>
-                            <StyledListItemNew><b>Latest pick up time:</b> {endTime}</StyledListItemNew>
+                            <StyledListItemNew><b>Pickup Window:</b> {startTime} - {endTime}</StyledListItemNew>
                             <StyledListItemNew><b>Address:</b> {apt.pet.address}</StyledListItemNew>
                             <StyledListItemNew>
                                 <b>Walk Duration:</b>
@@ -356,8 +375,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                                     <option value="60">60 Minutes</option>
                                 </select>
                             </StyledListItemNew>                            <StyledListItemNew><b>Walk Type:</b> {apt.solo ? 'Solo Walk' : 'Group Walk'}</StyledListItemNew>
-                            <StyledListItemNew><b>Add an Upcharge or Discount:</b></StyledListItemNew>
-                            <StyledListItemNew><StyledInput type='text' name="offset" maxLength={3} value={"$" + offset} onChange={(e) => setOffset(e.target.value.substring(1))} /></StyledListItemNew>
+                            <StyledListItemNew><b>Offset walk price:</b> <input size="3" type='text' name="offset" maxLength={3} value={"$" + offset} onChange={(e) => setOffset(e.target.value.substring(1))} /></StyledListItemNew>
                             {offset > 0 && (
                                 <StyledListItemNew>
                                     <b>Upcharge or Discount?</b>

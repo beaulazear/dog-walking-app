@@ -35,7 +35,6 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     const [profilePic, setProfilePic] = useState(pet.profile_pic);
 
     const [show, setShow] = useState(false);
-    const [activeAccordionKey, setActiveAccordionKey] = useState(null); // State to control active key
 
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
@@ -84,8 +83,6 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                 if (res.ok) {
                     res.json().then((newPet) => {
                         alert("Successfully Updated!");
-                        setErrors([]);
-                        setActiveAccordionKey(null);
                         updateUserPets(newPet);
                         setTodaysAppointments(todaysAppointments.map((apt) => {
                             if (apt.pet.id === pet.id) {
@@ -180,30 +177,30 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     return (
         <div>
             <h4>{pet.name}</h4>
-            <Accordion style={{ marginBottom: '10px' }} activeKey={activeAccordionKey}>
-                <Accordion.Item className="text-bg-light p-3" eventKey="0">
-                    <Accordion.Header onClick={() => setActiveAccordionKey(activeAccordionKey === "0" ? null : "0")}>Information & Appointments</Accordion.Header>
+            <Accordion className="mb-3">
+                <Accordion.Item eventKey="0">
+                    <Accordion.Header>Information & Appointments</Accordion.Header>
                     <Accordion.Body>
-                        <Card style={{ width: '100%' }}>
-                            <Card.Img
-                                variant="top"
-                                src={pet.profile_pic}
-                                style={{
-                                    width: '150px',
-                                    height: '150px',
-                                    objectFit: 'cover',
-                                    borderRadius: '50%',
-                                    margin: '10px 20px 0 10px',
-                                    display: 'inline-block',
-                                }}
-                            />
-                            <Card.Body>
-                                <Card.Title style={{fontSize: '25px', fontWeight: 'bold'}}>{pet.name}</Card.Title>
-                                <Card.Text>
-                                    {pet.sex}, {pet.spayed_neutered ? "fixed" : "Not fixed"}
-                                    <br></br>
-                                    {pet.address}
-                                </Card.Text>
+                        <Card className="mb-3 shadow-sm">
+                            <Card.Body className="d-flex align-items-center">
+                                <div style={{ flex: '1 1 auto', paddingRight: '20px' }}>
+                                    <Card.Title style={{ fontSize: '25px', fontWeight: 'bold' }}>{pet.name}</Card.Title>
+                                    <Card.Text>
+                                        {pet.sex}, {pet.spayed_neutered ? "fixed" : "Not fixed"}
+                                        <br></br>
+                                        {pet.address}
+                                    </Card.Text>
+                                </div>
+                                <Card.Img
+                                    variant="top"
+                                    src={pet.profile_pic}
+                                    style={{
+                                        width: '150px',
+                                        height: '150px',
+                                        objectFit: 'cover',
+                                        borderRadius: '10px',
+                                    }}
+                                />
                             </Card.Body>
                             <ListGroup className="list-group-flush">
                                 <ListGroup.Item><b>Supplies:</b> {pet.supplies_location}</ListGroup.Item>
@@ -211,12 +208,12 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                                 <ListGroup.Item><b>Allergies:</b> {pet.allergies}</ListGroup.Item>
                                 <ListGroup.Item><b>Birthdate:</b> {formatDate(pet.birthdate)}</ListGroup.Item>
                                 {currentPetAppointments?.length === 0 && (
-                                    <h4 className='display-6 m-2' style={{ textAlign: 'center' }}>No scheduled appointments for {pet.name}.</h4>
+                                    <h4 className='display-8 m-2' style={{ textAlign: 'center' }}>No scheduled appointments for {pet.name}.</h4>
                                 )}
                                 {currentPetAppointments?.map((apt) => (
-                                    <PetAppointmentCard updateAppointmentsDelete={updateAppointmentsDelete} apt={apt} key={apt.id}>Apt</PetAppointmentCard>
+                                    <PetAppointmentCard updateAppointmentsDelete={updateAppointmentsDelete} apt={apt} key={apt.id} />
                                 ))}
-                                <Button className='m-2' variant="primary" onClick={changeAptFormView}>New Appointment</Button>
+                                <Button className='m-2' variant="primary" onClick={changeAptFormView}>Schedule New Appointment</Button>
                                 {newAptButton && (
                                     <NewAppointmentForm updateAppointmentsNew={updateAppointmentsNew} pet={pet} />
                                 )}
@@ -224,8 +221,8 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                         </Card>
                     </Accordion.Body>
                 </Accordion.Item>
-                <Accordion.Item className="text-bg-light p-3" eventKey="1">
-                    <Accordion.Header onClick={() => setActiveAccordionKey(activeAccordionKey === "1" ? null : "1")}>Update {pet.name}</Accordion.Header>
+                <Accordion.Item eventKey="1">
+                    <Accordion.Header>Update {pet.name}</Accordion.Header>
                     <Accordion.Body>
                         <h4 className="display-6 m-2">Update information for "{pet.name}"</h4>
                         <Form className="text-bg-light p-3" encType="multipart/form-data" onSubmit={handleUpdatePet}>
