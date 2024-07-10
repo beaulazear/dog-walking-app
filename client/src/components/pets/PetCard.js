@@ -45,14 +45,16 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
         return `${year}-${month}-${day}`;
     }
 
-    function handleDelete() {
-        fetch(`/pets/${pet.id}`, { method: 'DELETE' })
-            .then((response) => response.json())
-            .then((deletedPet) => {
-                handleClose();
-                updatePetsAfterDelete(deletedPet);
-            });
-    }
+function handleDelete() {
+    fetch(`/pets/${pet.id}`, { method: 'DELETE' })
+        .then((response) => response.json())
+        .then((deletedPet) => {
+            updatePetsAfterDelete(deletedPet); // Update the state first
+            handleClose(); // Close the modal after updating the state
+        })
+        .catch((error) => {
+            console.error('Error deleting pet:', error);
+        });
 
     function handleUpdatePet(e) {
         e.preventDefault();
