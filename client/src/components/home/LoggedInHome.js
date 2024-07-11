@@ -5,7 +5,6 @@ import { UserContext } from "../../context/user";
 import Rates from "./Rates";
 import dayjs from 'dayjs';
 
-// Styled Components
 const Container = styled.div`
     background: #f8f9fa;
     min-height: 100vh;
@@ -23,7 +22,7 @@ const StyledCard = styled.div`
     background: #fff;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    margin: 20px;
+    margin: 5px;
     padding: 20px;
 `;
 
@@ -131,13 +130,10 @@ export default function LoggedInHome() {
         <Container>
             <Header>Welcome, {user.name}</Header>
             <StyledCard>
-                <CardHeader>Your Schedule</CardHeader>
+                <CardHeader>Appointments Scheduled: {futureAppointments.length}</CardHeader>
                 <CardBody>
-                    <CardTitle>
-                        {todaysAppointments?.length === 0 ? "No appointments today." : `You have ${todaysAppointments.length} appointment${todaysAppointments.length > 1 ? 's' : ''} today.`}
-                    </CardTitle>
                     <CardText>
-                        Visit the Today page to complete them. Invoices will be generated automatically. Select a future date below to see scheduled walks.
+                        Visit the Today page to complete walks. Invoices will be generated automatically. Select a future date below to see scheduled walks.
                     </CardText>
                     <DateInput
                         style={{ marginBottom: '5px', marginTop: '2px' }}
