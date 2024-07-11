@@ -13,7 +13,7 @@ const StyledCard = styled(Card)`
     text-align: center;
     border-radius: 15px;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
-    background-color: #f1f1f1; /* Light gray background */
+    background-color: #f1f1f1;
 `;
 
 const StyledImage = styled.img`
@@ -21,7 +21,7 @@ const StyledImage = styled.img`
     height: auto;
     margin-bottom: 12px;
     border-radius: 50%;
-    border: 3px solid #4CAF50; /* Green border */
+    border: 3px solid #000000;
 `;
 
 const StyledTitle = styled(Card.Title)`
@@ -29,24 +29,17 @@ const StyledTitle = styled(Card.Title)`
     color: #444;
 `;
 
-const StyledText = styled(Card.Text)`
-    font-size: 1.15em;
-    text-align: left;
-    color: #666;
-`;
-
 const StyledButton = styled(Button)`
     margin: 10px;
     padding: 10px 20px;
     font-size: 1em;
-    background-color: #4CAF50; /* Green button */
+    background-color: #000000; /* Green button */
     border-color: #4CAF50;
     color: #fff; /* White text */
 `;
 
 const StyledListGroup = styled(ListGroup)`
     border: none;
-    margin-bottom: 16px;
     padding: 10px;
     border-radius: 10px;
 `;
@@ -324,10 +317,9 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                         <StyledTitle>Overdue Walk</StyledTitle>
                         <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
                         <StyledTitle>{apt.pet.name}</StyledTitle>
-                        <StyledText>
-                            {apt.pet.supplies_location} {apt.pet.behavorial_notes}
-                        </StyledText>
                         <StyledListGroup>
+                            <StyledListItem><b>Supplies:</b> {apt.pet.supplies_location}</StyledListItem>
+                            <StyledListItem><b>Notes:</b> {apt.pet.behavorial_notes}</StyledListItem>
                             <StyledListItem><b>Pickup Window:</b> {startTime} - {endTime}</StyledListItem>
                             <StyledListItem><b>Address:</b> {apt.pet.address}</StyledListItem>
                             <StyledListItem>
@@ -350,7 +342,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                                 </StyledListItem>
                             )}
                         </StyledListGroup>
-                        <StyledButton onClick={handleNewInvoice}>Complete Walk</StyledButton>
+                        <StyledButton className="btn btn-success" onClick={handleNewInvoice}>Complete Walk</StyledButton>
                         <StyledButton className="btn btn-danger" onClick={handleNewCancelInvoice}>Cancel Walk</StyledButton>
                     </Card.Body>
                 </StyledCard>
@@ -361,10 +353,9 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                         <StyledTitle>Uncompleted Walk</StyledTitle>
                         <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
                         <StyledTitle>{apt.pet.name}</StyledTitle>
-                        <StyledText>
-                            {apt.pet.supplies_location} : {apt.pet.behavorial_notes}
-                        </StyledText>
                         <StyledListGroup>
+                            <StyledListItemNew><b>Supplies:</b> {apt.pet.supplies_location}</StyledListItemNew>
+                            <StyledListItemNew><b>Notes:</b> {apt.pet.behavorial_notes}</StyledListItemNew>
                             <StyledListItemNew><b>Pickup Window:</b> {startTime} - {endTime}</StyledListItemNew>
                             <StyledListItemNew><b>Address:</b> {apt.pet.address}</StyledListItemNew>
                             <StyledListItemNew>

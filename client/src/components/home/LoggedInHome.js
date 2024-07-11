@@ -13,7 +13,7 @@ const Container = styled.div`
 `;
 
 const Header = styled.h1`
-    font-size: 3em;
+    font-size: 2em;
     margin: 5px;
     text-align: center;
     color: #6c757d;
@@ -126,7 +126,7 @@ export default function LoggedInHome() {
     const futureAppointments = getAppointmentsForDate(selectedDate).sort((a, b) => {
         return dayjs(a.start_time).isAfter(dayjs(b.start_time)) ? 1 : -1;
     });
-    
+
     return (
         <Container>
             <Header>Welcome, {user.name}</Header>
@@ -137,11 +137,7 @@ export default function LoggedInHome() {
                         {todaysAppointments?.length === 0 ? "No appointments today." : `You have ${todaysAppointments.length} appointment${todaysAppointments.length > 1 ? 's' : ''} today.`}
                     </CardTitle>
                     <CardText>
-                        Visit the Today page to complete them. Invoices will be generated automatically.
-                    </CardText>
-                    <CardTitle>View Future Appointments</CardTitle>
-                    <CardText>
-                        Select a future date to see scheduled walks.
+                        Visit the Today page to complete them. Invoices will be generated automatically. Select a future date below to see scheduled walks.
                     </CardText>
                     <DateInput
                         style={{ marginBottom: '5px', marginTop: '2px' }}
