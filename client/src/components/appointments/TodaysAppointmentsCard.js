@@ -10,7 +10,7 @@ const StyledCard = styled(Card)`
     margin: 20px auto;
     width: 90%;
     max-width: 500px;
-    min-width: 400px;
+    min-width: 350px;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
 `;
 
@@ -43,7 +43,7 @@ const StyledTitle = styled.h3`
 `;
 
 const StyledText = styled.p`
-    font-size: 0.9em;
+    font-size: 1em;
     color: #666;
     line-height: 1.4;
 `;
