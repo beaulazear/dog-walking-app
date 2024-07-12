@@ -358,7 +358,7 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                     <Card.Body>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <InfoContainer>
-                                <StyledTitle>Uncompleted</StyledTitle>
+                                <StyledTitle>Incomplete</StyledTitle>
                                 <StyledText><b>Pet Name:</b><br />{apt.pet.name}</StyledText>
                                 <StyledText><b>Address:</b><br />{apt.pet.address}</StyledText>
                                 <StyledText><b>Pickup Window:</b><br />{startTime} - {endTime}</StyledText>
