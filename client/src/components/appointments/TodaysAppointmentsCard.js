@@ -2,106 +2,93 @@ import React, { useContext, useState } from "react";
 import { PetsContext } from "../../context/pets";
 import { UserContext } from "../../context/user";
 import Card from 'react-bootstrap/Card';
-import ListGroup from 'react-bootstrap/ListGroup';
 import Button from "react-bootstrap/Button";
 import Modal from 'react-bootstrap/Modal';
 import styled from 'styled-components';
 
 const StyledCard = styled(Card)`
     margin: 20px auto;
-    max-width: 450px;
-    text-align: center;
-    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+    min-width: 400px;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
-    background-color: #f1f1f1;
+`;
+
+const ImageContainer = styled.div`
+    width: 150px;
+    height: 150px;
+    overflow: hidden;
+    border-radius: 50%;
+    margin: 4px;
+`;
+
+const InfoContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+    text-align: left;
+    align-items: flex-start;
 `;
 
 const StyledImage = styled.img`
-    width: 60%;
-    height: auto;
-    margin-bottom: 12px;
-    border-radius: 50%;
-    border: 3px solid #000000;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 `;
 
-const StyledTitle = styled(Card.Title)`
-    font-size: 1.75em;
-    color: #444;
+const StyledTitle = styled.h3`
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 5px;
+`;
+
+const StyledText = styled.p`
+    font-size: 0.9em;
+    color: #666;
+    line-height: 1.4;
 `;
 
 const StyledButton = styled(Button)`
-    margin: 10px;
-    padding: 10px 20px;
-    font-size: 1em;
-    background-color: #000000; /* Green button */
-    border-color: #4CAF50;
-    color: #fff; /* White text */
-`;
-
-const StyledListGroup = styled(ListGroup)`
-    border: none;
-    padding: 10px;
-    border-radius: 10px;
-`;
-
-const StyledListItem = styled(ListGroup.Item)`
-    background-color: #FFD700; /* Gold */
-    border: none;
-    text-align: left;
-    margin-bottom: 5px;
-    padding: 10px;
-    border-radius: 5px;
-`;
-
-const StyledListItemNew = styled(ListGroup.Item)`
-    background-color: #87CEEB; /* Sky blue */
-    border: none;
-    text-align: left;
-    margin-bottom: 5px;
-    padding: 10px;
-    border-radius: 5px;
+    margin: 5px;
+    padding: 8px 16px;
+    font-size: 0.9em;
+    width: 45%;
 `;
 
 const StyledModal = styled(Modal)`
     text-align: center;
-    .modal-content {
-        border-radius: 15px;
-        background-color: #f1f1f1; /* Light gray modal background */
-    }
 `;
 
 const StyledModalBody = styled(Modal.Body)`
     text-align: left;
-    padding: 20px;
 `;
 
 const StyledInput = styled.input`
-    width: 70%;
-    border: 2px solid #4CAF50; /* Green border */
-    border-radius: 8px;
+    width: 50%;
+    border: 2px solid ${({ theme }) => theme.successColor};
+    border-radius: 5px;
     padding: 8px;
-    font-size: 1em;
-    margin-top: 10px;
+    font-size: 0.9em;
+    margin-top: 5px;
 `;
-
 
 export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
 
-    const { pets, setPets } = useContext(PetsContext)
-    const { user } = useContext(UserContext)
+    const { pets, setPets } = useContext(PetsContext);
+    const { user } = useContext(UserContext);
 
-    const [offset, setOffset] = useState(0)
+    const [offset, setOffset] = useState(0);
     const [selectedOption, setSelectedOption] = useState("Upcharge");
     const [showModal, setShowModal] = useState(false);
     const [cancelledCompensation, setCancelledCompensation] = useState(0);
-    const [duration, setDuration] = useState(apt.duration)
+    const [duration, setDuration] = useState(apt.duration);
 
     const handleChange = (event) => {
         setSelectedOption(event.target.value);
     };
 
     const handleDurationChange = (event) => {
-        const number = parseFloat(event.target.value)
+        const number = parseFloat(event.target.value);
         setDuration(number);
     };
 
@@ -294,91 +281,116 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
             {invoices && invoices.cancelled !== true && (
                 <StyledCard style={{ backgroundColor: '#6fd388' }}>
                     <Card.Body>
-                        <StyledTitle style={{ fontSize: '2em', fontWeight: 'bold' }}>Completed Walk</StyledTitle>
-                        <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
-                        <StyledTitle style={{ fontSize: '1.5em', fontWeight: 'bold' }}>{apt.pet.name}</StyledTitle>
-                        <StyledTitle style={{ fontSize: '1.2em', fontWeight: 'bold' }}>{apt.duration} minute {apt.solo ? 'solo' : 'group'} walk</StyledTitle>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <ImageContainer>
+                                <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
+                            </ImageContainer>
+                            <InfoContainer>
+                                <StyledTitle>Completed Walk</StyledTitle>
+                                <StyledTitle>{apt.pet.name}</StyledTitle>
+                                <StyledText>{apt.pet.address}</StyledText>
+                            </InfoContainer>
+                        </div>
+                        <StyledText>{apt.duration} minute {apt.solo ? 'solo' : 'group'} walk</StyledText>
                     </Card.Body>
                 </StyledCard>
             )}
-            {invoices.cancelled && (
+            {invoices && invoices.cancelled && (
                 <StyledCard style={{ backgroundColor: '#FFB6C1' }}>
                     <Card.Body>
-                        <StyledTitle>Canceled Walk</StyledTitle>
-                        <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
-                        <StyledTitle>{apt.pet.name}</StyledTitle>
-                        <StyledTitle>{apt.duration} minute {apt.solo ? 'solo' : 'group'} walk</StyledTitle>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <ImageContainer>
+                                <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
+                            </ImageContainer>
+                            <InfoContainer>
+                                <StyledTitle>Canceled Walk</StyledTitle>
+                                <StyledTitle>{apt.pet.name}</StyledTitle>
+                                <StyledText>{apt.pet.address}</StyledText>
+                            </InfoContainer>
+                        </div>
+                        <StyledText>{apt.duration} minute {apt.solo ? 'solo' : 'group'} walk</StyledText>
                     </Card.Body>
                 </StyledCard>
             )}
             {!invoices && isAptLate && (
                 <StyledCard style={{ backgroundColor: '#FFFF99' }}>
                     <Card.Body>
-                        <StyledTitle>Overdue Walk</StyledTitle>
-                        <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
-                        <StyledTitle>{apt.pet.name}</StyledTitle>
-                        <StyledListGroup>
-                            <StyledListItem><b>Supplies:</b> {apt.pet.supplies_location}</StyledListItem>
-                            <StyledListItem><b>Notes:</b> {apt.pet.behavorial_notes}</StyledListItem>
-                            <StyledListItem><b>Pickup Window:</b> {startTime} - {endTime}</StyledListItem>
-                            <StyledListItem><b>Address:</b> {apt.pet.address}</StyledListItem>
-                            <StyledListItem>
-                                <b>Walk Duration:</b>
-                                <select onChange={handleDurationChange} value={duration} style={{ marginLeft: '10px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between'}}>
+                            <InfoContainer>
+                                <StyledTitle>Overdue</StyledTitle>
+                                <StyledText><b>Pet Details:</b><br />{apt.pet.name}
+                                <br />{apt.pet.address}</StyledText>
+                                <StyledText><b>Pickup Window:</b><br />{startTime} - {endTime}</StyledText>
+                            </InfoContainer>
+                            <ImageContainer>
+                                <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
+                            </ImageContainer>
+                        </div>
+                        <InfoContainer>
+                            <StyledText><b>Supplies:</b> {apt.pet.supplies_location}</StyledText>
+                            <StyledText><b>Notes:</b> {apt.pet.behavorial_notes}</StyledText>
+                            <StyledText>
+                                <b>{apt.solo ? 'Solo Walk' : 'Group Walk'}:</b>
+                                <select onChange={handleDurationChange} value={duration} style={{ marginLeft: '10px', marginRight: '5px' }}>
                                     <option value="30">30 Minutes</option>
                                     <option value="45">45 Minutes</option>
                                     <option value="60">60 Minutes</option>
                                 </select>
-                            </StyledListItem>
-                            <StyledListItem><b>Walk Type:</b> {apt.solo ? 'Solo Walk' : 'Group Walk'}</StyledListItem>
-                            <StyledListItem><b>Offset walk price:</b> <input size="3" type='text' name="offset" maxLength={3} value={"$" + offset} onChange={(e) => setOffset(e.target.value.substring(1))} /></StyledListItem>
+                                <b>Offset:</b> <input size="3" type='text' name="offset" maxLength={3} value={"$" + offset} onChange={(e) => setOffset(e.target.value.substring(1))} />
+                            </StyledText>
                             {offset > 0 && (
-                                <StyledListItem>
+                                <StyledText>
                                     <b>Upcharge or Discount?</b>
                                     <select onChange={handleChange} value={selectedOption} style={{ marginLeft: '10px' }}>
                                         <option value="Upcharge">Upcharge</option>
                                         <option value="Discount">Discount</option>
                                     </select>
-                                </StyledListItem>
+                                </StyledText>
                             )}
-                        </StyledListGroup>
-                        <StyledButton className="btn btn-success" onClick={handleNewInvoice}>Complete Walk</StyledButton>
-                        <StyledButton className="btn btn-danger" onClick={handleNewCancelInvoice}>Cancel Walk</StyledButton>
+                        </InfoContainer>
+                        <StyledButton onClick={handleNewInvoice}>Complete Walk</StyledButton>
+                        <StyledButton onClick={handleNewCancelInvoice}>Cancel Walk</StyledButton>
                     </Card.Body>
                 </StyledCard>
             )}
             {!invoices && !isAptLate && (
                 <StyledCard style={{ backgroundColor: '#E6F7FF' }}>
                     <Card.Body>
-                        <StyledTitle>Uncompleted Walk</StyledTitle>
-                        <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
-                        <StyledTitle>{apt.pet.name}</StyledTitle>
-                        <StyledListGroup>
-                            <StyledListItemNew><b>Supplies:</b> {apt.pet.supplies_location}</StyledListItemNew>
-                            <StyledListItemNew><b>Notes:</b> {apt.pet.behavorial_notes}</StyledListItemNew>
-                            <StyledListItemNew><b>Pickup Window:</b> {startTime} - {endTime}</StyledListItemNew>
-                            <StyledListItemNew><b>Address:</b> {apt.pet.address}</StyledListItemNew>
-                            <StyledListItemNew>
-                                <b>Walk Duration:</b>
-                                <select onChange={handleDurationChange} value={duration} style={{ marginLeft: '10px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <InfoContainer>
+                                <StyledTitle>Uncompleted</StyledTitle>
+                                <StyledText><b>Pet Name:</b><br />{apt.pet.name}</StyledText>
+                                <StyledText><b>Address:</b><br />{apt.pet.address}</StyledText>
+                                <StyledText><b>Pickup Window:</b><br />{startTime} - {endTime}</StyledText>
+                            </InfoContainer>
+                            <ImageContainer>
+                                <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
+                            </ImageContainer>
+                        </div>
+                        <InfoContainer>
+                            <StyledText><b>Supplies:</b> {apt.pet.supplies_location}</StyledText>
+                            <StyledText><b>Notes:</b> {apt.pet.behavorial_notes}</StyledText>
+                            <StyledText>
+                                <b>{apt.solo ? 'Solo Walk' : 'Group Walk'}:</b>
+                                <select onChange={handleDurationChange} value={duration} style={{ marginLeft: '10px', marginRight: '5px' }}>
                                     <option value="30">30 Minutes</option>
                                     <option value="45">45 Minutes</option>
                                     <option value="60">60 Minutes</option>
                                 </select>
-                            </StyledListItemNew>                            <StyledListItemNew><b>Walk Type:</b> {apt.solo ? 'Solo Walk' : 'Group Walk'}</StyledListItemNew>
-                            <StyledListItemNew><b>Offset walk price:</b> <input size="3" type='text' name="offset" maxLength={3} value={"$" + offset} onChange={(e) => setOffset(e.target.value.substring(1))} /></StyledListItemNew>
+                                <b>Offset:</b> <input size="3" type='text' name="offset" maxLength={3} value={"$" + offset} onChange={(e) => setOffset(e.target.value.substring(1))} />
+                            </StyledText>
                             {offset > 0 && (
-                                <StyledListItemNew>
+                                <StyledText>
                                     <b>Upcharge or Discount?</b>
                                     <select onChange={handleChange} value={selectedOption} style={{ marginLeft: '10px' }}>
                                         <option value="Upcharge">Upcharge</option>
                                         <option value="Discount">Discount</option>
                                     </select>
-                                </StyledListItemNew>
+                                </StyledText>
                             )}
-                        </StyledListGroup>
+                        </InfoContainer>
                         <StyledButton onClick={handleNewInvoice}>Complete Walk</StyledButton>
-                        <StyledButton className="btn btn-danger" onClick={handleNewCancelInvoice}>Cancel Walk</StyledButton>
+                        <StyledButton onClick={handleNewCancelInvoice}>Cancel Walk</StyledButton>
                     </Card.Body>
                 </StyledCard>
             )}
@@ -397,5 +409,5 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                 </Modal.Footer>
             </StyledModal>
         </div>
-    )
+    );
 }
