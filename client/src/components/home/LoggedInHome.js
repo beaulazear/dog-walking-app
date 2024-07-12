@@ -14,6 +14,7 @@ const Container = styled.div`
 const Header = styled.h1`
     font-size: 2em;
     margin: 5px;
+    margin-bottom: 15px;
     text-align: center;
     color: #6c757d;
 `;
@@ -38,6 +39,7 @@ const CardBody = styled.div`
 const CardTitle = styled.h6`
     font-size: 1.25em;
     color: #495057;
+    margin: 10px;
 `;
 
 const CardText = styled.p`
@@ -130,7 +132,7 @@ export default function LoggedInHome() {
         <Container>
             <Header>Welcome, {user.name}</Header>
             <StyledCard>
-                <CardHeader>Appointments Scheduled: {futureAppointments.length}</CardHeader>
+                <CardHeader>Your Schedule</CardHeader>
                 <CardBody>
                     <CardText>
                         Visit the Today page to complete walks. Invoices will be generated automatically. Select a future date below to see scheduled walks.
@@ -141,6 +143,7 @@ export default function LoggedInHome() {
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
                     />
+                    <CardTitle><b>Appointments: {futureAppointments.length}</b></CardTitle>
                     <ListGroup>
                         {futureAppointments.length === 0 && (
                             <ListGroupItem>No walks scheduled for the selected date.</ListGroupItem>
