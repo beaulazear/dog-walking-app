@@ -286,12 +286,12 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                                 <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
                             </ImageContainer>
                             <InfoContainer>
-                                <StyledTitle>Completed Walk</StyledTitle>
+                                <StyledTitle>Completed</StyledTitle>
                                 <StyledTitle>{apt.pet.name}</StyledTitle>
-                                <StyledText>{apt.pet.address}</StyledText>
+                                <StyledText>{apt.duration} minute {apt.solo ? 'solo' : 'group'} walk</StyledText>
                             </InfoContainer>
                         </div>
-                        <StyledText>{apt.duration} minute {apt.solo ? 'solo' : 'group'} walk</StyledText>
+
                     </Card.Body>
                 </StyledCard>
             )}
@@ -303,23 +303,22 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                                 <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
                             </ImageContainer>
                             <InfoContainer>
-                                <StyledTitle>Canceled Walk</StyledTitle>
+                                <StyledTitle>Canceled</StyledTitle>
                                 <StyledTitle>{apt.pet.name}</StyledTitle>
-                                <StyledText>{apt.pet.address}</StyledText>
+                                <StyledText>{apt.duration} minute {apt.solo ? 'solo' : 'group'} walk</StyledText>
                             </InfoContainer>
                         </div>
-                        <StyledText>{apt.duration} minute {apt.solo ? 'solo' : 'group'} walk</StyledText>
                     </Card.Body>
                 </StyledCard>
             )}
             {!invoices && isAptLate && (
                 <StyledCard style={{ backgroundColor: '#FFFF99' }}>
                     <Card.Body>
-                        <div style={{ display: 'flex', justifyContent: 'space-between'}}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <InfoContainer>
                                 <StyledTitle>Overdue</StyledTitle>
                                 <StyledText><b>Pet Details:</b><br />{apt.pet.name}
-                                <br />{apt.pet.address}</StyledText>
+                                    <br />{apt.pet.address}</StyledText>
                                 <StyledText><b>Pickup Window:</b><br />{startTime} - {endTime}</StyledText>
                             </InfoContainer>
                             <ImageContainer>
@@ -336,6 +335,8 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                                     <option value="45">45 Minutes</option>
                                     <option value="60">60 Minutes</option>
                                 </select>
+                            </StyledText>
+                            <StyledText>
                                 <b>Offset:</b> <input size="3" type='text' name="offset" maxLength={3} value={"$" + offset} onChange={(e) => setOffset(e.target.value.substring(1))} />
                             </StyledText>
                             {offset > 0 && (
@@ -377,6 +378,8 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                                     <option value="45">45 Minutes</option>
                                     <option value="60">60 Minutes</option>
                                 </select>
+                            </StyledText>
+                            <StyledText>
                                 <b>Offset:</b> <input size="3" type='text' name="offset" maxLength={3} value={"$" + offset} onChange={(e) => setOffset(e.target.value.substring(1))} />
                             </StyledText>
                             {offset > 0 && (
