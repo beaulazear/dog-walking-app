@@ -208,7 +208,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                                 <ListGroup.Item><b>Allergies:</b> {pet.allergies}</ListGroup.Item>
                                 <ListGroup.Item><b>Birthdate:</b> {formatDate(pet.birthdate)}</ListGroup.Item>
                                 {currentPetAppointments?.length === 0 && (
-                                    <h4 className='display-8 m-2' style={{ textAlign: 'center' }}>No scheduled appointments for {pet.name}.</h4>
+                                    <h4 className='display-8 m-2 p-2' style={{ textAlign: 'center' }}>No appointments scheduled</h4>
                                 )}
                                 {currentPetAppointments?.map((apt) => (
                                     <PetAppointmentCard updateAppointmentsDelete={updateAppointmentsDelete} apt={apt} key={apt.id} />
@@ -224,7 +224,6 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                 <Accordion.Item eventKey="1">
                     <Accordion.Header>Update {pet.name}</Accordion.Header>
                     <Accordion.Body>
-                        <h4 className="display-6 m-2">Update information for "{pet.name}"</h4>
                         <Form className="text-bg-light p-3" encType="multipart/form-data" onSubmit={handleUpdatePet}>
                             <Form.Group className="mb-3">
                                 <Form.Label>Pet's Photo</Form.Label>

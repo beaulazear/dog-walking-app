@@ -181,6 +181,31 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                                 ))}
                             </ListGroup>
                         )}
+                        <div className="d-grid gap-2 mx-4 mb-3">
+                            <InvoiceForm apt={apt} />
+                            <Button onClick={handleModalShow} className="btn btn-success btn-block">Add Cancellations</Button>
+                            {cancellations.length > 0 && (
+                                <Button onClick={handleEditModalShow} className="btn btn-secondary btn-block">Edit Cancellations</Button>
+                            )}
+                            <Button onClick={changeUpdateFormView} className="btn-block">
+                                {updateAptButton ? "Close Update Form" : "Update Appointment"}
+                            </Button>
+                            {updateAptButton && (
+                                <UpdateAppointmentForm changeUpdateFormView={changeUpdateFormView} apt={apt} />
+                            )}
+                            <Button onClick={handleCancel} className="btn btn-danger btn-block">Cancel Appointment</Button>
+                            <CancelAppointmentModal
+                                show={showModal}
+                                handleClose={handleModalClose}
+                                appointmentId={apt.id}
+                            />
+                            <EditCancellationsModal
+                                show={showEditModal}
+                                handleClose={handleEditModalClose}
+                                cancellations={cancellations}
+                                deleteCancellation={deleteCancellation}
+                            />
+                        </div>
                     </div>
                 ) : (
                     <div>
@@ -193,34 +218,24 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                         <Card.Text>
                             This is a one time appointment and will be displayed on the Today page on the date of the appointment.
                         </Card.Text>
+                        <div className="d-grid gap-2 mx-4 mb-3">
+                            <InvoiceForm apt={apt} />
+                            <Button onClick={changeUpdateFormView} className="btn-block">
+                                {updateAptButton ? "Close Update Form" : "Update Appointment"}
+                            </Button>
+                            {updateAptButton && (
+                                <UpdateAppointmentForm changeUpdateFormView={changeUpdateFormView} apt={apt} />
+                            )}
+                            <Button onClick={handleCancel} className="btn btn-danger btn-block">Cancel Appointment</Button>
+                            <CancelAppointmentModal
+                                show={showModal}
+                                handleClose={handleModalClose}
+                                appointmentId={apt.id}
+                            />
+                        </div>
                     </div>
                 )}
             </Card.Body>
-            <div className="d-grid gap-2 mx-4 mb-3">
-                <InvoiceForm apt={apt} />
-                <Button onClick={handleModalShow} className="btn btn-success btn-block">Add Cancellations</Button>
-                {cancellations.length > 0 && (
-                    <Button onClick={handleEditModalShow} className="btn btn-secondary btn-block">Edit Cancellations</Button>
-                )}
-                <Button onClick={changeUpdateFormView} className="btn-block">
-                    {updateAptButton ? "Close Update Form" : "Update Appointment"}
-                </Button>
-                {updateAptButton && (
-                    <UpdateAppointmentForm changeUpdateFormView={changeUpdateFormView} apt={apt} />
-                )}
-                <Button onClick={handleCancel} className="btn btn-danger btn-block">Cancel Appointment</Button>
-                <CancelAppointmentModal
-                    show={showModal}
-                    handleClose={handleModalClose}
-                    appointmentId={apt.id}
-                />
-                <EditCancellationsModal
-                    show={showEditModal}
-                    handleClose={handleEditModalClose}
-                    cancellations={cancellations}
-                    deleteCancellation={deleteCancellation}
-                />
-            </div>
         </Card>
     );
 }
