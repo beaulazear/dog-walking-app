@@ -165,7 +165,6 @@ export default function LoggedInHome() {
             <StyledCard>
                 <CardHeader>Set Your Rates</CardHeader>
                 <CardBody>
-                    <CardTitle>Your current rates for appointments.</CardTitle>
                     {user.thirty === null && user.fourty === null && user.sixty === null && (
                         <CardText>
                             You have not yet set your rates! This means walks will be defaulted to $22 for 30 minute walks, $28 for 45 minute walks, & $33 for 60 minute walks. Use the form below to update your rates.
