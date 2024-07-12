@@ -405,9 +405,9 @@ export default function InvoicePetCard({ pet }) {
                             </Card.Text>
                             <Card.Title style={{ marginLeft: '16px' }}>Paid Invoices</Card.Title>
                             {paidInvoices?.length > 0 && (
-                                <div style={{padding: "13px"}}>
-                                    <Dropdown style={{marginBottom: "3px"}} menu={{ items }}>
-                                        <button onClick={(e) => e.preventDefault()}>
+                                <div style={{padding: "10px"}}>
+                                    <Dropdown  menu={{ items }}>
+                                        <button style={{marginBottom: "13px"}} onClick={(e) => e.preventDefault()}>
                                             <Space>
                                                 Filter
                                                 <DownOutlined />
