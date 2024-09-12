@@ -44,7 +44,7 @@ const isTodayOrRecurring = (appointment) => {
 
 const AppointmentsProvider = ({ children }) => {
     const [todaysAppointments, setTodaysAppointments] = useState([]);
-    const [petsAppointments, setPetsAppointments] = useState(null);
+    const [petsAppointments, setPetsAppointments] = useState([]);
 
     useEffect(() => {
         const fetchAppointments = async () => {

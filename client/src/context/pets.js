@@ -4,7 +4,7 @@ const PetsContext = React.createContext();
 
 function PetsProvider({ children }) {
 
-    const [pets, setPets] = useState(null)
+    const [pets, setPets] = useState([])
 
     function sortObjectsByName(objects) {
         return objects.sort((a, b) => {

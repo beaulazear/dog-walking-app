@@ -13,9 +13,9 @@ const Container = styled.div`
 
 const Header = styled.h1`
     font-size: 2em;
-    margin: 5px;
+    margin: 12px;
     margin-bottom: 15px;
-    text-align: center;
+    text-align: left;
     color: #6c757d;
 `;
 

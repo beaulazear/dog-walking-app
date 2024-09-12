@@ -4,7 +4,7 @@ const InvoicesContext = React.createContext();
 
 function InvoicesProvider({ children }) {
 
-    const [invoices, setInvoices] = useState(null)
+    const [invoices, setInvoices] = useState([])
 
     useEffect(() => {
         fetch("/invoices").then((response) => {
