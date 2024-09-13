@@ -274,7 +274,7 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                         This is a one-time appointment and will be displayed on the Today page on the date of the appointment.
                     </CardText>
                     <InvoiceForm apt={apt} />
-                    <Button onClick={changeUpdateFormView}>
+                    <Button onClick={changeUpdateFormView} className="btn-success">
                         {updateAptButton ? "Close Update Form" : "Update Appointment"}
                     </Button>
                     {updateAptButton && (

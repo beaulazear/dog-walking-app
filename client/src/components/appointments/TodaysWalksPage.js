@@ -1,60 +1,102 @@
 import React, { useContext } from "react";
+import styled from "styled-components";
 import { AppointmentsContext } from "../../context/appointments";
-import Card from 'react-bootstrap/Card';
 import TodaysAppointmentsCard from "./TodaysAppointmentsCard";
+import dayjs from 'dayjs';
+
+// Styled Components
+const Container = styled.div`
+    background: #f8f9fa;
+    min-height: 100vh;
+    padding: 20px;
+    text-align: center;
+`;
+
+const Header = styled.h2`
+    font-size: 2.5rem;
+    color: #343a40;
+`;
+
+const SubHeader = styled.h4`
+    font-size: 1.5rem;
+    margin: 10px 0;
+    color: #495057;
+`;
+
+const NoAppointmentsCard = styled.div`
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    max-width: 600px;
+    margin: 20px auto;
+`;
+
+const CardHeader = styled.h5`
+    font-size: 1.5rem;
+    color: #007bff;
+    margin-bottom: 10px;
+`;
+
+const CardBody = styled.div`
+    margin-top: 10px;
+`;
+
+const CardTitle = styled.h6`
+    font-size: 1.25rem;
+    color: #495057;
+    margin: 10px 0;
+`;
+
+const CardText = styled.p`
+    color: #6c757d;
+`;
 
 export default function TodaysWalksPage() {
-
-    const { todaysAppointments, setTodaysAppointments } = useContext(AppointmentsContext)
-
-    const dayjs = require('dayjs');
+    const { todaysAppointments, setTodaysAppointments } = useContext(AppointmentsContext);
 
     function getCurrentDateFormatted() {
         const currentDate = dayjs();
-        const formattedDate = currentDate.format('MMMM DD, YYYY');
-    
-        return formattedDate;
+        return currentDate.format('MMMM DD, YYYY');
     }
-    
 
     function updateAppointments(newApt) {
         const newAppointments = todaysAppointments.map((apt) => {
             if (apt.id === newApt.id) {
-                return newApt
-            } else {
-                return apt
+                return newApt;
             }
-        })
-        setTodaysAppointments(newAppointments)
+            return apt;
+        });
+        setTodaysAppointments(newAppointments);
     }
 
     const todayFormatted = getCurrentDateFormatted();
 
     if (todaysAppointments?.length > 0) {
         return (
-            <div style={{ marginBottom: '35px', textAlign: 'center', paddingRight: '15px', paddingLeft: '15px' }}>
-                <h2 className="display-4 m-3">Today's Appointments</h2>
-                <h4 className="display-6 m-2">{todayFormatted}</h4>
+            <Container>
+                <Header>Today's Appointments</Header>
+                <SubHeader>{todayFormatted}</SubHeader>
                 {todaysAppointments.map((apt) => (
                     <TodaysAppointmentsCard updateAppointments={updateAppointments} key={apt.id} apt={apt} />
                 ))}
-            </div>
-        )
+            </Container>
+        );
     } else {
         return (
-            <div style={{ marginBottom: '45px' }}>
-                <h2 className="display-4 m-4">Today's Appointments</h2>
-                <h4 className="display-6 m-4">{todayFormatted}</h4>
-                <Card className="m-2">
-                    <Card.Header as="h5">No appointments scheduled for today</Card.Header>
-                    <Card.Body>
-                        <Card.Title>Visit the "Pets" page to create new appointments</Card.Title>
-                        <Card.Text>
-                            Appointments that are scheduled for today's date will be displayed here. You can complete them as you go, an invoice will be created for each completed walk.
-                        </Card.Text>
-                    </Card.Body>
-                </Card>
-            </div>
-        )
+            <Container>
+                <Header>Today's Appointments</Header>
+                <SubHeader>{todayFormatted}</SubHeader>
+                <NoAppointmentsCard>
+                    <CardHeader>No appointments scheduled for today</CardHeader>
+                    <CardBody>
+                        <CardTitle>Visit the "Pets" page to create new appointments</CardTitle>
+                        <CardText>
+                            Appointments that are scheduled for today's date will be displayed here. You can complete them as you go, and an invoice will be created for each completed walk.
+                        </CardText>
+                    </CardBody>
+                </NoAppointmentsCard>
+            </Container>
+        );
     }
 }

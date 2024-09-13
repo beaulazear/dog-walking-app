@@ -5,6 +5,7 @@ import { UserContext } from "../../context/user";
 import Rates from "./Rates";
 import dayjs from 'dayjs';
 
+// Styled Components
 const Container = styled.div`
     background: #f8f9fa;
     min-height: 100vh;
@@ -12,46 +13,54 @@ const Container = styled.div`
 `;
 
 const Header = styled.h1`
-    font-size: 2em;
-    margin: 12px;
-    margin-bottom: 15px;
-    text-align: left;
-    color: #6c757d;
-`;
-
-const StyledCard = styled.div`
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    margin: 5px;
-    padding: 20px;
-`;
-
-const CardHeader = styled.h5`
-    font-size: 1.5em;
+    font-size: 2.5rem;
+    margin: 10px 0;
     color: #343a40;
 `;
 
+const Card = styled.div`
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 15px 0;
+    padding: 20px;
+    max-width: 800px;
+    width: 100%;
+    transition: transform 0.3s ease-in-out;
+
+    &:hover {
+        transform: scale(1.02);
+    }
+`;
+
+const CardHeader = styled.h5`
+    font-size: 1.75rem;
+    color: #007bff;
+    margin-bottom: 10px;
+`;
+
 const CardBody = styled.div`
-    margin-top: 1em;
+    margin-top: 10px;
 `;
 
 const CardTitle = styled.h6`
-    font-size: 1.25em;
+    font-size: 1.5rem;
     color: #495057;
-    margin: 10px;
+    margin: 10px 0;
 `;
 
 const CardText = styled.p`
     color: #6c757d;
+    margin-bottom: 20px;
 `;
 
 const DateInput = styled.input`
     width: 100%;
-    padding: 10px;
-    margin-top: 1em;
-    border-radius: 4px;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 5px;
     border: 1px solid #ced4da;
+    box-sizing: border-box;
 `;
 
 const ListGroup = styled.ul`
@@ -61,15 +70,15 @@ const ListGroup = styled.ul`
 
 const ListGroupItem = styled.li`
     background: #e9ecef;
-    border-radius: 4px;
-    margin-bottom: 10px;
+    border-radius: 5px;
+    margin-bottom: 12px;
     padding: 15px;
 `;
 
 const AppointmentItem = styled.div`
     display: flex;
     flex-direction: column;
-    font-size: 1em;
+    font-size: 1rem;
     color: #495057;
     margin: 0.5em 0;
 `;
@@ -131,14 +140,13 @@ export default function LoggedInHome() {
     return (
         <Container>
             <Header>Welcome, {user.name}</Header>
-            <StyledCard>
+            <Card>
                 <CardHeader>Your Schedule</CardHeader>
                 <CardBody>
                     <CardText>
                         Visit the Today page to complete walks. Invoices will be generated automatically. Select a future date below to see scheduled walks.
                     </CardText>
                     <DateInput
-                        style={{ marginBottom: '5px', marginTop: '2px' }}
                         type="date"
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
@@ -161,8 +169,8 @@ export default function LoggedInHome() {
                         )}
                     </ListGroup>
                 </CardBody>
-            </StyledCard>
-            <StyledCard>
+            </Card>
+            <Card>
                 <CardHeader>Set Your Rates</CardHeader>
                 <CardBody>
                     {user.thirty === null && user.fourty === null && user.sixty === null && (
@@ -177,7 +185,7 @@ export default function LoggedInHome() {
                     )}
                     <Rates user={user} updateUserRates={updateUserRates} />
                 </CardBody>
-            </StyledCard>
+            </Card>
         </Container>
     );
 }

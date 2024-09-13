@@ -268,7 +268,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                                 )}
                             </Form.Group>
                             <br />
-                            <Button className='p-2 m-2' variant="primary" type="submit">Update</Button>
+                            <Button className='p-2 m-2' variant="primary" type="submit">Update Pet Informaiton</Button>
                         </Form>
                     </Accordion.Body>
                 </Accordion.Item>

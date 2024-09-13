@@ -9,50 +9,72 @@ import styled from 'styled-components';
 const StyledCard = styled(Card)`
     margin: 20px auto;
     width: 90%;
-    max-width: 500px;
-    min-width: 350px;
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+    max-width: 600px;
+    min-width: 320px;
+    box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.25);
+    }
 `;
 
 const ImageContainer = styled.div`
-    width: 150px;
-    height: 150px;
+    width: 120px;
+    height: 120px;
     overflow: hidden;
     border-radius: 50%;
-    margin: 4px;
+    margin: 10px;
 `;
 
 const InfoContainer = styled.div`
     display: flex;
     flex-direction: column;
-    justify-content: left;
+    justify-content: flex-start;
     text-align: left;
     align-items: flex-start;
+    padding: 10px;
 `;
 
 const StyledImage = styled.img`
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 50%;
 `;
 
 const StyledTitle = styled.h3`
-    font-size: 1.2em;
-    font-weight: bold;
+    font-size: 1.4em;
+    font-weight: 600;
     margin-bottom: 5px;
+    color: ${({ theme }) => theme.primaryColor || '#333'};
 `;
 
 const StyledText = styled.p`
     font-size: 1em;
-    color: #666;
-    line-height: 1.4;
+    color: #444;
+    line-height: 1.5;
+    margin: 5px 0;
 `;
 
 const StyledButton = styled(Button)`
-    margin: 5px;
-    padding: 8px 16px;
-    font-size: 0.9em;
-    width: 45%;
+    margin: 8px;
+    padding: 10px 20px;
+    font-size: 1em;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+
+    &:hover {
+        background-color: ${({ theme }) => theme.primaryColor || '#0056b3'};
+        transform: scale(1.05);
+    }
+
+    @media (max-width: 600px) {
+        width: 100%;
+        margin: 5px 0;
+    }
 `;
 
 const StyledModal = styled(Modal)`
@@ -61,15 +83,24 @@ const StyledModal = styled(Modal)`
 
 const StyledModalBody = styled(Modal.Body)`
     text-align: left;
+    padding: 20px;
 `;
 
 const StyledInput = styled.input`
-    width: 50%;
-    border: 2px solid ${({ theme }) => theme.successColor};
+    width: 100%;
+    max-width: 300px;
+    border: 2px solid ${({ theme }) => theme.successColor || '#4CAF50'};
     border-radius: 5px;
-    padding: 8px;
-    font-size: 0.9em;
-    margin-top: 5px;
+    padding: 10px;
+    font-size: 1em;
+    margin-top: 10px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+
+    &:focus {
+        border-color: ${({ theme }) => theme.primaryColor || '#0056b3'};
+        outline: none;
+    }
 `;
 
 export default function TodaysAppointmentsCard({ apt, updateAppointments }) {

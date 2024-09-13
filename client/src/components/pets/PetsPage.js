@@ -1,13 +1,70 @@
 import React, { useState, useContext } from "react";
+import styled from "styled-components";
 import { PetsContext } from "../../context/pets";
-import "bootstrap/dist/css/bootstrap.min.css";
-import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Col from 'react-bootstrap/Col';
-import Button from "react-bootstrap/Button";
-import Card from 'react-bootstrap/Card';
 import NewPetForm from "./NewPetForm";
 import PetCard from "./PetCard";
+
+// Styled Components
+const Container = styled.div`
+    background: #f8f9fa;
+    padding: 20px;
+`;
+
+const HeaderRow = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+`;
+
+const Title = styled.h2`
+    font-size: 2.5rem;
+    color: #343a40;
+`;
+
+const NewPetButton = styled.button`
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+
+    &:hover {
+        background-color: #0056b3;
+    }
+`;
+
+const NoPetsCard = styled.div`
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    max-width: 600px;
+    margin: 20px auto;
+`;
+
+const CardHeader = styled.h5`
+    font-size: 1.5rem;
+    color: #007bff;
+    margin-bottom: 10px;
+`;
+
+const CardBody = styled.div`
+    margin-top: 10px;
+`;
+
+const CardTitle = styled.h6`
+    font-size: 1.25rem;
+    color: #495057;
+    margin: 10px 0;
+`;
+
+const CardText = styled.p`
+    color: #6c757d;
+`;
 
 export default function PetsPage() {
     const { pets, setPets } = useContext(PetsContext);
@@ -39,48 +96,40 @@ export default function PetsPage() {
     }
 
     return (
-        <div>
-            <Container fluid="md" style={{ marginBottom: '35px' }}>
-                <Row style={{ marginBottom: '16px' }}>
-                    <Col>
-                        <h2 className="display-4 m-3">Pets</h2>
-                    </Col>
-                    <Col className="text-right">
-                        <Button className="m-3" variant="primary" onClick={updateDisplayButton}>New Pet</Button>
-                    </Col>
-                </Row>
-                {displayFormButton && pets && (
-                    <NewPetForm updateUserPets={addNewPet} />
-                )}
-                {pets === null ? (
-                    <div>
-                        Loading...
-                    </div>
-                ) : (
-                    <div>
-                        {pets.length > 0 ? (
-                            pets.map(pet => (
-                                <PetCard
-                                    key={pet.id}
-                                    pet={pet}
-                                    updatePetsAfterDelete={updatePetsAfterDelete}
-                                    updateUserPets={updateUserPets}
-                                />
-                            ))
-                        ) : (
-                            <Card className="m-2">
-                                <Card.Header as="h5">No pets currently in database</Card.Header>
-                                <Card.Body>
-                                    <Card.Title>Click "New Pet" button to create a pet</Card.Title>
-                                    <Card.Text>
-                                        Once a pet has been created, you can schedule appointments for said pet.
-                                    </Card.Text>
-                                </Card.Body>
-                            </Card>
-                        )}
-                    </div>
-                )}
-            </Container>
-        </div>
+        <Container>
+            <HeaderRow>
+                <Title>Pets</Title>
+                <NewPetButton onClick={updateDisplayButton}>New Pet</NewPetButton>
+            </HeaderRow>
+            {displayFormButton && pets && (
+                <NewPetForm updateUserPets={addNewPet} />
+            )}
+            {pets === null ? (
+                <div>Loading...</div>
+            ) : (
+                <div>
+                    {pets.length > 0 ? (
+                        pets.map(pet => (
+                            <PetCard
+                                key={pet.id}
+                                pet={pet}
+                                updatePetsAfterDelete={updatePetsAfterDelete}
+                                updateUserPets={updateUserPets}
+                            />
+                        ))
+                    ) : (
+                        <NoPetsCard>
+                            <CardHeader>No pets currently in database</CardHeader>
+                            <CardBody>
+                                <CardTitle>Click "New Pet" button to create a pet</CardTitle>
+                                <CardText>
+                                    Once a pet has been created, you can schedule appointments for said pet.
+                                </CardText>
+                            </CardBody>
+                        </NoPetsCard>
+                    )}
+                </div>
+            )}
+        </Container>
     );
 }
