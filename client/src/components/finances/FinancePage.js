@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import styled from "styled-components";
+import styled from 'styled-components';
 import { PetsContext } from "../../context/pets";
 
 const currentYear = new Date().getFullYear();
@@ -57,9 +57,11 @@ export default function FinancePage() {
     const { pets } = useContext(PetsContext);
 
     const totalIncome = calculateTotalIncome(pets, currentYear);
-    const monthlyIncome = calculateMonthlyIncome(totalIncome, currentYear);
-    const weeklyIncome = calculateWeeklyIncome(totalIncome, currentYear);
-    const taxEstimate = Math.round((totalIncome * taxPercentage) / 100);
+    const dailyAverage = calculateDailyAverage(totalIncome, currentYear);
+    const monthlyIncome = calculateMonthlyIncome(dailyAverage);
+    const weeklyIncome = calculateWeeklyIncome(dailyAverage);
+    const estimatedYearlyTotal = calculateEstimatedYearlyTotal(dailyAverage);
+    const taxEstimate = Math.round((estimatedYearlyTotal * taxPercentage) / 100);
 
     function handleTaxPercentageChange(e) {
         setTaxPercentage(parseInt(e.target.value));
@@ -69,8 +71,12 @@ export default function FinancePage() {
         <Container>
             <Header>Overview for {currentYear}</Header>
             <DetailRow>
-                <DetailLabel>Total Income:</DetailLabel>
+                <DetailLabel>Current Income This Year:</DetailLabel>
                 <DetailValue>${totalIncome}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+                <DetailLabel>Estimated Yearly Total:</DetailLabel>
+                <DetailValue>${estimatedYearlyTotal}</DetailValue>
             </DetailRow>
             <DetailRow>
                 <DetailLabel>Monthly Average Income:</DetailLabel>
@@ -119,14 +125,17 @@ function calculateDailyAverage(totalIncome, year) {
     return daysPassed > 0 ? totalIncome / daysPassed : 0;
 }
 
-function calculateWeeklyIncome(totalIncome, year) {
-    const dailyAverage = calculateDailyAverage(totalIncome, year);
+function calculateWeeklyIncome(dailyAverage) {
     // Multiply daily average by 7 to get weekly average
     return Math.round(dailyAverage * 7);
 }
 
-function calculateMonthlyIncome(totalIncome, year) {
-    const dailyAverage = calculateDailyAverage(totalIncome, year);
+function calculateMonthlyIncome(dailyAverage) {
     // Multiply daily average by the average number of days in a month (~30.44)
     return Math.round(dailyAverage * 30.44);
+}
+
+function calculateEstimatedYearlyTotal(dailyAverage) {
+    // Multiply daily average by 365 to estimate yearly total
+    return Math.round(dailyAverage * 365);
 }
