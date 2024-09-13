@@ -1,12 +1,10 @@
 import React, { useState, useContext } from "react";
 import styled from 'styled-components';
-import Button from "react-bootstrap/Button";
-import Form from 'react-bootstrap/Form';
-import Modal from 'react-bootstrap/Modal';
 import { PetsContext } from "../../context/pets";
-import { AppointmentsContext } from "../../context/appointments"; // Importing AppointmentsContext
+import { AppointmentsContext } from "../../context/appointments";
 
-const StyledForm = styled(Form)`
+// Styled components
+const StyledForm = styled.form`
     max-width: 500px;
     margin: 20px auto;
     padding: 20px;
@@ -15,9 +13,81 @@ const StyledForm = styled(Form)`
     background-color: #f9f9f9;
 `;
 
-export default function InvoiceForm({ apt }) { // Removed updateAppointments prop
+const FormGroup = styled.div`
+    margin-bottom: 15px;
+`;
+
+const FormLabel = styled.label`
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+`;
+
+const FormControl = styled.input`
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    box-sizing: border-box;
+`;
+
+const Button = styled.button`
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 8px;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    background-color: #007bff; /* Primary color */
+    font-size: 16px;
+    cursor: pointer;
+    text-align: center;
+
+    &:hover {
+        background-color: #0056b3; /* Darker shade for hover */
+    }
+`;
+
+const ModalContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    max-width: 500px;
+    margin: 20px auto;
+`;
+
+const ModalHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0e0e0;
+`;
+
+const ModalTitle = styled.h2`
+    margin: 0;
+`;
+
+const CloseButton = styled.button`
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #007bff;
+    
+    &:hover {
+        color: #0056b3;
+    }
+`;
+
+export default function InvoiceForm({ apt }) {
     const { pets, setPets } = useContext(PetsContext);
-    const { todaysAppointments, setTodaysAppointments } = useContext(AppointmentsContext); // Using AppointmentsContext
+    const { todaysAppointments, setTodaysAppointments } = useContext(AppointmentsContext);
 
     const [date, setDate] = useState('');
     const [title, setTitle] = useState('');
@@ -85,51 +155,52 @@ export default function InvoiceForm({ apt }) { // Removed updateAppointments pro
 
     return (
         <div>
-            <Button style={{width: '100%'}} variant="primary" onClick={handleShowModal} className="btn btn-info btn-block">
+            <Button onClick={handleShowModal}>
                 Create New Invoice
             </Button>
 
-            <Modal show={showModal} onHide={handleCloseModal}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Create New Invoice</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
+            {showModal && (
+                <ModalContainer>
+                    <ModalHeader>
+                        <ModalTitle>Create New Invoice</ModalTitle>
+                        <CloseButton onClick={handleCloseModal}>&times;</CloseButton>
+                    </ModalHeader>
                     <StyledForm onSubmit={handleSubmit}>
-                        <Form.Group controlId="formDate">
-                            <Form.Label>Date</Form.Label>
-                            <Form.Control
+                        <FormGroup>
+                            <FormLabel>Date</FormLabel>
+                            <FormControl
                                 type="date"
                                 value={date}
                                 onChange={(e) => setDate(e.target.value)}
                                 required
                             />
-                        </Form.Group>
-                        <Form.Group controlId="formTitle">
-                            <Form.Label>Title</Form.Label>
-                            <Form.Control
+                        </FormGroup>
+                        <FormGroup>
+                            <FormLabel>Title</FormLabel>
+                            <FormControl
                                 type="text"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="Enter title"
                                 required
                             />
-                        </Form.Group>
-                        <Form.Group controlId="formCompensation">
-                            <Form.Label>Compensation</Form.Label>
-                            <Form.Control
+                        </FormGroup>
+                        <FormGroup>
+                            <FormLabel>Compensation</FormLabel>
+                            <FormControl
                                 type="number"
                                 value={compensation}
                                 onChange={(e) => setCompensation(e.target.value)}
                                 placeholder="Enter compensation amount"
                                 required
                             />
-                        </Form.Group>
-                        <Button variant="primary" type="submit">
+                        </FormGroup>
+                        <Button type="submit">
                             Submit
                         </Button>
                     </StyledForm>
-                </Modal.Body>
-            </Modal>
+                </ModalContainer>
+            )}
         </div>
     );
 }

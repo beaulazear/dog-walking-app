@@ -1,20 +1,78 @@
 import React, { useContext, useState, useEffect, useMemo } from 'react';
-import Card from 'react-bootstrap/Card';
-import Button from 'react-bootstrap/Button';
-import ListGroup from 'react-bootstrap/ListGroup';
+import styled from 'styled-components';
 import { AppointmentsContext } from "../../context/appointments";
 import UpdateAppointmentForm from './UpdateAppointmentForm';
 import CancelAppointmentModal from './CancelAppointmentModal';
 import EditCancellationsModal from './EditCancellationsModal';
 import InvoiceForm from '../invoices/InvoiceForm';
 
-export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
+// Styled components
+const CardContainer = styled.div`
+    border: 1px solid #007bff;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    width: 100%;
+`;
 
+const CardTitle = styled.h5`
+    margin-bottom: 8px;
+    font-weight: bold;
+`;
+
+const CardSubtitle = styled.h6`
+    margin-bottom: 4px;
+    color: #6c757d;
+`;
+
+const CardText = styled.p`
+    margin-bottom: 16px;
+`;
+
+const Button = styled.button`
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 8px;
+    border: none;
+    border-radius: 4px;
+    color: #fff; /* Ensures text color is white */
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+
+    &.btn-success {
+        background-color: #28a745; /* Green background */
+    }
+
+    &.btn-secondary {
+        background-color: #6c757d; /* Grey background */
+    }
+
+    &.btn-danger {
+        background-color: #dc3545; /* Red background */
+    }
+
+    &:hover {
+        opacity: 0.8;
+    }
+`;
+
+const ListGroup = styled.ul`
+    list-style: none;
+    padding: 0;
+    margin: 0;
+`;
+
+const ListGroupItem = styled.li`
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+`;
+
+export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
     const [updateAptButton, setUpdateAptButton] = useState(false);
     const [showModal, setShowModal] = useState(false);
-
     const { petsAppointments, setPetsAppointments } = useContext(AppointmentsContext);
-
     const [showEditModal, setShowEditModal] = useState(false);
 
     const cancellations = useMemo(() => (apt.cancellations || []).sort((a, b) => new Date(a.date) - new Date(b.date)), [apt.cancellations]);
@@ -158,84 +216,79 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
     }, [cancellations, apt.id, petsAppointments, setPetsAppointments]);
 
     return (
-        <Card className="border border-primary" style={{ width: '100%', marginBottom: '5px' }}>
-            <Card.Body>
-                {apt.recurring ? (
-                    <div>
-                        <Card.Title>Recurring Appointment</Card.Title>
-                        <Card.Subtitle className="mb-2 text-muted"><b>Walk Duration:</b> {apt.duration} minutes</Card.Subtitle>
-                        <Card.Subtitle className="mb-2 text-muted"><b>Walk Type:</b> {apt.solo ? 'Solo' : 'Group'} Walk</Card.Subtitle>
-                        <Card.Subtitle className="mb-2 text-muted"><b>Earliest Pickup Time:</b> {startTime} </Card.Subtitle>
-                        <Card.Subtitle className="mb-2 text-muted"><b>Latest Pickup Time:</b> {endTime} </Card.Subtitle>
-                        <Card.Text>
-                            This is a recurring appointment and will be repeated every {daysOfWeekArr.join(', ')}
-                        </Card.Text>
-                        <Card.Subtitle className="mb-2 text-muted"><b>Canceled Dates:</b></Card.Subtitle>
-                        {cancellations.length < 1 && (
-                            <Card.Text>No cancellations currently, use button below to submit date that the appointment is to be skipped.</Card.Text>
-                        )}
-                        {cancellations.length > 0 && (
-                            <ListGroup variant="flush">
-                                {cancellations.map(cancellation => (
-                                    <ListGroup.Item key={cancellation.id}>{formatDate(cancellation.date)}</ListGroup.Item>
-                                ))}
-                            </ListGroup>
-                        )}
-                        <div className="d-grid gap-2 mx-4 mb-3">
-                            <InvoiceForm apt={apt} />
-                            <Button onClick={handleModalShow} className="btn btn-success btn-block">Add Cancellations</Button>
-                            {cancellations.length > 0 && (
-                                <Button onClick={handleEditModalShow} className="btn btn-secondary btn-block">Edit Cancellations</Button>
-                            )}
-                            <Button onClick={changeUpdateFormView} className="btn-block">
-                                {updateAptButton ? "Close Update Form" : "Update Appointment"}
-                            </Button>
-                            {updateAptButton && (
-                                <UpdateAppointmentForm changeUpdateFormView={changeUpdateFormView} apt={apt} />
-                            )}
-                            <Button onClick={handleCancel} className="btn btn-danger btn-block">Cancel Appointment</Button>
-                            <CancelAppointmentModal
-                                show={showModal}
-                                handleClose={handleModalClose}
-                                appointmentId={apt.id}
-                            />
-                            <EditCancellationsModal
-                                show={showEditModal}
-                                handleClose={handleEditModalClose}
-                                cancellations={cancellations}
-                                deleteCancellation={deleteCancellation}
-                            />
-                        </div>
-                    </div>
-                ) : (
-                    <div>
-                        <Card.Title>One Time Appointment</Card.Title>
-                        <Card.Subtitle className="mb-2 text-muted"><b>Date:</b> {datetimeString} </Card.Subtitle>
-                        <Card.Subtitle className="mb-2 text-muted"><b>Walk Duration:</b> {apt.duration} minutes</Card.Subtitle>
-                        <Card.Subtitle className="mb-2 text-muted"><b>Walk Type:</b> {apt.solo ? 'Solo' : 'Group'} Walk</Card.Subtitle>
-                        <Card.Subtitle className="mb-2 text-muted"><b>Earliest Pickup Time:</b> {startTime} </Card.Subtitle>
-                        <Card.Subtitle className="mb-2 text-muted"><b>Latest Pickup Time:</b> {endTime} </Card.Subtitle>
-                        <Card.Text>
-                            This is a one time appointment and will be displayed on the Today page on the date of the appointment.
-                        </Card.Text>
-                        <div className="d-grid gap-2 mx-4 mb-3">
-                            <InvoiceForm apt={apt} />
-                            <Button onClick={changeUpdateFormView} className="btn-block">
-                                {updateAptButton ? "Close Update Form" : "Update Appointment"}
-                            </Button>
-                            {updateAptButton && (
-                                <UpdateAppointmentForm changeUpdateFormView={changeUpdateFormView} apt={apt} />
-                            )}
-                            <Button onClick={handleCancel} className="btn btn-danger btn-block">Cancel Appointment</Button>
-                            <CancelAppointmentModal
-                                show={showModal}
-                                handleClose={handleModalClose}
-                                appointmentId={apt.id}
-                            />
-                        </div>
-                    </div>
-                )}
-            </Card.Body>
-        </Card>
+        <CardContainer>
+            {apt.recurring ? (
+                <div>
+                    <CardTitle>Recurring Appointment</CardTitle>
+                    <CardSubtitle><b>Walk Duration:</b> {apt.duration} minutes</CardSubtitle>
+                    <CardSubtitle><b>Walk Type:</b> {apt.solo ? 'Solo' : 'Group'} Walk</CardSubtitle>
+                    <CardSubtitle><b>Earliest Pickup Time:</b> {startTime} </CardSubtitle>
+                    <CardSubtitle><b>Latest Pickup Time:</b> {endTime} </CardSubtitle>
+                    <CardText>
+                        This is a recurring appointment and will be repeated every {daysOfWeekArr.join(', ')}
+                    </CardText>
+                    <CardSubtitle><b>Canceled Dates:</b></CardSubtitle>
+                    {cancellations.length < 1 && (
+                        <CardText>No cancellations currently, use button below to submit date that the appointment is to be skipped.</CardText>
+                    )}
+                    {cancellations.length > 0 && (
+                        <ListGroup>
+                            {cancellations.map(cancellation => (
+                                <ListGroupItem key={cancellation.id}>{formatDate(cancellation.date)}</ListGroupItem>
+                            ))}
+                        </ListGroup>
+                    )}
+                    <InvoiceForm apt={apt} />
+                    <Button onClick={handleModalShow} className="btn-success">Add Cancellations</Button>
+                    {cancellations.length > 0 && (
+                        <Button onClick={handleEditModalShow} className="btn-secondary">Edit Cancellations</Button>
+                    )}
+                    <Button className="btn btn-info btn-block" onClick={changeUpdateFormView}>
+                        {updateAptButton ? "Close Update Form" : "Update Appointment"}
+                    </Button>
+                    {updateAptButton && (
+                        <UpdateAppointmentForm changeUpdateFormView={changeUpdateFormView} apt={apt} />
+                    )}
+                    <Button onClick={handleCancel} className="btn-danger">Cancel Appointment</Button>
+                    <CancelAppointmentModal
+                        show={showModal}
+                        handleClose={handleModalClose}
+                        appointmentId={apt.id}
+                    />
+                    <EditCancellationsModal
+                        show={showEditModal}
+                        handleClose={handleEditModalClose}
+                        cancellations={cancellations}
+                        deleteCancellation={deleteCancellation}
+                    />
+                </div>
+            ) : (
+                <div>
+                    <CardTitle>One Time Appointment</CardTitle>
+                    <CardSubtitle><b>Date:</b> {datetimeString} </CardSubtitle>
+                    <CardSubtitle><b>Walk Duration:</b> {apt.duration} minutes</CardSubtitle>
+                    <CardSubtitle><b>Walk Type:</b> {apt.solo ? 'Solo' : 'Group'} Walk</CardSubtitle>
+                    <CardSubtitle><b>Earliest Pickup Time:</b> {startTime} </CardSubtitle>
+                    <CardSubtitle><b>Latest Pickup Time:</b> {endTime} </CardSubtitle>
+                    <CardText>
+                        This is a one-time appointment and will be displayed on the Today page on the date of the appointment.
+                    </CardText>
+                    <InvoiceForm apt={apt} />
+                    <Button onClick={changeUpdateFormView}>
+                        {updateAptButton ? "Close Update Form" : "Update Appointment"}
+                    </Button>
+                    {updateAptButton && (
+                        <UpdateAppointmentForm changeUpdateFormView={changeUpdateFormView} apt={apt} />
+                    )}
+                    <Button onClick={handleCancel} className="btn-danger">Cancel Appointment</Button>
+                    <CancelAppointmentModal
+                        show={showModal}
+                        handleClose={handleModalClose}
+                        appointmentId={apt.id}
+                    />
+                </div>
+            )}
+        </CardContainer>
     );
 }
+
