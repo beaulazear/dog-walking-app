@@ -6,7 +6,6 @@ import Accordion from 'react-bootstrap/Accordion';
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import Alert from 'react-bootstrap/Alert';
-import Modal from 'react-bootstrap/Modal';
 import NewAppointmentForm from '../appointments/NewAppointmentForm';
 import PetAppointmentCard from '../appointments/PetAppointmentCard';
 import { AppointmentsContext } from "../../context/appointments";
@@ -34,26 +33,9 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
 
     const [profilePic, setProfilePic] = useState(pet.profile_pic);
 
-    const [show, setShow] = useState(false);
-
-    const handleClose = () => setShow(false);
-    const handleShow = () => setShow(true);
-
     function formatDate(inputDate) {
         const [year, month, day] = inputDate.split('T')[0].split('-');
         return `${year}-${month}-${day}`;
-    }
-
-    function handleDelete() {
-        fetch(`/pets/${pet.id}`, { method: 'DELETE' })
-            .then((response) => response.json())
-            .then((deletedPet) => {
-                updatePetsAfterDelete(deletedPet); // Update the state first
-                handleClose(); // Close the modal after updating the state
-            })
-            .catch((error) => {
-                console.error('Error deleting pet:', error);
-            });
     }
 
     function handleUpdatePet(e) {
@@ -68,7 +50,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
         formData.append('supplies_location', suppliesLocation);
         formData.append('allergies', allergies);
         formData.append('behavorial_notes', behavioralNotes);
-        // please note spelling of behavioral is wrong in the database
+        // please note spelling of behavioral is wrong in the database, do not change spelling how it is in this component!
 
         if (profilePic instanceof File) {
             formData.append('profile_pic', profilePic);
@@ -287,18 +269,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                             </Form.Group>
                             <br />
                             <Button className='p-2 m-2' variant="primary" type="submit">Update</Button>
-                            <Button className='p-2 m-2' variant="danger" onClick={handleShow}>Delete</Button>
                         </Form>
-                        <Modal show={show} onHide={handleClose}>
-                            <Modal.Header closeButton>
-                                <Modal.Title>Delete {pet.name}</Modal.Title>
-                            </Modal.Header>
-                            <Modal.Body>Are you sure you want to delete pet information for {pet.name}? This will also destroy all associated invoices and appointments. This information will not be able to be recovered after deletion.</Modal.Body>
-                            <Modal.Footer>
-                                <Button variant="secondary" onClick={handleClose}>Close</Button>
-                                <Button variant="danger" onClick={handleDelete}>Delete {pet.name}</Button>
-                            </Modal.Footer>
-                        </Modal>
                     </Accordion.Body>
                 </Accordion.Item>
             </Accordion>
