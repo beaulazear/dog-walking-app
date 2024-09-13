@@ -124,17 +124,21 @@ function calculateMonthlyIncome(pets, year) {
 
 function calculateWeeklyIncome(pets, year) {
     let totalIncome = 0;
-    let totalWeeks = 0;
+    const today = new Date();
+    const currentYearStart = new Date(year, 0, 1);
+
+    // Calculate the number of weeks that have passed in the current year
+    const weeksPassed = Math.ceil(((today - currentYearStart) / 86400000 + currentYearStart.getDay() + 1) / 7);
+
     pets?.forEach(pet => {
         pet.invoices.forEach(inv => {
-            if (inv.date_completed.slice(0, 4) === year.toString()) {
+            const invDate = new Date(inv.date_completed);
+            if (invDate.getFullYear() === year && invDate <= today) {
                 totalIncome += inv.compensation;
-                const date = new Date(inv.date_completed);
-                const startOfYear = new Date(year, 0, 1);
-                const weekNumber = Math.ceil((((date - startOfYear) / 86400000) + startOfYear.getDay() + 1) / 7);
-                totalWeeks = Math.max(totalWeeks, weekNumber);
             }
         });
     });
-    return totalWeeks > 0 ? Math.round(totalIncome / totalWeeks) : 0;
+
+    return weeksPassed > 0 ? Math.round(totalIncome / weeksPassed) : 0;
 }
+
