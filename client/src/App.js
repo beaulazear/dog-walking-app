@@ -41,8 +41,7 @@ const StyledButton = styled.button`
 `;
 
 function App() {
-  const { user } = useContext(UserContext);
-  const { setUser } = useContext(UserContext);
+  const { user, setUser } = useContext(UserContext);
   const navigate = useNavigate();
 
   function handleLogout() {
@@ -59,9 +58,11 @@ function App() {
     }
   }
 
+  const isLoggedIn = user && Object.keys(user).length > 0; // Check if user has data
+
   return (
     <div>
-      {user && (
+      {isLoggedIn ? (
         <>
           <PageNavLinks />
           <AppointmentsProvider>
@@ -80,8 +81,7 @@ function App() {
           </AppointmentsProvider>
           <StyledButton onClick={handleLogout}>Logout</StyledButton>
         </>
-      )}
-      {!user && (
+      ) : (
         <>
           <PageNavLinksNotLoggedIn />
           <Routes>
