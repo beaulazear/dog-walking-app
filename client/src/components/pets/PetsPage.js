@@ -119,7 +119,7 @@ export default function PetsPage() {
         <Container>
             <Title>Pets & Appointments</Title>
             <ButtonWrapper>
-                <NewPetButton onClick={updateDisplayButton}>New Pet</NewPetButton>
+                <NewPetButton onClick={updateDisplayButton}>Add New Pet</NewPetButton>
             </ButtonWrapper>
             {displayFormButton && pets && (
                 <NewPetForm updateUserPets={addNewPet} />

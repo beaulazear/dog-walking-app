@@ -61,8 +61,8 @@ const CardText = styled(Card.Text)`
 export default function HomePage() {
     return (
         <Container>
-            <Title>Welcome to PocketWalks</Title>
-            <SubTitle>Login or Signup to gain access to the following:</SubTitle>
+            <Title>Welcome!</Title>
+            <SubTitle>Login or Signup to gain access:</SubTitle>
             <CustomCard>
                 <Card.Header as="h5">Current Pets</Card.Header>
                 <Card.Body>

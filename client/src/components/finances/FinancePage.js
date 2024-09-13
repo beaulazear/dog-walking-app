@@ -57,8 +57,8 @@ export default function FinancePage() {
     const { pets } = useContext(PetsContext);
 
     const totalIncome = calculateTotalIncome(pets, currentYear);
-    const monthlyIncome = calculateMonthlyIncome(pets, currentYear);
-    const weeklyIncome = calculateWeeklyIncome(pets, currentYear);
+    const monthlyIncome = calculateMonthlyIncome(totalIncome, currentYear);
+    const weeklyIncome = calculateWeeklyIncome(totalIncome, currentYear);
     const taxEstimate = Math.round((totalIncome * taxPercentage) / 100);
 
     function handleTaxPercentageChange(e) {
@@ -108,36 +108,25 @@ function calculateTotalIncome(pets, year) {
     return totalIncome;
 }
 
-function calculateDailyAverage(pets, year) {
-    let totalIncome = 0;
+function calculateDailyAverage(totalIncome, year) {
     const today = new Date();
     const startOfYear = new Date(year, 0, 1);
 
     // Calculate the number of days that have passed since the start of the year
     const daysPassed = Math.ceil((today - startOfYear) / (1000 * 60 * 60 * 24));
 
-    // Calculate total income
-    pets?.forEach(pet => {
-        pet.invoices.forEach(inv => {
-            const invDate = new Date(inv.date_completed);
-            if (invDate.getFullYear() === year && invDate <= today) {
-                totalIncome += inv.compensation;
-            }
-        });
-    });
-
     // Calculate daily average
     return daysPassed > 0 ? totalIncome / daysPassed : 0;
 }
 
-function calculateWeeklyIncome(pets, year) {
-    const dailyAverage = calculateDailyAverage(pets, year);
+function calculateWeeklyIncome(totalIncome, year) {
+    const dailyAverage = calculateDailyAverage(totalIncome, year);
     // Multiply daily average by 7 to get weekly average
     return Math.round(dailyAverage * 7);
 }
 
-function calculateMonthlyIncome(pets, year) {
-    const dailyAverage = calculateDailyAverage(pets, year);
+function calculateMonthlyIncome(totalIncome, year) {
+    const dailyAverage = calculateDailyAverage(totalIncome, year);
     // Multiply daily average by the average number of days in a month (~30.44)
     return Math.round(dailyAverage * 30.44);
 }
