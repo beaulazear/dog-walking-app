@@ -194,6 +194,11 @@ export default function LoggedInHome() {
     return (
         <Container>
             <Header>{user.name}</Header>
+            {upcomingBirthdayPet && (
+                <BirthdayAlert>
+                    <strong>Upcoming Birthday:</strong> {upcomingBirthdayPet.name}'s birthday is coming up on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}!
+                </BirthdayAlert>
+            )}
             <Card>
                 <CardHeader>Your Schedule</CardHeader>
                 <CardBody>
@@ -240,11 +245,6 @@ export default function LoggedInHome() {
                     <Rates user={user} updateUserRates={updateUserRates} />
                 </CardBody>
             </Card>
-            {upcomingBirthdayPet && (
-                <BirthdayAlert>
-                    <strong>Upcoming Birthday:</strong> {upcomingBirthdayPet.name}'s birthday is coming up on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}!
-                </BirthdayAlert>
-            )}
         </Container>
     );
 }

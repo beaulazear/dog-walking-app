@@ -75,10 +75,6 @@ export default function FinancePage() {
                 <DetailValue>${totalIncome}</DetailValue>
             </DetailRow>
             <DetailRow>
-                <DetailLabel>Estimated Yearly Total:</DetailLabel>
-                <DetailValue>${estimatedYearlyTotal}</DetailValue>
-            </DetailRow>
-            <DetailRow>
                 <DetailLabel>Monthly Average Income:</DetailLabel>
                 <DetailValue>${monthlyIncome}</DetailValue>
             </DetailRow>
@@ -87,7 +83,11 @@ export default function FinancePage() {
                 <DetailValue>${weeklyIncome}</DetailValue>
             </DetailRow>
             <DetailRow>
-                <DetailLabel>Tax Estimate:</DetailLabel>
+                <DetailLabel>Estimated Yearly Total:</DetailLabel>
+                <DetailValue>${estimatedYearlyTotal}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+                <DetailLabel>Yearly Estimate Taxes:</DetailLabel>
                 <DetailValue>${taxEstimate}</DetailValue>
             </DetailRow>
             <Select onChange={handleTaxPercentageChange} value={taxPercentage}>
