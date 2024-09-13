@@ -23,12 +23,21 @@ const StyledCard = styled(Card)`
 `;
 
 const ImageContainer = styled.div`
-    width: 100px;
-    height: 100px;
-    overflow: hidden;
+    width: 250px;
+    height: 250px;
     border-radius: 50%;
-    margin: 10px;
+    margin: 10px auto; /* Center container horizontally */
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border: 2px solid #e0e0e0;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Sleek shadow for style */
+
+    @media (max-width: 600px) {
+        width: 150px;
+        height: 150px;
+    }
 `;
 
 const InfoContainer = styled.div`
@@ -45,6 +54,18 @@ const StyledImage = styled.img`
     height: 100%;
     object-fit: cover;
     border-radius: 50%;
+    transition: transform 0.3s ease; /* Smooth transition for hover effect */
+            width: 100%;
+        height: 100%;
+
+    &:hover {
+        transform: scale(1.05); /* Slight zoom on hover */
+    }
+
+    @media (max-width: 600px) {
+        width: 100%;
+        height: 100%;
+    }
 `;
 
 const StyledTitle = styled.h3`
