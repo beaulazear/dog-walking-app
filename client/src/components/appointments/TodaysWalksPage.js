@@ -13,7 +13,7 @@ const Container = styled.div`
 `;
 
 const Header = styled.h2`
-    font-size: 2.5rem;
+    font-size: 2rem;
     color: #343a40;
 `;
 

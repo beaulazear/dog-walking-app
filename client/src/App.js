@@ -18,81 +18,81 @@ import { PetsProvider } from "./context/pets";
 const StyledButton = styled.button`
   position: fixed;
   bottom: 0;
-  width: 100%;
-  height: 40px;
-  background-color: red;
-  color: black;
-  text-align: center;
+  right: 0;
+  margin: 10px;
+  padding: 10px 20px;
+  background-color: #ccc;
+  color: #333;
   border: none;
   cursor: pointer;
-  /* Additional styles */
-  font-size: 1rem;
-  font-weight: bold;
-  border-radius: 0;
+  font-size: 0.9rem;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   transition: background-color 0.3s ease;
-  
+
   &:hover {
-    background-color: darkred;
+    background-color: #bbb;
+  }
+
+  @media (max-width: 600px) {
+    padding: 8px 16px;
+    font-size: 0.8rem;
   }
 `;
 
 function App() {
-
-  const { user } = useContext(UserContext)
-
-  const { setUser } = useContext(UserContext)
-
-  const navigate = useNavigate()
+  const { user } = useContext(UserContext);
+  const { setUser } = useContext(UserContext);
+  const navigate = useNavigate();
 
   function handleLogout() {
-
-    const confirmation = window.confirm("Are you sure you want to log out?")
-
+    const confirmation = window.confirm("Are you sure you want to log out?");
     if (confirmation) {
       fetch("/logout", {
         method: "DELETE",
       }).then(() => {
-        setUser(null)
-        navigate('/')
-      })
+        setUser(null);
+        navigate('/');
+      });
     } else {
-      console.log("Log out aborted")
+      console.log("Log out aborted");
     }
   }
 
-  if (user) {
-    return (
-      <div style={{ paddingBottom: '25px' }}>
-        <PageNavLinks />
-        <AppointmentsProvider>
-          <InvoicesProvider>
-            <PetsProvider>
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/signuppage" element={<Signup />} />
-                <Route path="/petspage" element={<PetsPage />} />
-                <Route path="/todayswalkspage" element={<TodaysWalksPage />} />
-                <Route path="/invoicespage" element={<InvoicesPage />} />
-                <Route path="/" element={<LoggedInHome />} />
-              </Routes>
-            </PetsProvider>
-          </InvoicesProvider>
-        </AppointmentsProvider>
-        <StyledButton onClick={handleLogout}>Logout</StyledButton>
-      </div>
-    );
-  } else {
-    return (
-      <div>
-        <PageNavLinksNotLoggedIn />
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signuppage" element={<Signup />} />
-          <Route path="/" element={<HomePage />} />
-        </Routes>
-      </div>
-    )
-  }
+  return (
+    <div>
+      {user && (
+        <>
+          <PageNavLinks />
+          <AppointmentsProvider>
+            <InvoicesProvider>
+              <PetsProvider>
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signuppage" element={<Signup />} />
+                  <Route path="/petspage" element={<PetsPage />} />
+                  <Route path="/todayswalkspage" element={<TodaysWalksPage />} />
+                  <Route path="/invoicespage" element={<InvoicesPage />} />
+                  <Route path="/" element={<LoggedInHome />} />
+                </Routes>
+              </PetsProvider>
+            </InvoicesProvider>
+          </AppointmentsProvider>
+          <StyledButton onClick={handleLogout}>Logout</StyledButton>
+        </>
+      )}
+      {!user && (
+        <>
+          <PageNavLinksNotLoggedIn />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signuppage" element={<Signup />} />
+            <Route path="/" element={<HomePage />} />
+          </Routes>
+        </>
+      )}
+    </div>
+  );
 }
 
 export default App;

@@ -16,6 +16,10 @@ const Header = styled.h3`
     font-size: 1.5rem;
     color: #343a40;
     margin-bottom: 10px;
+
+    @media (max-width: 768px) {
+    text-align: center;
+    }
 `;
 
 const Select = styled.select`
@@ -54,6 +58,7 @@ export default function FinancePage() {
 
     const totalIncome = calculateTotalIncome(pets, currentYear);
     const monthlyIncome = calculateMonthlyIncome(pets, currentYear);
+    const weeklyIncome = calculateWeeklyIncome(pets, currentYear);
     const taxEstimate = Math.round((totalIncome * taxPercentage) / 100);
 
     function handleTaxPercentageChange(e) {
@@ -70,6 +75,10 @@ export default function FinancePage() {
             <DetailRow>
                 <DetailLabel>Monthly Average Income:</DetailLabel>
                 <DetailValue>${monthlyIncome}</DetailValue>
+            </DetailRow>
+            <DetailRow>
+                <DetailLabel>Weekly Average Income:</DetailLabel>
+                <DetailValue>${weeklyIncome}</DetailValue>
             </DetailRow>
             <DetailRow>
                 <DetailLabel>Tax Estimate:</DetailLabel>
@@ -111,4 +120,21 @@ function calculateMonthlyIncome(pets, year) {
     });
     const totalMonths = monthlyIncome.reduce((a, b) => a + b, 0);
     return Math.round(totalMonths / 12);
+}
+
+function calculateWeeklyIncome(pets, year) {
+    let totalIncome = 0;
+    let totalWeeks = 0;
+    pets?.forEach(pet => {
+        pet.invoices.forEach(inv => {
+            if (inv.date_completed.slice(0, 4) === year.toString()) {
+                totalIncome += inv.compensation;
+                const date = new Date(inv.date_completed);
+                const startOfYear = new Date(year, 0, 1);
+                const weekNumber = Math.ceil((((date - startOfYear) / 86400000) + startOfYear.getDay() + 1) / 7);
+                totalWeeks = Math.max(totalWeeks, weekNumber);
+            }
+        });
+    });
+    return totalWeeks > 0 ? Math.round(totalIncome / totalWeeks) : 0;
 }

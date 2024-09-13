@@ -15,6 +15,10 @@ const Header = styled.h2`
     font-size: 2em;
     margin-left: 8px;
     color: #343a40;
+    
+        @media (max-width: 768px) {
+        text-align: center;
+    }
 `;
 
 const StyledCard = styled.div`

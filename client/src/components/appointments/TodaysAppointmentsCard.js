@@ -11,22 +11,24 @@ const StyledCard = styled(Card)`
     width: 90%;
     max-width: 600px;
     min-width: 320px;
-    box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.2);
-    border-radius: 10px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background-color: ${({ bgColor }) => bgColor || '#fff'};
 
     &:hover {
-        transform: translateY(-5px);
-        box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.25);
+        transform: translateY(-4px);
+        box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
     }
 `;
 
 const ImageContainer = styled.div`
-    width: 120px;
-    height: 120px;
+    width: 100px;
+    height: 100px;
     overflow: hidden;
     border-radius: 50%;
     margin: 10px;
+    border: 2px solid #e0e0e0;
 `;
 
 const InfoContainer = styled.div`
@@ -59,21 +61,22 @@ const StyledText = styled.p`
     margin: 5px 0;
 `;
 
+
 const StyledButton = styled(Button)`
-    margin: 8px;
-    padding: 10px 20px;
-    font-size: 1em;
-    border-radius: 5px;
+    margin: 5px;
+    padding: 8px 16px;
+    font-size: 0.9em;
+    border-radius: 6px;
     transition: background-color 0.3s ease, transform 0.2s ease;
 
     &:hover {
-        background-color: ${({ theme }) => theme.primaryColor || '#0056b3'};
-        transform: scale(1.05);
+        background-color: ${({ theme }) => theme.primaryColorHover || '#0056b3'};
+        transform: scale(1.03);
     }
 
     @media (max-width: 600px) {
         width: 100%;
-        margin: 5px 0;
+        margin: 4px 0;
     }
 `;
 

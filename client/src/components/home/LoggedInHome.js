@@ -1,9 +1,10 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import styled from "styled-components";
 import { AppointmentsContext } from "../../context/appointments";
 import { UserContext } from "../../context/user";
 import Rates from "./Rates";
 import dayjs from 'dayjs';
+import { PetsContext } from "../../context/pets";
 
 // Styled Components
 const Container = styled.div`
@@ -16,6 +17,10 @@ const Header = styled.h1`
     font-size: 2.5rem;
     margin: 10px 0;
     color: #343a40;
+
+    @media (max-width: 768px) {
+        text-align: center;
+    }
 `;
 
 const Card = styled.div`
@@ -83,11 +88,59 @@ const AppointmentItem = styled.div`
     margin: 0.5em 0;
 `;
 
+const BirthdayAlert = styled.div`
+    background: #d4edda;
+    color: #155724;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 15px;
+    font-size: 1.2rem;
+`;
+
+// Function to get the pet with the closest upcoming birthday
+const getUpcomingBirthday = (pets) => {
+    const today = dayjs();
+    let closestBirthdayPet = null;
+    let minDaysUntilBirthday = Infinity;
+
+    pets.forEach(pet => {
+        if (pet.birthdate) {
+            const birthdate = dayjs(pet.birthdate);
+            const birthdayThisYear = birthdate.year(today.year());
+            const daysUntilBirthday = birthdayThisYear.diff(today, 'day');
+
+            if (daysUntilBirthday < 0) {
+                // If birthday has already passed this year, calculate for next year
+                const birthdayNextYear = birthdayThisYear.add(1, 'year');
+                const daysUntilNextBirthday = birthdayNextYear.diff(today, 'day');
+                if (daysUntilNextBirthday < minDaysUntilBirthday) {
+                    minDaysUntilBirthday = daysUntilNextBirthday;
+                    closestBirthdayPet = pet;
+                }
+            } else if (daysUntilBirthday < minDaysUntilBirthday) {
+                minDaysUntilBirthday = daysUntilBirthday;
+                closestBirthdayPet = pet;
+            }
+        }
+    });
+
+    return closestBirthdayPet;
+};
+
 export default function LoggedInHome() {
     const { todaysAppointments, petsAppointments } = useContext(AppointmentsContext);
-    const { user, setUser } = useContext(UserContext);
+    const { user, setUser } = useContext(UserContext); // Added `pets` from context
+    const { pets } = useContext(PetsContext);
 
     const [selectedDate, setSelectedDate] = useState(dayjs().format('YYYY-MM-DD'));
+    const [upcomingBirthdayPet, setUpcomingBirthdayPet] = useState(null);
+
+    useEffect(() => {
+        if (pets) {
+            const petWithUpcomingBirthday = getUpcomingBirthday(pets);
+            setUpcomingBirthdayPet(petWithUpcomingBirthday);
+        }
+    }, [pets]);
 
     const updateUserRates = (rates) => {
         setUser({ ...user, ...rates });
@@ -137,9 +190,15 @@ export default function LoggedInHome() {
         return dayjs(a.start_time).isAfter(dayjs(b.start_time)) ? 1 : -1;
     });
 
+    // for chat gpt below 
     return (
         <Container>
-            <Header>Welcome, {user.name}</Header>
+            <Header>{user.name}</Header>
+            {upcomingBirthdayPet && (
+                <BirthdayAlert>
+                    <strong>Upcoming Birthday:</strong> {upcomingBirthdayPet.name}'s birthday is coming up on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}!
+                </BirthdayAlert>
+            )}
             <Card>
                 <CardHeader>Your Schedule</CardHeader>
                 <CardBody>
