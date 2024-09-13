@@ -31,7 +31,7 @@ const NewPetButton = styled.button`
     cursor: pointer;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
-    margin: 20px 0;
+    margin: 8px 0;
     display: block;
 
 
