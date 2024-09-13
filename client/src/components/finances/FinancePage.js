@@ -18,7 +18,7 @@ const Header = styled.h3`
     margin-bottom: 10px;
 
     @media (max-width: 768px) {
-    text-align: center;
+        text-align: center;
     }
 `;
 
@@ -118,8 +118,12 @@ function calculateMonthlyIncome(pets, year) {
             }
         });
     });
-    const totalMonths = monthlyIncome.reduce((a, b) => a + b, 0);
-    return Math.round(totalMonths / 12);
+
+    const today = new Date();
+    const monthsPassed = today.getFullYear() === year ? today.getMonth() + 1 : 12;
+    const totalIncome = monthlyIncome.slice(0, monthsPassed).reduce((a, b) => a + b, 0);
+
+    return monthsPassed > 0 ? Math.round(totalIncome / monthsPassed) : 0;
 }
 
 function calculateWeeklyIncome(pets, year) {
@@ -128,7 +132,7 @@ function calculateWeeklyIncome(pets, year) {
     const currentYearStart = new Date(year, 0, 1);
 
     // Calculate the number of weeks that have passed in the current year
-    const weeksPassed = Math.ceil(((today - currentYearStart) / 86400000 + currentYearStart.getDay() + 1) / 7);
+    const weeksPassed = Math.ceil(((today - currentYearStart) / (1000 * 60 * 60 * 24 * 7)));
 
     pets?.forEach(pet => {
         pet.invoices.forEach(inv => {
@@ -141,4 +145,3 @@ function calculateWeeklyIncome(pets, year) {
 
     return weeksPassed > 0 ? Math.round(totalIncome / weeksPassed) : 0;
 }
-

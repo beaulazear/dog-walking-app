@@ -14,9 +14,10 @@ const Container = styled.div`
 `;
 
 const Header = styled.h1`
-    font-size: 2.5rem;
-    margin: 10px 0;
+    font-size: 2rem;
     color: #343a40;
+    margin-bottom: 10px;
+    text-align: left;
 
     @media (max-width: 768px) {
         text-align: center;
