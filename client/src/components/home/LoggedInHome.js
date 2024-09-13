@@ -6,7 +6,6 @@ import Rates from "./Rates";
 import dayjs from 'dayjs';
 import { PetsContext } from "../../context/pets";
 
-// Styled Components
 const Container = styled.div`
     background: #f8f9fa;
     min-height: 100vh;
@@ -195,16 +194,11 @@ export default function LoggedInHome() {
     return (
         <Container>
             <Header>{user.name}</Header>
-            {upcomingBirthdayPet && (
-                <BirthdayAlert>
-                    <strong>Upcoming Birthday:</strong> {upcomingBirthdayPet.name}'s birthday is coming up on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}!
-                </BirthdayAlert>
-            )}
             <Card>
                 <CardHeader>Your Schedule</CardHeader>
                 <CardBody>
                     <CardText>
-                        Visit the Today page to complete walks. Invoices will be generated automatically. Select a future date below to see scheduled walks.
+                        Visit the Today page to complete walks and view auto-generated invoices. Select a future date to see scheduled walks.
                     </CardText>
                     <DateInput
                         type="date"
@@ -246,6 +240,11 @@ export default function LoggedInHome() {
                     <Rates user={user} updateUserRates={updateUserRates} />
                 </CardBody>
             </Card>
+            {upcomingBirthdayPet && (
+                <BirthdayAlert>
+                    <strong>Upcoming Birthday:</strong> {upcomingBirthdayPet.name}'s birthday is coming up on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}!
+                </BirthdayAlert>
+            )}
         </Container>
     );
 }

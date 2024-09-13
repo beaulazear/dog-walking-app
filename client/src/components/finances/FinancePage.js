@@ -108,32 +108,15 @@ function calculateTotalIncome(pets, year) {
     return totalIncome;
 }
 
-function calculateMonthlyIncome(pets, year) {
-    let monthlyIncome = Array(12).fill(0);
-    pets?.forEach(pet => {
-        pet.invoices.forEach(inv => {
-            if (inv.date_completed.slice(0, 4) === year.toString()) {
-                const month = parseInt(inv.date_completed.slice(5, 7)) - 1;
-                monthlyIncome[month] += inv.compensation;
-            }
-        });
-    });
-
-    const today = new Date();
-    const monthsPassed = today.getFullYear() === year ? today.getMonth() + 1 : 12;
-    const totalIncome = monthlyIncome.slice(0, monthsPassed).reduce((a, b) => a + b, 0);
-
-    return monthsPassed > 0 ? Math.round(totalIncome / monthsPassed) : 0;
-}
-
-function calculateWeeklyIncome(pets, year) {
+function calculateDailyAverage(pets, year) {
     let totalIncome = 0;
     const today = new Date();
-    const currentYearStart = new Date(year, 0, 1);
+    const startOfYear = new Date(year, 0, 1);
 
-    // Calculate the number of weeks that have passed in the current year
-    const weeksPassed = Math.ceil(((today - currentYearStart) / (1000 * 60 * 60 * 24 * 7)));
+    // Calculate the number of days that have passed since the start of the year
+    const daysPassed = Math.ceil((today - startOfYear) / (1000 * 60 * 60 * 24));
 
+    // Calculate total income
     pets?.forEach(pet => {
         pet.invoices.forEach(inv => {
             const invDate = new Date(inv.date_completed);
@@ -143,5 +126,18 @@ function calculateWeeklyIncome(pets, year) {
         });
     });
 
-    return weeksPassed > 0 ? Math.round(totalIncome / weeksPassed) : 0;
+    // Calculate daily average
+    return daysPassed > 0 ? totalIncome / daysPassed : 0;
+}
+
+function calculateWeeklyIncome(pets, year) {
+    const dailyAverage = calculateDailyAverage(pets, year);
+    // Multiply daily average by 7 to get weekly average
+    return Math.round(dailyAverage * 7);
+}
+
+function calculateMonthlyIncome(pets, year) {
+    const dailyAverage = calculateDailyAverage(pets, year);
+    // Multiply daily average by the average number of days in a month (~30.44)
+    return Math.round(dailyAverage * 30.44);
 }
