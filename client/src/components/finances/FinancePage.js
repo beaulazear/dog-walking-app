@@ -13,23 +13,21 @@ const Container = styled.div`
 `;
 
 const Header = styled.h3`
-    font-size: 1.5rem;
+    font-size: 1.75rem; // Larger font size for emphasis
     color: #343a40;
-    margin-bottom: 10px;
-
-    @media (max-width: 768px) {
-        text-align: center;
-    }
+    margin-bottom: 20px; // Increased margin for spacing
+    text-align: center; // Centered text for better appearance
 `;
 
 const Select = styled.select`
-    font-size: 1rem;
-    padding: 10px;
-    border-radius: 4px;
+    font-size: 1.1rem; // Slightly larger font size for better readability
+    padding: 12px; // Increased padding for better spacing
+    border-radius: 5px; // Slightly larger border radius
     border: 1px solid #ced4da;
     background: #fff;
     cursor: pointer;
     transition: border-color 0.3s ease;
+    margin-top: 20px; // Added margin for spacing below the content
 
     &:hover {
         border-color: #007bff;
@@ -39,8 +37,8 @@ const Select = styled.select`
 const DetailRow = styled.div`
     display: flex;
     justify-content: space-between;
-    margin-bottom: 10px;
-    font-size: 1rem;
+    margin-bottom: 15px; // Increased margin for better spacing
+    font-size: 1.1rem; // Slightly larger font size
 `;
 
 const DetailLabel = styled.span`
@@ -51,6 +49,7 @@ const DetailLabel = styled.span`
 const DetailValue = styled.span`
     color: #007bff;
 `;
+
 
 export default function FinancePage() {
     const [taxPercentage, setTaxPercentage] = useState(15);

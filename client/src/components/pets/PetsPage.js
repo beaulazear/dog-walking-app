@@ -26,12 +26,12 @@ const NewPetButton = styled.button`
     color: white;
     border: none;
     border-radius: 50px;
-    padding: 10px 30px;
-    font-size: 1rem;
+    padding: 12px 32px; // Increased padding for better spacing
+    font-size: 1.1rem; // Slightly larger font size
     cursor: pointer;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
-    margin: 8px 0;
+    margin: 15px 0; // Increased margin for better spacing
     display: block;
 
     &:hover {
@@ -87,10 +87,7 @@ const CardText = styled.p`
 
 const FilterWrapper = styled.div`
     margin-bottom: 20px;
-
-    @media (max-width: 768px) {
-        text-align: center;
-    }
+    text-align: center; // Centered on smaller screens
 
     @media (min-width: 769px) {
         text-align: left;
@@ -98,12 +95,13 @@ const FilterWrapper = styled.div`
 `;
 
 const FilterSelect = styled.select`
-    padding: 10px;
-    font-size: 1rem;
+    padding: 12px; // Increased padding for better spacing
+    font-size: 1.1rem; // Slightly larger font size
     border-radius: 5px;
     border: 1px solid #ddd;
     background-color: white;
     color: #343a40;
+    margin-top: 8px; // Added margin for spacing between filter and other elements
 `;
 
 export default function PetsPage() {
