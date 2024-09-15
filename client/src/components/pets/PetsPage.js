@@ -14,7 +14,7 @@ const Title = styled.h2`
     font-size: 2rem;
     color: #343a40;
     margin-bottom: 10px;
-    text-align: left;
+    text-align: center; // Center the title
 
     @media (max-width: 768px) {
         text-align: center;
@@ -31,8 +31,8 @@ const NewPetButton = styled.button`
     cursor: pointer;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
-    margin: 15px 0; // Increased margin for better spacing
-    display: block;
+    margin: 15px auto; // Center the button
+    display: block; // Centering in button wrapper
 
     &:hover {
         background-color: #c2185b;
@@ -49,11 +49,8 @@ const NewPetButton = styled.button`
 
 const ButtonWrapper = styled.div`
     display: flex;
-    justify-content: center;
-
-    @media (min-width: 769px) {
-        justify-content: flex-start;
-    }
+    justify-content: center; // Center the button
+    margin-bottom: 20px;
 `;
 
 const NoPetsCard = styled.div`
@@ -87,10 +84,10 @@ const CardText = styled.p`
 
 const FilterWrapper = styled.div`
     margin-bottom: 20px;
-    text-align: center; // Centered on smaller screens
+    text-align: center; // Center the filter
 
     @media (min-width: 769px) {
-        text-align: left;
+        text-align: center; // Center on larger screens
     }
 `;
 
@@ -102,6 +99,28 @@ const FilterSelect = styled.select`
     background-color: white;
     color: #343a40;
     margin-top: 8px; // Added margin for spacing between filter and other elements
+`;
+
+const PetStats = styled.div`
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 600px;
+    text-align: center; // Center text inside PetStats
+`;
+
+const PetStatsTitle = styled.h3`
+    font-size: 1.5rem;
+    color: #007bff;
+    margin-bottom: 10px;
+`;
+
+const PetStatsText = styled.p`
+    font-size: 1.1rem;
+    color: #495057;
+    margin: 5px 0;
 `;
 
 export default function PetsPage() {
@@ -144,9 +163,19 @@ export default function PetsPage() {
         return true;
     });
 
+    const activePetsCount = pets.filter(pet => pet.active).length;
+    const inactivePetsCount = pets.filter(pet => !pet.active).length;
+    const totalPetsCount = pets.length;
+
     return (
         <Container>
             <Title>Pets & Appointments</Title>
+            <PetStats>
+                <PetStatsTitle>Pet Statistics</PetStatsTitle>
+                <PetStatsText><strong>Total Pets:</strong> {totalPetsCount}</PetStatsText>
+                <PetStatsText><strong>Active Pets:</strong> {activePetsCount}</PetStatsText>
+                <PetStatsText><strong>Inactive Pets:</strong> {inactivePetsCount}</PetStatsText>
+            </PetStats>
             <ButtonWrapper>
                 <NewPetButton onClick={updateDisplayButton}>Add New Pet</NewPetButton>
             </ButtonWrapper>
