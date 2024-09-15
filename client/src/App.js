@@ -15,28 +15,43 @@ import { AppointmentsProvider } from './context/appointments';
 import { InvoicesProvider } from './context/invoices';
 import { PetsProvider } from "./context/pets";
 
+const AppContainer = styled.div`
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+`;
+
+const MainContent = styled.div`
+  flex: 1; // Takes up remaining space to push the button to the bottom
+  padding-bottom: 70px; // Space for the button
+`;
+
 const StyledButton = styled.button`
   position: fixed;
-  bottom: 0;
-  right: 0;
-  margin: 10px;
-  padding: 10px 20px;
-  background-color: #ccc;
-  color: #333;
-  border: none;
+  bottom: 20px; // Space from the bottom
+  left: 50%; // Center horizontally
+  transform: translateX(-50%); // Adjust for centering
+  padding: 10px 20px; // Adequate padding for a sleek look
+  background-color: transparent; // Transparent background
+  color: #007bff; // Primary color for text
+  border: 1px solid #007bff; // Border matching the text color
+  border-radius: 30px; // Rounded button
   cursor: pointer;
-  font-size: 0.9rem;
-  border-radius: 5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: background-color 0.3s ease;
+  font-size: 0.9rem; // Slightly smaller text
+  font-weight: 500; // Medium font weight
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); // Subtle shadow
 
   &:hover {
-    background-color: #bbb;
+    background-color: #007bff; // Background color on hover
+    color: #fff; // White text on hover
+    border-color: #007bff; // Maintain border color
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15); // Slightly larger shadow on hover
   }
 
   @media (max-width: 600px) {
-    padding: 8px 16px;
-    font-size: 0.8rem;
+    padding: 8px 16px; // Adjust padding for mobile
+    font-size: 0.8rem; // Adjust font size for mobile
   }
 `;
 
@@ -61,37 +76,39 @@ function App() {
   const isLoggedIn = user && Object.keys(user).length > 0; // Check if user has data
 
   return (
-    <div>
-      {isLoggedIn ? (
-        <>
-          <PageNavLinks />
-          <AppointmentsProvider>
-            <InvoicesProvider>
-              <PetsProvider>
-                <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signuppage" element={<Signup />} />
-                  <Route path="/petspage" element={<PetsPage />} />
-                  <Route path="/todayswalkspage" element={<TodaysWalksPage />} />
-                  <Route path="/invoicespage" element={<InvoicesPage />} />
-                  <Route path="/" element={<LoggedInHome />} />
-                </Routes>
-              </PetsProvider>
-            </InvoicesProvider>
-          </AppointmentsProvider>
-          <StyledButton onClick={handleLogout}>Logout</StyledButton>
-        </>
-      ) : (
-        <>
-          <PageNavLinksNotLoggedIn />
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/signuppage" element={<Signup />} />
-            <Route path="/" element={<HomePage />} />
-          </Routes>
-        </>
-      )}
-    </div>
+    <AppContainer>
+      <MainContent>
+        {isLoggedIn ? (
+          <>
+            <PageNavLinks />
+            <AppointmentsProvider>
+              <InvoicesProvider>
+                <PetsProvider>
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signuppage" element={<Signup />} />
+                    <Route path="/petspage" element={<PetsPage />} />
+                    <Route path="/todayswalkspage" element={<TodaysWalksPage />} />
+                    <Route path="/invoicespage" element={<InvoicesPage />} />
+                    <Route path="/" element={<LoggedInHome />} />
+                  </Routes>
+                </PetsProvider>
+              </InvoicesProvider>
+            </AppointmentsProvider>
+          </>
+        ) : (
+          <>
+            <PageNavLinksNotLoggedIn />
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/signuppage" element={<Signup />} />
+              <Route path="/" element={<HomePage />} />
+            </Routes>
+          </>
+        )}
+      </MainContent>
+      {isLoggedIn && <StyledButton onClick={handleLogout}>Logout</StyledButton>}
+    </AppContainer>
   );
 }
 
