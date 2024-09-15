@@ -10,17 +10,16 @@ const Container = styled.div`
     background: #f8f9fa;
     min-height: 100vh;
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center; // Center everything horizontally
 `;
 
 const Header = styled.h1`
     font-size: 2rem;
     color: #343a40;
     margin-bottom: 10px;
-    text-align: left;
-
-    @media (max-width: 768px) {
-        text-align: center;
-    }
+    text-align: center; // Center header text
 `;
 
 const Card = styled.div`
@@ -32,11 +31,11 @@ const Card = styled.div`
     max-width: 800px;
     width: 100%;
     transition: transform 0.3s ease-in-out;
-
-    &:hover {
-        transform: scale(1.02);
-    }
+    display: flex;
+    flex-direction: column;
+    align-items: center; // Center content inside Card
 `;
+
 
 const CardHeader = styled.h5`
     font-size: 1.75rem;
@@ -89,15 +88,18 @@ const AppointmentItem = styled.div`
 `;
 
 const BirthdayAlert = styled.div`
-    background: #d4edda;
-    color: #155724;
-    padding: 10px;
-    border-radius: 5px;
-    margin-top: 15px;
+    background: #d1ecf1; /* Light blue background */
+    color: #0c5460; /* Darker blue text */
+    padding: 20px;
+    border-radius: 8px;
+    margin: 15px 0;
     font-size: 1.2rem;
+    max-width: 800px;
+    width: 100%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center; // Center text inside BirthdayAlert
 `;
 
-// Function to get the pet with the closest upcoming birthday
 const getUpcomingBirthday = (pets) => {
     const today = dayjs();
     let closestBirthdayPet = null;
@@ -194,11 +196,6 @@ export default function LoggedInHome() {
     return (
         <Container>
             <Header>{user.name}</Header>
-            {upcomingBirthdayPet && (
-                <BirthdayAlert>
-                    <strong>Upcoming Birthday:</strong> {upcomingBirthdayPet.name}'s birthday is coming up on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}!
-                </BirthdayAlert>
-            )}
             <Card>
                 <CardHeader>Your Schedule</CardHeader>
                 <CardBody>
@@ -229,6 +226,11 @@ export default function LoggedInHome() {
                     </ListGroup>
                 </CardBody>
             </Card>
+            {upcomingBirthdayPet && (
+                <BirthdayAlert>
+                    <strong>Upcoming Birthday:</strong> {upcomingBirthdayPet.name}'s birthday is coming up on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}!
+                </BirthdayAlert>
+            )}
             <Card>
                 <CardHeader>Set Your Rates</CardHeader>
                 <CardBody>
