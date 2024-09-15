@@ -39,6 +39,16 @@ class PetsController < ApplicationController
         end
     end
 
+    def update_active_status
+        pet = @current_user.pets.find_by(id: params[:id])
+        if pet
+          pet.update(active: params[:active])
+          render json: pet, status: :ok
+        else
+          render json: { error: "Pet not found" }, status: :not_found
+        end
+      end
+
     private
 
     def pet_params
@@ -47,6 +57,6 @@ class PetsController < ApplicationController
 
 
     def pet_params_update
-        params.permit(:user_id, :name, :spayed_neutered, :supplies_location, :behavorial_notes, :birthdate, :sex, :allergies, :address, :profile_pic, :id)
+        params.permit(:user_id, :name, :active, :spayed_neutered, :supplies_location, :behavorial_notes, :birthdate, :sex, :allergies, :address, :profile_pic, :id)
     end
 end

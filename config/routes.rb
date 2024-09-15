@@ -18,6 +18,7 @@ Rails.application.routes.draw do
 
   patch '/appointments/:id/canceled', to: 'appointments#canceled'
   get '/pets_appointments', to: 'appointments#pet_appointments'
+  patch '/pets/:id/active', to: 'pets#update_active_status'
 
   # Routing logic: fallback requests for React Router.
   # Leave this here to help deploy your app later!

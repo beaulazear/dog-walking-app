@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useState, useContext } from "react";
 import styled from "styled-components";
 import { PetsContext } from "../../context/pets";
 import FinancePage from "../finances/FinancePage";
@@ -15,8 +15,8 @@ const Header = styled.h2`
     font-size: 2em;
     margin-left: 8px;
     color: #343a40;
-    
-        @media (max-width: 768px) {
+
+    @media (max-width: 768px) {
         text-align: center;
     }
 `;
@@ -48,15 +48,60 @@ const CardText = styled.p`
     color: #6c757d;
 `;
 
+const FilterWrapper = styled.div`
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+
+    @media (min-width: 769px) {
+        justify-content: flex-start;
+    }
+`;
+
+const FilterSelect = styled.select`
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ced4da;
+    font-size: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    @media (max-width: 768px) {
+        margin: 0 auto;
+    }
+`;
+
 export default function InvoicesPage() {
     const { pets } = useContext(PetsContext);
+    const [filter, setFilter] = useState("active");
 
-    if (pets?.length > 0) {
+    function handleFilterChange(e) {
+        setFilter(e.target.value);
+    }
+
+    function filterPets(pets) {
+        if (filter === "active") {
+            return pets.filter(pet => pet.active);
+        } else if (filter === "inactive") {
+            return pets.filter(pet => !pet.active);
+        }
+        return pets;
+    }
+
+    const filteredPets = filterPets(pets);
+
+    if (filteredPets?.length > 0) {
         return (
             <Container>
                 <Header>Finances</Header>
                 <FinancePage />
-                {pets.map((pet) => (
+                <FilterWrapper>
+                    <FilterSelect value={filter} onChange={handleFilterChange}>
+                        <option value="active">Active Pets</option>
+                        <option value="inactive">Inactive Pets</option>
+                        <option value="both">Both Active and Inactive</option>
+                    </FilterSelect>
+                </FilterWrapper>
+                {filteredPets.map((pet) => (
                     <InvoicePetCard key={pet.id} pet={pet} />
                 ))}
             </Container>

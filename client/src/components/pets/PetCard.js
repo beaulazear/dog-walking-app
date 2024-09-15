@@ -26,6 +26,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
     const [suppliesLocation, setSuppliesLocation] = useState(pet.supplies_location);
     const [behavioralNotes, setBehavioralNotes] = useState(pet.behavorial_notes);
     const [spayedOrNeutered, setSpayedOrNeutered] = useState(pet.spayed_neutered);
+    const [active, setActive] = useState(pet.active); // new state for active/inactive
 
     const [newAptButton, setNewAptButton] = useState(false);
 
@@ -50,6 +51,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
         formData.append('supplies_location', suppliesLocation);
         formData.append('allergies', allergies);
         formData.append('behavorial_notes', behavioralNotes);
+        formData.append('active', active); // include active status
         // please note spelling of behavioral is wrong in the database, do not change spelling how it is in this component!
 
         if (profilePic instanceof File) {
@@ -168,9 +170,11 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                                 <div style={{ flex: '1 1 auto', paddingRight: '20px' }}>
                                     <Card.Title style={{ fontSize: '25px', fontWeight: 'bold' }}>{pet.name}</Card.Title>
                                     <Card.Text>
-                                        {pet.sex}, {pet.spayed_neutered ? "fixed" : "Not fixed"}
-                                        <br></br>
+                                        {pet.sex}, {pet.spayed_neutered ? "Fixed" : "Not fixed"}
+                                        <br />
                                         {pet.address}
+                                        <br />
+                                        <b>Status:</b> {pet.active ? "Active" : "Inactive"}
                                     </Card.Text>
                                 </div>
                                 <Card.Img
@@ -217,6 +221,15 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                                     }} />
                                 <Form.Label>Pet's Name</Form.Label>
                                 <Form.Control onChange={(e) => setName(e.target.value)} value={name} type="text" placeholder="Enter name" />
+                            </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Check
+                                    type="switch"
+                                    id="active-status"
+                                    label={active ? "Active" : "Inactive"}
+                                    checked={active}
+                                    onChange={(e) => setActive(e.target.checked)}
+                                />
                             </Form.Group>
                             <Form.Group className="mb-3" controlId="formBasicaddress">
                                 <Form.Label>Address</Form.Label>

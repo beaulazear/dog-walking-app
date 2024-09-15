@@ -1,5 +1,5 @@
 class PetSerializer < ActiveModel::Serializer
-  attributes :id, :name, :birthdate, :sex, :spayed_neutered, :address, :behavorial_notes, :supplies_location, :allergies, :profile_pic
+  attributes :active, :id, :name, :birthdate, :sex, :spayed_neutered, :address, :behavorial_notes, :supplies_location, :allergies, :profile_pic
 
   has_one :user
   has_many :appointments

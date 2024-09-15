@@ -34,7 +34,6 @@ const NewPetButton = styled.button`
     margin: 8px 0;
     display: block;
 
-
     &:hover {
         background-color: #c2185b;
         transform: translateY(-2px);
@@ -51,7 +50,7 @@ const NewPetButton = styled.button`
 const ButtonWrapper = styled.div`
     display: flex;
     justify-content: center;
-    
+
     @media (min-width: 769px) {
         justify-content: flex-start;
     }
@@ -86,8 +85,30 @@ const CardText = styled.p`
     color: #6c757d;
 `;
 
+const FilterWrapper = styled.div`
+    margin-bottom: 20px;
+
+    @media (max-width: 768px) {
+        text-align: center;
+    }
+
+    @media (min-width: 769px) {
+        text-align: left;
+    }
+`;
+
+const FilterSelect = styled.select`
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    background-color: white;
+    color: #343a40;
+`;
+
 export default function PetsPage() {
     const { pets, setPets } = useContext(PetsContext);
+    const [filter, setFilter] = useState("active");
     const [displayFormButton, setDisplayFormButton] = useState(false);
 
     function sortObjectsByName(objects) {
@@ -115,6 +136,16 @@ export default function PetsPage() {
         setPets(remainingPets);
     }
 
+    function handleFilterChange(e) {
+        setFilter(e.target.value);
+    }
+
+    const filteredPets = pets.filter(pet => {
+        if (filter === "active") return pet.active;
+        if (filter === "inactive") return !pet.active;
+        return true;
+    });
+
     return (
         <Container>
             <Title>Pets & Appointments</Title>
@@ -124,12 +155,19 @@ export default function PetsPage() {
             {displayFormButton && pets && (
                 <NewPetForm updateUserPets={addNewPet} />
             )}
+            <FilterWrapper>
+                <FilterSelect value={filter} onChange={handleFilterChange}>
+                    <option value="active">Active Pets</option>
+                    <option value="inactive">Inactive Pets</option>
+                    <option value="both">Both Active and Inactive</option>
+                </FilterSelect>
+            </FilterWrapper>
             {pets === null ? (
                 <div>Loading...</div>
             ) : (
                 <div>
-                    {pets.length > 0 ? (
-                        pets.map(pet => (
+                    {filteredPets.length > 0 ? (
+                        filteredPets.map(pet => (
                             <PetCard
                                 key={pet.id}
                                 pet={pet}
