@@ -48,13 +48,32 @@ const CardText = styled.p`
     color: #6c757d;
 `;
 
-const FilterWrapper = styled.div`
-    display: flex;
-    justify-content: center;
+const FilterSection = styled.div`
     margin-bottom: 20px;
+    text-align: left; // Align the section to the left on larger screens
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 
     @media (min-width: 769px) {
-        justify-content: flex-start;
+        text-align: left;
+        align-items: flex-start; // Align the filter and title to the left on larger screens
+    }
+`;
+
+
+const FilterTitle = styled.h3`
+    font-size: 1.5rem;
+    color: #007bff;
+    margin-bottom: 10px;
+`;
+
+const FilterWrapper = styled.div`
+    display: flex;
+    justify-content: flex-start; // Align the filter to the left
+
+    @media (min-width: 769px) {
+        justify-content: flex-start; // Maintain left alignment on larger screens
     }
 `;
 
@@ -94,13 +113,16 @@ export default function InvoicesPage() {
             <Container>
                 <Header>Finances</Header>
                 <FinancePage />
-                <FilterWrapper>
-                    <FilterSelect value={filter} onChange={handleFilterChange}>
-                        <option value="active">Active Pets</option>
-                        <option value="inactive">Inactive Pets</option>
-                        <option value="both">Both Active and Inactive</option>
-                    </FilterSelect>
-                </FilterWrapper>
+                <FilterSection>
+                    <FilterTitle>Filter Pets</FilterTitle>
+                    <FilterWrapper>
+                        <FilterSelect value={filter} onChange={handleFilterChange}>
+                            <option value="active">Active Pets</option>
+                            <option value="inactive">Inactive Pets</option>
+                            <option value="both">Both Active and Inactive</option>
+                        </FilterSelect>
+                    </FilterWrapper>
+                </FilterSection>
                 {filteredPets.map((pet) => (
                     <InvoicePetCard key={pet.id} pet={pet} />
                 ))}

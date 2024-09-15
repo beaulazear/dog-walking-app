@@ -50,7 +50,6 @@ const NewPetButton = styled.button`
 const ButtonWrapper = styled.div`
     display: flex;
     justify-content: center; // Center the button
-    margin-bottom: 20px;
 `;
 
 const NoPetsCard = styled.div`
@@ -107,8 +106,8 @@ const PetStats = styled.div`
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 20px;
     margin: 20px auto;
-    max-width: 600px;
-    text-align: center; // Center text inside PetStats
+    max-width: 350px;
+    text-align: left; // Center text inside PetStats
 `;
 
 const PetStatsTitle = styled.h3`
@@ -170,12 +169,6 @@ export default function PetsPage() {
     return (
         <Container>
             <Title>Pets & Appointments</Title>
-            <PetStats>
-                <PetStatsTitle>Pet Statistics</PetStatsTitle>
-                <PetStatsText><strong>Total Pets:</strong> {totalPetsCount}</PetStatsText>
-                <PetStatsText><strong>Active Pets:</strong> {activePetsCount}</PetStatsText>
-                <PetStatsText><strong>Inactive Pets:</strong> {inactivePetsCount}</PetStatsText>
-            </PetStats>
             <ButtonWrapper>
                 <NewPetButton onClick={updateDisplayButton}>Add New Pet</NewPetButton>
             </ButtonWrapper>
@@ -189,6 +182,12 @@ export default function PetsPage() {
                     <option value="both">Both Active and Inactive</option>
                 </FilterSelect>
             </FilterWrapper>
+            <PetStats>
+                <PetStatsTitle>Pet Statistics</PetStatsTitle>
+                <PetStatsText><strong>Total Pets:</strong> {totalPetsCount}</PetStatsText>
+                <PetStatsText><strong>Active Pets:</strong> {activePetsCount}</PetStatsText>
+                <PetStatsText><strong>Inactive Pets:</strong> {inactivePetsCount}</PetStatsText>
+            </PetStats>
             {pets === null ? (
                 <div>Loading...</div>
             ) : (
