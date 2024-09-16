@@ -179,7 +179,7 @@ export default function PetsPage() {
                 <FilterSelect value={filter} onChange={handleFilterChange}>
                     <option value="active">Active Pets</option>
                     <option value="inactive">Inactive Pets</option>
-                    <option value="both">Both Active and Inactive</option>
+                    <option value="both">Active & Inactive Pets</option>
                 </FilterSelect>
             </FilterWrapper>
             <PetStats>
