@@ -53,7 +53,7 @@ const FilterSection = styled.div`
     text-align: left; // Align the section to the left on larger screens
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: left;
 
     @media (min-width: 769px) {
         text-align: left;
@@ -69,7 +69,6 @@ const FilterTitle = styled.h3`
 `;
 
 const FilterWrapper = styled.div`
-    display: flex;
     justify-content: flex-start; // Align the filter to the left
 
     @media (min-width: 769px) {

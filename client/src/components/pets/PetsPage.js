@@ -14,7 +14,7 @@ const Title = styled.h2`
     font-size: 2rem;
     color: #343a40;
     margin-bottom: 10px;
-    text-align: center; // Center the title
+    text-align: center;
 
     @media (max-width: 768px) {
         text-align: center;
@@ -26,13 +26,13 @@ const NewPetButton = styled.button`
     color: white;
     border: none;
     border-radius: 50px;
-    padding: 12px 32px; // Increased padding for better spacing
-    font-size: 1.1rem; // Slightly larger font size
+    padding: 12px 32px;
+    font-size: 1.1rem;
     cursor: pointer;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
-    margin: 15px auto; // Center the button
-    display: block; // Centering in button wrapper
+    margin: 15px auto;
+    display: block;
 
     &:hover {
         background-color: #c2185b;
@@ -49,7 +49,7 @@ const NewPetButton = styled.button`
 
 const ButtonWrapper = styled.div`
     display: flex;
-    justify-content: center; // Center the button
+    justify-content: center;
 `;
 
 const NoPetsCard = styled.div`
@@ -83,21 +83,27 @@ const CardText = styled.p`
 
 const FilterWrapper = styled.div`
     margin-bottom: 20px;
-    text-align: center; // Center the filter
+    text-align: left;
 
     @media (min-width: 769px) {
-        text-align: center; // Center on larger screens
+        text-align: left;
     }
 `;
 
+const FilterTitle = styled.h3`
+    font-size: 1.5rem;
+    color: #007bff;
+    margin-bottom: 10px;
+`;
+
 const FilterSelect = styled.select`
-    padding: 12px; // Increased padding for better spacing
-    font-size: 1.1rem; // Slightly larger font size
+    padding: 12px;
+    font-size: 1.1rem;
     border-radius: 5px;
     border: 1px solid #ddd;
     background-color: white;
     color: #343a40;
-    margin-top: 8px; // Added margin for spacing between filter and other elements
+    margin-top: 8px;
 `;
 
 const PetStats = styled.div`
@@ -107,7 +113,7 @@ const PetStats = styled.div`
     padding: 20px;
     margin: 20px auto;
     max-width: 350px;
-    text-align: left; // Center text inside PetStats
+    text-align: left;
 `;
 
 const PetStatsTitle = styled.h3`
@@ -169,6 +175,12 @@ export default function PetsPage() {
     return (
         <Container>
             <Title>Pets & Appointments</Title>
+            <PetStats>
+                <PetStatsTitle>Pet Statistics</PetStatsTitle>
+                <PetStatsText><strong>Total Pets:</strong> {totalPetsCount}</PetStatsText>
+                <PetStatsText><strong>Active Pets:</strong> {activePetsCount}</PetStatsText>
+                <PetStatsText><strong>Inactive Pets:</strong> {inactivePetsCount}</PetStatsText>
+            </PetStats>
             <ButtonWrapper>
                 <NewPetButton onClick={updateDisplayButton}>Add New Pet</NewPetButton>
             </ButtonWrapper>
@@ -176,18 +188,13 @@ export default function PetsPage() {
                 <NewPetForm updateUserPets={addNewPet} />
             )}
             <FilterWrapper>
+                <FilterTitle>Filter Pets</FilterTitle> {/* Header for the filter */}
                 <FilterSelect value={filter} onChange={handleFilterChange}>
                     <option value="active">Active Pets</option>
                     <option value="inactive">Inactive Pets</option>
                     <option value="both">Active & Inactive Pets</option>
                 </FilterSelect>
             </FilterWrapper>
-            <PetStats>
-                <PetStatsTitle>Pet Statistics</PetStatsTitle>
-                <PetStatsText><strong>Total Pets:</strong> {totalPetsCount}</PetStatsText>
-                <PetStatsText><strong>Active Pets:</strong> {activePetsCount}</PetStatsText>
-                <PetStatsText><strong>Inactive Pets:</strong> {inactivePetsCount}</PetStatsText>
-            </PetStats>
             {pets === null ? (
                 <div>Loading...</div>
             ) : (
