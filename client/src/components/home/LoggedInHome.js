@@ -6,6 +6,30 @@ import Rates from "./Rates";
 import dayjs from 'dayjs';
 import { PetsContext } from "../../context/pets";
 
+const Intro = styled.div`
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin: 20px 0;
+    max-width: 900px;
+    text-align: center;
+`;
+
+const IntroHeader = styled.h2`
+    font-size: 1.75rem;
+    color: #007bff;
+    margin-bottom: 15px;
+`;
+
+const IntroText = styled.p`
+    color: #495057;
+    font-size: 1.125rem;
+    line-height: 1.6;
+    margin: 0;
+    display: ${({ visible }) => (visible ? 'block' : 'none')};
+`;
+
 const Container = styled.div`
     background: #f4f7f9;
     min-height: 100vh;
@@ -92,13 +116,21 @@ const ListGroupItem = styled.li`
     display: flex;
     align-items: center;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    }
 `;
 
 const AppointmentItem = styled.div`
     flex: 1;
     font-size: 1rem;
     color: #495057;
-    margin-left: 15px;
+    margin-left: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 `;
 
 const BirthdayAlert = styled.div`
@@ -112,13 +144,40 @@ const BirthdayAlert = styled.div`
     width: 100%;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-direction: column;
+`;
+
+const BirthdayPetImage = styled.img`
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 15px;
 `;
 
 const PetImage = styled.img`
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     object-fit: cover;
+    margin-right: 15px;
+`;
+
+const ToggleButton = styled.button`
+    background: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-bottom: 15px;
+    &:hover {
+        background: #0056b3;
+    }
 `;
 
 const getUpcomingBirthday = (pets) => {
@@ -150,12 +209,13 @@ const getUpcomingBirthday = (pets) => {
 };
 
 export default function LoggedInHome() {
-    const { todaysAppointments, petsAppointments } = useContext(AppointmentsContext);
+    const { petsAppointments } = useContext(AppointmentsContext);
     const { user, setUser } = useContext(UserContext);
     const { pets } = useContext(PetsContext);
 
     const [selectedDate, setSelectedDate] = useState(dayjs().format('YYYY-MM-DD'));
     const [upcomingBirthdayPet, setUpcomingBirthdayPet] = useState(null);
+    const [showIntroText, setShowIntroText] = useState(false);
 
     useEffect(() => {
         if (pets) {
@@ -214,7 +274,17 @@ export default function LoggedInHome() {
 
     return (
         <Container>
-            <Header>Welcome, {user.name}</Header>
+            <Intro>
+                <IntroHeader>🐕 Welcome 🐈</IntroHeader>
+                <ToggleButton onClick={() => setShowIntroText(!showIntroText)}>
+                    {showIntroText ? 'Hide Instructions' : 'Need Instructions?'}
+                </ToggleButton>
+                <IntroText visible={showIntroText}>
+                    Use this app to manage your dog walking appointments. On the homepage, select a date to view upcoming appointments. Update your rates in the Rate Settings section. Visit the Pets page to add new pets, create appointments, and manage existing ones. On the Today page, you will find every appointment scheduled for today; complete these to generate new invoices. Go to the Finance page to view current and past invoices and manage these along with additional income capabilities.
+
+                </IntroText>
+            </Intro>
+
             <Card>
                 <CardHeader>Schedule Overview</CardHeader>
                 <CardBody>
@@ -247,7 +317,12 @@ export default function LoggedInHome() {
             </Card>
             {upcomingBirthdayPet && (
                 <BirthdayAlert>
-                    <strong>Upcoming Birthday:</strong> {upcomingBirthdayPet.name}'s birthday is on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}!
+                    {upcomingBirthdayPet.profile_pic && (
+                        <BirthdayPetImage src={upcomingBirthdayPet.profile_pic} alt={upcomingBirthdayPet.name} />
+                    )}
+                    <div>
+                        <strong>Upcoming Birthday:</strong> {upcomingBirthdayPet.name}'s birthday is on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}!
+                    </div>
                 </BirthdayAlert>
             )}
             <Card>
@@ -268,5 +343,8 @@ export default function LoggedInHome() {
         </Container>
     );
 }
+
+
+
 
 

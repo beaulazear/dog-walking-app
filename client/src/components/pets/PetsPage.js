@@ -7,7 +7,7 @@ import PetCard from "./PetCard";
 // Styled Components
 const Container = styled.div`
     background: #f8f9fa;
-    padding: 20px;
+    padding: 10px;
 `;
 
 const Title = styled.h2`
@@ -127,7 +127,7 @@ const PetStats = styled.div`
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 20px;
-    margin: 20px auto;
+    margin: 15px auto;
     max-width: 350px; /* Match the smaller max-width */
     text-align: left;
 `;
@@ -190,7 +190,6 @@ export default function PetsPage() {
 
     return (
         <Container>
-            <Title>Pets & Appointments</Title>
             <PetStats>
                 <PetStatsTitle>Pet Statistics</PetStatsTitle>
                 <PetStatsText><strong>Total Pets:</strong> {totalPetsCount}</PetStatsText>

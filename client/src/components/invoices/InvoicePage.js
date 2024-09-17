@@ -7,7 +7,7 @@ import InvoicePetCard from "./InvoicePetCard";
 // Styled Components
 const Container = styled.div`
     background: #f8f9fa;
-    padding: 20px;
+    padding: 10px;
     margin: 0 10px;
 `;
 
@@ -111,7 +111,6 @@ export default function InvoicesPage() {
 
     return (
         <Container>
-            <Header>Finances</Header>
             <FinancePage />
             <Description>
                 Click on a pet to view their new invoices. You can mark invoices as pending or paid as they are sent to the client.
