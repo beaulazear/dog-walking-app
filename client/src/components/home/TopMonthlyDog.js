@@ -40,9 +40,10 @@ const PetInfo = styled.p`
 export default function TopMonthlyDog() {
     const { pets } = useContext(PetsContext);
 
-    // Find the pet with the most appointments
+    // Find the pet with the most invoices
     const topPet = pets.reduce((maxPet, pet) => {
-        if (pet.appointments.length > (maxPet.appointments?.length || 0)) {
+        // Assuming each pet object has an `invoices` array
+        if (pet.invoices?.length > (maxPet.invoices?.length || 0)) {
             return pet;
         }
         return maxPet;
@@ -52,8 +53,8 @@ export default function TopMonthlyDog() {
         <Card>
             <PetImage src={topPet.profile_pic || 'https://via.placeholder.com/100'} alt={topPet.name} />
             <PetName>{topPet.name}</PetName>
-            <PetInfo>Most Appointments: {topPet.appointments?.length || 0}</PetInfo>
-            <PetInfo>Congratulations {topPet.name}! 🎉</PetInfo>
+            <PetInfo>Most Walks: {topPet.invoices?.length || 0}</PetInfo>
+            <PetInfo>Congratulations {topPet.name}! 💕</PetInfo>
         </Card>
     );
 }

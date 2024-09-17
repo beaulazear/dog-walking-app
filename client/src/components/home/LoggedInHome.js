@@ -38,19 +38,17 @@ const IntroHeader = styled.h2`
     margin: 0 auto; /* Centering the IntroHeader */
 `;
 
-
 const IntroText = styled.p`
     color: #495057;
     font-size: 1.125rem;
     line-height: 1.6;
     margin: 0;
-    display: block; /* Always display */
     text-align: left;
     padding: 0 10px;
     max-width: 800px;
     margin: 0 auto;
+    display: ${props => (props.visible ? 'block' : 'none')}; /* Conditionally render based on visibility */
 `;
-
 
 const Container = styled.div`
     background: #f4f7f9;
@@ -61,13 +59,6 @@ const Container = styled.div`
     align-items: center;
     max-width: 1200px;
     margin: 0 auto;
-`;
-
-const Header = styled.h1`
-    font-size: 2rem;
-    color: #333;
-    margin-bottom: 20px;
-    text-align: center;
 `;
 
 const Card = styled.div`
@@ -201,6 +192,7 @@ const ToggleButton = styled.button`
     cursor: pointer;
     font-size: 1rem;
     margin-bottom: 15px;
+    margin-top: 20px;
     transition: background 0.3s ease;
     &:hover {
         background: #0056b3;
@@ -311,7 +303,6 @@ export default function LoggedInHome() {
                 </ToggleButton>
                 <IntroText visible={showIntroText}>
                     Use this app to manage your dog walking appointments. On the homepage, select a date to view upcoming appointments. Update your rates in the Rate Settings section. Visit the Pets page to add new pets, create appointments, and manage existing ones. On the Today page, you will find every appointment scheduled for today; complete these to generate new invoices. Go to the Finance page to view current and past invoices and manage these along with additional income capabilities.
-
                 </IntroText>
             </Intro>
 
@@ -353,7 +344,7 @@ export default function LoggedInHome() {
                     <div>
                         <strong>Upcoming Birthday:</strong>
                         <br />
-                         {upcomingBirthdayPet.name}'s birthday is on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}! 🎉
+                        {upcomingBirthdayPet.name}'s birthday is on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}! 🎉
                     </div>
                 </BirthdayAlert>
             )}
