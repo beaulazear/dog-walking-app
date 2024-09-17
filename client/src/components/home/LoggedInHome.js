@@ -192,7 +192,7 @@ const ToggleButton = styled.button`
     cursor: pointer;
     font-size: 1rem;
     margin-bottom: 15px;
-    margin-top: 20px;
+    margin-top: 30px;
     transition: background 0.3s ease;
     &:hover {
         background: #0056b3;
