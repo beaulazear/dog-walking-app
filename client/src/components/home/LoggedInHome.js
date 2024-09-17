@@ -147,19 +147,18 @@ const AppointmentItem = styled.div`
 `;
 
 const BirthdayAlert = styled.div`
-    background: #ffffff; /* Same background as other cards */
+    background: #f8f9fa;
     border-radius: 12px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
     padding: 20px;
     margin: 20px 0;
     font-size: 1.25rem;
     max-width: 900px;
     width: 100%;
-    text-align: center;
     display: flex;
     align-items: center;
-    gap: 15px;
-    flex-direction: column;
+    gap: 20px;
+    flex-direction: row; /* Changed to row for alignment like TopMonthlyDog */
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     &:hover {
         transform: translateY(-5px);
@@ -168,11 +167,28 @@ const BirthdayAlert = styled.div`
 `;
 
 const BirthdayPetImage = styled.img`
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     object-fit: cover;
-    margin-bottom: 15px;
+`;
+
+const BirthdayText = styled.div`
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    gap: 5px;
+`;
+
+const BirthdayPetName = styled.h3`
+    font-size: 1.5rem;
+    color: #007bff;
+    margin: 0;
+`;
+
+const BirthdayMessage = styled.p`
+    color: #495057;
+    margin: 0;
 `;
 
 const PetImage = styled.img`
@@ -339,14 +355,11 @@ export default function LoggedInHome() {
             </Card>
             {upcomingBirthdayPet && (
                 <BirthdayAlert>
-                    {upcomingBirthdayPet.profile_pic && (
-                        <BirthdayPetImage src={upcomingBirthdayPet.profile_pic} alt={upcomingBirthdayPet.name} />
-                    )}
-                    <div>
-                        <strong>Upcoming Birthday:</strong>
-                        <br />
-                        {upcomingBirthdayPet.name}'s birthday is on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}! 🎉
-                    </div>
+                    <BirthdayPetImage src={upcomingBirthdayPet.profile_pic} alt={upcomingBirthdayPet.name} />
+                    <BirthdayText>
+                        <BirthdayPetName>Next Birthday</BirthdayPetName>
+                        <BirthdayMessage>{upcomingBirthdayPet.name} has an upcoming birthday on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}! 🎉</BirthdayMessage>
+                    </BirthdayText>
                 </BirthdayAlert>
             )}
             <TopMonthlyDog />
