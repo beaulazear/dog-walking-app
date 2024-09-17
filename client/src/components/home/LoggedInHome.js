@@ -11,7 +11,7 @@ const Intro = styled.div`
     background: #f8f9fa;
     border-radius: 12px;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-    padding: 20px;
+    padding: 5px;
     max-width: 900px;
     text-align: center;
     width: 100%;
@@ -188,18 +188,19 @@ const ToggleButton = styled.button`
     color: #fff;
     border: none;
     border-radius: 8px;
-    padding: 10px 20px;
+    padding: 8px 16px; /* Reduced padding */
     cursor: pointer;
     font-size: 1rem;
-    margin-bottom: 15px;
-    margin-top: 30px;
-    transition: background 0.3s ease;
+    margin: 15px 0; /* Reduced margin */
+    transition: background 0.3s ease, transform 0.2s ease;
     &:hover {
         background: #0056b3;
+        transform: translateY(-2px); /* Slight movement on hover */
     }
-    margin-top: 10px;
+    &:active {
+        transform: translateY(0); /* Natural feel when button is clicked */
+    }
 `;
-
 
 const getUpcomingBirthday = (pets) => {
     const today = dayjs();
