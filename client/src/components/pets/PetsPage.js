@@ -21,6 +21,22 @@ const Title = styled.h2`
     }
 `;
 
+const Description = styled.div`
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 15px 20px;
+    margin: 20px auto;
+    max-width: 350px; /* Smaller max-width similar to PetStats */
+    font-size: 1.125rem;
+    color: #495057;
+    text-align: center;
+
+    @media (max-width: 768px) {
+        font-size: 1rem;
+    }
+`;
+
 const NewPetButton = styled.button`
     background-color: #e91e63;
     color: white;
@@ -31,8 +47,9 @@ const NewPetButton = styled.button`
     cursor: pointer;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
-    margin: 15px auto;
+    margin-bottom: 15px;
     display: block;
+    width: 350px;
 
     &:hover {
         background-color: #c2185b;
@@ -83,11 +100,7 @@ const CardText = styled.p`
 
 const FilterWrapper = styled.div`
     margin-bottom: 20px;
-    text-align: left;
-
-    @media (min-width: 769px) {
-        text-align: left;
-    }
+    text-align: center; /* Center the text and controls */
 `;
 
 const FilterTitle = styled.h3`
@@ -104,6 +117,9 @@ const FilterSelect = styled.select`
     background-color: white;
     color: #343a40;
     margin-top: 8px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 `;
 
 const PetStats = styled.div`
@@ -112,7 +128,7 @@ const PetStats = styled.div`
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 20px;
     margin: 20px auto;
-    max-width: 350px;
+    max-width: 350px; /* Match the smaller max-width */
     text-align: left;
 `;
 
@@ -184,15 +200,19 @@ export default function PetsPage() {
             <ButtonWrapper>
                 <NewPetButton onClick={updateDisplayButton}>Add New Pet</NewPetButton>
             </ButtonWrapper>
+            <Description>
+                Manage your pets here. Each pet can be updated and marked active or inactive. Use the filter to view pets based on their status.
+                Create new appointments and invoices by clicking on a pet's accordion.
+            </Description>
             {displayFormButton && pets && (
                 <NewPetForm updateUserPets={addNewPet} />
             )}
             <FilterWrapper>
-                <FilterTitle>Filter Pets</FilterTitle> {/* Header for the filter */}
+                <FilterTitle>Filter Pets</FilterTitle>
                 <FilterSelect value={filter} onChange={handleFilterChange}>
                     <option value="active">Active Pets</option>
                     <option value="inactive">Inactive Pets</option>
-                    <option value="both">Active & Inactive Pets</option>
+                    <option value="both">Active & Inactive</option>
                 </FilterSelect>
             </FilterWrapper>
             {pets === null ? (

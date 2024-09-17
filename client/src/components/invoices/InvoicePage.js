@@ -13,11 +13,12 @@ const Container = styled.div`
 
 const Header = styled.h2`
     font-size: 2em;
-    margin-left: 8px;
     color: #343a40;
+    margin: 0; // Remove any default margin
+    text-align: center; // Centered text for all screen sizes
 
     @media (max-width: 768px) {
-        text-align: center;
+        font-size: 1.75em; // Optional: adjust font size for smaller screens if needed
     }
 `;
 
@@ -50,30 +51,13 @@ const CardText = styled.p`
 
 const FilterSection = styled.div`
     margin-bottom: 20px;
-    text-align: left; // Align the section to the left on larger screens
-    display: flex;
-    flex-direction: column;
-    align-items: left;
-
-    @media (min-width: 769px) {
-        text-align: left;
-        align-items: flex-start; // Align the filter and title to the left on larger screens
-    }
+    text-align: center; // Center the text and controls
 `;
-
 
 const FilterTitle = styled.h3`
     font-size: 1.5rem;
     color: #007bff;
     margin-bottom: 10px;
-`;
-
-const FilterWrapper = styled.div`
-    justify-content: flex-start; // Align the filter to the left
-
-    @media (min-width: 769px) {
-        justify-content: flex-start; // Maintain left alignment on larger screens
-    }
 `;
 
 const FilterSelect = styled.select`
@@ -82,9 +66,27 @@ const FilterSelect = styled.select`
     border: 1px solid #ced4da;
     font-size: 1rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 0 auto; // Center the select element
+    display: block; // Ensure the select takes up the full width available
 
     @media (max-width: 768px) {
-        margin: 0 auto;
+        font-size: 0.9rem; // Optional: adjust font size for smaller screens if needed
+    }
+`;
+
+const Description = styled.div`
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 15px 20px;
+    margin: 20px auto;
+    max-width: 350px; // Adjust to match the PetStats width
+    font-size: 1.125rem;
+    color: #495057;
+    text-align: center;
+
+    @media (max-width: 768px) {
+        font-size: 1rem;
     }
 `;
 
@@ -107,40 +109,38 @@ export default function InvoicesPage() {
 
     const filteredPets = filterPets(pets);
 
-    if (filteredPets?.length > 0) {
-        return (
-            <Container>
-                <Header>Finances</Header>
-                <FinancePage />
-                <FilterSection>
-                    <FilterTitle>Filter Pets</FilterTitle>
-                    <FilterWrapper>
-                        <FilterSelect value={filter} onChange={handleFilterChange}>
-                            <option value="active">Active Pets</option>
-                            <option value="inactive">Inactive Pets</option>
-                            <option value="both">Both Active and Inactive</option>
-                        </FilterSelect>
-                    </FilterWrapper>
-                </FilterSection>
-                {filteredPets.map((pet) => (
+    return (
+        <Container>
+            <Header>Finances</Header>
+            <FinancePage />
+            <Description>
+                Click on a pet to view their new invoices. You can mark invoices as pending or paid as they are sent to the client.
+                Additionally, view all past invoice data and add incomes for payments that did not come from walk invoices.
+            </Description>
+            <FilterSection>
+                <FilterTitle>Filter Pets</FilterTitle>
+                <FilterSelect value={filter} onChange={handleFilterChange}>
+                    <option value="active">Active Pets</option>
+                    <option value="inactive">Inactive Pets</option>
+                    <option value="both">Active and Inactive</option>
+                </FilterSelect>
+            </FilterSection>
+            {filteredPets.length > 0 ? (
+                filteredPets.map((pet) => (
                     <InvoicePetCard key={pet.id} pet={pet} />
-                ))}
-            </Container>
-        );
-    } else {
-        return (
-            <Container>
-                <Header>Finances</Header>
+                ))
+            ) : (
                 <StyledCard>
                     <CardHeader>No pets currently in database</CardHeader>
                     <CardBody>
                         <CardTitle>Visit the "Pets" page to create your first pet.</CardTitle>
                         <CardText>
-                            Once a pet has been created, you can schedule appointments for said pet. Once an appointment is completed, an invoice will be created and displayed on this page.
+                            Once a pet has been created, you can schedule appointments for them. After an appointment is completed,
+                            an invoice will be generated and displayed here.
                         </CardText>
                     </CardBody>
                 </StyledCard>
-            </Container>
-        );
-    }
+            )}
+        </Container>
+    );
 }

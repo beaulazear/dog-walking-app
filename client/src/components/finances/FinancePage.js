@@ -7,27 +7,32 @@ const currentYear = new Date().getFullYear();
 const Container = styled.div`
     background: #f8f9fa;
     padding: 20px;
-    margin-bottom: 10px;
+    margin: 20px auto; // Center horizontally with auto margins
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 350px;
+    width: 100%; // Ensure it takes full width up to max-width
+    box-sizing: border-box; // Include padding and border in the element's total width and height
 `;
 
 const Header = styled.h3`
-    font-size: 1.75rem; // Larger font size for emphasis
+    font-size: 1.75rem;
     color: #343a40;
-    margin-bottom: 20px; // Increased margin for spacing
+    margin-bottom: 20px;
     text-align: center; // Centered text for better appearance
 `;
 
 const Select = styled.select`
-    font-size: 1.1rem; // Slightly larger font size for better readability
-    padding: 12px; // Increased padding for better spacing
-    border-radius: 5px; // Slightly larger border radius
+    font-size: 1.1rem;
+    padding: 12px;
+    border-radius: 5px;
     border: 1px solid #ced4da;
     background: #fff;
     cursor: pointer;
     transition: border-color 0.3s ease;
-    margin-top: 20px; // Added margin for spacing below the content
+    margin-top: 20px;
+    width: 100%; // Full width of the container
+    box-sizing: border-box; // Include padding and border in the element's total width and height
 
     &:hover {
         border-color: #007bff;
@@ -37,8 +42,8 @@ const Select = styled.select`
 const DetailRow = styled.div`
     display: flex;
     justify-content: space-between;
-    margin-bottom: 15px; // Increased margin for better spacing
-    font-size: 1.1rem; // Slightly larger font size
+    margin-bottom: 15px;
+    font-size: 1.1rem;
 `;
 
 const DetailLabel = styled.span`
@@ -49,7 +54,6 @@ const DetailLabel = styled.span`
 const DetailValue = styled.span`
     color: #007bff;
 `;
-
 
 export default function FinancePage() {
     const [taxPercentage, setTaxPercentage] = useState(15);
@@ -117,24 +121,19 @@ function calculateDailyAverage(totalIncome, year) {
     const today = new Date();
     const startOfYear = new Date(year, 0, 1);
 
-    // Calculate the number of days that have passed since the start of the year
     const daysPassed = Math.ceil((today - startOfYear) / (1000 * 60 * 60 * 24));
 
-    // Calculate daily average
     return daysPassed > 0 ? totalIncome / daysPassed : 0;
 }
 
 function calculateWeeklyIncome(dailyAverage) {
-    // Multiply daily average by 7 to get weekly average
     return Math.round(dailyAverage * 7);
 }
 
 function calculateMonthlyIncome(dailyAverage) {
-    // Multiply daily average by the average number of days in a month (~30.44)
     return Math.round(dailyAverage * 30.44);
 }
 
 function calculateEstimatedYearlyTotal(dailyAverage) {
-    // Multiply daily average by 365 to estimate yearly total
     return Math.round(dailyAverage * 365);
 }
