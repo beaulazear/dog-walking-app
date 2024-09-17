@@ -7,110 +7,119 @@ import dayjs from 'dayjs';
 import { PetsContext } from "../../context/pets";
 
 const Container = styled.div`
-    background: #f8f9fa;
+    background: #f4f7f9;
     min-height: 100vh;
     padding: 20px;
     display: flex;
     flex-direction: column;
-    align-items: center; // Center everything horizontally
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
 `;
 
 const Header = styled.h1`
     font-size: 2rem;
-    color: #343a40;
-    margin-bottom: 10px;
-    text-align: center; // Center header text
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
 `;
 
 const Card = styled.div`
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    margin: 15px 0;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    margin: 20px 0;
     padding: 20px;
-    max-width: 800px;
     width: 100%;
-    transition: transform 0.3s ease-in-out;
-    display: flex;
-    flex-direction: column;
-    align-items: center; // Center content inside Card
+    max-width: 900px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+    }
 `;
 
-
-const CardHeader = styled.h5`
+const CardHeader = styled.h2`
     font-size: 1.75rem;
     color: #007bff;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
 `;
 
 const CardBody = styled.div`
-    margin-top: 10px;
+    margin-top: 15px;
 `;
 
-const CardTitle = styled.h6`
-    font-size: 1.5rem;
+const CardTitle = styled.h3`
+    font-size: 1.25rem;
     color: #495057;
-    margin: 10px 0;
+    margin: 15px 0;
 `;
 
 const CardText = styled.p`
     color: #6c757d;
     margin-bottom: 20px;
+    line-height: 1.6;
 `;
 
 const DateInput = styled.input`
     width: 100%;
     padding: 12px;
-    margin: 10px 0;
-    border-radius: 5px;
+    margin: 15px 0;
+    border-radius: 8px;
     border: 1px solid #ced4da;
     box-sizing: border-box;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+    &:focus {
+        border-color: #007bff;
+        outline: none;
+    }
 `;
 
 const ListGroup = styled.ul`
     list-style: none;
     padding: 0;
+    margin: 0;
 `;
 
 const ListGroupItem = styled.li`
-    background: #e9ecef;
-    border-radius: 5px;
-    margin-bottom: 12px;
+    background: #ffffff;
+    border-radius: 8px;
+    margin-bottom: 15px;
     padding: 15px;
     display: flex;
-    align-items: center; // Align image and text
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 `;
 
 const AppointmentItem = styled.div`
-    display: flex;
-    flex-direction: column;
+    flex: 1;
     font-size: 1rem;
     color: #495057;
-    margin: 0.5em 0;
-    flex: 1; // Make sure text takes the remaining space
+    margin-left: 15px;
 `;
 
 const BirthdayAlert = styled.div`
-    background: #d1ecf1; /* Light blue background */
-    color: #0c5460; /* Darker blue text */
+    background: #d1ecf1;
+    color: #0c5460;
     padding: 20px;
     border-radius: 8px;
-    margin: 15px 0;
-    font-size: 1.2rem;
-    max-width: 800px;
+    margin: 20px 0;
+    font-size: 1.25rem;
+    max-width: 900px;
     width: 100%;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    text-align: center; // Center text inside BirthdayAlert
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    text-align: center;
 `;
 
 const PetImage = styled.img`
-    width: 50px; // Set a small size for the image
-    height: 50px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
-    margin-right: 15px;
-    object-fit: cover; // Ensure the image looks good even if resized
+    object-fit: cover;
 `;
-
 
 const getUpcomingBirthday = (pets) => {
     const today = dayjs();
@@ -124,7 +133,6 @@ const getUpcomingBirthday = (pets) => {
             const daysUntilBirthday = birthdayThisYear.diff(today, 'day');
 
             if (daysUntilBirthday < 0) {
-                // If birthday has already passed this year, calculate for next year
                 const birthdayNextYear = birthdayThisYear.add(1, 'year');
                 const daysUntilNextBirthday = birthdayNextYear.diff(today, 'day');
                 if (daysUntilNextBirthday < minDaysUntilBirthday) {
@@ -143,7 +151,7 @@ const getUpcomingBirthday = (pets) => {
 
 export default function LoggedInHome() {
     const { todaysAppointments, petsAppointments } = useContext(AppointmentsContext);
-    const { user, setUser } = useContext(UserContext); // Added `pets` from context
+    const { user, setUser } = useContext(UserContext);
     const { pets } = useContext(PetsContext);
 
     const [selectedDate, setSelectedDate] = useState(dayjs().format('YYYY-MM-DD'));
@@ -204,34 +212,32 @@ export default function LoggedInHome() {
         return dayjs(a.start_time).isAfter(dayjs(b.start_time)) ? 1 : -1;
     });
 
-    // for chat gpt below 
     return (
         <Container>
-            <Header>{user.name}</Header>
+            <Header>Welcome, {user.name}</Header>
             <Card>
-                <CardHeader>Your Schedule</CardHeader>
+                <CardHeader>Schedule Overview</CardHeader>
                 <CardBody>
                     <CardText>
-                        Visit the Today page to complete walks and view auto-generated invoices. Select a future date to see scheduled walks.
+                        Check today's page to manage walks and view invoices. Select a date to view future appointments.
                     </CardText>
                     <DateInput
                         type="date"
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
                     />
-                    <CardTitle><b>Appointments: {futureAppointments.length}</b></CardTitle>
+                    <CardTitle><strong>Appointments: {futureAppointments.length}</strong></CardTitle>
                     <ListGroup>
-                        {futureAppointments.length === 0 && (
-                            <ListGroupItem>No walks scheduled for the selected date.</ListGroupItem>
-                        )}
-                        {futureAppointments.length > 0 && (
+                        {futureAppointments.length === 0 ? (
+                            <ListGroupItem>No scheduled walks for this date.</ListGroupItem>
+                        ) : (
                             futureAppointments.map((appointment, index) => (
                                 <ListGroupItem key={index}>
                                     <PetImage src={appointment.pet.profile_pic} alt={appointment.pet.name} />
                                     <AppointmentItem>
                                         <div><strong>Pet:</strong> {appointment.pet.name}</div>
                                         <div><strong>Time:</strong> {dayjs(appointment.start_time).format('h:mm A')} - {dayjs(appointment.end_time).format('h:mm A')}</div>
-                                        <div><strong>Duration:</strong> {appointment.duration} minutes</div>
+                                        <div><strong>Duration:</strong> {appointment.duration} mins</div>
                                     </AppointmentItem>
                                 </ListGroupItem>
                             ))
@@ -241,20 +247,19 @@ export default function LoggedInHome() {
             </Card>
             {upcomingBirthdayPet && (
                 <BirthdayAlert>
-                    <strong>Upcoming Birthday:</strong> {upcomingBirthdayPet.name}'s birthday is coming up on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}!
+                    <strong>Upcoming Birthday:</strong> {upcomingBirthdayPet.name}'s birthday is on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}!
                 </BirthdayAlert>
             )}
             <Card>
-                <CardHeader>Set Your Rates</CardHeader>
+                <CardHeader>Rate Settings</CardHeader>
                 <CardBody>
-                    {user.thirty === null && user.fourty === null && user.sixty === null && (
+                    {user.thirty === null && user.fourty === null && user.sixty === null ? (
                         <CardText>
-                            You have not yet set your rates! This means walks will be defaulted to $22 for 30 minute walks, $28 for 45 minute walks, & $33 for 60 minute walks. Use the form below to update your rates.
+                            Your rates are not set. Default rates will apply. Update them below.
                         </CardText>
-                    )}
-                    {user.thirty !== null && user.fourty !== null && user.sixty !== null && (
+                    ) : (
                         <CardText>
-                            Use the form below to update your rates. This will be reflected on new invoices.
+                            Update your rates below. These will be reflected in new invoices.
                         </CardText>
                     )}
                     <Rates user={user} updateUserRates={updateUserRates} />
@@ -263,3 +268,5 @@ export default function LoggedInHome() {
         </Container>
     );
 }
+
+
