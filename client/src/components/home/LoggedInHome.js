@@ -111,6 +111,7 @@ const PetImage = styled.img`
     object-fit: cover; // Ensure the image looks good even if resized
 `;
 
+
 const getUpcomingBirthday = (pets) => {
     const today = dayjs();
     let closestBirthdayPet = null;
@@ -226,7 +227,7 @@ export default function LoggedInHome() {
                         {futureAppointments.length > 0 && (
                             futureAppointments.map((appointment, index) => (
                                 <ListGroupItem key={index}>
-                                    <PetImage src={appointment.pet.photo_url} alt={appointment.pet.name} />
+                                    <PetImage src={appointment.pet.profile_pic} alt={appointment.pet.name} />
                                     <AppointmentItem>
                                         <div><strong>Pet:</strong> {appointment.pet.name}</div>
                                         <div><strong>Time:</strong> {dayjs(appointment.start_time).format('h:mm A')} - {dayjs(appointment.end_time).format('h:mm A')}</div>
