@@ -9,6 +9,7 @@ import Alert from 'react-bootstrap/Alert';
 import NewAppointmentForm from '../appointments/NewAppointmentForm';
 import PetAppointmentCard from '../appointments/PetAppointmentCard';
 import { AppointmentsContext } from "../../context/appointments";
+import update from "./update.jpg";
 
 export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) {
     const dayjs = require('dayjs');
@@ -225,7 +226,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                     <Accordion.Header>
                         <div className="d-flex align-items-center">
                             <img
-                                src={pet.profile_pic}
+                                src={update}
                                 alt={`${pet.name}'s profile`}
                                 style={{
                                     width: '50px',
