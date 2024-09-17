@@ -77,7 +77,7 @@ export default function TodaysWalksPage() {
             <Container>
                 <Header>Today's Schedule</Header>
                 <SubHeader>{todayFormatted}</SubHeader>
-                <SubHeader>Total Appointments: {todaysAppointments.length}</SubHeader>
+                <SubHeader>Appointments: {todaysAppointments.length}</SubHeader>
                 {todaysAppointments.map((apt) => (
                     <TodaysAppointmentsCard updateAppointments={updateAppointments} key={apt.id} apt={apt} />
                 ))}
