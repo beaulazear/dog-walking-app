@@ -4,10 +4,6 @@ import { PetsContext } from "../../context/pets";
 import NewPetForm from "./NewPetForm";
 import PetCard from "./PetCard";
 
-// PetsPage Component
-
-// ... (other imports and code)
-
 const Container = styled.div`
     background: #f8f9fa;
     padding: 10px;

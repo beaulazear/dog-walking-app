@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { AppointmentsContext } from "../../context/appointments";
 import { UserContext } from "../../context/user";
 import Rates from "./Rates";
+import TopMonthlyDog from "./TopMonthlyDog";
 import dayjs from 'dayjs';
 import { PetsContext } from "../../context/pets";
 
@@ -16,36 +17,40 @@ const Intro = styled.div`
     width: 100%;
     box-sizing: border-box;
     border: 1px solid #e9ecef;
+    margin: 0 auto; /* Centering the Intro component */
 `;
 
 const IntroHeader = styled.h2`
-    font-size: 2rem; /* Increased font size */
-    color: #007bff; /* Primary color */
+    font-size: 2rem;
+    color: #007bff;
     margin-bottom: 20px;
     font-weight: bold;
     text-transform: uppercase;
-    letter-spacing: 1px; /* Add some spacing between letters */
-    background: linear-gradient(90deg, rgba(0,123,255,1) 0%, rgba(0,59,122,1) 100%); /* Gradient background */
+    letter-spacing: 1px;
+    background: linear-gradient(90deg, rgba(0,123,255,1) 0%, rgba(0,59,122,1) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    padding: 10px 20px; /* Padding around the text */
-    border-radius: 8px; /* Rounded corners */
+    padding: 10px 20px;
+    border-radius: 8px;
     text-align: center;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Subtle shadow for depth */
-    display: inline-block; /* Makes the gradient text fit content */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    display: inline-block;
+    margin: 0 auto; /* Centering the IntroHeader */
 `;
+
 
 const IntroText = styled.p`
     color: #495057;
     font-size: 1.125rem;
     line-height: 1.6;
     margin: 0;
-    display: ${({ visible }) => (visible ? 'block' : 'none')};
+    display: block; /* Always display */
     text-align: left;
     padding: 0 10px;
     max-width: 800px;
     margin: 0 auto;
 `;
+
 
 const Container = styled.div`
     background: #f4f7f9;
@@ -151,20 +156,24 @@ const AppointmentItem = styled.div`
 `;
 
 const BirthdayAlert = styled.div`
-    background: #d1ecf1;
-    color: #0c5460;
+    background: #ffffff; /* Same background as other cards */
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     padding: 20px;
-    border-radius: 8px;
     margin: 20px 0;
     font-size: 1.25rem;
     max-width: 900px;
     width: 100%;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     text-align: center;
     display: flex;
     align-items: center;
     gap: 15px;
     flex-direction: column;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+    }
 `;
 
 const BirthdayPetImage = styled.img`
@@ -296,6 +305,7 @@ export default function LoggedInHome() {
         <Container>
             <Intro>
                 <IntroHeader>🐕 Welcome 🐈</IntroHeader>
+                <br />
                 <ToggleButton onClick={() => setShowIntroText(!showIntroText)}>
                     {showIntroText ? 'Hide Instructions' : 'Need Instructions?'}
                 </ToggleButton>
@@ -341,10 +351,13 @@ export default function LoggedInHome() {
                         <BirthdayPetImage src={upcomingBirthdayPet.profile_pic} alt={upcomingBirthdayPet.name} />
                     )}
                     <div>
-                        <strong>Upcoming Birthday:</strong> {upcomingBirthdayPet.name}'s birthday is on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}! 🎉
+                        <strong>Upcoming Birthday:</strong>
+                        <br />
+                         {upcomingBirthdayPet.name}'s birthday is on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}! 🎉
                     </div>
                 </BirthdayAlert>
             )}
+            <TopMonthlyDog />
             <Card>
                 <CardHeader>Rate Settings</CardHeader>
                 <CardBody>
