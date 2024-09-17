@@ -4,20 +4,24 @@ import { PetsContext } from "../../context/pets";
 import NewPetForm from "./NewPetForm";
 import PetCard from "./PetCard";
 
-// Styled Components
+// PetsPage Component
+
+// ... (other imports and code)
+
 const Container = styled.div`
     background: #f8f9fa;
     padding: 10px;
+    margin: 0 10px; /* Adjusted margin to match InvoicesPage */
 `;
 
 const Title = styled.h2`
-    font-size: 2rem;
+    font-size: 2em;
     color: #343a40;
-    margin-bottom: 10px;
+    margin: 0; /* Remove default margin */
     text-align: center;
 
     @media (max-width: 768px) {
-        text-align: center;
+        font-size: 1.75em;
     }
 `;
 
@@ -26,8 +30,8 @@ const Description = styled.div`
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 15px 20px;
-    margin: 20px auto;
-    max-width: 350px; /* Smaller max-width similar to PetStats */
+    margin: 10px auto;
+    max-width: 350px;
     font-size: 1.125rem;
     color: #495057;
     text-align: center;
@@ -74,18 +78,18 @@ const NoPetsCard = styled.div`
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 20px;
+    margin: 10px auto; /* Adjusted margin to match InvoicesPage */
     max-width: 600px;
-    margin: 20px auto;
 `;
 
 const CardHeader = styled.h5`
     font-size: 1.5rem;
-    color: #007bff;
+    color: #343a40;
     margin-bottom: 10px;
 `;
 
 const CardBody = styled.div`
-    margin-top: 10px;
+    margin-top: 1em;
 `;
 
 const CardTitle = styled.h6`
@@ -100,26 +104,28 @@ const CardText = styled.p`
 
 const FilterWrapper = styled.div`
     margin-bottom: 20px;
-    text-align: center; /* Center the text and controls */
+    text-align: center;
 `;
 
 const FilterTitle = styled.h3`
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     color: #007bff;
     margin-bottom: 10px;
 `;
 
 const FilterSelect = styled.select`
-    padding: 12px;
-    font-size: 1.1rem;
+    padding: 10px;
     border-radius: 5px;
-    border: 1px solid #ddd;
-    background-color: white;
-    color: #343a40;
-    margin-top: 8px;
+    border: 1px solid #ced4da;
+    font-size: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 0 auto;
     display: block;
-    margin-left: auto;
-    margin-right: auto;
+    width: 315px;
+
+    @media (max-width: 768px) {
+        font-size: 0.9rem;
+    }
 `;
 
 const PetStats = styled.div`
@@ -190,24 +196,27 @@ export default function PetsPage() {
 
     return (
         <Container>
-            <PetStats>
-                <PetStatsTitle>Pet Statistics</PetStatsTitle>
-                <PetStatsText><strong>Total Pets:</strong> {totalPetsCount}</PetStatsText>
-                <PetStatsText><strong>Active Pets:</strong> {activePetsCount}</PetStatsText>
-                <PetStatsText><strong>Inactive Pets:</strong> {inactivePetsCount}</PetStatsText>
-            </PetStats>
-            <ButtonWrapper>
-                <NewPetButton onClick={updateDisplayButton}>Add New Pet</NewPetButton>
-            </ButtonWrapper>
+            <Title>Pets Page</Title>
             <Description>
                 Manage your pets here. Each pet can be updated and marked active or inactive. Use the filter to view pets based on their status.
                 Create new appointments and invoices by clicking on a pet's accordion.
             </Description>
+            <PetStats>
+                <PetStatsTitle>Your Pet Statistics</PetStatsTitle>
+                <PetStatsText><strong>Total Pets:</strong> {totalPetsCount}</PetStatsText>
+                <PetStatsText><strong>Marked As Active:</strong> {activePetsCount}</PetStatsText>
+                <PetStatsText><strong>Marked As Inactive:</strong> {inactivePetsCount}</PetStatsText>
+            </PetStats>
+            <ButtonWrapper>
+                <NewPetButton onClick={updateDisplayButton}>
+                    {displayFormButton ? "Close New Pet Form" : "Click To Add New Pet To Database"}
+                </NewPetButton>
+            </ButtonWrapper>
             {displayFormButton && pets && (
                 <NewPetForm updateUserPets={addNewPet} />
             )}
             <FilterWrapper>
-                <FilterTitle>Filter Pets</FilterTitle>
+                <FilterTitle>Filter Active & Inactive Pets</FilterTitle>
                 <FilterSelect value={filter} onChange={handleFilterChange}>
                     <option value="active">Active Pets</option>
                     <option value="inactive">Inactive Pets</option>

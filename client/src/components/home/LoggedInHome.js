@@ -7,19 +7,32 @@ import dayjs from 'dayjs';
 import { PetsContext } from "../../context/pets";
 
 const Intro = styled.div`
-    background: #ffffff;
-    border-radius: 8px;
+    background: #f8f9fa;
+    border-radius: 12px;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
     padding: 20px;
-    margin: 20px 0;
     max-width: 900px;
     text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #e9ecef;
 `;
 
 const IntroHeader = styled.h2`
-    font-size: 1.75rem;
-    color: #007bff;
-    margin-bottom: 15px;
+    font-size: 2rem; /* Increased font size */
+    color: #007bff; /* Primary color */
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px; /* Add some spacing between letters */
+    background: linear-gradient(90deg, rgba(0,123,255,1) 0%, rgba(0,59,122,1) 100%); /* Gradient background */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    padding: 10px 20px; /* Padding around the text */
+    border-radius: 8px; /* Rounded corners */
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Subtle shadow for depth */
+    display: inline-block; /* Makes the gradient text fit content */
 `;
 
 const IntroText = styled.p`
@@ -28,6 +41,10 @@ const IntroText = styled.p`
     line-height: 1.6;
     margin: 0;
     display: ${({ visible }) => (visible ? 'block' : 'none')};
+    text-align: left;
+    padding: 0 10px;
+    max-width: 800px;
+    margin: 0 auto;
 `;
 
 const Container = styled.div`
@@ -175,10 +192,13 @@ const ToggleButton = styled.button`
     cursor: pointer;
     font-size: 1rem;
     margin-bottom: 15px;
+    transition: background 0.3s ease;
     &:hover {
         background: #0056b3;
     }
+    margin-top: 10px;
 `;
+
 
 const getUpcomingBirthday = (pets) => {
     const today = dayjs();
@@ -321,7 +341,7 @@ export default function LoggedInHome() {
                         <BirthdayPetImage src={upcomingBirthdayPet.profile_pic} alt={upcomingBirthdayPet.name} />
                     )}
                     <div>
-                        <strong>Upcoming Birthday:</strong> {upcomingBirthdayPet.name}'s birthday is on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}!
+                        <strong>Upcoming Birthday:</strong> {upcomingBirthdayPet.name}'s birthday is on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}! 🎉
                     </div>
                 </BirthdayAlert>
             )}

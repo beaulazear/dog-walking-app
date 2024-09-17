@@ -296,6 +296,7 @@ export default function InvoicePetCard({ pet }) {
             <Accordion className="mb-3">
                 <Accordion.Item eventKey="0">
                     <Accordion.Header>Unpaid Invoices</Accordion.Header>
+                    
                     <Accordion.Body>
                         <Modal show={showEditModal} onHide={toggleEditModal}>
                             <Modal.Header closeButton>
@@ -384,7 +385,7 @@ export default function InvoicePetCard({ pet }) {
                     </Accordion.Body>
                 </Accordion.Item>
                 <Accordion.Item eventKey="1">
-                    <Accordion.Header>Paid Invoices / Personal Finance</Accordion.Header>
+                    <Accordion.Header>Past Invoices / Personal Finance</Accordion.Header>
                     <Accordion.Body>
                         <Card style={{ width: '100%' }}>
                             <Card.Img

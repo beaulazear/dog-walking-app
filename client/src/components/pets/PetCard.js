@@ -163,8 +163,22 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
             <h4>{pet.name}</h4>
             <Accordion className="mb-3">
                 <Accordion.Item eventKey="0">
-                    <Accordion.Header>Information & Appointments</Accordion.Header>
-                    <Accordion.Body>
+                    <Accordion.Header>
+                        <div className="d-flex align-items-center">
+                            <img
+                                src={pet.profile_pic}
+                                alt={`${pet.name}'s profile`}
+                                style={{
+                                    width: '50px',
+                                    height: '50px',
+                                    objectFit: 'cover',
+                                    borderRadius: '50%',
+                                    marginRight: '10px'
+                                }}
+                            />
+                            Appointments & Information
+                        </div>
+                    </Accordion.Header>                    <Accordion.Body>
                         <Card className="mb-3 shadow-sm">
                             <Card.Body className="d-flex align-items-center">
                                 <div style={{ flex: '1 1 auto', paddingRight: '20px' }}>
@@ -208,8 +222,22 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                     </Accordion.Body>
                 </Accordion.Item>
                 <Accordion.Item eventKey="1">
-                    <Accordion.Header>Update {pet.name}</Accordion.Header>
-                    <Accordion.Body>
+                    <Accordion.Header>
+                        <div className="d-flex align-items-center">
+                            <img
+                                src={pet.profile_pic}
+                                alt={`${pet.name}'s profile`}
+                                style={{
+                                    width: '50px',
+                                    height: '50px',
+                                    objectFit: 'cover',
+                                    borderRadius: '50%',
+                                    marginRight: '10px'
+                                }}
+                            />
+                            Update information
+                        </div>
+                    </Accordion.Header>                    <Accordion.Body>
                         <Form className="text-bg-light p-3" encType="multipart/form-data" onSubmit={handleUpdatePet}>
                             <Form.Group className="mb-3">
                                 <Form.Label>Pet's Photo</Form.Label>

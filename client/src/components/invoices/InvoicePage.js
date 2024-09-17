@@ -55,7 +55,7 @@ const FilterSection = styled.div`
 `;
 
 const FilterTitle = styled.h3`
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     color: #007bff;
     margin-bottom: 10px;
 `;
@@ -68,6 +68,7 @@ const FilterSelect = styled.select`
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     margin: 0 auto; // Center the select element
     display: block; // Ensure the select takes up the full width available
+    width: 350px;
 
     @media (max-width: 768px) {
         font-size: 0.9rem; // Optional: adjust font size for smaller screens if needed
@@ -79,7 +80,7 @@ const Description = styled.div`
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 15px 20px;
-    margin: 20px auto;
+    margin: 10px auto;
     max-width: 350px; // Adjust to match the PetStats width
     font-size: 1.125rem;
     color: #495057;
@@ -111,13 +112,14 @@ export default function InvoicesPage() {
 
     return (
         <Container>
-            <FinancePage />
+            <Header>Finance Page</Header>
             <Description>
                 Click on a pet to view their new invoices. You can mark invoices as pending or paid as they are sent to the client.
                 Additionally, view all past invoice data and add incomes for payments that did not come from walk invoices.
             </Description>
+            <FinancePage />
             <FilterSection>
-                <FilterTitle>Filter Pets</FilterTitle>
+                <FilterTitle>Filter Active & Inactive Pets</FilterTitle>
                 <FilterSelect value={filter} onChange={handleFilterChange}>
                     <option value="active">Active Pets</option>
                     <option value="inactive">Inactive Pets</option>
