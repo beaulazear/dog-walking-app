@@ -77,6 +77,8 @@ const ListGroupItem = styled.li`
     border-radius: 5px;
     margin-bottom: 12px;
     padding: 15px;
+    display: flex;
+    align-items: center; // Align image and text
 `;
 
 const AppointmentItem = styled.div`
@@ -85,6 +87,7 @@ const AppointmentItem = styled.div`
     font-size: 1rem;
     color: #495057;
     margin: 0.5em 0;
+    flex: 1; // Make sure text takes the remaining space
 `;
 
 const BirthdayAlert = styled.div`
@@ -98,6 +101,14 @@ const BirthdayAlert = styled.div`
     width: 100%;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     text-align: center; // Center text inside BirthdayAlert
+`;
+
+const PetImage = styled.img`
+    width: 50px; // Set a small size for the image
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 15px;
+    object-fit: cover; // Ensure the image looks good even if resized
 `;
 
 const getUpcomingBirthday = (pets) => {
@@ -215,6 +226,7 @@ export default function LoggedInHome() {
                         {futureAppointments.length > 0 && (
                             futureAppointments.map((appointment, index) => (
                                 <ListGroupItem key={index}>
+                                    <PetImage src={appointment.pet.photo_url} alt={appointment.pet.name} />
                                     <AppointmentItem>
                                         <div><strong>Pet:</strong> {appointment.pet.name}</div>
                                         <div><strong>Time:</strong> {dayjs(appointment.start_time).format('h:mm A')} - {dayjs(appointment.end_time).format('h:mm A')}</div>
