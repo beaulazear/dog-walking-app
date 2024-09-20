@@ -30,7 +30,7 @@ const Description = styled.div`
     max-width: 350px;
     font-size: 1.125rem;
     color: #495057;
-    text-align: center;
+    text-align: left;
 
     @media (max-width: 768px) {
         font-size: 1rem;
@@ -47,7 +47,6 @@ const NewPetButton = styled.button`
     cursor: pointer;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
-    margin-bottom: 15px;
     display: block;
     width: 350px;
 
@@ -202,12 +201,12 @@ export default function PetsPage() {
                 <PetStatsText><strong>Total Pets:</strong> {totalPetsCount}</PetStatsText>
                 <PetStatsText><strong>Marked As Active:</strong> {activePetsCount}</PetStatsText>
                 <PetStatsText><strong>Marked As Inactive:</strong> {inactivePetsCount}</PetStatsText>
+                <ButtonWrapper>
+                    <NewPetButton onClick={updateDisplayButton}>
+                        {displayFormButton ? "Close New Pet Form" : "Add New Pet To Database"}
+                    </NewPetButton>
+                </ButtonWrapper>
             </PetStats>
-            <ButtonWrapper>
-                <NewPetButton onClick={updateDisplayButton}>
-                    {displayFormButton ? "Close New Pet Form" : "Click To Add New Pet To Database"}
-                </NewPetButton>
-            </ButtonWrapper>
             {displayFormButton && pets && (
                 <NewPetForm updateUserPets={addNewPet} />
             )}

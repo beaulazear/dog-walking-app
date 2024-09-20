@@ -7,20 +7,42 @@ import dayjs from 'dayjs';
 // Styled Components
 const Container = styled.div`
     background: #f8f9fa;
-    min-height: 100vh;
-    padding: 20px;
-    text-align: center;
+    padding: 10px;  /* Match the padding from PetsPage */
+    margin: 0 10px; /* Match the margin from PetsPage */
 `;
 
 const Header = styled.h2`
     font-size: 2rem;
     color: #343a40;
+    margin: 0; /* Remove default margin */
+    text-align: center;
+
+    @media (max-width: 768px) {
+        font-size: 1.75em;
+    }
+`;
+
+const InstructionParagraph = styled.div`
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 15px 20px;
+    margin: 10px auto;
+    max-width: 350px;
+    font-size: 1.125rem;
+    color: #495057;
+    text-align: left;
+
+    @media (max-width: 768px) {
+        font-size: 1rem;
+    }
 `;
 
 const SubHeader = styled.h4`
     font-size: 1.5rem;
     margin: 10px 0;
     color: #495057;
+    text-align: center; /* Align subheader text to center */
 `;
 
 const NoAppointmentsCard = styled.div`
@@ -72,22 +94,21 @@ export default function TodaysWalksPage() {
 
     const todayFormatted = getCurrentDateFormatted();
 
-    if (todaysAppointments?.length > 0) {
-        return (
-            <Container>
-                <Header>Today's Schedule</Header>
-                <SubHeader>{todayFormatted}</SubHeader>
-                <SubHeader>Appointments: {todaysAppointments.length}</SubHeader>
-                {todaysAppointments.map((apt) => (
-                    <TodaysAppointmentsCard updateAppointments={updateAppointments} key={apt.id} apt={apt} />
-                ))}
-            </Container>
-        );
-    } else {
-        return (
-            <Container>
-                <Header>Today's Appointments</Header>
-                <SubHeader>{todayFormatted}</SubHeader>
+    return (
+        <Container>
+            <Header>Today's Appointments</Header>
+            <SubHeader>{todayFormatted}</SubHeader>
+            {/* <SubHeader>Appointments: {todaysAppointments.length}</SubHeader> */}
+            <InstructionParagraph>
+                Below is your list of today's appointments. As you finish each walk, mark it as completed, and the corresponding invoice will be automatically saved.
+            </InstructionParagraph>
+            {todaysAppointments?.length > 0 ? (
+                <>
+                    {todaysAppointments.map((apt) => (
+                        <TodaysAppointmentsCard updateAppointments={updateAppointments} key={apt.id} apt={apt} />
+                    ))}
+                </>
+            ) : (
                 <NoAppointmentsCard>
                     <CardHeader>No appointments scheduled for today</CardHeader>
                     <CardBody>
@@ -97,7 +118,7 @@ export default function TodaysWalksPage() {
                         </CardText>
                     </CardBody>
                 </NoAppointmentsCard>
-            </Container>
-        );
-    }
+            )}
+        </Container>
+    );
 }

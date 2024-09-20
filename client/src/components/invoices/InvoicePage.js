@@ -84,7 +84,7 @@ const Description = styled.div`
     max-width: 350px; // Adjust to match the PetStats width
     font-size: 1.125rem;
     color: #495057;
-    text-align: center;
+    text-align: left;
 
     @media (max-width: 768px) {
         font-size: 1rem;
