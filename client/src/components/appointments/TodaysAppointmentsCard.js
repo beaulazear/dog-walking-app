@@ -8,7 +8,6 @@ import styled from 'styled-components';
 
 const StyledCard = styled(Card)`
     margin: 20px auto;
-    width: 90%;
     max-width: 600px;
     min-width: 320px;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
