@@ -5,6 +5,7 @@ import Card from 'react-bootstrap/Card';
 import Button from "react-bootstrap/Button";
 import Modal from 'react-bootstrap/Modal';
 import styled from 'styled-components';
+import dog from './dog.jpg';
 
 const StyledCard = styled(Card)`
     margin: 20px auto;
@@ -337,7 +338,11 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                     <Card.Body>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <ImageContainer>
-                                <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
+                                <StyledImage
+                                    alt="Pet associated with appointment"
+                                    src={apt.pet.profile_pic || dog}  // Fallback to 'dog' image if profile_pic is missing
+                                    onError={(e) => { e.target.src = dog; }}  // Fallback to 'dog' image if profile_pic fails to load
+                                />
                             </ImageContainer>
                             <InfoContainer>
                                 <StyledTitle>Completed</StyledTitle>
@@ -354,8 +359,13 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                     <Card.Body>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <ImageContainer>
-                                <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
+                                <StyledImage
+                                    alt="Pet associated with appointment"
+                                    src={apt.pet.profile_pic || dog}  // Fallback to 'dog' image if profile_pic is missing
+                                    onError={(e) => { e.target.src = dog; }}  // Fallback to 'dog' image if profile_pic fails to load
+                                />
                             </ImageContainer>
+
                             <InfoContainer>
                                 <StyledTitle>Canceled</StyledTitle>
                                 <StyledTitle>{apt.pet.name}</StyledTitle>
@@ -376,7 +386,11 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                                 <StyledText><b>Pickup Window:</b><br />{startTime} - {endTime}</StyledText>
                             </InfoContainer>
                             <ImageContainer>
-                                <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
+                                <StyledImage
+                                    alt="Pet associated with appointment"
+                                    src={apt.pet.profile_pic || dog}  // Fallback to 'dog' image if profile_pic is missing
+                                    onError={(e) => { e.target.src = dog; }}  // Fallback to 'dog' image if profile_pic fails to load
+                                />
                             </ImageContainer>
                         </div>
                         <InfoContainer>
@@ -419,7 +433,11 @@ export default function TodaysAppointmentsCard({ apt, updateAppointments }) {
                                 <StyledText><b>Pickup Window:</b><br />{startTime} - {endTime}</StyledText>
                             </InfoContainer>
                             <ImageContainer>
-                                <StyledImage alt="Pet associated with appointment" src={apt.pet.profile_pic} />
+                                <StyledImage
+                                    alt="Pet associated with appointment"
+                                    src={apt.pet.profile_pic || dog}  // Fallback to 'dog' image if profile_pic is missing
+                                    onError={(e) => { e.target.src = dog; }}  // Fallback to 'dog' image if profile_pic fails to load
+                                />
                             </ImageContainer>
                         </div>
                         <InfoContainer>
