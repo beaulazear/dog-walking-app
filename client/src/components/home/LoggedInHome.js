@@ -356,7 +356,7 @@ export default function LoggedInHome() {
             </Card>
             {upcomingBirthdayPet && (
                 <BirthdayAlert>
-                    <BirthdayPetImage src={upcomingBirthdayPet.profile_pic} alt={upcomingBirthdayPet.name} />
+                    <BirthdayPetImage src={upcomingBirthdayPet.profile_pic || dog} onError={(e) => { e.target.src = dog; }} alt={upcomingBirthdayPet.name} />
                     <BirthdayText>
                         <BirthdayPetName>Next Birthday</BirthdayPetName>
                         <BirthdayMessage>{upcomingBirthdayPet.name} has an upcoming birthday on {dayjs(upcomingBirthdayPet.birthdate).format('MMMM D')}! 🎉</BirthdayMessage>

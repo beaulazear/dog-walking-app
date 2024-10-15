@@ -16,6 +16,7 @@ import {
     Input,
     FormButton
 } from '../styles/InvoicePetCard.styles';
+import dog from '../appointments/dog.jpg'
 
 export default function InvoicePetCard({ pet }) {
 
@@ -329,7 +330,8 @@ export default function InvoicePetCard({ pet }) {
                         <Card style={{ width: '100%' }}>
                             <Card.Img
                                 variant="top"
-                                src={pet.profile_pic}
+                                src={pet.profile_pic || dog}
+                                onError={(e) => { e.target.src = dog; }}
                                 style={{
                                     width: '150px',
                                     height: '150px',

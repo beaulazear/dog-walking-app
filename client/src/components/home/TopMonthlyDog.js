@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 import { PetsContext } from "../../context/pets";
 import styled from "styled-components";
+import dog from '../appointments/dog.jpg'
 
 // Updated Card styling to match BirthdayAlert
 const Card = styled.div`
@@ -93,7 +94,8 @@ export default function TopMonthlyDog() {
     return (
         <Card>
             <PetImage
-                src={topPet.profile_pic || "https://via.placeholder.com/100"}
+                src={topPet.profile_pic || dog}
+                onError={(e) => { e.target.src = dog; }}
                 alt={topPet.name}
             />
             <PetDetails>

@@ -10,6 +10,7 @@ import NewAppointmentForm from '../appointments/NewAppointmentForm';
 import PetAppointmentCard from '../appointments/PetAppointmentCard';
 import { AppointmentsContext } from "../../context/appointments";
 import update from "./update.jpg";
+import dog from '../appointments/dog.jpg'
 
 export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) {
     const dayjs = require('dayjs');
@@ -194,7 +195,8 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                                 </div>
                                 <Card.Img
                                     variant="top"
-                                    src={pet.profile_pic}
+                                    src={pet.profile_pic || dog}
+                                    onError={(e) => { e.target.src = dog; }}
                                     style={{
                                         width: '150px',
                                         height: '150px',
