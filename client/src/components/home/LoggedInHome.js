@@ -6,6 +6,7 @@ import Rates from "./Rates";
 import TopMonthlyDog from "./TopMonthlyDog";
 import dayjs from 'dayjs';
 import { PetsContext } from "../../context/pets";
+import dog from '../appointments/dog.jpg';
 
 const Intro = styled.div`
     background: #f8f9fa;
@@ -341,7 +342,7 @@ export default function LoggedInHome() {
                         ) : (
                             futureAppointments.map((appointment, index) => (
                                 <ListGroupItem key={index}>
-                                    <PetImage src={appointment.pet.profile_pic} alt={appointment.pet.name} />
+                                    <PetImage src={appointment.pet.profile_pic || dog} onError={(e) => { e.target.src = dog; }} alt={appointment.pet.name} />
                                     <AppointmentItem>
                                         <div><strong>Pet:</strong> {appointment.pet.name}</div>
                                         <div><strong>Time:</strong> {dayjs(appointment.start_time).format('h:mm A')} - {dayjs(appointment.end_time).format('h:mm A')}</div>
