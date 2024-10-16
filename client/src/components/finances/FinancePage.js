@@ -5,12 +5,12 @@ import { PetsContext } from "../../context/pets";
 const currentYear = new Date().getFullYear();
 
 const Container = styled.div`
-    background: #f8f9fa;
     padding: 20px;
+    background: #ffffff;
     margin: 20px auto; // Center horizontally with auto margins
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    max-width: 350px;
+    max-width: 600px;
     width: 100%; // Ensure it takes full width up to max-width
     box-sizing: border-box; // Include padding and border in the element's total width and height
 `;
@@ -43,7 +43,7 @@ const DetailRow = styled.div`
     display: flex;
     justify-content: space-between;
     margin-bottom: 15px;
-    font-size: 1.1rem;
+    font-size: 1.3rem;
 `;
 
 const DetailLabel = styled.span`

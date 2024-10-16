@@ -14,7 +14,7 @@ const StyledCard = styled(Card)`
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
     border-radius: 12px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    background-color: ${({ bgColor }) => bgColor || '#fff'};
+    background-color: ${({ bgColor }) => bgColor || '#f8f9fa'}; // Softer default background color
 
     &:hover {
         transform: translateY(-4px);
@@ -23,30 +23,30 @@ const StyledCard = styled(Card)`
 `;
 
 const ImageContainer = styled.div`
-    width: 250px;
-    height: 250px;
+    width: 180px;
+    height: 180px;
     border-radius: 50%;
-    margin: 10px auto; /* Center container horizontally */
+    margin: 10px auto;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     border: 2px solid #e0e0e0;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Sleek shadow for style */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 
     @media (max-width: 600px) {
-        width: 150px;
-        height: 150px;
+        width: 120px;
+        height: 120px;
     }
 `;
+
 
 const InfoContainer = styled.div`
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
+    justify-content: space-between;
     text-align: left;
-    align-items: flex-start;
-    padding: 10px;
+    padding: 10px 15px;
 `;
 
 const StyledImage = styled.img`
@@ -69,15 +69,15 @@ const StyledImage = styled.img`
 `;
 
 const StyledTitle = styled.h3`
-    font-size: 1.4em;
-    font-weight: 600;
-    margin-bottom: 5px;
+    font-size: 1.2em;
+    font-weight: 700;
     color: ${({ theme }) => theme.primaryColor || '#333'};
+    margin-bottom: 10px;
 `;
 
 const StyledText = styled.p`
     font-size: 1em;
-    color: #444;
+    color: #555;
     line-height: 1.5;
     margin: 5px 0;
 `;
@@ -86,13 +86,14 @@ const StyledText = styled.p`
 const StyledButton = styled(Button)`
     margin: 5px;
     padding: 8px 16px;
-    font-size: 0.9em;
+    font-size: 0.85em; // Slightly smaller font for a more refined look
     border-radius: 6px;
+    background-color: ${({ theme }) => theme.primaryColor || '#007bff'};
     transition: background-color 0.3s ease, transform 0.2s ease;
 
     &:hover {
         background-color: ${({ theme }) => theme.primaryColorHover || '#0056b3'};
-        transform: scale(1.03);
+        transform: scale(1.05);
     }
 
     @media (max-width: 600px) {
@@ -101,6 +102,7 @@ const StyledButton = styled(Button)`
     }
 `;
 
+
 const StyledModal = styled(Modal)`
     text-align: center;
 `;
@@ -108,6 +110,8 @@ const StyledModal = styled(Modal)`
 const StyledModalBody = styled(Modal.Body)`
     text-align: left;
     padding: 20px;
+    font-size: 1.05em; // Adjusted for better readability
+    color: #444;
 `;
 
 const StyledInput = styled.input`

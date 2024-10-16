@@ -7,7 +7,8 @@ import PetCard from "./PetCard";
 const Container = styled.div`
     background: #f8f9fa;
     padding: 10px;
-    margin: 0 10px; /* Adjusted margin to match InvoicesPage */
+    margin: 0; /* Adjusted margin to match InvoicesPage */
+    max-width: 100%; /* Consistent with InvoicesPage */
 `;
 
 const Title = styled.h2`
@@ -27,7 +28,7 @@ const Description = styled.div`
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 15px 20px;
     margin: 10px auto;
-    max-width: 350px;
+    max-width: 600px;
     font-size: 1.125rem;
     color: #495057;
     text-align: left;
@@ -48,7 +49,7 @@ const NewPetButton = styled.button`
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
     display: block;
-    width: 100%;
+    width: 45%;
 
     &:hover {
         background-color: #c2185b;
@@ -73,28 +74,8 @@ const NoPetsCard = styled.div`
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 20px;
-    margin: 10px auto; /* Adjusted margin to match InvoicesPage */
+    margin: 10px auto;
     max-width: 600px;
-`;
-
-const CardHeader = styled.h5`
-    font-size: 1.5rem;
-    color: #343a40;
-    margin-bottom: 10px;
-`;
-
-const CardBody = styled.div`
-    margin-top: 1em;
-`;
-
-const CardTitle = styled.h6`
-    font-size: 1.25rem;
-    color: #495057;
-    margin: 10px 0;
-`;
-
-const CardText = styled.p`
-    color: #6c757d;
 `;
 
 const FilterWrapper = styled.div`
@@ -103,7 +84,7 @@ const FilterWrapper = styled.div`
 `;
 
 const FilterTitle = styled.h3`
-    font-size: 1.6rem;
+    font-size: 1.8rem;
     color: #007bff;
     margin-bottom: 10px;
 `;
@@ -116,7 +97,8 @@ const FilterSelect = styled.select`
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     margin: 0 auto;
     display: block;
-    width: 315px;
+    width: 100%;
+    max-width: 600px;
 
     @media (max-width: 768px) {
         font-size: 0.9rem;
@@ -124,56 +106,33 @@ const FilterSelect = styled.select`
 `;
 
 const PetStats = styled.div`
-    background: #fff;
+    background: #ffffff;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 20px;
     margin: 15px auto;
-    max-width: 350px; /* Match the smaller max-width */
+    max-width: 600px;
     text-align: left;
 `;
 
 const PetStatsTitle = styled.h3`
-    font-size: 1.5rem;
-    color: #007bff;
-    margin-bottom: 10px;
+    font-size: 1.8rem; /* Match financial overview font size */
+    color: #343a40; /* Same dark color as Finance Page title */
+    text-align: center;
+    margin-bottom: 20px; /* Add more space to the bottom */
 `;
 
 const PetStatsText = styled.p`
-    font-size: 1.1rem;
+    font-size: 1.25rem; /* Similar font size to finance overview details */
     color: #495057;
-    margin: 5px 0;
+    margin: 10px 0;
+    font-weight: bold; /* Add a bold weight for emphasis */
 `;
 
 export default function PetsPage() {
     const { pets, setPets } = useContext(PetsContext);
     const [filter, setFilter] = useState("active");
     const [displayFormButton, setDisplayFormButton] = useState(false);
-
-    function sortObjectsByName(objects) {
-        return objects.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
-    }
-
-    function updateDisplayButton() {
-        setDisplayFormButton(!displayFormButton);
-    }
-
-    function addNewPet(newPet) {
-        const newPets = [...pets, newPet];
-        const sortedPets = sortObjectsByName(newPets);
-        setPets(sortedPets);
-        setDisplayFormButton(false);
-    }
-
-    function updateUserPets(updatedPet) {
-        const updatedPets = pets.map(pet => (pet.id === updatedPet.id ? updatedPet : pet));
-        setPets(updatedPets);
-    }
-
-    function updatePetsAfterDelete(deletedPet) {
-        const remainingPets = pets.filter(pet => pet.id !== deletedPet.id);
-        setPets(remainingPets);
-    }
 
     function handleFilterChange(e) {
         setFilter(e.target.value);
@@ -198,51 +157,35 @@ export default function PetsPage() {
             </Description>
             <PetStats>
                 <PetStatsTitle>Your Pet Statistics</PetStatsTitle>
-                <PetStatsText><strong>Total Pets:</strong> {totalPetsCount}</PetStatsText>
-                <PetStatsText><strong>Marked As Active:</strong> {activePetsCount}</PetStatsText>
-                <PetStatsText><strong>Marked As Inactive:</strong> {inactivePetsCount}</PetStatsText>
                 <ButtonWrapper>
-                    <NewPetButton onClick={updateDisplayButton}>
+                    <NewPetButton onClick={() => setDisplayFormButton(!displayFormButton)}>
                         {displayFormButton ? "Close New Pet Form" : "Add New Pet To Database"}
                     </NewPetButton>
                 </ButtonWrapper>
+                <PetStatsText><strong>Total Pets:</strong> {totalPetsCount}</PetStatsText>
+                <PetStatsText><strong>Marked As Active:</strong> {activePetsCount}</PetStatsText>
+                <PetStatsText><strong>Marked As Inactive:</strong> {inactivePetsCount}</PetStatsText>
             </PetStats>
             {displayFormButton && pets && (
-                <NewPetForm updateUserPets={addNewPet} />
+                <NewPetForm updateUserPets={setPets} />
             )}
             <FilterWrapper>
                 <FilterTitle>Filter Active & Inactive Pets</FilterTitle>
                 <FilterSelect value={filter} onChange={handleFilterChange}>
                     <option value="active">Active Pets</option>
                     <option value="inactive">Inactive Pets</option>
-                    <option value="both">Active & Inactive</option>
+                    <option value="both">Active and Inactive</option>
                 </FilterSelect>
             </FilterWrapper>
-            {pets === null ? (
-                <div>Loading...</div>
+            {filteredPets.length > 0 ? (
+                filteredPets.map(pet => (
+                    <PetCard key={pet.id} pet={pet} />
+                ))
             ) : (
-                <div>
-                    {filteredPets.length > 0 ? (
-                        filteredPets.map(pet => (
-                            <PetCard
-                                key={pet.id}
-                                pet={pet}
-                                updatePetsAfterDelete={updatePetsAfterDelete}
-                                updateUserPets={updateUserPets}
-                            />
-                        ))
-                    ) : (
-                        <NoPetsCard>
-                            <CardHeader>No pets currently in database</CardHeader>
-                            <CardBody>
-                                <CardTitle>Click "New Pet" button to create a pet</CardTitle>
-                                <CardText>
-                                    Once a pet has been created, you can schedule appointments for said pet.
-                                </CardText>
-                            </CardBody>
-                        </NoPetsCard>
-                    )}
-                </div>
+                <NoPetsCard>
+                    <h5>No pets available</h5>
+                    <p>Create your first pet to get started.</p>
+                </NoPetsCard>
             )}
         </Container>
     );

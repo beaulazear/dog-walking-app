@@ -28,7 +28,7 @@ const InstructionParagraph = styled.div`
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 15px 20px;
     margin: 10px auto;
-    max-width: 350px;
+    max-width: 600px;
     font-size: 1.125rem;
     color: #495057;
     text-align: left;

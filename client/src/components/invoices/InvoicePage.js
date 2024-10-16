@@ -4,11 +4,12 @@ import { PetsContext } from "../../context/pets";
 import FinancePage from "../finances/FinancePage";
 import InvoicePetCard from "./InvoicePetCard";
 
-// Styled Components
 const Container = styled.div`
     background: #f8f9fa;
     padding: 10px;
-    margin: 0 10px;
+    margin: 0; // Ensure no extra margin on the sides
+    max-width: 100%; // Make sure the container doesn't exceed the viewport's width
+    overflow-x: hidden; // Prevent horizontal scroll if there's any overflow
 `;
 
 const Header = styled.h2`
@@ -55,7 +56,7 @@ const FilterSection = styled.div`
 `;
 
 const FilterTitle = styled.h3`
-    font-size: 1.6rem;
+    font-size: 1.8rem;
     color: #007bff;
     margin-bottom: 10px;
 `;
@@ -67,11 +68,12 @@ const FilterSelect = styled.select`
     font-size: 1rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     margin: 0 auto; // Center the select element
-    display: block; // Ensure the select takes up the full width available
-    width: 350px;
+    display: block;
+    width: 100%; // Ensure it takes the full available width
+    max-width: 600px; // Restrict to a max-width for larger screens
 
     @media (max-width: 768px) {
-        font-size: 0.9rem; // Optional: adjust font size for smaller screens if needed
+        font-size: 0.9rem;
     }
 `;
 
@@ -81,7 +83,8 @@ const Description = styled.div`
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 15px 20px;
     margin: 10px auto;
-    max-width: 350px; // Adjust to match the PetStats width
+    width: 100%; // Ensure the description doesn't exceed viewport width
+    max-width: 600px;
     font-size: 1.125rem;
     color: #495057;
     text-align: left;
@@ -90,6 +93,7 @@ const Description = styled.div`
         font-size: 1rem;
     }
 `;
+
 
 export default function InvoicesPage() {
     const { pets } = useContext(PetsContext);
