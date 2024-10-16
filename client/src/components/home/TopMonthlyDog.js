@@ -92,18 +92,22 @@ export default function TopMonthlyDog() {
     ).length;
 
     return (
-        <Card>
-            <PetImage
-                src={topPet.profile_pic || dog}
-                onError={(e) => { e.target.src = dog; }}
-                alt={topPet.name}
-            />
-            <PetDetails>
-                <PetName>Your Top Walker</PetName>
-                <PetInfo>
-                    {topPet.name} has walked with you {monthlyInvoicesCount || 0} times this month. 💕
-                </PetInfo>
-            </PetDetails>
-        </Card>
+        <>
+            {topPet && (
+                <Card>
+                    <PetImage
+                        src={topPet.profile_pic || dog}
+                        onError={(e) => { e.target.src = dog; }}
+                        alt={topPet.name}
+                    />
+                    <PetDetails>
+                        <PetName>Your Top Walker</PetName>
+                        <PetInfo>
+                            {topPet.name} has walked with you {monthlyInvoicesCount || 0} times this month. 💕
+                        </PetInfo>
+                    </PetDetails>
+                </Card>
+            )}
+        </>
     );
 }

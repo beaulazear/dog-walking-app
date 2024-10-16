@@ -42,13 +42,13 @@ const NewPetButton = styled.button`
     color: white;
     border: none;
     border-radius: 50px;
-    padding: 12px 32px;
-    font-size: 1.1rem;
+    padding: 6px 18px;
+    font-size: 1rem;
     cursor: pointer;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
     display: block;
-    width: 350px;
+    width: 100%;
 
     &:hover {
         background-color: #c2185b;
