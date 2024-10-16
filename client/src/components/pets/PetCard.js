@@ -168,7 +168,8 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
                     <Accordion.Header>
                         <div className="d-flex align-items-center">
                             <img
-                                src={pet.profile_pic}
+                                src={pet.profile_pic || dog}
+                                onError={(e) => { e.target.src = dog; }}
                                 alt={`${pet.name}'s profile`}
                                 style={{
                                     width: '50px',
