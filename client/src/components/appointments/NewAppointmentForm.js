@@ -14,8 +14,8 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
     const [duration, setDuration] = useState("30");
     const [solo, setSolo] = useState(false);
     const [errors, setErrors] = useState([]);
+    const [appointmentDate, setAppointmentDate] = useState("");
 
-    const appointmentDate = new Date().toISOString().split("T")[0]
     const [daysOfWeek, setDaysOfWeek] = useState({
         monday: false,
         tuesday: false,
@@ -36,7 +36,10 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
     function handleNewAppointmentRequest(e) {
         e.preventDefault();
 
-        if (!appointmentDate) {
+        // Use today's date if the appointment is not recurring and no date is selected
+        const selectedDate = recurring ? null : (appointmentDate || new Date().toISOString().split("T")[0]);
+
+        if (!recurring && !selectedDate) {
             setErrors(["Appointment date is required"]);
             return;
         }
@@ -54,7 +57,7 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
                 end_time: endTime,
                 duration,
                 solo,
-                appointment_date: appointmentDate,
+                appointment_date: selectedDate,
                 monday: daysOfWeek.monday,
                 tuesday: daysOfWeek.tuesday,
                 wednesday: daysOfWeek.wednesday,
@@ -108,6 +111,13 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
                     <Form.Label>Is this a recurring walk?</Form.Label>
                     <Form.Check type="checkbox" label="Yes" checked={recurring} onChange={() => setRecurring(!recurring)} />
                 </Form.Group>
+
+                {!recurring && (
+                    <Form.Group className="mb-3" controlId="formBasicDate">
+                        <Form.Label>Appointment Date</Form.Label>
+                        <Form.Control type="date" value={appointmentDate} onChange={(e) => setAppointmentDate(e.target.value)} />
+                    </Form.Group>
+                )}
 
                 {recurring && (
                     <div>

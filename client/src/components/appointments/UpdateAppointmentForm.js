@@ -55,16 +55,21 @@ export default function UpdateAppointmentForm({ apt, changeUpdateFormView }) {
             .then((response) => {
                 if (response.ok) {
                     response.json().then((updatedApt) => {
-                        const newPetAppointments = petsAppointments.filter((apt) => apt.id !== updatedApt.id);
-                        const newTodaysAppointments = todaysAppointments.map((apt) => {
-                            if (apt.id === updatedApt.id) {
-                                return updatedApt;
-                            } else {
-                                return apt;
-                            }
-                        });
-                        setPetsAppointments([updatedApt, ...newPetAppointments]);
+                        // Update petsAppointments by replacing the old appointment with the updated one
+                        const newPetAppointments = petsAppointments.map((appointment) =>
+                            appointment.id === updatedApt.id ? updatedApt : appointment
+                        );
+
+                        // Update todaysAppointments similarly if it exists in that list
+                        const newTodaysAppointments = todaysAppointments.map((appointment) =>
+                            appointment.id === updatedApt.id ? updatedApt : appointment
+                        );
+
+                        // Update context
+                        setPetsAppointments(newPetAppointments);
                         setTodaysAppointments(newTodaysAppointments);
+
+                        // Hide the form
                         changeUpdateFormView();
                         alert('Appointment successfully updated!');
                     });

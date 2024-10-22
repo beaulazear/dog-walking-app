@@ -98,9 +98,8 @@ export default function TodaysWalksPage() {
         <Container>
             <Header>Today's Appointments</Header>
             <SubHeader>{todayFormatted}</SubHeader>
-            {/* <SubHeader>Appointments: {todaysAppointments.length}</SubHeader> */}
             <InstructionParagraph>
-                Below is your list of today's appointments. As you finish each walk, mark it as completed, and the corresponding invoice will be automatically saved.
+                Below is your list of today's appointments (Total: {todaysAppointments.length}). As you finish each walk, mark it as completed, and the corresponding invoice will be automatically saved.
             </InstructionParagraph>
             {todaysAppointments?.length > 0 ? (
                 <>
