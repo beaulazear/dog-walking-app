@@ -239,13 +239,13 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                         </ListGroup>
                     )}
                     <InvoiceForm apt={apt} />
+                    <Button className="btn btn-info btn-block" onClick={changeUpdateFormView}>
+                        {updateAptButton ? "Close Update Form" : "Update Appointment"}
+                    </Button>
                     <Button onClick={handleModalShow} className="btn-success">Add Cancellations</Button>
                     {cancellations.length > 0 && (
                         <Button onClick={handleEditModalShow} className="btn-secondary">Edit Cancellations</Button>
                     )}
-                    <Button className="btn btn-info btn-block" onClick={changeUpdateFormView}>
-                        {updateAptButton ? "Close Update Form" : "Update Appointment"}
-                    </Button>
                     {updateAptButton && (
                         <UpdateAppointmentForm changeUpdateFormView={changeUpdateFormView} apt={apt} />
                     )}
@@ -274,7 +274,7 @@ export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {
                         This is a one-time appointment and will be displayed on the Today page on the date of the appointment.
                     </CardText>
                     <InvoiceForm apt={apt} />
-                    <Button onClick={changeUpdateFormView} className="btn-success">
+                    <Button onClick={changeUpdateFormView} className="btn btn-info btn-block">
                         {updateAptButton ? "Close Update Form" : "Update Appointment"}
                     </Button>
                     {updateAptButton && (

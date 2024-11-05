@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { UserContext } from "../../context/user";
 import { AppointmentsContext } from "../../context/appointments";
 import Button from "react-bootstrap/Button";
@@ -10,9 +10,10 @@ export default function UpdateAppointmentForm({ apt, changeUpdateFormView }) {
     const { user } = useContext(UserContext);
     const { setPetsAppointments, petsAppointments, todaysAppointments, setTodaysAppointments } = useContext(AppointmentsContext);
 
-    const [startTime, setStartTime] = useState(apt.start_time || '');
-    const [endTime, setEndTime] = useState(apt.end_time || '');
+    const [startTime, setStartTime] = useState('');
+    const [endTime, setEndTime] = useState('');
     const [duration, setDuration] = useState(apt.duration || '30');
+    const [appointmentDate, setAppointmentDate] = useState(apt.appointment_date || '');
     const [daysOfWeek, setDaysOfWeek] = useState({
         monday: apt.monday || false,
         tuesday: apt.tuesday || false,
@@ -24,6 +25,21 @@ export default function UpdateAppointmentForm({ apt, changeUpdateFormView }) {
     });
     const [errors, setErrors] = useState([]);
 
+    useEffect(() => {
+        // Format the start and end times for display in HH:mm format
+        const formatTime = (dateTime) => {
+            const date = new Date(dateTime);
+            return date.toLocaleTimeString("en-US", {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+            });
+        };
+
+        setStartTime(apt.start_time ? formatTime(apt.start_time) : '');
+        setEndTime(apt.end_time ? formatTime(apt.end_time) : '');
+    }, [apt.start_time, apt.end_time]);
+
     function handleDayChange(day) {
         setDaysOfWeek((prevDays) => ({
             ...prevDays,
@@ -33,43 +49,47 @@ export default function UpdateAppointmentForm({ apt, changeUpdateFormView }) {
 
     function handleUpdateAppointmentRequest(e) {
         e.preventDefault();
+        const body = {
+            user_id: user.id,
+            start_time: startTime,
+            end_time: endTime,
+            duration: duration,
+            recurring: apt.recurring,  // Keep the existing appointment type
+        };
+
+        if (apt.recurring) {
+            body.monday = daysOfWeek.monday;
+            body.tuesday = daysOfWeek.tuesday;
+            body.wednesday = daysOfWeek.wednesday;
+            body.thursday = daysOfWeek.thursday;
+            body.friday = daysOfWeek.friday;
+            body.saturday = daysOfWeek.saturday;
+            body.sunday = daysOfWeek.sunday;
+        } else {
+            body.appointment_date = appointmentDate;
+        }
+
         fetch(`/appointments/${apt.id}`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-                user_id: user.id,
-                start_time: startTime,
-                end_time: endTime,
-                duration: duration,
-                monday: daysOfWeek.monday,
-                tuesday: daysOfWeek.tuesday,
-                wednesday: daysOfWeek.wednesday,
-                thursday: daysOfWeek.thursday,
-                friday: daysOfWeek.friday,
-                saturday: daysOfWeek.saturday,
-                sunday: daysOfWeek.sunday,
-            })
+            body: JSON.stringify(body)
         })
             .then((response) => {
                 if (response.ok) {
                     response.json().then((updatedApt) => {
-                        // Update petsAppointments by replacing the old appointment with the updated one
                         const newPetAppointments = petsAppointments.map((appointment) =>
                             appointment.id === updatedApt.id ? updatedApt : appointment
                         );
 
-                        // Update todaysAppointments similarly if it exists in that list
                         const newTodaysAppointments = todaysAppointments.map((appointment) =>
                             appointment.id === updatedApt.id ? updatedApt : appointment
                         );
 
-                        // Update context
                         setPetsAppointments(newPetAppointments);
                         setTodaysAppointments(newTodaysAppointments);
 
-                        // Hide the form
                         changeUpdateFormView();
                         alert('Appointment successfully updated!');
                     });
@@ -88,7 +108,7 @@ export default function UpdateAppointmentForm({ apt, changeUpdateFormView }) {
                         <Form.Label>Start Time</Form.Label>
                         <Form.Control
                             onChange={(e) => setStartTime(e.target.value)}
-                            value={startTime || ''}
+                            value={startTime}
                             type="time"
                         />
                     </Form.Group>
@@ -96,7 +116,7 @@ export default function UpdateAppointmentForm({ apt, changeUpdateFormView }) {
                         <Form.Label>End Time</Form.Label>
                         <Form.Control
                             onChange={(e) => setEndTime(e.target.value)}
-                            value={endTime || ''}
+                            value={endTime}
                             type="time"
                         />
                     </Form.Group>
@@ -111,19 +131,30 @@ export default function UpdateAppointmentForm({ apt, changeUpdateFormView }) {
                             <option value="60">60 Minutes</option>
                         </Form.Select>
                     </Form.Group>
-                    <Form.Group className="mb-3">
-                        <Form.Label>Days of Week</Form.Label>
-                        {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map((day) => (
-                            <Form.Check
-                                key={day}
-                                type="checkbox"
-                                id={`formBasic${day.charAt(0).toUpperCase() + day.slice(1)}`}
-                                label={day.charAt(0).toUpperCase() + day.slice(1)}
-                                checked={daysOfWeek[day]}
-                                onChange={() => handleDayChange(day)}
+                    {apt.recurring ? (
+                        <Form.Group className="mb-3">
+                            <Form.Label>Days of Week</Form.Label>
+                            {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map((day) => (
+                                <Form.Check
+                                    key={day}
+                                    type="checkbox"
+                                    id={`formBasic${day.charAt(0).toUpperCase() + day.slice(1)}`}
+                                    label={day.charAt(0).toUpperCase() + day.slice(1)}
+                                    checked={daysOfWeek[day]}
+                                    onChange={() => handleDayChange(day)}
+                                />
+                            ))}
+                        </Form.Group>
+                    ) : (
+                        <Form.Group className="mb-3" controlId="formBasicDate">
+                            <Form.Label>Appointment Date</Form.Label>
+                            <Form.Control
+                                type="date"
+                                value={appointmentDate || ''}
+                                onChange={(e) => setAppointmentDate(e.target.value)}
                             />
-                        ))}
-                    </Form.Group>
+                        </Form.Group>
+                    )}
                     {errors?.length > 0 && (
                         <ul>
                             {errors.map((error, index) => (
