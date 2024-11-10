@@ -49,7 +49,7 @@ const NewPetButton = styled.button`
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
     display: block;
-    width: 45%;
+    width: 225px;
 
     &:hover {
         background-color: #c2185b;
@@ -58,6 +58,7 @@ const NewPetButton = styled.button`
     }
 
     @media (max-width: 768px) {
+        width: 150px;
         display: block;
         margin-left: auto;
         margin-right: auto;
@@ -67,6 +68,7 @@ const NewPetButton = styled.button`
 const ButtonWrapper = styled.div`
     display: flex;
     justify-content: center;
+    margin-bottom: 10px;
 `;
 
 const NoPetsCard = styled.div`
@@ -157,15 +159,15 @@ export default function PetsPage() {
             </Description>
             <PetStats>
                 <PetStatsTitle>Your Pet Statistics</PetStatsTitle>
+                <PetStatsText><strong>Total Pets:</strong> {totalPetsCount}</PetStatsText>
+                <PetStatsText><strong>Marked As Active:</strong> {activePetsCount}</PetStatsText>
+                <PetStatsText><strong>Marked As Inactive:</strong> {inactivePetsCount}</PetStatsText>
+            </PetStats>
                 <ButtonWrapper>
                     <NewPetButton onClick={() => setDisplayFormButton(!displayFormButton)}>
                         {displayFormButton ? "Close New Pet Form" : "Add New Pet To Database"}
                     </NewPetButton>
                 </ButtonWrapper>
-                <PetStatsText><strong>Total Pets:</strong> {totalPetsCount}</PetStatsText>
-                <PetStatsText><strong>Marked As Active:</strong> {activePetsCount}</PetStatsText>
-                <PetStatsText><strong>Marked As Inactive:</strong> {inactivePetsCount}</PetStatsText>
-            </PetStats>
             {displayFormButton && pets && (
                 <NewPetForm updateUserPets={setPets} />
             )}
