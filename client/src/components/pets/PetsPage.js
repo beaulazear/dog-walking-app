@@ -7,14 +7,14 @@ import PetCard from "./PetCard";
 const Container = styled.div`
     background: #f8f9fa;
     padding: 10px;
-    margin: 0; /* Adjusted margin to match InvoicesPage */
-    max-width: 100%; /* Consistent with InvoicesPage */
+    margin: 0;
+    max-width: 100%;
 `;
 
 const Title = styled.h2`
     font-size: 2em;
     color: #343a40;
-    margin: 0; /* Remove default margin */
+    margin: 0;
     text-align: center;
 
     @media (max-width: 768px) {
@@ -36,6 +36,12 @@ const Description = styled.div`
     @media (max-width: 768px) {
         font-size: 1rem;
     }
+`;
+
+const ButtonWrapper = styled.div`
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
 `;
 
 const NewPetButton = styled.button`
@@ -65,21 +71,6 @@ const NewPetButton = styled.button`
     }
 `;
 
-const ButtonWrapper = styled.div`
-    display: flex;
-    justify-content: center;
-    margin-bottom: 10px;
-`;
-
-const NoPetsCard = styled.div`
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    margin: 10px auto;
-    max-width: 600px;
-`;
-
 const FilterWrapper = styled.div`
     margin-bottom: 20px;
     text-align: center;
@@ -107,32 +98,8 @@ const FilterSelect = styled.select`
     }
 `;
 
-const PetStats = styled.div`
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    margin: 15px auto;
-    max-width: 600px;
-    text-align: left;
-`;
-
-const PetStatsTitle = styled.h3`
-    font-size: 1.8rem; /* Match financial overview font size */
-    color: #343a40; /* Same dark color as Finance Page title */
-    text-align: center;
-    margin-bottom: 20px; /* Add more space to the bottom */
-`;
-
-const PetStatsText = styled.p`
-    font-size: 1.25rem; /* Similar font size to finance overview details */
-    color: #495057;
-    margin: 10px 0;
-    font-weight: bold; /* Add a bold weight for emphasis */
-`;
-
 export default function PetsPage() {
-    const { pets, setPets } = useContext(PetsContext);
+    const { pets } = useContext(PetsContext);
     const [filter, setFilter] = useState("active");
     const [displayFormButton, setDisplayFormButton] = useState(false);
 
@@ -140,11 +107,15 @@ export default function PetsPage() {
         setFilter(e.target.value);
     }
 
-    const filteredPets = pets.filter(pet => {
+    function closeForm() {
+        setDisplayFormButton(false);  // This will close the form after a successful submission
+    }
+
+    const filteredPets = Array.isArray(pets) ? pets.filter(pet => {
         if (filter === "active") return pet.active;
         if (filter === "inactive") return !pet.active;
         return true;
-    });
+    }) : [];
 
     const activePetsCount = pets.filter(pet => pet.active).length;
     const inactivePetsCount = pets.filter(pet => !pet.active).length;
@@ -157,19 +128,13 @@ export default function PetsPage() {
                 Manage your pets here. Each pet can be updated and marked active or inactive. Use the filter to view pets based on their status.
                 Create new appointments and invoices by clicking on a pet's accordion.
             </Description>
-            <PetStats>
-                <PetStatsTitle>Your Pet Statistics</PetStatsTitle>
-                <PetStatsText><strong>Total Pets:</strong> {totalPetsCount}</PetStatsText>
-                <PetStatsText><strong>Marked As Active:</strong> {activePetsCount}</PetStatsText>
-                <PetStatsText><strong>Marked As Inactive:</strong> {inactivePetsCount}</PetStatsText>
-            </PetStats>
-                <ButtonWrapper>
-                    <NewPetButton onClick={() => setDisplayFormButton(!displayFormButton)}>
-                        {displayFormButton ? "Close New Pet Form" : "Add New Pet To Database"}
-                    </NewPetButton>
-                </ButtonWrapper>
-            {displayFormButton && pets && (
-                <NewPetForm updateUserPets={setPets} />
+            <ButtonWrapper>
+                <NewPetButton onClick={() => setDisplayFormButton(!displayFormButton)}>
+                    {displayFormButton ? "Close New Pet Form" : "Add New Pet To Database"}
+                </NewPetButton>
+            </ButtonWrapper>
+            {displayFormButton && (
+                <NewPetForm closeForm={closeForm} />
             )}
             <FilterWrapper>
                 <FilterTitle>Filter Active & Inactive Pets</FilterTitle>
@@ -184,10 +149,7 @@ export default function PetsPage() {
                     <PetCard key={pet.id} pet={pet} />
                 ))
             ) : (
-                <NoPetsCard>
-                    <h5>No pets available</h5>
-                    <p>Create your first pet to get started.</p>
-                </NoPetsCard>
+                <div>No pets available. Create your first pet to get started.</div>
             )}
         </Container>
     );
