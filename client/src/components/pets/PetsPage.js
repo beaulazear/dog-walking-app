@@ -38,10 +38,32 @@ const Description = styled.div`
     }
 `;
 
+const StatsWrapper = styled.div`
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 15px 20px;
+    margin: 10px auto 20px;
+    max-width: 600px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    text-align: center;
+
+    @media (max-width: 768px) {
+        flex-direction: column;
+    }
+`;
+
+const Stat = styled.div`
+    font-size: 1.25rem;
+    color: #495057;
+`;
+
 const ButtonWrapper = styled.div`
     display: flex;
     justify-content: center;
-    margin-bottom: 10px;
+    margin-top: 15px;
 `;
 
 const NewPetButton = styled.button`
@@ -56,6 +78,7 @@ const NewPetButton = styled.button`
     transition: all 0.3s ease;
     display: block;
     width: 225px;
+    height: 60px;
 
     &:hover {
         background-color: #c2185b;
@@ -99,16 +122,26 @@ const FilterSelect = styled.select`
 `;
 
 export default function PetsPage() {
-    const { pets } = useContext(PetsContext);
+    const { pets, setPets } = useContext(PetsContext);
     const [filter, setFilter] = useState("active");
     const [displayFormButton, setDisplayFormButton] = useState(false);
+
+    const activePetsCount = pets.filter(pet => pet.active).length;
+    const inactivePetsCount = pets.filter(pet => !pet.active).length;
+    const totalPetsCount = pets.length;
+
+    function updateUserPets(updatedPet) {
+        setPets(prevPets =>
+            prevPets.map(pet => (pet.id === updatedPet.id ? updatedPet : pet))
+        );
+    }
 
     function handleFilterChange(e) {
         setFilter(e.target.value);
     }
 
     function closeForm() {
-        setDisplayFormButton(false);  // This will close the form after a successful submission
+        setDisplayFormButton(false);
     }
 
     const filteredPets = Array.isArray(pets) ? pets.filter(pet => {
@@ -117,10 +150,6 @@ export default function PetsPage() {
         return true;
     }) : [];
 
-    const activePetsCount = pets.filter(pet => pet.active).length;
-    const inactivePetsCount = pets.filter(pet => !pet.active).length;
-    const totalPetsCount = pets.length;
-
     return (
         <Container>
             <Title>Pets Page</Title>
@@ -128,14 +157,11 @@ export default function PetsPage() {
                 Manage your pets here. Each pet can be updated and marked active or inactive. Use the filter to view pets based on their status.
                 Create new appointments and invoices by clicking on a pet's accordion.
             </Description>
-            <ButtonWrapper>
-                <NewPetButton onClick={() => setDisplayFormButton(!displayFormButton)}>
-                    {displayFormButton ? "Close New Pet Form" : "Add New Pet To Database"}
-                </NewPetButton>
-            </ButtonWrapper>
-            {displayFormButton && (
-                <NewPetForm closeForm={closeForm} />
-            )}
+            <StatsWrapper>
+                <Stat>Active Dogs: {activePetsCount}</Stat>
+                <Stat>Inactive Dogs: {inactivePetsCount}</Stat>
+                <Stat>Total Dogs: {totalPetsCount}</Stat>
+            </StatsWrapper>
             <FilterWrapper>
                 <FilterTitle>Filter Active & Inactive Pets</FilterTitle>
                 <FilterSelect value={filter} onChange={handleFilterChange}>
@@ -143,10 +169,20 @@ export default function PetsPage() {
                     <option value="inactive">Inactive Pets</option>
                     <option value="both">Active and Inactive</option>
                 </FilterSelect>
+                <ButtonWrapper>
+                    <NewPetButton onClick={() => setDisplayFormButton(!displayFormButton)}>
+                        {displayFormButton ? "Close New Pet Form" : "Add New Pet To Database"}
+                    </NewPetButton>
+                </ButtonWrapper>
+                {displayFormButton && <NewPetForm closeForm={closeForm} />}
             </FilterWrapper>
             {filteredPets.length > 0 ? (
                 filteredPets.map(pet => (
-                    <PetCard key={pet.id} pet={pet} />
+                    <PetCard
+                        key={pet.id}
+                        pet={pet}
+                        updateUserPets={updateUserPets}
+                    />
                 ))
             ) : (
                 <div>No pets available. Create your first pet to get started.</div>

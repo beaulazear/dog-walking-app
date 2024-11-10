@@ -85,8 +85,6 @@ function App() {
               <InvoicesProvider>
                 <PetsProvider>
                   <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signuppage" element={<Signup />} />
                     <Route path="/petspage" element={<PetsPage />} />
                     <Route path="/todayswalkspage" element={<TodaysWalksPage />} />
                     <Route path="/invoicespage" element={<InvoicesPage />} />

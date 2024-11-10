@@ -53,6 +53,7 @@ export default function PetCard({ pet, updateUserPets, updatePetsAfterDelete }) 
         formData.append('supplies_location', suppliesLocation);
         formData.append('allergies', allergies);
         formData.append('behavorial_notes', behavioralNotes);
+        formData.append('spayed_neutered', spayedOrNeutered);
         formData.append('active', active); // include active status
         // please note spelling of behavioral is wrong in the database, do not change spelling how it is in this component!
 
