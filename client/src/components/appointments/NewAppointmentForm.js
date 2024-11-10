@@ -8,14 +8,15 @@ import Alert from 'react-bootstrap/Alert';
 export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
     const { user } = useContext(UserContext);
 
+    const todayDate = new Date().toISOString().split("T")[0];
+    const [appointmentDate, setAppointmentDate] = useState(todayDate);
+
     const [recurring, setRecurring] = useState(false);
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
     const [duration, setDuration] = useState("30");
     const [solo, setSolo] = useState(false);
     const [errors, setErrors] = useState([]);
-    const [appointmentDate, setAppointmentDate] = useState("");
-
     const [daysOfWeek, setDaysOfWeek] = useState({
         monday: false,
         tuesday: false,
@@ -36,13 +37,8 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
     function handleNewAppointmentRequest(e) {
         e.preventDefault();
 
-        // Use today's date if the appointment is not recurring and no date is selected
-        const selectedDate = recurring ? null : (appointmentDate || new Date().toISOString().split("T")[0]);
-
-        if (!recurring && !selectedDate) {
-            setErrors(["Appointment date is required"]);
-            return;
-        }
+        // Use today's date for recurring appointments
+        const selectedDate = recurring ? todayDate : appointmentDate;
 
         fetch("/appointments", {
             method: "POST",
@@ -58,13 +54,7 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
                 duration,
                 solo,
                 appointment_date: selectedDate,
-                monday: daysOfWeek.monday,
-                tuesday: daysOfWeek.tuesday,
-                wednesday: daysOfWeek.wednesday,
-                thursday: daysOfWeek.thursday,
-                friday: daysOfWeek.friday,
-                saturday: daysOfWeek.saturday,
-                sunday: daysOfWeek.sunday
+                ...daysOfWeek
             })
         })
             .then((response) => {
@@ -144,7 +134,6 @@ export default function NewAppointmentForm({ pet, updateAppointmentsNew }) {
                         </ul>
                     </Alert>
                 )}
-
                 <Button variant="primary" type="submit">
                     Submit
                 </Button>
