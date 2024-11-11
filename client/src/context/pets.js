@@ -4,6 +4,7 @@ const PetsContext = React.createContext();
 
 function PetsProvider({ children }) {
     const [pets, setPets] = useState([]);
+    const [loading, setLoading] = useState(true); // Loading state
 
     const sortObjectsByName = (objects) => {
         return objects.sort((a, b) => {
@@ -21,7 +22,7 @@ function PetsProvider({ children }) {
                     setPets(sortedPets);
                 });
             }
-        });
+        }).finally(() => setLoading(false)); // Set loading to false after fetch
     }, []);
 
     useEffect(() => {
@@ -29,7 +30,7 @@ function PetsProvider({ children }) {
     }, [refreshPets]);
 
     return (
-        <PetsContext.Provider value={{ pets, setPets, refreshPets }}>
+        <PetsContext.Provider value={{ pets, setPets, refreshPets, loading }}>
             {children}
         </PetsContext.Provider>
     );
