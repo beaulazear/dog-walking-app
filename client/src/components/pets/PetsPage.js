@@ -87,7 +87,6 @@ const NewPetButton = styled.button`
     }
 
     @media (max-width: 768px) {
-        width: 150px;
         display: block;
         margin-left: auto;
         margin-right: auto;
