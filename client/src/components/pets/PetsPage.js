@@ -1,8 +1,15 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import styled from "styled-components";
 import { PetsContext } from "../../context/pets";
 import NewPetForm from "./NewPetForm";
 import PetCard from "./PetCard";
+
+const LoadingMessage = styled.div`
+    font-size: 1.5rem;
+    color: #343a40;
+    text-align: center;
+    margin-top: 20px;
+`;
 
 const Container = styled.div`
     background: #f8f9fa;
@@ -124,6 +131,16 @@ export default function PetsPage() {
     const { pets, setPets } = useContext(PetsContext);
     const [filter, setFilter] = useState("active");
     const [displayFormButton, setDisplayFormButton] = useState(false);
+    const [loading, setLoading] = useState(true); // New loading state
+
+    useEffect(() => {
+        const fetchPets = async () => {
+            // Simulate a delay for fetching pets
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            setLoading(false);
+        };
+        fetchPets();
+    }, [pets]);
 
     const activePetsCount = pets.filter(pet => pet.active).length;
     const inactivePetsCount = pets.filter(pet => !pet.active).length;
@@ -156,36 +173,43 @@ export default function PetsPage() {
                 Manage your pets here. Each pet can be updated and marked active or inactive. Use the filter to view pets based on their status.
                 Create new appointments and invoices by clicking on a pet's accordion.
             </Description>
-            <StatsWrapper>
-                <Stat>Active Dogs: {activePetsCount}</Stat>
-                <Stat>Inactive Dogs: {inactivePetsCount}</Stat>
-                <Stat>Total Dogs: {totalPetsCount}</Stat>
-            </StatsWrapper>
-            <FilterWrapper>
-                <FilterTitle>Filter Active & Inactive Pets</FilterTitle>
-                <FilterSelect value={filter} onChange={handleFilterChange}>
-                    <option value="active">Active Pets</option>
-                    <option value="inactive">Inactive Pets</option>
-                    <option value="both">Active and Inactive</option>
-                </FilterSelect>
-                <ButtonWrapper>
-                    <NewPetButton onClick={() => setDisplayFormButton(!displayFormButton)}>
-                        {displayFormButton ? "Close New Pet Form" : "Add New Pet To Database"}
-                    </NewPetButton>
-                </ButtonWrapper>
-                {displayFormButton && <NewPetForm closeForm={closeForm} />}
-            </FilterWrapper>
-            {filteredPets.length > 0 ? (
-                filteredPets.map(pet => (
-                    <PetCard
-                        key={pet.id}
-                        pet={pet}
-                        updateUserPets={updateUserPets}
-                    />
-                ))
+            {loading ? (
+                <LoadingMessage>Loading pets, please wait...</LoadingMessage>
             ) : (
-                <div>No pets available. Create your first pet to get started.</div>
+                <>
+                    <StatsWrapper>
+                        <Stat>Active Dogs: {activePetsCount}</Stat>
+                        <Stat>Inactive Dogs: {inactivePetsCount}</Stat>
+                        <Stat>Total Dogs: {totalPetsCount}</Stat>
+                    </StatsWrapper>
+                    <FilterWrapper>
+                        <FilterTitle>Filter Active & Inactive Pets</FilterTitle>
+                        <FilterSelect value={filter} onChange={handleFilterChange}>
+                            <option value="active">Active Pets</option>
+                            <option value="inactive">Inactive Pets</option>
+                            <option value="both">Active and Inactive</option>
+                        </FilterSelect>
+                        <ButtonWrapper>
+                            <NewPetButton onClick={() => setDisplayFormButton(!displayFormButton)}>
+                                {displayFormButton ? "Close New Pet Form" : "Add New Pet To Database"}
+                            </NewPetButton>
+                        </ButtonWrapper>
+                        {displayFormButton && <NewPetForm closeForm={closeForm} />}
+                    </FilterWrapper>
+                    {filteredPets.length > 0 ? (
+                        filteredPets.map(pet => (
+                            <PetCard
+                                key={pet.id}
+                                pet={pet}
+                                updateUserPets={updateUserPets}
+                            />
+                        ))
+                    ) : (
+                        <div>No pets available. Create your first pet to get started.</div>
+                    )}
+                </>
             )}
+
         </Container>
     );
 }
