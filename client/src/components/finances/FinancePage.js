@@ -104,16 +104,21 @@ export default function FinancePage() {
 
 function calculateTotalIncome(pets, year) {
     let totalIncome = 0;
+
     pets?.forEach(pet => {
         pet.invoices.forEach(inv => {
             if (inv.date_completed.slice(0, 4) === year.toString()) {
                 totalIncome += inv.compensation;
             }
         });
+
         pet.additional_incomes.forEach(income => {
-            totalIncome += income.compensation;
+            if (income.date_added.slice(0, 4) === year.toString()) {
+                totalIncome += income.compensation;
+            }
         });
     });
+
     return totalIncome;
 }
 
