@@ -1,20 +1,27 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import styled from "styled-components";
 import { PetsContext } from "../../context/pets";
 import NewPetForm from "./NewPetForm";
 import PetCard from "./PetCard";
 
+const LoadingMessage = styled.div`
+    font-size: 1.5rem;
+    color: #343a40;
+    text-align: center;
+    margin-top: 20px;
+`;
+
 const Container = styled.div`
     background: #f8f9fa;
     padding: 10px;
-    margin: 0; /* Adjusted margin to match InvoicesPage */
-    max-width: 100%; /* Consistent with InvoicesPage */
+    margin: 0;
+    max-width: 100%;
 `;
 
 const Title = styled.h2`
     font-size: 2em;
     color: #343a40;
-    margin: 0; /* Remove default margin */
+    margin: 0;
     text-align: center;
 
     @media (max-width: 768px) {
@@ -38,6 +45,34 @@ const Description = styled.div`
     }
 `;
 
+const StatsWrapper = styled.div`
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 15px 20px;
+    margin: 10px auto 20px;
+    max-width: 600px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    text-align: center;
+
+    @media (max-width: 768px) {
+        flex-direction: column;
+    }
+`;
+
+const Stat = styled.div`
+    font-size: 1.25rem;
+    color: #495057;
+`;
+
+const ButtonWrapper = styled.div`
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+`;
+
 const NewPetButton = styled.button`
     background-color: #e91e63;
     color: white;
@@ -49,7 +84,8 @@ const NewPetButton = styled.button`
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
     display: block;
-    width: 45%;
+    width: 225px;
+    height: 60px;
 
     &:hover {
         background-color: #c2185b;
@@ -62,20 +98,6 @@ const NewPetButton = styled.button`
         margin-left: auto;
         margin-right: auto;
     }
-`;
-
-const ButtonWrapper = styled.div`
-    display: flex;
-    justify-content: center;
-`;
-
-const NoPetsCard = styled.div`
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    margin: 10px auto;
-    max-width: 600px;
 `;
 
 const FilterWrapper = styled.div`
@@ -105,48 +127,44 @@ const FilterSelect = styled.select`
     }
 `;
 
-const PetStats = styled.div`
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    margin: 15px auto;
-    max-width: 600px;
-    text-align: left;
-`;
-
-const PetStatsTitle = styled.h3`
-    font-size: 1.8rem; /* Match financial overview font size */
-    color: #343a40; /* Same dark color as Finance Page title */
-    text-align: center;
-    margin-bottom: 20px; /* Add more space to the bottom */
-`;
-
-const PetStatsText = styled.p`
-    font-size: 1.25rem; /* Similar font size to finance overview details */
-    color: #495057;
-    margin: 10px 0;
-    font-weight: bold; /* Add a bold weight for emphasis */
-`;
-
 export default function PetsPage() {
     const { pets, setPets } = useContext(PetsContext);
     const [filter, setFilter] = useState("active");
     const [displayFormButton, setDisplayFormButton] = useState(false);
+    const [loading, setLoading] = useState(true); // New loading state
+
+    useEffect(() => {
+        const fetchPets = async () => {
+            // Simulate a delay for fetching pets
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            setLoading(false);
+        };
+        fetchPets();
+    }, [pets]);
+
+    const activePetsCount = pets.filter(pet => pet.active).length;
+    const inactivePetsCount = pets.filter(pet => !pet.active).length;
+    const totalPetsCount = pets.length;
+
+    function updateUserPets(updatedPet) {
+        setPets(prevPets =>
+            prevPets.map(pet => (pet.id === updatedPet.id ? updatedPet : pet))
+        );
+    }
 
     function handleFilterChange(e) {
         setFilter(e.target.value);
     }
 
-    const filteredPets = pets.filter(pet => {
+    function closeForm() {
+        setDisplayFormButton(false);
+    }
+
+    const filteredPets = Array.isArray(pets) ? pets.filter(pet => {
         if (filter === "active") return pet.active;
         if (filter === "inactive") return !pet.active;
         return true;
-    });
-
-    const activePetsCount = pets.filter(pet => pet.active).length;
-    const inactivePetsCount = pets.filter(pet => !pet.active).length;
-    const totalPetsCount = pets.length;
+    }) : [];
 
     return (
         <Container>
@@ -155,38 +173,43 @@ export default function PetsPage() {
                 Manage your pets here. Each pet can be updated and marked active or inactive. Use the filter to view pets based on their status.
                 Create new appointments and invoices by clicking on a pet's accordion.
             </Description>
-            <PetStats>
-                <PetStatsTitle>Your Pet Statistics</PetStatsTitle>
-                <ButtonWrapper>
-                    <NewPetButton onClick={() => setDisplayFormButton(!displayFormButton)}>
-                        {displayFormButton ? "Close New Pet Form" : "Add New Pet To Database"}
-                    </NewPetButton>
-                </ButtonWrapper>
-                <PetStatsText><strong>Total Pets:</strong> {totalPetsCount}</PetStatsText>
-                <PetStatsText><strong>Marked As Active:</strong> {activePetsCount}</PetStatsText>
-                <PetStatsText><strong>Marked As Inactive:</strong> {inactivePetsCount}</PetStatsText>
-            </PetStats>
-            {displayFormButton && pets && (
-                <NewPetForm updateUserPets={setPets} />
-            )}
-            <FilterWrapper>
-                <FilterTitle>Filter Active & Inactive Pets</FilterTitle>
-                <FilterSelect value={filter} onChange={handleFilterChange}>
-                    <option value="active">Active Pets</option>
-                    <option value="inactive">Inactive Pets</option>
-                    <option value="both">Active and Inactive</option>
-                </FilterSelect>
-            </FilterWrapper>
-            {filteredPets.length > 0 ? (
-                filteredPets.map(pet => (
-                    <PetCard key={pet.id} pet={pet} />
-                ))
+            {loading ? (
+                <LoadingMessage>Loading pets, please wait...</LoadingMessage>
             ) : (
-                <NoPetsCard>
-                    <h5>No pets available</h5>
-                    <p>Create your first pet to get started.</p>
-                </NoPetsCard>
+                <>
+                    <StatsWrapper>
+                        <Stat>Active Dogs: {activePetsCount}</Stat>
+                        <Stat>Inactive Dogs: {inactivePetsCount}</Stat>
+                        <Stat>Total Dogs: {totalPetsCount}</Stat>
+                    </StatsWrapper>
+                    <FilterWrapper>
+                        <FilterTitle>Filter Active & Inactive Pets</FilterTitle>
+                        <FilterSelect value={filter} onChange={handleFilterChange}>
+                            <option value="active">Active Pets</option>
+                            <option value="inactive">Inactive Pets</option>
+                            <option value="both">Active and Inactive</option>
+                        </FilterSelect>
+                        <ButtonWrapper>
+                            <NewPetButton onClick={() => setDisplayFormButton(!displayFormButton)}>
+                                {displayFormButton ? "Close New Pet Form" : "Add New Pet To Database"}
+                            </NewPetButton>
+                        </ButtonWrapper>
+                        {displayFormButton && <NewPetForm closeForm={closeForm} />}
+                    </FilterWrapper>
+                    {filteredPets.length > 0 ? (
+                        filteredPets.map(pet => (
+                            <PetCard
+                                key={pet.id}
+                                pet={pet}
+                                updateUserPets={updateUserPets}
+                            />
+                        ))
+                    ) : (
+                        <div>No pets available. Create your first pet to get started.</div>
+                    )}
+                </>
             )}
+
         </Container>
     );
 }

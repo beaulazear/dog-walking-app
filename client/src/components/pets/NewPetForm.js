@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import styled from "styled-components";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import Container from 'react-bootstrap/Container';
 import Alert from 'react-bootstrap/Alert';
+import { PetsContext } from "../../context/pets";
 
 const StyledContainer = styled(Container)`
     padding: 20px;
@@ -40,8 +41,7 @@ const StyledButton = styled(Button)`
     }
 `;
 
-export default function NewPetForm({ updateUserPets }) {
-
+export default function NewPetForm({ closeForm }) {
     const [name, setName] = useState("");
     const [address, setAddress] = useState("");
     const [sex, setSex] = useState("");
@@ -50,8 +50,10 @@ export default function NewPetForm({ updateUserPets }) {
     const [suppliesLocation, setSuppliesLocation] = useState("");
     const [behavioralNotes, setBehavioralNotes] = useState("");
     const [spayedOrNeutered, setSpayedOrNeutered] = useState(false);
-
     const [errors, setErrors] = useState([]);
+    const [success, setSuccess] = useState(false);  // New success state
+
+    const { refreshPets } = useContext(PetsContext);
 
     function handleNewPet(e) {
         e.preventDefault();
@@ -62,21 +64,26 @@ export default function NewPetForm({ updateUserPets }) {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                name: name,
-                sex: sex,
-                address: address,
-                birthdate: birthdate,
-                allergies: allergies,
+                name,
+                sex,
+                address,
+                birthdate,
+                allergies,
                 behavorial_notes: behavioralNotes,
-                // please note spelling of behavioral is wrong in the database
                 supplies_location: suppliesLocation,
                 spayed_neutered: spayedOrNeutered
             })
         })
             .then((response) => {
                 if (response.ok) {
-                    response.json().then((newPet) => {
-                        updateUserPets(newPet);
+                    response.json().then(() => {
+                        refreshPets();  // Refresh pets to get the latest list
+                        setSuccess(true);  // Set success message
+                        resetForm();  // Reset form fields
+                        setTimeout(() => {
+                            setSuccess(false);  // Hide success message after a few seconds
+                            closeForm();  // Close the form
+                        }, 2000);  // Adjust time as desired
                     });
                 } else {
                     response.json().then((errorData) => setErrors(errorData.errors));
@@ -84,17 +91,22 @@ export default function NewPetForm({ updateUserPets }) {
             });
     }
 
-    function updateSpayedOrNeutered(e) {
-        setSpayedOrNeutered(e.target.value === "true");
-    }
-
-    function updateSex(e) {
-        setSex(e.target.value);
+    function resetForm() {
+        setName("");
+        setAddress("");
+        setSex("");
+        setBirthdate("");
+        setAllergies("");
+        setSuppliesLocation("");
+        setBehavioralNotes("");
+        setSpayedOrNeutered(false);
+        setErrors([]);
     }
 
     return (
         <StyledContainer>
             <StyledTitle>New Pet Form</StyledTitle>
+            {success && <Alert variant="success">Pet added successfully!</Alert>}
             <StyledForm onSubmit={handleNewPet}>
                 <StyledFormGroup>
                     <StyledFormLabel>Pet's Name</StyledFormLabel>
@@ -109,7 +121,7 @@ export default function NewPetForm({ updateUserPets }) {
                 </StyledFormGroup>
                 <StyledFormGroup>
                     <StyledFormLabel>Sex</StyledFormLabel>
-                    <Form.Select onChange={updateSex} aria-label="Select sex">
+                    <Form.Select onChange={(e) => setSex(e.target.value)} aria-label="Select sex">
                         <option>Select sex</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
@@ -117,7 +129,7 @@ export default function NewPetForm({ updateUserPets }) {
                 </StyledFormGroup>
                 <StyledFormGroup>
                     <StyledFormLabel>Spayed or Neutered?</StyledFormLabel>
-                    <Form.Select onChange={updateSpayedOrNeutered} aria-label="Select spayed or neutered">
+                    <Form.Select onChange={(e) => setSpayedOrNeutered(e.target.value === "true")} aria-label="Select spayed or neutered">
                         <option>Select</option>
                         <option value="true">Yes</option>
                         <option value="false">No</option>

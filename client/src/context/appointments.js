@@ -7,9 +7,7 @@ const isTodayOrRecurring = (appointment) => {
     const today = dayjs().format('YYYY-MM-DD');
     const dayOfWeek = dayjs().day();
 
-    if (appointment.canceled) {
-        return false;
-    }
+    if (appointment.canceled) return false;
 
     let noCancellationToday = true;
     if (appointment.cancellations) {
@@ -45,23 +43,23 @@ const isTodayOrRecurring = (appointment) => {
 const AppointmentsProvider = ({ children }) => {
     const [todaysAppointments, setTodaysAppointments] = useState([]);
     const [petsAppointments, setPetsAppointments] = useState([]);
+    const [loading, setLoading] = useState(true); // Loading state
 
     useEffect(() => {
         const fetchAppointments = async () => {
             try {
                 const response = await fetch("/appointments");
-                if (!response.ok) {
-                    throw new Error('Failed to fetch appointments');
-                }
+                if (!response.ok) throw new Error('Failed to fetch appointments');
                 const appointments = await response.json();
                 const filteredAppointments = appointments.filter(isTodayOrRecurring);
                 const sortedAppointments = filteredAppointments.sort((a, b) => dayjs(a.start_time).diff(dayjs(b.start_time)));
                 setTodaysAppointments(sortedAppointments);
             } catch (error) {
                 console.error('Error fetching appointments:', error);
+            } finally {
+                setLoading(false); // Set loading to false after fetch
             }
         };
-
         fetchAppointments();
     }, []);
 
@@ -69,21 +67,18 @@ const AppointmentsProvider = ({ children }) => {
         const fetchPetsAppointments = async () => {
             try {
                 const response = await fetch("/pets_appointments");
-                if (!response.ok) {
-                    throw new Error('Failed to fetch pets appointments');
-                }
+                if (!response.ok) throw new Error('Failed to fetch pets appointments');
                 const appointments = await response.json();
                 setPetsAppointments(appointments);
             } catch (error) {
                 console.error('Error fetching pets appointments:', error);
             }
         };
-
         fetchPetsAppointments();
     }, []);
 
     return (
-        <AppointmentsContext.Provider value={{ todaysAppointments, petsAppointments, setTodaysAppointments, setPetsAppointments }}>
+        <AppointmentsContext.Provider value={{ todaysAppointments, petsAppointments, setTodaysAppointments, setPetsAppointments, loading }}>
             {children}
         </AppointmentsContext.Provider>
     );

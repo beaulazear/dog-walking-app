@@ -6,67 +6,84 @@ import CancelAppointmentModal from './CancelAppointmentModal';
 import EditCancellationsModal from './EditCancellationsModal';
 import InvoiceForm from '../invoices/InvoiceForm';
 
-// Styled components
 const CardContainer = styled.div`
-    border: 1px solid #007bff;
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 16px;
+    border: 2px solid #007bff;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
     width: 100%;
+    background-color: #f8f9fa;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
 `;
 
-const CardTitle = styled.h5`
-    margin-bottom: 8px;
-    font-weight: bold;
+const CardTitle = styled.h4`
+    margin-bottom: 12px;
+    font-weight: 700;
+    color: #333;
+    font-size: 1.5rem;
 `;
 
-const CardSubtitle = styled.h6`
-    margin-bottom: 4px;
-    color: #6c757d;
+const CardSubtitle = styled.p`
+    margin: 6px 0;
+    color: #555;
+    font-size: 1rem;
+    font-weight: 500;
 `;
 
 const CardText = styled.p`
-    margin-bottom: 16px;
+    margin: 12px 0;
+    font-size: 0.95rem;
+    color: #666;
+    line-height: 1.4;
 `;
 
 const Button = styled.button`
     display: block;
     width: 100%;
-    padding: 10px;
-    margin-bottom: 8px;
+    padding: 12px;
+    margin-top: 10px;
     border: none;
-    border-radius: 4px;
-    color: #fff; /* Ensures text color is white */
-    font-size: 16px;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.2s;
 
     &.btn-success {
-        background-color: #28a745; /* Green background */
+        background-color: #28a745;
     }
 
     &.btn-secondary {
-        background-color: #6c757d; /* Grey background */
+        background-color: #6c757d;
     }
 
     &.btn-danger {
-        background-color: #dc3545; /* Red background */
+        background-color: #dc3545;
+    }
+
+    &.btn-info {
+        background-color: #17a2b8;
     }
 
     &:hover {
-        opacity: 0.8;
+        opacity: 0.9;
+        transform: translateY(-2px);
     }
 `;
 
 const ListGroup = styled.ul`
     list-style: none;
     padding: 0;
-    margin: 0;
+    margin: 8px 0;
+    color: #444;
 `;
 
 const ListGroupItem = styled.li`
     padding: 8px;
     border-bottom: 1px solid #ddd;
+    font-size: 0.9rem;
+    color: #555;
 `;
 
 export default function PetAppointmentCard({ apt, updateAppointmentsDelete }) {

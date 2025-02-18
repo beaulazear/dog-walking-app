@@ -248,9 +248,9 @@ const getUpcomingBirthday = (pets) => {
 };
 
 export default function LoggedInHome() {
-    const { petsAppointments } = useContext(AppointmentsContext);
+    const { petsAppointments, loading: appointmentsLoading } = useContext(AppointmentsContext);
     const { user, setUser } = useContext(UserContext);
-    const { pets } = useContext(PetsContext);
+    const { pets, loading: petsLoading } = useContext(PetsContext);
 
     const [selectedDate, setSelectedDate] = useState(dayjs().format('YYYY-MM-DD'));
     const [upcomingBirthdayPet, setUpcomingBirthdayPet] = useState(null);
@@ -335,9 +335,11 @@ export default function LoggedInHome() {
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
                     />
-                    <CardTitle><strong>Appointments: {futureAppointments.length}</strong></CardTitle>
+                    <CardTitle><strong>Appointments:</strong> {appointmentsLoading ? "Loading..." : futureAppointments.length}</CardTitle>
                     <ListGroup>
-                        {futureAppointments.length === 0 ? (
+                        {appointmentsLoading ? (
+                            <ListGroupItem>Loading appointments...</ListGroupItem>
+                        ) : futureAppointments.length === 0 ? (
                             <ListGroupItem>No scheduled walks for this date.</ListGroupItem>
                         ) : (
                             futureAppointments.map((appointment, index) => (
@@ -354,7 +356,10 @@ export default function LoggedInHome() {
                     </ListGroup>
                 </CardBody>
             </Card>
-            {upcomingBirthdayPet && (
+
+            {petsLoading ? (
+                <div>Loading upcoming birthday...</div>
+            ) : upcomingBirthdayPet && (
                 <BirthdayAlert>
                     <BirthdayPetImage src={upcomingBirthdayPet.profile_pic || dog} onError={(e) => { e.target.src = dog; }} alt={upcomingBirthdayPet.name} />
                     <BirthdayText>
@@ -363,7 +368,13 @@ export default function LoggedInHome() {
                     </BirthdayText>
                 </BirthdayAlert>
             )}
-            <TopMonthlyDog />
+
+            {petsLoading ? (
+                <div>Loading top walker...</div>
+            ) : (
+                <TopMonthlyDog />
+            )}
+
             <Card>
                 <CardHeader>Rate Settings</CardHeader>
                 <CardBody>
@@ -382,6 +393,7 @@ export default function LoggedInHome() {
         </Container>
     );
 }
+
 
 
 

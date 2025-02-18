@@ -79,14 +79,28 @@ export default function UpdateAppointmentForm({ apt, changeUpdateFormView }) {
             .then((response) => {
                 if (response.ok) {
                     response.json().then((updatedApt) => {
+                        // Update petsAppointments with the new appointment data
                         const newPetAppointments = petsAppointments.map((appointment) =>
                             appointment.id === updatedApt.id ? updatedApt : appointment
                         );
 
-                        const newTodaysAppointments = todaysAppointments.map((appointment) =>
-                            appointment.id === updatedApt.id ? updatedApt : appointment
-                        );
+                        // Get today's day of the week and date
+                        const today = new Date();
+                        const todayDayOfWeek = today.toLocaleString("en-US", { weekday: 'long' }).toLowerCase();
+                        const todayDate = today.toISOString().split('T')[0];
 
+                        // Filter today's appointments to include only those scheduled for today
+                        const newTodaysAppointments = newPetAppointments.filter((appointment) => {
+                            if (appointment.recurring) {
+                                // Check if today's day of the week is marked true
+                                return appointment[todayDayOfWeek] === true;
+                            } else {
+                                // Check if the one-time appointment date matches today
+                                return appointment.appointment_date === todayDate;
+                            }
+                        });
+
+                        // Set updated lists in state
                         setPetsAppointments(newPetAppointments);
                         setTodaysAppointments(newTodaysAppointments);
 
@@ -97,6 +111,7 @@ export default function UpdateAppointmentForm({ apt, changeUpdateFormView }) {
                     response.json().then((errorData) => setErrors(errorData.errors));
                 }
             });
+
     }
 
     return (
