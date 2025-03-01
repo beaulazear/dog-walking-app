@@ -1,4 +1,6 @@
 class UsersController < ApplicationController
+    include Rails.application.routes.url_helpers
+    
     before_action :current_user
 
     skip_before_action :authorized, only: :create
@@ -55,7 +57,21 @@ class UsersController < ApplicationController
             fourty: user.fourty,
             sixty: user.sixty,
             solo_rate: user.solo_rate,
-            pets: user.pets.as_json(only: [ :id, :name, :birthdate, :sex, :spayed_neutered, :address, :behavorial_notes, :supplies_location, :allergies, :active ]),
+            pets: user.pets.map do |pet|
+                {
+                  id: pet.id,
+                  name: pet.name,
+                  birthdate: pet.birthdate,
+                  sex: pet.sex,
+                  spayed_neutered: pet.spayed_neutered,
+                  address: pet.address,
+                  behavorial_notes: pet.behavorial_notes,
+                  supplies_location: pet.supplies_location,
+                  allergies: pet.allergies,
+                  active: pet.active,
+                  profile_pic: pet.profile_pic.attached? ? Rails.application.routes.url_helpers.rails_blob_url(pet.profile_pic, only_path: true) : nil
+                }
+              end,   
             appointments: user.appointments.as_json(
                 only: [ :id, :pet_id, :appointment_date, :start_time, :end_time, :duration, :recurring, :solo, :completed, :canceled, 
                         :monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday ],

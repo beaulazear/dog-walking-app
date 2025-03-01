@@ -5,8 +5,8 @@ import { UserContext } from "../context/user";
 
 const PetInvoices = ({ pet }) => {
     const { user, setUser } = useContext(UserContext);
-    const [activeTab, setActiveTab] = useState("unpaid"); // Tabs: "unpaid" | "paid"
-    const [invoiceLimit, setInvoiceLimit] = useState(15); // Limit: 15, 50, or all
+    const [activeTab, setActiveTab] = useState("unpaid");
+    const [invoiceLimit, setInvoiceLimit] = useState(15);
 
     const petInvoices = user.invoices.filter(invoice => invoice.pet_id === pet.id);
     const unpaidInvoices = petInvoices.filter(invoice => !invoice.paid);
