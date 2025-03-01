@@ -1,13 +1,20 @@
 import React, { useState, useContext } from "react";
 import styled from "styled-components";
 import { UserContext } from "../context/user";
+import dayjs from "dayjs";
 
-export default function CancellationModal({ appointment }) {
+export default function CancellationModal({ appointment, setSelectedAppointment }) {
     const { setUser } = useContext(UserContext);
     const [showModal, setShowModal] = useState(false);
     const [selectedDate, setSelectedDate] = useState("");
 
-    async function handleNewCancellation(appointmentId, date, setUser) {
+    const handleOpenModal = () => setShowModal(true);
+    const handleCloseModal = () => {
+        setSelectedDate("");
+        setShowModal(false);
+    };
+
+    async function handleNewCancellation(appointmentId, date) {
         const today = new Date().toISOString().split("T")[0];
         if (new Date(date) < new Date(today)) {
             alert("Cancellation date must be today or in the future.");
@@ -32,26 +39,48 @@ export default function CancellationModal({ appointment }) {
 
             setUser((prevUser) => ({
                 ...prevUser,
-                appointments: prevUser.appointments.map((appointment) =>
-                    appointment.id === appointmentId
-                        ? { ...appointment, cancellations: [...(appointment.cancellations || []), newCancellation] }
-                        : appointment
+                appointments: prevUser.appointments.map((apt) =>
+                    apt.id === appointmentId
+                        ? { ...apt, cancellations: [...(apt.cancellations || []), newCancellation] }
+                        : apt
                 ),
             }));
-
-            alert("Cancellation added successfully!");
+            alert("Cancellation added.");
+            setSelectedAppointment(null)
         } catch (error) {
             console.error("Error adding cancellation:", error);
             alert("An error occurred while processing the cancellation.");
         }
     }
 
+    async function handleDeleteCancellation(cancellationId) {
+        try {
+            const response = await fetch(`/cancellations/${cancellationId}`, {
+                method: "DELETE",
+                credentials: "include",
+            });
 
-    const handleOpenModal = () => setShowModal(true);
-    const handleCloseModal = () => {
-        setSelectedDate("");
-        setShowModal(false);
-    };
+            if (!response.ok) {
+                alert("Failed to delete cancellation.");
+                return;
+            }
+
+            setUser((prevUser) => ({
+                ...prevUser,
+                appointments: prevUser.appointments.map((apt) =>
+                    apt.id === appointment.id
+                        ? { ...apt, cancellations: apt.cancellations.filter(c => c.id !== cancellationId) }
+                        : apt
+                ),
+            }));
+
+            alert("Cancellation removed.");
+            setSelectedAppointment(null)
+        } catch (error) {
+            console.error("Error deleting cancellation:", error);
+            alert("An error occurred while deleting the cancellation.");
+        }
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -61,16 +90,13 @@ export default function CancellationModal({ appointment }) {
             return;
         }
 
-        // Call the async function to handle cancellation
-        await handleNewCancellation(appointment.id, selectedDate, setUser);
-
-        // Close modal on success
+        await handleNewCancellation(appointment.id, selectedDate);
         handleCloseModal();
     };
 
     return (
         <>
-            <CloseButton onClick={handleOpenModal}>➕ Add Cancellation</CloseButton>
+            <ToggleButton onClick={handleOpenModal}>➕ Add or Remove Cancellations</ToggleButton>
 
             {showModal && (
                 <ModalOverlay>
@@ -87,6 +113,20 @@ export default function CancellationModal({ appointment }) {
                             />
                             <SubmitButton type="submit">Confirm Cancellation</SubmitButton>
                         </Form>
+
+                        {appointment.cancellations?.length > 0 && (
+                            <>
+                                <Title>Existing Cancellations</Title>
+                                <CancellationList>
+                                    {appointment.cancellations.map((cancellation) => (
+                                        <CancellationItem key={cancellation.id}>
+                                            {dayjs(cancellation.date).format("MMMM D, YYYY")}
+                                            <DeleteButton onClick={() => handleDeleteCancellation(cancellation.id)}>❌</DeleteButton>
+                                        </CancellationItem>
+                                    ))}
+                                </CancellationList>
+                            </>
+                        )}
                     </ModalContent>
                 </ModalOverlay>
             )}
@@ -94,17 +134,18 @@ export default function CancellationModal({ appointment }) {
     );
 }
 
-const CloseButton = styled.button`
-    background: red;
-    color: black;
+const ToggleButton = styled.button`
+    background: #28a745;
+    color: white;
+    padding: 10px;
     border: none;
-    padding: 5px 10px;
     border-radius: 6px;
     cursor: pointer;
-    top: 10px;
-    right: 10px;
+    font-size: 1rem;
+    margin-top: 10px;
+
     &:hover {
-        background: darkred;
+        background: darkgreen;
     }
 `;
 
@@ -164,5 +205,52 @@ const SubmitButton = styled.button`
 
     &:hover {
         background: darkgreen;
+    }
+`;
+
+const CloseButton = styled.button`
+    background: red;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 10px;
+
+    &:hover {
+        background: darkred;
+    }
+`;
+
+const CancellationList = styled.ul`
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+`;
+
+const CancellationItem = styled.li`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 5px;
+`;
+
+const DeleteButton = styled.button`
+    background: red;
+    color: white;
+    border: none;
+    padding: 5px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+        background: darkred;
     }
 `;

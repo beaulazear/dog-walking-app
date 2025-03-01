@@ -6,6 +6,9 @@ import dogPlaceholder from "../assets/dog.png";
 import PetInvoices from "./PetInvoices";
 import NewAppointmentForm from "./NewAppointmentForm";
 import CancellationModal from "./CancellationModal";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter"; // ✅ Import plugin
+
+dayjs.extend(isSameOrAfter); // ✅ Extend dayjs with the plugin
 
 export default function PetsPage() {
     const { user } = useContext(UserContext);
@@ -42,8 +45,6 @@ const PetDetails = ({ pet, setSelectedPet }) => {
     const [formData, setFormData] = useState(pet);
     const [appointments, setAppointments] = useState(pet.appointments || []);
 
-    console.log(user)
-
     useEffect(() => {
         setFormData(pet);
 
@@ -57,7 +58,7 @@ const PetDetails = ({ pet, setSelectedPet }) => {
                     apt.pet_id === pet.id &&
                     !apt.completed &&
                     !apt.canceled &&
-                    (apt.recurring || appointmentDate.isAfter(today))
+                    (apt.recurring || appointmentDate.isSameOrAfter(today)) // ✅ Fix: Includes today's appointments
                 );
             });
 
@@ -140,7 +141,7 @@ const PetAppointments = ({ pet, appointments }) => {
                         )}
                         {!apt.recurring && (<Text>{dayjs(apt.appointment_date).format("MMM D, YYYY")}</Text>)}
                         <Text>{dayjs(apt.start_time).format("h:mm A")} - {dayjs(apt.end_time).format("h:mm A")}</Text>
-                        {(apt.recurring && apt.cancellations.length > 0) && (
+                        {(apt.recurring && apt.cancellations?.length > 0) && (
                             <ul>
                                 {apt.cancellations.map((cancellation) => (
                                     <li key={cancellation.id}>{dayjs(cancellation.date).format("MMMM D, YYYY")}</li>
@@ -157,6 +158,7 @@ const PetAppointments = ({ pet, appointments }) => {
                 />
             )}
             <NewAppointmentForm pet={pet} />
+            <Subtitle>$ {pet.name}'s Invoices</Subtitle>
             <PetInvoices pet={pet} />
         </AppointmentsContainer>
     );
@@ -169,8 +171,6 @@ const AppointmentDetails = ({ appointment, setSelectedAppointment }) => {
         start_time: dayjs(appointment.start_time).format("HH:mm"),
         end_time: dayjs(appointment.end_time).format("HH:mm"),
     });
-
-    console.log(appointment)
 
     const handleChange = (e) => {
         const { name, type, value } = e.target;
@@ -256,7 +256,7 @@ const AppointmentDetails = ({ appointment, setSelectedAppointment }) => {
                                     </DayToggle>
                                 ))}
                             </DaysContainer>
-                            <CancellationModal appointment={appointment}>Add Cancellations</CancellationModal>
+                            <CancellationModal setSelectedAppointment={setSelectedAppointment} appointment={appointment}>Add Cancellations</CancellationModal>
                         </>
                     ) : (
                         <>

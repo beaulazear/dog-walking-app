@@ -57,8 +57,11 @@ class AppointmentsController < ApplicationController
         appointment = @current_user.appointments.find_by(id: params[:id])
         if appointment
             appointment.update(appointment_params)
-            render json: appointment.as_json(only: [ :id, :pet_id, :appointment_date, :start_time, :end_time, :duration, :recurring, :solo, :completed, :canceled, 
-            :monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday ])
+            render json: appointment.as_json(
+                only: [ :id, :pet_id, :appointment_date, :start_time, :end_time, :duration, :recurring, :solo, :completed, :canceled, 
+                        :monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday ],
+                include: { cancellations: { only: [ :id, :date ] } }, status: :ok
+            )
         else
             render json: { error: "appointment not found" }, status: :not_found
         end
