@@ -144,7 +144,6 @@ export default function Dashboard() {
         <Container>
             <Section>
                 <Title>📅 Schedule Overview</Title>
-                <Text>Select a date to view scheduled appointments.</Text>
                 <DateInput
                     type="date"
                     value={selectedDate}
@@ -152,7 +151,7 @@ export default function Dashboard() {
                 />
                 <ListGroup>
                     {appointments.length === 0 ? (
-                        <Text>No appointments scheduled for this date.</Text>
+                        <Text>No appointments scheduled for selected date.</Text>
                     ) : (
                         <>
                             <Text><strong>{appointments.length} {appointments.length === 1 ? 'appointment' : 'appointments'}  scheduled for this date.</strong></Text>
@@ -183,7 +182,7 @@ export default function Dashboard() {
                         style={{ width: "80px", height: "80px" }}
                     />
                     <div>
-                        <Title>🎂 Upcoming Birthday</Title>
+                        <Title>Next Birthday 🎂</Title>
                         <Text>{upcomingBirthdayPet.name} has a birthday on {dayjs(upcomingBirthdayPet.birthdate).format("MMMM D")}!</Text>
                     </div>
                 </BirthdayCard>
@@ -213,7 +212,7 @@ export default function Dashboard() {
                         </InputWrapper>
                     </InputGroup>
                     <InputGroup>
-                        <Label>Solo Rate:</Label>
+                        <Label>Solo Walk Rate:</Label>
                         <InputWrapper>
                             <DollarSign>$</DollarSign>
                             <Input type="number" name="solo_rate" value={rates.solo_rate} onChange={handleRateChange} required />
@@ -315,7 +314,6 @@ const ListItem = styled.li`
 const PetImage = styled.img`
     width: 50px;
     height: 50px;
-    border-radius: 50%;
     object-fit: cover;
 `;
 
@@ -348,7 +346,7 @@ const InputGroup = styled.div`
 `;
 
 const Label = styled.label`
-    font-size: 1rem;
+    font-size: 1.1rem;
     color: white;
 `;
 
@@ -385,7 +383,6 @@ const InputWrapper = styled.div`
 `;
 
 const DollarSign = styled.span`
-    color: white;
     font-size: 1rem;
     margin-right: 5px;
 `;
