@@ -40,7 +40,9 @@ const PetDetails = ({ pet, setSelectedPet }) => {
     useEffect(() => {
         setFormData(pet);
         if (user?.appointments) {
-            setAppointments(user.appointments.filter(apt => apt.pet_id === pet.id));
+            setAppointments(user.appointments.filter(
+                apt => apt.pet_id === pet.id && !apt.completed && !apt.canceled
+            ));
         }
     }, [pet, user]);
 
