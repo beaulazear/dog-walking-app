@@ -8,12 +8,10 @@ const PetInvoices = ({ pet }) => {
     const [activeTab, setActiveTab] = useState("unpaid"); // Tabs: "unpaid" | "paid"
     const [invoiceLimit, setInvoiceLimit] = useState(15); // Limit: 15, 50, or all
 
-    // Filter invoices for the selected pet
     const petInvoices = user.invoices.filter(invoice => invoice.pet_id === pet.id);
     const unpaidInvoices = petInvoices.filter(invoice => !invoice.paid);
     const pastInvoices = petInvoices.filter(invoice => invoice.paid).slice(0, invoiceLimit === "all" ? undefined : invoiceLimit);
 
-    // Function to mark all unpaid invoices as paid
     const markAllAsPaid = async () => {
         if (!window.confirm("Mark all unpaid invoices for this pet as paid?")) return;
 
@@ -58,8 +56,7 @@ const PetInvoices = ({ pet }) => {
                             {unpaidInvoices.map(invoice => (
                                 <InvoiceCard key={invoice.id}>
                                     <Text><strong>{invoice.title}</strong></Text>
-                                    <Text>Date: {dayjs(invoice.date_completed).format("MMM D, YYYY")}</Text>
-                                    <Text>Amount: ${invoice.compensation}</Text>
+                                    <Text>${invoice.compensation} - {dayjs(invoice.date_completed).format("MMM D, YYYY")}</Text>
                                 </InvoiceCard>
                             ))}
                             <Text>Total: ${totalUnpaid.toFixed(2)}</Text>
