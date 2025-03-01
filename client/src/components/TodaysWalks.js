@@ -7,21 +7,35 @@ import dogPlaceholder from "../assets/dog.png";
 export default function TodaysWalks() {
     const { user } = useContext(UserContext);
 
-    const todaysAppointments = user?.appointments?.filter(appointment => {
-        if (appointment.canceled) return false; // Exclude explicitly canceled appointments
+    const todaysAppointments = (user?.appointments
+        ?.filter(appointment => {
+            if (appointment.canceled) return false; // Exclude explicitly canceled appointments
 
-        const todayFormatted = dayjs().format("YYYY-MM-DD");
+            const todayFormatted = dayjs().format("YYYY-MM-DD");
 
-        const hasCancellationToday = appointment.cancellations?.some(cancellation =>
-            dayjs(cancellation.date).format("YYYY-MM-DD") === todayFormatted
-        );
+            // Check if appointment has a cancellation for today
+            const hasCancellationToday = appointment.cancellations?.some(cancellation =>
+                dayjs(cancellation.date).format("YYYY-MM-DD") === todayFormatted
+            );
 
-        if (appointment.recurring) {
-            return appointment[dayjs().format("dddd").toLowerCase()] && !hasCancellationToday;
-        }
+            if (appointment.recurring) {
+                return appointment[dayjs().format("dddd").toLowerCase()] && !hasCancellationToday;
+            }
 
-        return dayjs(appointment.appointment_date).format("YYYY-MM-DD") === todayFormatted;
-    }) || [];
+            return dayjs(appointment.appointment_date).format("YYYY-MM-DD") === todayFormatted;
+        })
+        ?.sort((a, b) => {
+            const startA = dayjs(a.start_time, "HH:mm");
+            const startB = dayjs(b.start_time, "HH:mm");
+            const endA = dayjs(a.end_time, "HH:mm");
+            const endB = dayjs(b.end_time, "HH:mm");
+
+            if (startA.isBefore(startB)) return -1;
+            if (startA.isAfter(startB)) return 1;
+
+            // If start times are the same, sort by end time
+            return endA.isBefore(endB) ? -1 : 1;
+        }) || []);
 
     return (
         <Container>

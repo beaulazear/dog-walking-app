@@ -110,22 +110,34 @@ export default function Dashboard() {
     };
 
     const getAppointmentsForDate = (date) => {
-        return user?.appointments?.filter(appointment => {
-            if (appointment.canceled) return false;
-
-            const formattedDate = dayjs(date).format("YYYY-MM-DD");
-            const hasCancellation = appointment.cancellations?.some(cancellation =>
-                dayjs(cancellation.date).format("YYYY-MM-DD") === formattedDate
-            );
-            if (hasCancellation) return false;
-
-            if (appointment.recurring) {
-                return isRecurringOnDate(appointment, date);
-            }
-            return dayjs(appointment.appointment_date).format("YYYY-MM-DD") === date;
-        }) || [];
+        return (user?.appointments
+            ?.filter(appointment => {
+                if (appointment.canceled) return false;
+    
+                const formattedDate = dayjs(date).format("YYYY-MM-DD");
+                const hasCancellation = appointment.cancellations?.some(cancellation =>
+                    dayjs(cancellation.date).format("YYYY-MM-DD") === formattedDate
+                );
+                if (hasCancellation) return false;
+    
+                if (appointment.recurring) {
+                    return isRecurringOnDate(appointment, date);
+                }
+                return dayjs(appointment.appointment_date).format("YYYY-MM-DD") === formattedDate;
+            })
+            ?.sort((a, b) => {
+                const startA = dayjs(a.start_time, "HH:mm");
+                const startB = dayjs(b.start_time, "HH:mm");
+                const endA = dayjs(a.end_time, "HH:mm");
+                const endB = dayjs(b.end_time, "HH:mm");
+    
+                if (startA.isBefore(startB)) return -1;
+                if (startA.isAfter(startB)) return 1;
+    
+                return endA.isBefore(endB) ? -1 : 1;
+            }) || []);
     };
-
+    
     const appointments = getAppointmentsForDate(selectedDate);
 
     return (
