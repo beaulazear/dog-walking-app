@@ -3,14 +3,14 @@ class AdditionalIncomesController < ApplicationController
 
     def index
         additional_incomes = AdditionalIncome.all
-        render json: additional_incomes
+        render json: additional_incomes.as_json(only: [:id, :pet_id, :date_added, :description, :compensation]), status: :ok
     end
 
     def create
         additional_income = AdditionalIncome.create(additional_income_params)
 
         if additional_income.valid?
-            render json: additional_income, status: :created
+            render json: additional_income.as_json(only: [:id, :pet_id, :date_added, :description, :compensation]), status: :created
         else
             render json: { errors: additional_income.errors.full_messages }, status: :unprocessable_entity
         end
@@ -21,7 +21,7 @@ class AdditionalIncomesController < ApplicationController
         
         if income
             income.destroy
-            render json: income, status: :ok
+            render json: additional_income.as_json(only: [:id, :pet_id, :date_added, :description, :compensation]), status: :ok
         else
             render json: { error: 'income not found' }, status: :not_found
         end

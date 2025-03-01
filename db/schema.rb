@@ -10,8 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_09_15_202744) do
-
+ActiveRecord::Schema[7.2].define(version: 2024_09_15_202744) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -20,7 +19,7 @@ ActiveRecord::Schema.define(version: 2024_09_15_202744) do
     t.string "record_type", null: false
     t.bigint "record_id", null: false
     t.bigint "blob_id", null: false
-    t.datetime "created_at", null: false
+    t.datetime "created_at", precision: nil, null: false
     t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
     t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
   end
@@ -33,7 +32,7 @@ ActiveRecord::Schema.define(version: 2024_09_15_202744) do
     t.string "service_name", null: false
     t.bigint "byte_size", null: false
     t.string "checksum", null: false
-    t.datetime "created_at", null: false
+    t.datetime "created_at", precision: nil, null: false
     t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
   end
 
@@ -45,11 +44,11 @@ ActiveRecord::Schema.define(version: 2024_09_15_202744) do
 
   create_table "additional_incomes", force: :cascade do |t|
     t.string "description"
-    t.datetime "date_added"
+    t.datetime "date_added", precision: nil
     t.integer "compensation"
     t.bigint "pet_id", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["pet_id"], name: "index_additional_incomes_on_pet_id"
   end
 
@@ -57,7 +56,7 @@ ActiveRecord::Schema.define(version: 2024_09_15_202744) do
     t.bigint "user_id", null: false
     t.bigint "pet_id", null: false
     t.boolean "recurring"
-    t.datetime "appointment_date"
+    t.datetime "appointment_date", precision: nil
     t.time "start_time"
     t.time "end_time"
     t.integer "duration"
@@ -71,29 +70,29 @@ ActiveRecord::Schema.define(version: 2024_09_15_202744) do
     t.boolean "sunday"
     t.boolean "completed"
     t.boolean "canceled"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.boolean "solo"
     t.index ["pet_id"], name: "index_appointments_on_pet_id"
     t.index ["user_id"], name: "index_appointments_on_user_id"
   end
 
   create_table "cancellations", force: :cascade do |t|
-    t.datetime "date"
+    t.datetime "date", precision: nil
     t.bigint "appointment_id", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["appointment_id"], name: "index_cancellations_on_appointment_id"
   end
 
   create_table "invoices", force: :cascade do |t|
     t.bigint "appointment_id", null: false
     t.bigint "pet_id", null: false
-    t.datetime "date_completed"
+    t.datetime "date_completed", precision: nil
     t.integer "compensation"
     t.boolean "paid"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.boolean "pending"
     t.string "title"
     t.boolean "cancelled"
@@ -104,15 +103,15 @@ ActiveRecord::Schema.define(version: 2024_09_15_202744) do
   create_table "pets", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "name"
-    t.datetime "birthdate"
+    t.datetime "birthdate", precision: nil
     t.string "sex"
     t.boolean "spayed_neutered"
     t.string "address"
     t.text "behavorial_notes"
     t.text "supplies_location"
     t.string "allergies"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.boolean "active", default: true, null: false
     t.index ["user_id"], name: "index_pets_on_user_id"
   end
@@ -122,8 +121,8 @@ ActiveRecord::Schema.define(version: 2024_09_15_202744) do
     t.string "password_digest"
     t.string "name"
     t.string "email_address"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.integer "thirty"
     t.integer "fourty"
     t.integer "sixty"

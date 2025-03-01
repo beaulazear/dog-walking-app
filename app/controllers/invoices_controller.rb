@@ -1,15 +1,13 @@
 class InvoicesController < ApplicationController
     before_action :current_user
 
-    # writes custom method that checks validaity, returns true or false... "check owner" argument is user ID, look at current user,  invoice, appointment, make sure theyre all connected.
-
     def create
         pet = @current_user.pets.find_by(id: params[:pet_id])
 
         invoice = pet.invoices.build(invoice_params)
         
         if invoice.save
-            render json: invoice, status: :created
+            render json: invoice.as_json(only: [:id, :appointment_id, :pet_id, :date_completed, :compensation, :paid, :pending, :title, :cancelled]), status: :created
         else
             render json: { errors: invoice.errors.full_messages }, status: :unprocessable_entity
         end
@@ -17,7 +15,6 @@ class InvoicesController < ApplicationController
     
 
     def paid
-        
         id_array = params[:id_array]
     
         invoices = Invoice.find(id_array)
@@ -28,12 +25,10 @@ class InvoicesController < ApplicationController
 
         end
 
-        render json: invoices
-
+        render json: invoices.as_json(only: [:id, :appointment_id, :pet_id, :date_completed, :compensation, :paid, :pending, :title, :cancelled]), status: :ok
     end
 
     def pending
-        
         id_array = params[:id_array]
     
         invoices = Invoice.find(id_array)
@@ -44,13 +39,12 @@ class InvoicesController < ApplicationController
 
         end
 
-        render json: invoices
-
+        render json: invoices.as_json(only: [:id, :appointment_id, :pet_id, :date_completed, :compensation, :paid, :pending, :title, :cancelled]), status: :ok
     end
 
     def index
         invoices = Invoice.all
-        render json: invoices
+        render json: invoices.as_json(only: [:id, :appointment_id, :pet_id, :date_completed, :compensation, :paid, :pending, :title, :cancelled]), status: :ok
     end
 
     def destroy
@@ -61,7 +55,7 @@ class InvoicesController < ApplicationController
 
             invoice.destroy
 
-            render json: invoice, status: :ok
+            render json: invoice.as_json(only: [:id, :appointment_id, :pet_id, :date_completed, :compensation, :paid, :pending, :title, :cancelled]), status: :ok
 
         else
             render json: { error: 'invoice not found' }, status: :not_found
@@ -72,6 +66,6 @@ class InvoicesController < ApplicationController
     private
 
     def invoice_params
-        params.permit(:appointment_id, :pet_id, :date_completed, :walk_duration, :compensation, :paid, :id, :title, :cancelled)
+        params.require(:invoice).permit(:appointment_id, :pet_id, :date_completed, :walk_duration, :compensation, :paid, :id, :title, :cancelled)
     end
 end
