@@ -3,6 +3,7 @@ import styled from "styled-components";
 import dayjs from "dayjs";
 import { UserContext } from "../context/user";
 import dogPlaceholder from "../assets/dog.png";
+import YearlyFinanceOverview from "./YearlyFinanceOverview";
 
 const getUpcomingBirthday = (pets) => {
     const today = dayjs().startOf("day");
@@ -198,6 +199,7 @@ export default function Dashboard() {
                     <UpdateButton type="submit">Update Rates</UpdateButton>
                 </Form>
             </RateSection>
+            <YearlyFinanceOverview />
             <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
         </Container>
     );
@@ -205,6 +207,7 @@ export default function Dashboard() {
 
 const LogoutButton = styled.button`
     background: #ff758c;
+    margin-top: 20px;
     color: white;
     padding: 10px 15px;
     font-size: 14px;
