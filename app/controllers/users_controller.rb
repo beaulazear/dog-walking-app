@@ -1,6 +1,6 @@
 class UsersController < ApplicationController
     include Rails.application.routes.url_helpers
-    
+
     before_action :current_user
 
     skip_before_action :authorized, only: :create
@@ -76,7 +76,7 @@ class UsersController < ApplicationController
                 only: [ :id, :pet_id, :appointment_date, :start_time, :end_time, :duration, :recurring, :solo, :completed, :canceled, 
                         :monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday ],
                 include: { 
-                    pet: { only: [ :id, :name ] },
+                    pet: { only: [ :id, :name, :profile_pic ] },
                     cancellations: { only: [ :id, :date ] }
                 }
             ),

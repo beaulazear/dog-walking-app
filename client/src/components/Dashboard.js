@@ -153,8 +153,8 @@ export default function Dashboard() {
                                         alt={appointment.pet?.name}
                                     />
                                     <div>
-                                        <Text><strong>{appointment.pet?.name}</strong></Text>
-                                        <Text>{dayjs(appointment.start_time).format("h:mm A")} - {dayjs(appointment.end_time).format("h:mm A")}</Text>
+                                        <Text><strong>{appointment.pet?.name}, {appointment.duration} min walk</strong></Text>
+                                        <Text>Pickup: {dayjs(appointment.start_time).format("h:mm A")} - {dayjs(appointment.end_time).format("h:mm A")}</Text>
                                     </div>
                                 </ListItem>
                             ))}
