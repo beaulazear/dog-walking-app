@@ -5,6 +5,7 @@ import { UserContext } from "../context/user";
 
 const NewAppointmentForm = ({ pet }) => {
     const { user, setUser } = useContext(UserContext);
+    const [showForm, setShowForm] = useState(false)
     const [formData, setFormData] = useState({
         user_id: user.id,
         pet_id: pet.id,
@@ -22,6 +23,8 @@ const NewAppointmentForm = ({ pet }) => {
         saturday: false,
         sunday: false
     });
+
+    const toggleForm = () => setShowForm((prev) => !prev); // ✅ Toggles form visibility
 
     const handleChange = (e) => {
         const { name, type, value, checked } = e.target;
@@ -65,8 +68,7 @@ const NewAppointmentForm = ({ pet }) => {
                 return;
             }
 
-            const createdAppointment = await response.json(); // ✅ Read JSON only ONCE
-            console.log("New Appointment Created:", createdAppointment);
+            const createdAppointment = await response.json();
 
             setUser(prevUser => ({
                 ...prevUser,
@@ -80,73 +82,101 @@ const NewAppointmentForm = ({ pet }) => {
     };
 
     return (
-        <FormContainer>
-            <Subtitle>➕ Schedule a New Appointment</Subtitle>
-            <Form onSubmit={handleSubmit}>
-                <Label>Recurring Appointment?</Label>
-                <Select name="recurring" value={formData.recurring} onChange={handleChange}>
-                    <option value={false}>No</option>
-                    <option value={true}>Yes</option>
-                </Select>
+        <>
+            <ButtonContainer>
+                <ToggleButton onClick={toggleForm}>
+                    {showForm ? "Cancel" : "➕ Schedule a New Appointment"}
+                </ToggleButton>
+            </ButtonContainer>
 
-                {!formData.recurring && (
-                    <>
-                        <Label>Appointment Date:</Label>
-                        <Input
-                            type="date"
-                            name="appointment_date"
-                            value={formData.appointment_date}
-                            onChange={handleChange}
-                        />
-                    </>
-                )}
+            {showForm && (
+                <FormContainer>
+                    <Subtitle>Schedule a New Appointment</Subtitle>
+                    <Form onSubmit={handleSubmit}>
+                        <Label>Recurring Appointment?</Label>
+                        <Select name="recurring" value={formData.recurring} onChange={handleChange}>
+                            <option value={false}>No</option>
+                            <option value={true}>Yes</option>
+                        </Select>
 
-                {formData.recurring && (
-                    <>
-                        <Label>Select Recurring Days:</Label>
-                        <DaysContainer>
-                            {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map((day) => (
-                                <DayToggle key={day}>
-                                    <input type="checkbox" name={day} checked={formData[day]} onChange={handleChange} />
-                                    <span>{day.charAt(0).toUpperCase() + day.slice(1)}</span>
-                                </DayToggle>
-                            ))}
-                        </DaysContainer>
-                    </>
-                )}
+                        {!formData.recurring && (
+                            <>
+                                <Label>Appointment Date:</Label>
+                                <Input type="date" name="appointment_date" value={formData.appointment_date} onChange={handleChange} />
+                            </>
+                        )}
 
-                <Label>Start Time:</Label>
-                <Input type="time" name="start_time" value={formData.start_time} onChange={handleChange} />
+                        {formData.recurring && (
+                            <>
+                                <Label>Select Recurring Days:</Label>
+                                <DaysContainer>
+                                    {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map((day) => (
+                                        <DayToggle key={day}>
+                                            <input type="checkbox" name={day} checked={formData[day]} onChange={handleChange} />
+                                            <span>{day.charAt(0).toUpperCase() + day.slice(1)}</span>
+                                        </DayToggle>
+                                    ))}
+                                </DaysContainer>
+                            </>
+                        )}
 
-                <Label>End Time:</Label>
-                <Input type="time" name="end_time" value={formData.end_time} onChange={handleChange} />
+                        <Label>Start Time:</Label>
+                        <Input type="time" name="start_time" value={formData.start_time} onChange={handleChange} />
 
-                <Label>Duration (minutes):</Label>
-                <Input type="number" name="duration" value={formData.duration} onChange={handleChange} />
+                        <Label>End Time:</Label>
+                        <Input type="time" name="end_time" value={formData.end_time} onChange={handleChange} />
 
-                <Label>Solo Walk?</Label>
-                <Select name="solo" value={formData.solo} onChange={handleChange}>
-                    <option value={false}>No</option>
-                    <option value={true}>Yes</option>
-                </Select>
+                        <Label>Duration (minutes):</Label>
+                        <Input type="number" name="duration" value={formData.duration} onChange={handleChange} />
 
-                <SubmitButton type="submit">Add Appointment</SubmitButton>
-            </Form>
-        </FormContainer>
+                        <Label>Solo Walk?</Label>
+                        <Select name="solo" value={formData.solo} onChange={handleChange}>
+                            <option value={false}>No</option>
+                            <option value={true}>Yes</option>
+                        </Select>
+
+                        <SubmitButton type="submit">Add Appointment</SubmitButton>
+                    </Form>
+                </FormContainer>
+            )}
+        </>
     );
 };
-
 export default NewAppointmentForm;
+
+const ButtonContainer = styled.div`
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+    margin-top: 15px;
+`;
+
+const ToggleButton = styled.button`
+    background: #28a745;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: bold;
+    width: fit-content;
+    transition: background 0.3s ease-in-out;
+
+    &:hover {
+        background: darkgreen;
+    }
+`;
 
 const FormContainer = styled.div`
     margin-top: 20px;
     padding: 20px;
-    background: #4B0082;
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 12px;
 `;
 
 const Subtitle = styled.h3`
-    color: white;
+    color: #4B0082;
     margin-bottom: 10px;
 `;
 
@@ -157,7 +187,7 @@ const Form = styled.form`
 `;
 
 const Label = styled.label`
-    color: white;
+    color: #4B0082;
     font-size: 1rem;
 `;
 
@@ -165,7 +195,7 @@ const Input = styled.input`
     padding: 8px;
     border-radius: 6px;
     border: none;
-    width: 100%;
+    width: 95%;
 `;
 
 const Select = styled.select`

@@ -35,6 +35,8 @@ const PetInvoices = ({ pet }) => {
         }
     };
 
+    const totalUnpaid = unpaidInvoices.reduce((sum, invoice) => sum + invoice.compensation, 0);
+
     return (
         <InvoicesContainer>
             <TabContainer>
@@ -58,9 +60,9 @@ const PetInvoices = ({ pet }) => {
                                     <Text><strong>{invoice.title}</strong></Text>
                                     <Text>Date: {dayjs(invoice.date_completed).format("MMM D, YYYY")}</Text>
                                     <Text>Amount: ${invoice.compensation}</Text>
-                                    <Status $unpaid>Unpaid</Status>
                                 </InvoiceCard>
                             ))}
+                            <Text>Total: ${totalUnpaid.toFixed(2)}</Text>
                             <MarkPaidButton onClick={markAllAsPaid}>Mark All as Paid</MarkPaidButton>
                         </>
                     )}
@@ -85,7 +87,6 @@ const PetInvoices = ({ pet }) => {
                                 <Text><strong>{invoice.title}</strong></Text>
                                 <Text>Date: {dayjs(invoice.date_completed).format("MMM D, YYYY")}</Text>
                                 <Text>Amount: ${invoice.compensation}</Text>
-                                <Status $paid>Paid ✅</Status>
                             </InvoiceCard>
                         ))
                     )}
@@ -135,19 +136,8 @@ const NoInvoices = styled.p`
 `;
 
 const Text = styled.p`
-    color: white;
+    color: #4B0082;
     margin: 5px 0;
-`;
-
-const Status = styled.span`
-    display: inline-block;
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-weight: bold;
-    background: ${({ $paid, $unpaid }) =>
-        $paid ? "#1E7D32" :
-            $unpaid ? "#ff4d4d" : "#ccc"};
-    color: white;
 `;
 
 const MarkPaidButton = styled.button`

@@ -6,7 +6,7 @@ export default function LoadingScreen() {
   return (
     <LoaderContainer>
       <DogImage src={dogImage} alt="Pocket Walks Mascot" />
-      <LoadingText>🐾 Pocket Walks is Loading...</LoadingText>
+      <LoadingText>Loading...</LoadingText>
     </LoaderContainer>
   );
 }
