@@ -27,7 +27,7 @@ export default function TodaysWalks() {
         <Container>
             <Title>🐾 Today's Walks 🐾</Title>
             <Subtitle>{dayjs().format("MMMM D, YYYY")}</Subtitle>
-            <Text>You have {todaysAppointments.length} walks scheduled for today.</Text>
+            <Text>You have {todaysAppointments.length} {todaysAppointments.length === 1 ? 'walk' : 'walks'} scheduled for today.</Text>
 
             {todaysAppointments.length === 0 ? (
                 <NoWalksCard>No scheduled walks for today.</NoWalksCard>

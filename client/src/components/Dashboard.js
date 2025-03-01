@@ -143,7 +143,7 @@ export default function Dashboard() {
                         <Text>No appointments scheduled for this date.</Text>
                     ) : (
                         <>
-                            <Text><strong>{appointments.length} appointments scheduled for this date.</strong></Text>
+                            <Text><strong>{appointments.length} {appointments.length === 1 ? 'appointment' : 'appointments'}  scheduled for this date.</strong></Text>
                             < br/>
                             {appointments.map((appointment) => (
                                 <ListItem key={appointment.id}>
