@@ -19,7 +19,7 @@ const Navbar = () => {
                     ) : (
                         <>
                             <StyledLink to="/todays-walks">Today</StyledLink>
-                            <StyledLink to="/pets">Pets</StyledLink>
+                            <StyledLink to="/pets-page">Pets</StyledLink>
                         </>
                     )}
                 </NavLinks>
