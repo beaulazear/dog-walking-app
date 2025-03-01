@@ -262,7 +262,7 @@ const Section = styled.div`
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
-    width: 100%;
+    width: 95%;
     max-width: 800px;
     margin-bottom: 20px;
 `;

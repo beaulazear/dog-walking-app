@@ -1,5 +1,6 @@
 import React, { useState, useContext } from "react";
 import styled from "styled-components";
+import { Link } from "react-router-dom";
 import { UserContext } from "../context/user.js";
 
 const Signup = () => {
@@ -90,7 +91,7 @@ const Signup = () => {
                 </Form>
                 <Divider />
                 <LoginPrompt>
-                    Already have an account? <LoginLink href="/login">Log In</LoginLink>
+                    Already have an account? <LoginLink to="/login">Log In</LoginLink>
                 </LoginPrompt>
             </SignupBox>
         </SignupWrapper>
@@ -103,6 +104,7 @@ const SignupWrapper = styled.div`
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 20px;
     height: 100vh;
     background: linear-gradient(135deg, #ff9a9e, #fad0c4);
 `;
@@ -110,7 +112,7 @@ const SignupWrapper = styled.div`
 const SignupBox = styled.div`
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
-    padding: 40px;
+    padding: 20px;
     border-radius: 12px;
     box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
     width: 100%;
@@ -131,7 +133,7 @@ const Form = styled.form`
 `;
 
 const Input = styled.input`
-    width: 100%;
+    width: 92%;
     padding: 12px;
     margin-bottom: 12px;
     border: none;
@@ -186,7 +188,7 @@ const LoginPrompt = styled.p`
     font-size: 14px;
 `;
 
-const LoginLink = styled.a`
+const LoginLink = styled(Link)`
     color: #fff;
     font-weight: bold;
     text-decoration: none;

@@ -4,7 +4,7 @@ import styled from "styled-components";
 export default function Home() {
     return (
         <Container>
-            <Title>🐶 Welcome to Pocket Walks 🐾</Title>
+            <Title>Pocket Walks</Title>
             <SubTitle>Manage your pet care appointments, invoices, and more in one place.</SubTitle>
             <CardsContainer>
                 <Card>

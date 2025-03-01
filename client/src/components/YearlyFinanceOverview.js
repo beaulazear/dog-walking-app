@@ -9,12 +9,10 @@ export default function YearlyFinanceOverview() {
     const { user } = useContext(UserContext);
     const [taxPercentage, setTaxPercentage] = useState(15);
 
-    // Filter invoices from 2025
     const invoicesFromCurrentYear = user?.invoices?.filter(inv =>
         dayjs(inv.date_completed).year() === currentYear
     ) || [];
 
-    // Calculate totals and estimates
     const totalIncome = calculateTotalIncome(invoicesFromCurrentYear);
     const dailyAverage = calculateDailyAverage(totalIncome);
     const weeklyIncome = calculateWeeklyIncome(dailyAverage);
@@ -62,43 +60,37 @@ export default function YearlyFinanceOverview() {
     );
 }
 
-// ✅ Function to calculate total income from invoices
 function calculateTotalIncome(invoices) {
     return invoices.reduce((total, inv) => total + (inv.compensation || 0), 0);
 }
 
-// ✅ Function to calculate daily average income
 function calculateDailyAverage(totalIncome) {
     const today = dayjs();
     const startOfYear = dayjs().startOf("year");
-    const daysPassed = today.diff(startOfYear, "day") + 1; // Ensure at least 1 day
+    const daysPassed = today.diff(startOfYear, "day") + 1;
 
     return daysPassed > 0 ? totalIncome / daysPassed : 0;
 }
 
-// ✅ Function to calculate estimated weekly income
 function calculateWeeklyIncome(dailyAverage) {
     return Math.round(dailyAverage * 7);
 }
 
-// ✅ Function to calculate estimated monthly income
 function calculateMonthlyIncome(dailyAverage) {
-    return Math.round(dailyAverage * 30.44); // Avg. days in a month
+    return Math.round(dailyAverage * 30.44);
 }
 
-// ✅ Function to estimate total yearly income
 function calculateEstimatedYearlyTotal(dailyAverage) {
     return Math.round(dailyAverage * 365);
 }
 
-// 📌 Styled Components
 const Container = styled.div`
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
-    width: 100%;
+    width: 95%;
     max-width: 800px;
     text-align: center;
 `;

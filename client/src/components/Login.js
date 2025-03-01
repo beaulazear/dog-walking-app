@@ -1,5 +1,6 @@
 import React, { useState, useContext } from "react";
 import styled from "styled-components";
+import { Link } from "react-router-dom";
 import { UserContext } from "../context/user.js";
 
 const Login = () => {
@@ -33,7 +34,7 @@ const Login = () => {
     return (
         <LoginWrapper>
             <LoginBox>
-                <Title>Welcome Back</Title>
+                <Title>Login to your account</Title>
                 <Form onSubmit={handleSubmit}>
                     <Input
                         type="text"
@@ -56,7 +57,7 @@ const Login = () => {
                 </Form>
                 <Divider />
                 <SignupPrompt>
-                    Don't have an account? <SignupLink href="/signup">Sign Up</SignupLink>
+                    Don't have an account? <SignupLink to="/signup">Sign Up</SignupLink>
                 </SignupPrompt>
             </LoginBox>
         </LoginWrapper>
@@ -68,6 +69,7 @@ export default Login;
 const LoginWrapper = styled.div`
     display: flex;
     justify-content: center;
+    padding: 20px;
     align-items: center;
     height: 100vh;
     background: linear-gradient(135deg, #ff9a9e, #fad0c4);
@@ -76,10 +78,10 @@ const LoginWrapper = styled.div`
 const LoginBox = styled.div`
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
-    padding: 40px;
+    padding: 20px;
     border-radius: 12px;
     box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
-    width: 100%;
+    width: 90%;
     max-width: 400px;
     text-align: center;
 `;
@@ -97,7 +99,7 @@ const Form = styled.form`
 `;
 
 const Input = styled.input`
-    width: 100%;
+    width: 92%;
     padding: 12px;
     margin-bottom: 12px;
     border: none;
@@ -152,7 +154,7 @@ const SignupPrompt = styled.p`
     font-size: 14px;
 `;
 
-const SignupLink = styled.a`
+const SignupLink = styled(Link)`
     color: #fff;
     font-weight: bold;
     text-decoration: none;
