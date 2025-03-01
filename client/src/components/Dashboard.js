@@ -183,7 +183,7 @@ export default function Dashboard() {
                     />
                     <div>
                         <Title>Next Birthday 🎂</Title>
-                        <Text>{upcomingBirthdayPet.name} has a birthday on {dayjs(upcomingBirthdayPet.birthdate).format("MMMM D")}!</Text>
+                        <Text>{upcomingBirthdayPet.name}, on {dayjs(upcomingBirthdayPet.birthdate).format("MMMM D")}!</Text>
                     </div>
                 </BirthdayCard>
             )}

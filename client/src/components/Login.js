@@ -1,7 +1,8 @@
 import React, { useState, useContext } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { Link } from "react-router-dom";
 import { UserContext } from "../context/user.js";
+import dogImage from "../assets/dog.png"; // Make sure the path to your image is correct
 
 const Login = () => {
     const { setUser } = useContext(UserContext);
@@ -33,8 +34,13 @@ const Login = () => {
 
     return (
         <LoginWrapper>
+            <DogContainer>
+                <DogImage src={dogImage} alt="Pocket Walks Mascot" />
+                <GreetingText>Welcome Back!</GreetingText>
+            </DogContainer>
+
             <LoginBox>
-                <Title>Login to your account</Title>
+                <Title>Login</Title>
                 <Form onSubmit={handleSubmit}>
                     <Input
                         type="text"
@@ -66,13 +72,43 @@ const Login = () => {
 
 export default Login;
 
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
 const LoginWrapper = styled.div`
     display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
     padding: 20px;
-    align-items: center;
     height: 100vh;
     background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+`;
+
+const DogContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    animation: ${fadeIn} 1s ease-in-out;
+`;
+
+const DogImage = styled.img`
+    width: 150px;
+    height: auto;
+    animation: ${fadeIn} 1s ease-in-out;
+`;
+
+const GreetingText = styled.h1`
+    font-size: 22px;
+    color: white;
+    font-weight: bold;
+    margin-top: 10px;
+    text-align: center;
+    animation: ${fadeIn} 1s ease-in-out;
 `;
 
 const LoginBox = styled.div`
@@ -91,6 +127,7 @@ const Title = styled.h2`
     font-weight: 600;
     color: #ffffff;
     margin-bottom: 20px;
+    margin-top: 5px;
 `;
 
 const Form = styled.form`
