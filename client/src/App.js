@@ -23,7 +23,7 @@ function App() {
         <>
           <Routes>
             <Route path="/todays-walks" element={<TodaysWalks />} />
-            <Route path="/pets" element={<PetsPage />} />
+            <Route path="/pets-page" element={<PetsPage />} />
             <Route path="*" element={<Dashboard />} />
           </Routes>
         </>
