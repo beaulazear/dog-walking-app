@@ -12,20 +12,24 @@ export default function PetsPage() {
 
     return (
         <Container>
-            <Title>🐾 Your Pets</Title>
-            <Subtitle>Select a pet to view or edit their details.</Subtitle>
-            <PetGrid>
-                {user?.pets?.map((pet) => (
-                    <PetCard key={pet.id} onClick={() => setSelectedPet(pet)}>
-                        <PetImage
-                            src={pet.profile_pic || dogPlaceholder}
-                            onError={(e) => (e.target.src = dogPlaceholder)}
-                            alt={pet.name}
-                        />
-                        <PetName>{pet.name}</PetName>
-                    </PetCard>
-                ))}
-            </PetGrid>
+            {!selectedPet && (
+                <>
+                    <Title>Your Pets</Title>
+                    <Subtitle>Select a pet to view or edit their details.</Subtitle>
+                    <PetGrid>
+                        {user?.pets?.map((pet) => (
+                            <PetCard key={pet.id} onClick={() => setSelectedPet(pet)}>
+                                <PetImage
+                                    src={pet.profile_pic || dogPlaceholder}
+                                    onError={(e) => (e.target.src = dogPlaceholder)}
+                                    alt={pet.name}
+                                />
+                                <PetName>{pet.name}</PetName>
+                            </PetCard>
+                        ))}
+                    </PetGrid>
+                </>
+            )}
 
             {selectedPet && <PetDetails key={selectedPet.id} pet={selectedPet} setSelectedPet={setSelectedPet} />}
         </Container>
@@ -82,8 +86,8 @@ const PetDetails = ({ pet, setSelectedPet }) => {
 
     return (
         <DetailsContainer>
-            <CloseButton onClick={() => setSelectedPet(null)}>✖ Close</CloseButton>
-            <Title>🐶 {pet.name}'s Info</Title>
+            <CloseButton onClick={() => setSelectedPet(null)}>✖ Return to Pets Page</CloseButton>
+            <Title>{pet.name}'s Info</Title>
             <Form>
                 <Label>Name:</Label>
                 <Input name="name" value={formData.name || ""} onChange={handleChange} />
@@ -301,12 +305,12 @@ const Container = styled.div`
 const Title = styled.h2`
     font-size: 2rem;
     color: white;
-    margin-bottom: 10px;
+    margin-bottom: 0px;
 `;
 
 const Subtitle = styled.h3`
     font-size: 1.25rem;
-    color: #4B0082;
+    color: white;
 `;
 
 const PetGrid = styled.div`
