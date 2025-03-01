@@ -31,7 +31,7 @@ const LoaderContainer = styled.div`
 const DogImage = styled.img`
   width: 150px;
   height: auto;
-  animation: ${fadeIn} 2s ease-in-out infinite alternate;
+  animation: ${fadeIn} 1s ease-in-out infinite alternate;
 `;
 
 const LoadingText = styled.h1`
@@ -39,5 +39,5 @@ const LoadingText = styled.h1`
   font-size: 1.8rem;
   margin-top: 20px;
   font-weight: bold;
-  animation: ${fadeIn} 2s ease-in-out infinite alternate;
+  animation: ${fadeIn} 1s ease-in-out infinite alternate;
 `;
