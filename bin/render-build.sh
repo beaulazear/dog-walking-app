@@ -7,6 +7,7 @@ rm -rf public
 npm install --prefix client && npm run build --prefix client
 cp -a client/build/. public/
 
-# builds the back end code
+gem install nokogiri --platform=ruby
 bundle install
+
 bundle exec rake db:migrate
