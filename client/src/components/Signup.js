@@ -125,6 +125,7 @@ const Title = styled.h2`
     font-weight: 600;
     color: #ffffff;
     margin-bottom: 20px;
+    margin-top: 5px;
 `;
 
 const Form = styled.form`
