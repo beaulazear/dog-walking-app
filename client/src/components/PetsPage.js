@@ -337,7 +337,7 @@ const PetGrid = styled.div`
 
 const PetCard = styled.div`
     background: rgba(255, 255, 255, 0.2);
-    padding: 15px;
+    padding: 10px;
     border-radius: 12px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
     display: flex;
@@ -346,7 +346,7 @@ const PetCard = styled.div`
     cursor: pointer;
     transition: 0.3s ease-in-out;
     width: 75px;
-    height: 150px;
+    height: 125px;
 
     &:hover {
         transform: scale(1.05);
@@ -361,6 +361,7 @@ const PetImage = styled.img`
 
 const PetName = styled.h4`
     color: white;
+    margin-top: 5px;
 `;
 
 const DetailsContainer = styled.div`
