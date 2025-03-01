@@ -39,10 +39,22 @@ const PetDetails = ({ pet, setSelectedPet }) => {
 
     useEffect(() => {
         setFormData(pet);
+
         if (user?.appointments) {
-            setAppointments(user.appointments.filter(
-                apt => apt.pet_id === pet.id && !apt.completed && !apt.canceled
-            ));
+            const today = dayjs().startOf("day"); // Get today's date, ignoring time
+
+            const filteredAppointments = user.appointments.filter(apt => {
+                const appointmentDate = dayjs(apt.appointment_date).startOf("day"); // Ignore time
+
+                return (
+                    apt.pet_id === pet.id &&
+                    !apt.completed &&
+                    !apt.canceled &&
+                    (apt.recurring || appointmentDate.isAfter(today)) // ✅ Only filter past one-time appointments
+                );
+            });
+
+            setAppointments(filteredAppointments);
         }
     }, [pet, user]);
 
@@ -101,6 +113,8 @@ const PetDetails = ({ pet, setSelectedPet }) => {
 
 const PetAppointments = ({ pet, appointments }) => {
     const [selectedAppointment, setSelectedAppointment] = useState(null);
+
+    console.log(appointments)
 
     return (
         <AppointmentsContainer>
