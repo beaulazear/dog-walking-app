@@ -19,7 +19,7 @@ export default function PetsPage() {
             {!selectedPet && (
                 <>
                     <Title>Your Pets</Title>
-                    <Subtitle>Select a pet to view or edit their details.</Subtitle>
+                    <Subtitle>Select a pet to view or edit their details, appointments, & invoices.</Subtitle>
                     <PetGrid>
                         {user?.pets
                             ?.slice() // Create a shallow copy to avoid mutating original data
@@ -345,7 +345,7 @@ const PetCard = styled.div`
     align-items: center;
     cursor: pointer;
     transition: 0.3s ease-in-out;
-    width: 90px;
+    width: 75px;
     height: 150px;
 
     &:hover {
@@ -356,7 +356,6 @@ const PetCard = styled.div`
 const PetImage = styled.img`
     width: 80px;
     height: 80px;
-    border-radius: 50%;
     object-fit: cover;
 `;
 
