@@ -5,7 +5,7 @@ import { UserContext } from "../context/user";
 import dogPlaceholder from "../assets/dog.png";
 
 const getUpcomingBirthday = (pets) => {
-    const today = dayjs();
+    const today = dayjs().startOf("day");
     let closestPet = null;
     let minDays = Infinity;
 
@@ -13,15 +13,17 @@ const getUpcomingBirthday = (pets) => {
         if (pet.birthdate) {
             const birthdate = dayjs(pet.birthdate);
             const birthdayThisYear = birthdate.year(today.year());
-            let daysUntil = birthdayThisYear.diff(today, "day");
+            const birthdayNextYear = birthdate.year(today.year() + 1);
 
-            if (daysUntil < 0) {
-                daysUntil = birthdate.add(1, "year").diff(today, "day");
-            }
+            let upcomingBirthday = birthdayThisYear.isAfter(today) 
+                ? birthdayThisYear 
+                : birthdayNextYear;
+
+            const daysUntil = upcomingBirthday.diff(today, "day");
 
             if (daysUntil < minDays) {
                 minDays = daysUntil;
-                closestPet = pet;
+                closestPet = { ...pet, upcomingBirthday };
             }
         }
     });
@@ -39,6 +41,12 @@ export default function Dashboard() {
         sixty: user?.sixty || "",
         solo_rate: user?.solo_rate || "",
     });
+
+    useEffect(() => {
+        if (user?.pets) {
+            setUpcomingBirthdayPet(getUpcomingBirthday(user.pets));
+        }
+    }, [user]);
 
     const handleRateChange = (e) => {
         setRates({
@@ -85,12 +93,6 @@ export default function Dashboard() {
             console.error("Error during logout:", error);
         }
     };
-
-    useEffect(() => {
-        if (user?.pets) {
-            setUpcomingBirthdayPet(getUpcomingBirthday(user.pets));
-        }
-    }, [user]);
 
     const isRecurringOnDate = (appointment, date) => {
         const dayOfWeek = dayjs(date).day();
