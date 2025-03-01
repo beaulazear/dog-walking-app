@@ -157,7 +157,7 @@ export default function Dashboard() {
                             <Text><strong>{appointments.length} {appointments.length === 1 ? 'appointment' : 'appointments'}  scheduled for this date.</strong></Text>
                             < br/>
                             {appointments.map((appointment) => (
-                                <ListItem key={appointment.id}>
+                                <ListItem style={{textAlign: 'left'}} key={appointment.id}>
                                     <PetImage
                                         src={appointment.pet?.profile_pic || dogPlaceholder}
                                         onError={(e) => (e.target.src = dogPlaceholder)}
@@ -174,7 +174,7 @@ export default function Dashboard() {
                 </ListGroup>
             </Section>
             {upcomingBirthdayPet && (
-                <BirthdayCard>
+                <BirthdayCard style={{textAlign: 'left'}}>
                     <PetImage
                         src={upcomingBirthdayPet.profile_pic || dogPlaceholder}
                         onError={(e) => (e.target.src = dogPlaceholder)}
@@ -269,7 +269,8 @@ const Section = styled.div`
 const Title = styled.h2`
     font-size: 1.75rem;
     color: white;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
+    margin-top: 5px;
 `;
 
 const DateInput = styled.input`

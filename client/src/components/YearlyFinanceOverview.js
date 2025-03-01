@@ -98,7 +98,8 @@ const Container = styled.div`
 const Header = styled.h2`
     font-size: 1.75rem;
     color: white;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
+    margin-top: 5px;
 `;
 
 const DetailRow = styled.div`
