@@ -40,7 +40,7 @@ const Login = () => {
             </DogContainer>
 
             <LoginBox>
-                <Title>Login</Title>
+                <Title>Login to your account</Title>
                 <Form onSubmit={handleSubmit}>
                     <Input
                         type="text"
