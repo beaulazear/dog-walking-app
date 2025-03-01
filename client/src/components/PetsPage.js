@@ -345,6 +345,8 @@ const PetCard = styled.div`
     align-items: center;
     cursor: pointer;
     transition: 0.3s ease-in-out;
+    width: 90px;
+    height: 150px;
 
     &:hover {
         transform: scale(1.05);
@@ -356,7 +358,6 @@ const PetImage = styled.img`
     height: 80px;
     border-radius: 50%;
     object-fit: cover;
-    margin-bottom: 10px;
 `;
 
 const PetName = styled.h4`
