@@ -11,7 +11,7 @@ class AppointmentsController < ApplicationController
         appointment = pet.appointments.create(appointment_params)
     
         if appointment.valid?
-            render json: appointment.as_json(only: [ :user_id, :pet_id, :appointment_date, :start_time, :id, :canceled, :completed, :end_time, :recurring, :solo, :duration, :monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday ])
+            render json: appointment.as_json(only: [ :user_id, :pet_id, :appointment_date, :start_time, :id, :canceled, :completed, :end_time, :recurring, :solo, :duration, :monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday, :cancellations ])
         else
             render json: { errors: appointment.errors.full_messages }, status: :unprocessable_entity
         end

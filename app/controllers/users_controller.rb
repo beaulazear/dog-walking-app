@@ -59,7 +59,10 @@ class UsersController < ApplicationController
             appointments: user.appointments.as_json(
                 only: [ :id, :pet_id, :appointment_date, :start_time, :end_time, :duration, :recurring, :solo, :completed, :canceled, 
                         :monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday ],
-                include: { pet: { only: [ :id, :name ] } }
+                include: { 
+                    pet: { only: [ :id, :name ] },
+                    cancellations: { only: [ :id, :date ] }
+                }
             ),
             invoices: Invoice.where(pet_id: user.pets.pluck(:id)).as_json(only: [ :id, :appointment_id, :pet_id, :date_completed, :compensation, :paid, :pending, :title, :cancelled ])
         }

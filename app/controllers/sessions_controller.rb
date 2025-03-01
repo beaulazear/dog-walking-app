@@ -30,10 +30,13 @@ class SessionsController < ApplicationController
           solo_rate: user.solo_rate,
           pets: user.pets.as_json(only: [ :id, :name, :birthdate, :sex, :spayed_neutered, :address, :behavorial_notes, :supplies_location, :allergies, :active ]),
           appointments: user.appointments.as_json(
-            only: [ :id, :pet_id, :appointment_date, :start_time, :end_time, :duration, :solo, :recurring, :completed, :canceled, 
-                    :monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday ],
-            include: { pet: { only: [ :id, :name ] } }
-        ),
+              only: [ :id, :pet_id, :appointment_date, :start_time, :end_time, :duration, :recurring, :solo, :completed, :canceled, 
+                      :monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday ],
+              include: { 
+                  pet: { only: [ :id, :name ] },
+                  cancellations: { only: [ :id, :date ] }
+              }
+          ),
           invoices: Invoice.where(pet_id: user.pets.pluck(:id)).as_json(only: [ :id, :appointment_id, :pet_id, :date_completed, :compensation, :paid, :pending, :title, :cancelled ])
       }
   end
