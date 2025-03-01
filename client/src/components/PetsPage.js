@@ -21,16 +21,19 @@ export default function PetsPage() {
                     <Title>Your Pets</Title>
                     <Subtitle>Select a pet to view or edit their details.</Subtitle>
                     <PetGrid>
-                        {user?.pets?.map((pet) => (
-                            <PetCard key={pet.id} onClick={() => setSelectedPet(pet)}>
-                                <PetImage
-                                    src={pet.profile_pic || dogPlaceholder}
-                                    onError={(e) => (e.target.src = dogPlaceholder)}
-                                    alt={pet.name}
-                                />
-                                <PetName>{pet.name}</PetName>
-                            </PetCard>
-                        ))}
+                        {user?.pets
+                            ?.slice() // Create a shallow copy to avoid mutating original data
+                            .sort((a, b) => a.name.localeCompare(b.name)) // Sort pets alphabetically
+                            .map((pet) => (
+                                <PetCard key={pet.id} onClick={() => setSelectedPet(pet)}>
+                                    <PetImage
+                                        src={pet.profile_pic || dogPlaceholder}
+                                        onError={(e) => (e.target.src = dogPlaceholder)}
+                                        alt={pet.name}
+                                    />
+                                    <PetName>{pet.name}</PetName>
+                                </PetCard>
+                            ))}
                     </PetGrid>
                 </>
             )}
