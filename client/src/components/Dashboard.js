@@ -16,8 +16,8 @@ const getUpcomingBirthday = (pets) => {
             const birthdayThisYear = birthdate.year(today.year());
             const birthdayNextYear = birthdate.year(today.year() + 1);
 
-            let upcomingBirthday = birthdayThisYear.isAfter(today) 
-                ? birthdayThisYear 
+            let upcomingBirthday = birthdayThisYear.isAfter(today)
+                ? birthdayThisYear
                 : birthdayNextYear;
 
             const daysUntil = upcomingBirthday.diff(today, "day");
@@ -112,6 +112,13 @@ export default function Dashboard() {
     const getAppointmentsForDate = (date) => {
         return user?.appointments?.filter(appointment => {
             if (appointment.canceled) return false;
+
+            const formattedDate = dayjs(date).format("YYYY-MM-DD");
+            const hasCancellation = appointment.cancellations?.some(cancellation =>
+                dayjs(cancellation.date).format("YYYY-MM-DD") === formattedDate
+            );
+            if (hasCancellation) return false;
+
             if (appointment.recurring) {
                 return isRecurringOnDate(appointment, date);
             }
