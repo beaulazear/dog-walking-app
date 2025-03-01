@@ -9,11 +9,10 @@ export default function TodaysWalks() {
 
     const todaysAppointments = (user?.appointments
         ?.filter(appointment => {
-            if (appointment.canceled) return false; // Exclude explicitly canceled appointments
+            if (appointment.canceled) return false;
 
             const todayFormatted = dayjs().format("YYYY-MM-DD");
 
-            // Check if appointment has a cancellation for today
             const hasCancellationToday = appointment.cancellations?.some(cancellation =>
                 dayjs(cancellation.date).format("YYYY-MM-DD") === todayFormatted
             );
@@ -33,13 +32,12 @@ export default function TodaysWalks() {
             if (startA.isBefore(startB)) return -1;
             if (startA.isAfter(startB)) return 1;
 
-            // If start times are the same, sort by end time
             return endA.isBefore(endB) ? -1 : 1;
         }) || []);
 
     return (
         <Container>
-            <Title>🐾 Today's Walks 🐾</Title>
+            <Title>Today's Walks</Title>
             <Subtitle>{dayjs().format("MMMM D, YYYY")}</Subtitle>
             <Text>You have {todaysAppointments.length} {todaysAppointments.length === 1 ? 'walk' : 'walks'} scheduled for today.</Text>
 
@@ -169,8 +167,8 @@ const WalkCard = ({ appointment }) => {
                     <Text>{appointment.duration} minute {appointment.solo ? 'solo' : 'group'} walk</Text>
                 </WalkDetails>
             )}
-            {isCompleted && <CompletedTag><strong>Completed ✅</strong></CompletedTag>}
-            {isCancelled && <CompletedTag><strong>Cancelled ❌</strong></CompletedTag>}
+            {isCompleted && <CompletedTag><strong>✅Completed</strong></CompletedTag>}
+            {isCancelled && <CompletedTag><strong>❌Cancelled</strong></CompletedTag>}
         </Card>
     );
 };
@@ -238,7 +236,7 @@ const Card = styled.div`
     background: ${({ $completed, $cancelled }) =>
         $completed ? "#1E7D32" :  // Dark green for completed walks
             $cancelled ? "#B22222" :  // Firebrick red for cancelled walks
-                "#4B0082"};
+                "#8750A6"};
 
     backdrop-filter: blur(10px);
     padding: 15px;
