@@ -8,12 +8,13 @@ import Home from "./components/Home";
 import Dashboard from "./components/Dashboard";
 import TodaysWalks from "./components/TodaysWalks";
 import PetsPage from "./components/PetsPage";
+import LoadingScreen from "./components/LoadingScreen";
 
 function App() {
   const { user, loading } = useContext(UserContext);
 
   if (loading) {
-    return <h1>Loading...</h1>;
+    return <LoadingScreen>Loading...</LoadingScreen>;
   }
 
   return (

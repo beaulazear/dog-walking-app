@@ -102,8 +102,6 @@ const PetDetails = ({ pet, setSelectedPet }) => {
 const PetAppointments = ({ pet, appointments }) => {
     const [selectedAppointment, setSelectedAppointment] = useState(null);
 
-    console.log(appointments)
-
     return (
         <AppointmentsContainer>
             <Subtitle>📅 {pet.name}'s Appointments</Subtitle>
