@@ -73,7 +73,6 @@ const PetInvoices = ({ pet }) => {
                             <option value={50}>50</option>
                             <option value="all">All</option>
                         </Select>
-                        <Label>Invoices</Label>
                     </InvoiceLimitSelector>
 
                     {pastInvoices.length === 0 ? (
