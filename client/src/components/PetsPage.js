@@ -18,8 +18,8 @@ export default function PetsPage() {
         <Container>
             {!selectedPet && (
                 <>
-                    <Title>Your Pets</Title>
-                    <Subtitle>Select a pet to view or edit their details, appointments, & invoices.</Subtitle>
+                    <TitleOne>Your Pets</TitleOne>
+                    <SubtitleOne>Select a pet to view or edit their details, appointments, & invoices.</SubtitleOne>
                     <PetGrid>
                         {user?.pets
                             ?.slice() // Create a shallow copy to avoid mutating original data
@@ -93,8 +93,10 @@ const PetDetails = ({ pet, setSelectedPet }) => {
 
     return (
         <DetailsContainer>
-            <CloseButton onClick={() => setSelectedPet(null)}>✖ Return to Pets Page</CloseButton>
-            <Title>{pet.name}'s Info</Title>
+            <HeaderContainer>
+                <Title>{pet.name}</Title>
+                <CloseButton onClick={() => setSelectedPet(null)}>✖ Exit</CloseButton>
+            </HeaderContainer>
             <Form>
                 <Label>Name:</Label>
                 <Input name="name" value={formData.name || ""} onChange={handleChange} />
@@ -114,7 +116,7 @@ const PetDetails = ({ pet, setSelectedPet }) => {
                     <option value={true}>Yes</option>
                     <option value={false}>No</option>
                 </Select>
-                <UpdateButton onClick={handleUpdate}>Update {pet.name}'s details</UpdateButton>
+                <UpdateButton onClick={handleUpdate}>Update details</UpdateButton>
             </Form>
 
             <PetAppointments appointments={appointments} pet={pet} />
@@ -127,10 +129,10 @@ const PetAppointments = ({ pet, appointments }) => {
 
     return (
         <AppointmentsContainer>
-            <Subtitle>📅 {pet.name}'s Appointments</Subtitle>
+            <Subtitle>📅 Appointments</Subtitle>
             {appointments.length > 0 && (<Text>Click on an appointment to edit, delete, or add cancellations</Text>)}
             {appointments.length === 0 ? (
-                <NoAppointments>No appointments scheduled.</NoAppointments>
+                <Text>No appointments scheduled.</Text>
             ) : (
                 appointments.map((apt) => (
                     <AppointmentCard key={apt.id} onClick={() => setSelectedAppointment(apt)}>
@@ -161,7 +163,7 @@ const PetAppointments = ({ pet, appointments }) => {
                 />
             )}
             <NewAppointmentForm pet={pet} />
-            <Subtitle>$ {pet.name}'s Invoices</Subtitle>
+            <Subtitle>💰 Invoices</Subtitle>
             <PetInvoices pet={pet} />
         </AppointmentsContainer>
     );
@@ -240,12 +242,14 @@ const AppointmentDetails = ({ appointment, setSelectedAppointment }) => {
     return (
         <Overlay>
             <ModalContainer>
-                <CloseButton onClick={() => setSelectedAppointment(null)}>✖ Close</CloseButton>
-                <Title>🗓 Edit Appointment</Title>
+                <HeaderContainer>
+                    <TitleOne>Edit Form</TitleOne>
+                    <CloseButton onClick={() => setSelectedAppointment(null)}>✖ Close</CloseButton>
+                </HeaderContainer>
                 <Form>
                     {formData.recurring ? (
                         <>
-                            <Label>Recurring Days:</Label>
+                            <LabelOne style={{ textAlign: 'center' }}>Recurring Days:</LabelOne>
                             <DaysContainer>
                                 {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map(day => (
                                     <DayToggle key={day}>
@@ -259,11 +263,10 @@ const AppointmentDetails = ({ appointment, setSelectedAppointment }) => {
                                     </DayToggle>
                                 ))}
                             </DaysContainer>
-                            <CancellationModal setSelectedAppointment={setSelectedAppointment} appointment={appointment}>Add Cancellations</CancellationModal>
                         </>
                     ) : (
                         <>
-                            <Label>Appointment Date:</Label>
+                            <LabelOne>Appointment Date:</LabelOne>
                             <Input
                                 type="date"
                                 name="appointment_date"
@@ -272,43 +275,45 @@ const AppointmentDetails = ({ appointment, setSelectedAppointment }) => {
                             />
                         </>
                     )}
-                    <Label>Start Time:</Label>
+                    {appointment.recurring && (<CancellationModal setSelectedAppointment={setSelectedAppointment} appointment={appointment}>Add Cancellations</CancellationModal>)}
+                    <LabelOne>Start Time:</LabelOne>
                     <Input
                         type="time"
                         name="start_time"
                         value={formData.start_time || ""}
                         onChange={handleTimeChange}
                     />
-                    <Label>End Time:</Label>
+                    <LabelOne>End Time:</LabelOne>
                     <Input
                         type="time"
                         name="end_time"
                         value={formData.end_time || ""}
                         onChange={handleTimeChange}
                     />
-                    <Label>Duration:</Label>
+                    <LabelOne>Duration:</LabelOne>
                     <Input type="number" name="duration" value={formData.duration} onChange={handleChange} />
-                    <ButtonContainer>
+                    <HeaderContainer>
                         <UpdateButton onClick={handleUpdate}>Save Changes</UpdateButton>
                         <DeleteButton onClick={handleCancel}>Cancel Appointment</DeleteButton>
-                    </ButtonContainer>
+                    </HeaderContainer>
                 </Form>
             </ModalContainer>
         </Overlay>
     );
 };
 
-const ButtonContainer = styled.div`
+const HeaderContainer = styled.div`
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 20px;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 10px;
 `;
 
 const Container = styled.div`
     background: linear-gradient(135deg, #ff9a9e, #fad0c4);
     min-height: 100vh;
-    padding: 40px 20px;
+    padding: 40px 35px;
     padding-top: 80px;
     display: flex;
     flex-direction: column;
@@ -318,11 +323,24 @@ const Container = styled.div`
 
 const Title = styled.h2`
     font-size: 2rem;
+    color: #4B0082;
+    margin-bottom: 2px;
+    margin-top: 2px;
+    text-align: left;
+`;
+
+const TitleOne = styled.h2`
+    font-size: 2rem;
     color: white;
-    margin-bottom: 0px;
+    margin-bottom: 2px;
+    margin-top: 2px;
 `;
 
 const Subtitle = styled.h3`
+    font-size: 1.25rem;
+    color: #4B0082;
+`;
+const SubtitleOne = styled.h3`
     font-size: 1.25rem;
     color: white;
 `;
@@ -396,6 +414,11 @@ const Form = styled.div`
 `;
 
 const Label = styled.label`
+    color: #4B0082;
+    text-align: left;
+`;
+
+const LabelOne = styled.label`
     color: white;
     text-align: left;
 `;
@@ -428,6 +451,8 @@ const UpdateButton = styled.button`
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    font-weight: bold;
+    width: fit-content;
     
     &:hover {
         background: darkblue;
@@ -446,10 +471,6 @@ const AppointmentCard = styled.div`
     margin-top: 10px;
 `;
 
-const NoAppointments = styled.p`
-    color: white;
-`;
-
 const Text = styled.p`
     color: #4B0082;
 `;
@@ -461,7 +482,8 @@ const DeleteButton = styled.button`
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    margin-top: 10px;
+    font-weight: bold;
+    width: fit-content;
 
     &:hover {
         background: darkred;
@@ -474,7 +496,7 @@ const Overlay = styled.div`
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.6); /* Darkened background */
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -483,7 +505,7 @@ const Overlay = styled.div`
 
 const ModalContainer = styled.div`
     background: white;
-    width: 90%;
+    width: 80%;
     max-width: 600px;
     padding: 30px;
     border-radius: 12px;

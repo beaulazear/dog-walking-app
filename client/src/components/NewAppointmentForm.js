@@ -85,10 +85,9 @@ const NewAppointmentForm = ({ pet }) => {
         <>
             <ButtonContainer>
                 <ToggleButton onClick={toggleForm}>
-                    {showForm ? "Cancel" : "➕ Schedule a New Appointment"}
+                    {showForm ? "Close Appointment Form" : "➕ Schedule a New Appointment"}
                 </ToggleButton>
             </ButtonContainer>
-
             {showForm && (
                 <FormContainer>
                     <Subtitle>Schedule a New Appointment</Subtitle>
@@ -157,7 +156,6 @@ const ToggleButton = styled.button`
     padding: 12px 20px;
     border: none;
     border-radius: 6px;
-    font-size: 1rem;
     cursor: pointer;
     font-weight: bold;
     width: fit-content;
@@ -240,6 +238,8 @@ const SubmitButton = styled.button`
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    font-weight: bold;
+    width: fit-content;
 
     &:hover {
         background: darkgreen;

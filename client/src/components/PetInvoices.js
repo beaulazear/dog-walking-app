@@ -113,6 +113,7 @@ const TabButton = styled.button`
     border-bottom: ${({ $active }) => ($active ? "3px solid #ffcc00" : "none")};
     cursor: pointer;
     transition: background 0.3s;
+    font-weight: bold;
 
     &:hover {
         background: #0056b3;
@@ -144,6 +145,7 @@ const MarkPaidButton = styled.button`
     border-radius: 6px;
     cursor: pointer;
     margin-top: 10px;
+    font-weight: bold;
 `;
 
 const InvoiceLimitSelector = styled.div`
