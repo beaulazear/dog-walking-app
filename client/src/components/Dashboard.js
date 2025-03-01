@@ -142,19 +142,23 @@ export default function Dashboard() {
                     {appointments.length === 0 ? (
                         <Text>No appointments scheduled for this date.</Text>
                     ) : (
-                        appointments.map((appointment) => (
-                            <ListItem key={appointment.id}>
-                                <PetImage
-                                    src={appointment.pet?.profile_pic || dogPlaceholder}
-                                    onError={(e) => (e.target.src = dogPlaceholder)}
-                                    alt={appointment.pet?.name}
-                                />
-                                <div>
-                                    <Text><strong>{appointment.pet?.name}</strong></Text>
-                                    <Text>{dayjs(appointment.start_time).format("h:mm A")} - {dayjs(appointment.end_time).format("h:mm A")}</Text>
-                                </div>
-                            </ListItem>
-                        ))
+                        <>
+                            <Text><strong>{appointments.length} appointments scheduled for this date.</strong></Text>
+                            < br/>
+                            {appointments.map((appointment) => (
+                                <ListItem key={appointment.id}>
+                                    <PetImage
+                                        src={appointment.pet?.profile_pic || dogPlaceholder}
+                                        onError={(e) => (e.target.src = dogPlaceholder)}
+                                        alt={appointment.pet?.name}
+                                    />
+                                    <div>
+                                        <Text><strong>{appointment.pet?.name}</strong></Text>
+                                        <Text>{dayjs(appointment.start_time).format("h:mm A")} - {dayjs(appointment.end_time).format("h:mm A")}</Text>
+                                    </div>
+                                </ListItem>
+                            ))}
+                        </>
                     )}
                 </ListGroup>
             </Section>
