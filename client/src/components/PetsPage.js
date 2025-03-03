@@ -333,7 +333,7 @@ const TitleOne = styled.h2`
     font-size: 2rem;
     color: white;
     margin-bottom: 2px;
-    margin-top: 2px;
+    margin-top: 5px;
 `;
 
 const Subtitle = styled.h3`
