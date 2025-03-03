@@ -76,6 +76,7 @@ const NewAppointmentForm = ({ pet }) => {
             }));
 
             alert("Appointment created successfully!");
+            toggleForm()
         } catch (error) {
             console.error("Error submitting appointment:", error);
         }
