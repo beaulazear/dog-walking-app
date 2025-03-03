@@ -49,9 +49,10 @@ const InvoiceList = styled.pre`
 const CopyableInvoicesModal = ({ unpaidInvoices, onClose, total }) => {
   if (!unpaidInvoices || unpaidInvoices.length === 0) return null;
 
-  const formattedInvoices = unpaidInvoices.map(invoice => (
-    `${invoice.title} | ${invoice.date} | $${invoice.compensation}`
-  )).join("\n");
+  const formattedInvoices = unpaidInvoices.map(invoice => {
+    const formattedDate = new Date(invoice.date_completed).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' });
+    return `${invoice.title} | ${formattedDate} | $${invoice.compensation}`;
+  }).join("\n");
 
   return (
     <ModalOverlay>
