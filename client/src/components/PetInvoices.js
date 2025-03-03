@@ -2,11 +2,13 @@ import React, { useState, useContext } from "react";
 import styled from "styled-components";
 import dayjs from "dayjs";
 import { UserContext } from "../context/user";
+import CopyableInvoicesModal from "./CopyableInvoiceModal";
 
 const PetInvoices = ({ pet }) => {
     const { user, setUser } = useContext(UserContext);
     const [activeTab, setActiveTab] = useState("unpaid");
     const [invoiceLimit, setInvoiceLimit] = useState(15);
+    const [showModal, setShowModal] = useState(false);
 
     const petInvoices = user.invoices
         .filter(invoice => invoice.pet_id === pet.id);
@@ -73,6 +75,8 @@ const PetInvoices = ({ pet }) => {
                             ))}
                             <Text>Total: ${totalUnpaid.toFixed(2)}</Text>
                             <MarkPaidButton onClick={markAllAsPaid}>Mark All as Paid</MarkPaidButton>
+                            <MarkPaidButton onClick={() => setShowModal(true)}>View Copyable Invoices</MarkPaidButton>
+                            {showModal && <CopyableInvoicesModal total={totalUnpaid} unpaidInvoices={unpaidInvoices} onClose={() => setShowModal(false)} />}
                         </>
                     )}
                 </>
@@ -156,6 +160,7 @@ const MarkPaidButton = styled.button`
     border-radius: 6px;
     cursor: pointer;
     margin-top: 10px;
+    margin-right: 5px;
     font-weight: bold;
 `;
 
