@@ -8,9 +8,21 @@ const PetInvoices = ({ pet }) => {
     const [activeTab, setActiveTab] = useState("unpaid");
     const [invoiceLimit, setInvoiceLimit] = useState(15);
 
-    const petInvoices = user.invoices.filter(invoice => invoice.pet_id === pet.id);
-    const unpaidInvoices = petInvoices.filter(invoice => !invoice.paid);
-    const pastInvoices = petInvoices.filter(invoice => invoice.paid).slice(0, invoiceLimit === "all" ? undefined : invoiceLimit);
+    const petInvoices = user.invoices
+        .filter(invoice => invoice.pet_id === pet.id);
+
+    const sortByDateDesc = (a, b) => new Date(b.date_completed) - new Date(a.date_completed);
+
+    const unpaidInvoices = petInvoices
+        .filter(invoice => !invoice.paid)
+        .sort(sortByDateDesc);
+
+
+    const pastInvoices = petInvoices
+        .filter(invoice => invoice.paid)
+        .sort(sortByDateDesc)
+        .slice(0, invoiceLimit === "all" ? undefined : invoiceLimit);
+
 
     const markAllAsPaid = async () => {
         if (!window.confirm("Mark all unpaid invoices for this pet as paid?")) return;
@@ -92,7 +104,6 @@ const PetInvoices = ({ pet }) => {
     );
 };
 
-// 📌 Styled Components
 const InvoicesContainer = styled.div`
     margin-top: 20px;
     text-align: left;
