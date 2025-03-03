@@ -59,7 +59,7 @@ const CopyableInvoicesModal = ({ unpaidInvoices, onClose, total }) => {
       <ModalContent>
         <h2>Copyable Invoices</h2>
         <InvoiceList>{formattedInvoices}</InvoiceList>
-        <h4>Total: {total}</h4>
+        <h4>Total: ${total}</h4>
         <CloseButton onClick={onClose}>Close</CloseButton>
       </ModalContent>
     </ModalOverlay>
