@@ -1,5 +1,4 @@
 Rails.application.routes.draw do
-  
   resources :cancellations
   resources :additional_incomes
   resources :invoices, except: :update
@@ -7,14 +6,14 @@ Rails.application.routes.draw do
   resources :pets
   resources :users
 
-  get "/me", to: "users#show"
+  get '/me', to: 'users#show'
   patch '/change_rates', to: 'users#change_rates'
-  
-  post "/login", to: "sessions#create"
-  delete "/logout", to: "sessions#destroy"
 
-  patch "/invoices/paid", to: "invoices#paid"
-  patch "/invoices/pending", to: "invoices#pending"
+  post '/login', to: 'sessions#create'
+  delete '/logout', to: 'sessions#destroy'
+
+  patch '/invoices/paid', to: 'invoices#paid'
+  patch '/invoices/pending', to: 'invoices#pending'
 
   patch '/appointments/:id/canceled', to: 'appointments#canceled'
   get '/pets_appointments', to: 'appointments#pet_appointments'
@@ -23,5 +22,5 @@ Rails.application.routes.draw do
   # Routing logic: fallback requests for React Router.
   # Leave this here to help deploy your app later!
 
-  get "*path", to: "fallback#index", constraints: ->(req) { !req.xhr? && req.format.html? }
+  get '*path', to: 'fallback#index', constraints: ->(req) { !req.xhr? && req.format.html? }
 end

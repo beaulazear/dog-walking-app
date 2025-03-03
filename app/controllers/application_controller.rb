@@ -16,8 +16,8 @@ class ApplicationController < ActionController::API
 
   def block_direct_requests
     # If the request is NOT an AJAX (fetch) request and expects HTML, serve React app
-    if request.format.html? && !request.xhr?
-      render file: Rails.public_path.join('index.html'), layout: false, status: :ok
-    end
+    return unless request.format.html? && !request.xhr?
+
+    render file: Rails.public_path.join('index.html'), layout: false, status: :ok
   end
 end

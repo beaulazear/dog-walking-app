@@ -15,9 +15,8 @@ class Pet < ApplicationRecord
   before_validation :ensure_birthdate_is_valid
 
   def ensure_birthdate_is_valid
-    if birthdate > Date.current
-      errors.add(:birthdate, "Must be in the past")
-    end
-  end
+    return unless birthdate > Date.current
 
+    errors.add(:birthdate, 'Must be in the past')
+  end
 end

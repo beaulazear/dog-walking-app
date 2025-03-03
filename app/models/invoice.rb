@@ -4,5 +4,4 @@ class Invoice < ApplicationRecord
 
   validates :date_completed, presence: true
   validates :compensation, presence: true
-
 end
