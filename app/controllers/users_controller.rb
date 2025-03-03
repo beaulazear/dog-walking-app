@@ -1,4 +1,5 @@
 class UsersController < ApplicationController
+
     include Rails.application.routes.url_helpers
 
     before_action :current_user
@@ -71,7 +72,7 @@ class UsersController < ApplicationController
               active: pet.active,
               profile_pic: pet.profile_pic.attached? ? Rails.application.routes.url_helpers.rails_blob_url(pet.profile_pic, only_path: true) : nil
             }
-          end,   
+          end,
           appointments: user.appointments.map do |appointment|
             {
               id: appointment.id,
@@ -101,7 +102,7 @@ class UsersController < ApplicationController
           end,
           invoices: Invoice.where(pet_id: user.pets.pluck(:id)).as_json(only: [ :id, :appointment_id, :pet_id, :date_completed, :compensation, :paid, :pending, :title, :cancelled ])
         }
-      end
+    end
 
     def user_params
         params.permit(:username, :password, :password_confirmation, :name, :email_address, :pets, :thirty, :fourty, :sixty, :solo_rate)

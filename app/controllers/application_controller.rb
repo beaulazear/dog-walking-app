@@ -5,7 +5,7 @@ class ApplicationController < ActionController::API
   before_action :block_direct_requests
 
   def authorized
-    return render json: { error: "Not authorized" }, status: :unauthorized unless session.include?(:user_id)
+    render json: { error: 'Not authorized' }, status: :unauthorized unless session.include?(:user_id)
   end
 
   def current_user
@@ -17,7 +17,7 @@ class ApplicationController < ActionController::API
   def block_direct_requests
     # If the request is NOT an AJAX (fetch) request and expects HTML, serve React app
     if request.format.html? && !request.xhr?
-      render file: Rails.public_path.join("index.html"), layout: false, status: :ok
+      render file: Rails.public_path.join('index.html'), layout: false, status: :ok
     end
   end
 end
