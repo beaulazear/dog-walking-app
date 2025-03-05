@@ -6,7 +6,8 @@ import dogPlaceholder from "../assets/dog.png";
 import PetInvoices from "./PetInvoices";
 import NewAppointmentForm from "./NewAppointmentForm";
 import CancellationModal from "./CancellationModal";
-import isSameOrAfter from "dayjs/plugin/isSameOrAfter"; // ✅ Import plugin
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import CreatePetButton from "./CreatePetButton";
 
 dayjs.extend(isSameOrAfter); // ✅ Extend dayjs with the plugin
 
@@ -20,6 +21,7 @@ export default function PetsPage() {
                 <>
                     <TitleOne>Your Pets</TitleOne>
                     <SubtitleOne>Select a pet to view or edit their details, appointments, & invoices.</SubtitleOne>
+                    <CreatePetButton />
                     <PetGrid>
                         {user?.pets
                             ?.slice() // Create a shallow copy to avoid mutating original data
@@ -61,7 +63,7 @@ const PetDetails = ({ pet, setSelectedPet }) => {
                     apt.pet_id === pet.id &&
                     !apt.completed &&
                     !apt.canceled &&
-                    (apt.recurring || appointmentDate.isSameOrAfter(today)) // ✅ Fix: Includes today's appointments
+                    (apt.recurring || appointmentDate.isSameOrAfter(today))
                 );
             });
 

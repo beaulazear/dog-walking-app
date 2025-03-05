@@ -4,7 +4,7 @@ class PetsController < ApplicationController
   def create
     pet = @current_user.pets.create(pet_params)
     if pet.valid?
-      render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active]), status: :created
+      render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active behavorial_notes address]), status: :created
     else
       render json: { errors: pet.errors.full_messages }, status: :unprocessable_entity
     end
@@ -54,7 +54,7 @@ class PetsController < ApplicationController
 
   def pet_params
     params.require(:pet).permit(:user_id, :name, :spayed_neutered, :supplies_location, :behavorial_notes,
-                                :birthdate, :sex, :allergies, :address, :profile_pic, :id)
+                                :birthdate, :sex, :allergies, :address, :profile_pic, :id, :active)
   end
 
   def pet_params_update
