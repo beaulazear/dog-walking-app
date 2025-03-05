@@ -32,6 +32,7 @@ class PetsController < ApplicationController
 
       if pet.update(pet_params_update)
         render json: {
+          id: pet.id,
           name: pet.name,
           birthdate: pet.birthdate,
           sex: pet.sex,
@@ -41,7 +42,11 @@ class PetsController < ApplicationController
           supplies_location: pet.supplies_location,
           allergies: pet.allergies,
           active: pet.active,
-          profile_pic: pet.profile_pic.attached? ? Rails.application.routes.url_helpers.rails_blob_url(pet.profile_pic, only_path: true) : nil
+          profile_pic: if pet.profile_pic.attached?
+                         Rails.application.routes.url_helpers.rails_blob_url(
+                           pet.profile_pic, only_path: true
+                         )
+                       end
         }, status: :ok
       else
         render json: { errors: pet.errors.full_messages }, status: :unprocessable_entity

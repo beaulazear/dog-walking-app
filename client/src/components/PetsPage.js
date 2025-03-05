@@ -100,9 +100,10 @@ const PetDetails = ({ pet, setSelectedPet }) => {
 
         if (response.ok) {
             const updatedPet = await response.json();
-            setUser(prevUser => ({
-                ...prevUser,
-                pets: prevUser.pets.map(p => (p.id === updatedPet.id ? updatedPet : p))
+            console.log(user, user.pets)
+            setUser(user => ({
+                ...user,
+                pets: [...user.pets.map(p => (p.id === updatedPet.id ? { ...updatedPet } : p))]
             }));
             alert("Pet details updated!");
             setSelectedPet(null);
