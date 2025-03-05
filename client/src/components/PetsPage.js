@@ -9,7 +9,7 @@ import CancellationModal from "./CancellationModal";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import CreatePetButton from "./CreatePetButton";
 
-dayjs.extend(isSameOrAfter); // ✅ Extend dayjs with the plugin
+dayjs.extend(isSameOrAfter);
 
 export default function PetsPage() {
     const { user } = useContext(UserContext);
@@ -24,8 +24,8 @@ export default function PetsPage() {
                     <CreatePetButton />
                     <PetGrid>
                         {user?.pets
-                            ?.slice() // Create a shallow copy to avoid mutating original data
-                            .sort((a, b) => a.name.localeCompare(b.name)) // Sort pets alphabetically
+                            ?.slice()
+                            .sort((a, b) => a.name.localeCompare(b.name))
                             .map((pet) => (
                                 <PetCard key={pet.id} onClick={() => setSelectedPet(pet)}>
                                     <PetImage
@@ -49,6 +49,7 @@ const PetDetails = ({ pet, setSelectedPet }) => {
     const { setUser, user } = useContext(UserContext);
     const [formData, setFormData] = useState(pet);
     const [appointments, setAppointments] = useState(pet.appointments || []);
+    const [newProfilePic, setNewProfilePic] = useState(null);
 
     useEffect(() => {
         setFormData(pet);
@@ -75,11 +76,24 @@ const PetDetails = ({ pet, setSelectedPet }) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handleFileChange = (e) => {
+        setNewProfilePic(e.target.files[0]);
+    };
+
     const handleUpdate = async () => {
+        const formDataToSend = new FormData();
+
+        Object.keys(formData).forEach(key => {
+            formDataToSend.append(key, formData[key]);
+        });
+
+        if (newProfilePic) {
+            formDataToSend.append("profile_pic", newProfilePic);
+        }
+
         const response = await fetch(`/pets/${pet.id}`, {
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(formData),
+            body: formDataToSend,
         });
 
         if (response.ok) {
@@ -89,7 +103,7 @@ const PetDetails = ({ pet, setSelectedPet }) => {
                 pets: prevUser.pets.map(p => (p.id === updatedPet.id ? updatedPet : p))
             }));
             alert("Pet details updated!");
-            setSelectedPet(null)
+            setSelectedPet(null);
         }
     };
 
@@ -118,6 +132,8 @@ const PetDetails = ({ pet, setSelectedPet }) => {
                     <option value={true}>Yes</option>
                     <option value={false}>No</option>
                 </Select>
+                <Label>Profile Picture:</Label>
+                <Input type="file" accept="image/*" onChange={handleFileChange} />
                 <UpdateButton onClick={handleUpdate}>Update details</UpdateButton>
             </Form>
 
@@ -193,8 +209,8 @@ const AppointmentDetails = ({ appointment, setSelectedAppointment }) => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 ...formData,
-                start_time: formData.start_time.length > 5 ? formData.start_time.slice(11, 16) : formData.start_time, // Extract only HH:mm
-                end_time: formData.end_time.length > 5 ? formData.end_time.slice(11, 16) : formData.end_time, // Extract only HH:mm
+                start_time: formData.start_time.length > 5 ? formData.start_time.slice(11, 16) : formData.start_time,
+                end_time: formData.end_time.length > 5 ? formData.end_time.slice(11, 16) : formData.end_time,
             }),
         });
 

@@ -19,4 +19,8 @@ class Pet < ApplicationRecord
 
     errors.add(:birthdate, 'Must be in the past')
   end
+
+  def profile_pic_url
+    profile_pic.attached? ? Rails.application.routes.url_helpers.rails_blob_url(profile_pic, only_path: true) : nil
+  end
 end

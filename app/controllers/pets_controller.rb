@@ -4,7 +4,8 @@ class PetsController < ApplicationController
   def create
     pet = @current_user.pets.create(pet_params)
     if pet.valid?
-      render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active behavorial_notes address]), status: :created
+      render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active behavorial_notes address]),
+             status: :created
     else
       render json: { errors: pet.errors.full_messages }, status: :unprocessable_entity
     end
@@ -21,12 +22,33 @@ class PetsController < ApplicationController
 
   def update
     pet = @current_user.pets.find_by(id: params[:id])
-    pet.update(pet_params_update)
-    if pet.valid?
-      render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered address behavorial_notes supplies_location allergies active]),
-             status: :ok
+
+    if pet
+      pet.profile_pic.attach(params[:profile_pic]) if params[:profile_pic].present?
+
+      if pet.update(pet_params_update)
+        render json: {
+          name: pet.name,
+          birthdate: pet.birthdate,
+          sex: pet.sex,
+          spayed_neutered: pet.spayed_neutered,
+          address: pet.address,
+          behavorial_notes: pet.behavorial_notes,
+          supplies_location: pet.supplies_location,
+          allergies: pet.allergies,
+          active: pet.active,
+          profile_pic: if pet.profile_pic.attached?
+                         Rails.application.routes.url_helpers.rails_blob_url(pet.profile_pic,
+                                                                             only_path: true)
+                       else
+                         nil
+                       end
+        }, status: :ok
+      else
+        render json: { errors: pet.errors.full_messages }, status: :unprocessable_entity
+      end
     else
-      render json: { errors: pet.errors.full_messages }, status: :unprocessable_entity
+      render json: { error: 'Pet not found' }, status: :not_found
     end
   end
 
@@ -58,7 +80,7 @@ class PetsController < ApplicationController
   end
 
   def pet_params_update
-    params.require(:pet).permit(:user_id, :name, :spayed_neutered, :supplies_location, :behavorial_notes,
-                                :birthdate, :sex, :allergies, :address, :profile_pic, :id, :active)
+    params.permit(:name, :spayed_neutered, :supplies_location, :behavorial_notes,
+                  :birthdate, :sex, :allergies, :address, :active, :profile_pic)
   end
 end
