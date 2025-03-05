@@ -21,10 +21,14 @@ class PetsController < ApplicationController
   end
 
   def update
+    Rails.logger.debug "PARAMS RECEIVED: #{params.inspect}"
+
     pet = @current_user.pets.find_by(id: params[:id])
 
     if pet
-      pet.profile_pic.attach(params[:profile_pic]) if params[:profile_pic].present?
+      if params[:profile_pic].present? && params[:profile_pic].is_a?(ActionDispatch::Http::UploadedFile)
+        pet.profile_pic.attach(params[:profile_pic])
+      end
 
       if pet.update(pet_params_update)
         render json: {
@@ -37,12 +41,7 @@ class PetsController < ApplicationController
           supplies_location: pet.supplies_location,
           allergies: pet.allergies,
           active: pet.active,
-          profile_pic: if pet.profile_pic.attached?
-                         Rails.application.routes.url_helpers.rails_blob_url(pet.profile_pic,
-                                                                             only_path: true)
-                       else
-                         nil
-                       end
+          profile_pic: pet.profile_pic.attached? ? Rails.application.routes.url_helpers.rails_blob_url(pet.profile_pic, only_path: true) : nil
         }, status: :ok
       else
         render json: { errors: pet.errors.full_messages }, status: :unprocessable_entity

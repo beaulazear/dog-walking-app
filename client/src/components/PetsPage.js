@@ -84,10 +84,12 @@ const PetDetails = ({ pet, setSelectedPet }) => {
         const formDataToSend = new FormData();
 
         Object.keys(formData).forEach(key => {
-            formDataToSend.append(key, formData[key]);
+            if (key !== "profile_pic") {
+                formDataToSend.append(key, formData[key]);
+            }
         });
 
-        if (newProfilePic) {
+        if (newProfilePic instanceof File) {
             formDataToSend.append("profile_pic", newProfilePic);
         }
 
