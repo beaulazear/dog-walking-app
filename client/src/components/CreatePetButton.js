@@ -50,6 +50,7 @@ const CreatePetButton = () => {
                 <AddButton onClick={() => setShowForm(true)}>+ Add New Pet</AddButton>
             ) : (
                 <FormContainer>
+                    <h2>New Pet Form</h2>
                     <Form onSubmit={handleSubmit}>
                         <Label>Name</Label>
                         <Input name="name" value={formData.name} onChange={handleChange} required />
@@ -98,7 +99,6 @@ const Container = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 20px;
 `;
 
 const AddButton = styled.button`
