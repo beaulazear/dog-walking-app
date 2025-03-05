@@ -147,6 +147,46 @@ const PetDetails = ({ pet, setSelectedPet }) => {
 
 const PetAppointments = ({ pet, appointments }) => {
     const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const { user, setUser } = useContext(UserContext);
+
+
+    useEffect(() => {
+        const deletePastCancellations = async () => {
+            const today = new Date();
+
+            for (const apt of appointments) {
+                if (apt.cancellations) {
+                    for (const c of apt.cancellations) {
+                        const cancellationDate = new Date(c.date);
+
+                        if (cancellationDate < today) {
+                            try {
+                                const response = await fetch(`/cancellations/${c.id}`, {
+                                    method: "DELETE",
+                                });
+
+                                if (response.ok) {
+                                    setUser(user => ({
+                                        ...user,
+                                        appointments: user.appointments.map(apt => ({
+                                            ...apt,
+                                            cancellations: apt.cancellations.filter(cancel => cancel.id !== c.id)
+                                        }))
+                                    }));
+                                } else {
+                                    console.error(`Failed to delete cancellation ID: ${c.id}`);
+                                }
+                            } catch (error) {
+                                console.error("Error deleting cancellation:", error);
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        deletePastCancellations();
+    }, [appointments]);
 
     return (
         <AppointmentsContainer>
