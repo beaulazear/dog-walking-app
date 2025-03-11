@@ -10,8 +10,7 @@ const PetInvoices = ({ pet }) => {
     const [invoiceLimit, setInvoiceLimit] = useState(15);
     const [showModal, setShowModal] = useState(false);
 
-    const petInvoices = user.invoices
-        .filter(invoice => invoice.pet_id === pet.id);
+    const petInvoices = user.invoices.filter(invoice => invoice.pet_id === pet.id);
 
     const sortByDateDesc = (a, b) => new Date(b.date_completed) - new Date(a.date_completed);
 
@@ -19,12 +18,10 @@ const PetInvoices = ({ pet }) => {
         .filter(invoice => !invoice.paid)
         .sort(sortByDateDesc);
 
-
     const pastInvoices = petInvoices
         .filter(invoice => invoice.paid)
         .sort(sortByDateDesc)
         .slice(0, invoiceLimit === "all" ? undefined : invoiceLimit);
-
 
     const markAllAsPaid = async () => {
         if (!window.confirm("Mark all unpaid invoices for this pet as paid?")) return;
@@ -44,6 +41,23 @@ const PetInvoices = ({ pet }) => {
                 )
             }));
             alert("All invoices marked as paid!");
+        }
+    };
+
+    const deleteInvoice = async (invoiceId) => {
+        if (!window.confirm("Are you sure you want to delete this invoice?")) return;
+
+        const response = await fetch(`/invoices/${invoiceId}`, {
+            method: "DELETE",
+        });
+
+        if (response.ok) {
+            setUser(prevUser => ({
+                ...prevUser,
+                invoices: prevUser.invoices.filter(inv => inv.id !== invoiceId)
+            }));
+        } else {
+            alert("Failed to delete invoice. Please try again.");
         }
     };
 
@@ -69,8 +83,11 @@ const PetInvoices = ({ pet }) => {
                         <>
                             {unpaidInvoices.map(invoice => (
                                 <InvoiceCard key={invoice.id}>
-                                    <Text><strong>{invoice.title}</strong></Text>
+                                    <Text>
+                                        <strong>{invoice.title}</strong>
+                                    </Text>
                                     <Text>${invoice.compensation} - {dayjs(invoice.date_completed).format("MMM D, YYYY")}</Text>
+                                    <DeleteButton onClick={() => deleteInvoice(invoice.id)}>❌</DeleteButton>
                                 </InvoiceCard>
                             ))}
                             <Text>Total: ${totalUnpaid.toFixed(2)}</Text>
@@ -140,8 +157,10 @@ const InvoiceCard = styled.div`
     padding: 10px;
     border-radius: 8px;
     margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 `;
-
 
 const NoInvoices = styled.p`
     color: white;
@@ -161,6 +180,13 @@ const MarkPaidButton = styled.button`
     cursor: pointer;
     margin-top: 10px;
     margin-right: 5px;
+    font-weight: bold;
+`;
+
+const DeleteButton = styled.button`
+    color: black;
+    cursor: pointer;
+    font-size: 18px;
     font-weight: bold;
 `;
 
