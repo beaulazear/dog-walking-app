@@ -152,14 +152,17 @@ const PetAppointments = ({ pet, appointments }) => {
 
     useEffect(() => {
         const deletePastCancellations = async () => {
-            const today = new Date();
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1); // Moves the threshold to yesterday
+            yesterday.setHours(0, 0, 0, 0); // Normalize to midnight
 
             for (const apt of appointments) {
                 if (apt.cancellations) {
                     for (const c of apt.cancellations) {
                         const cancellationDate = new Date(c.date);
+                        cancellationDate.setHours(0, 0, 0, 0); // Normalize cancellation date
 
-                        if (cancellationDate < today) {
+                        if (cancellationDate <= yesterday) { // Only delete if it's at least a day old
                             try {
                                 const response = await fetch(`/cancellations/${c.id}`, {
                                     method: "DELETE",
