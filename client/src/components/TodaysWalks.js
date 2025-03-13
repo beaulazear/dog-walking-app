@@ -78,18 +78,20 @@ const WalkCard = ({ appointment }) => {
     const [isCancelled, setIsCancelled] = useState(
         hasCancelledInvoiceForToday(appointment, user?.invoices)
     );
-
     const handleCompleteWalk = async () => {
-        const offsetInput = window.prompt("Enter an upcharge or discount amount ($):\n(Negative number for discount, positive for upcharge)", "0");
-
+        const offsetInput = window.prompt("Enter an upcharge or discount amount ($): Negative for discount, positive for upcharge", "0");
+        
+        if (offsetInput === null) return;
+    
         const offset = parseFloat(offsetInput) || 0;
-
-        let compensation = appointment.duration === 30 ? user.thirty :
-            appointment.duration === 40 ? user.fourty :
-                appointment.duration === 60 ? user.sixty : 0;
-
+    
+        let compensation = appointment.duration === 30 ? user.thirty 
+            : appointment.duration === 40 ? user.fourty 
+            : appointment.duration === 60 ? user.sixty 
+            : 0;
+    
         compensation += offset;
-
+    
         const response = await fetch("/invoices", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -102,7 +104,7 @@ const WalkCard = ({ appointment }) => {
                 title: `${appointment.duration} min walk`
             }),
         });
-
+    
         if (response.ok) {
             const newInvoice = await response.json();
             setUser(prevUser => ({
