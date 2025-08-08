@@ -1,6 +1,7 @@
 import { useState, useContext } from "react";
 import { UserContext } from "../context/user.js";
 import styled from "styled-components";
+import { Plus, X } from "lucide-react";
 
 const CreatePetButton = () => {
     const { setUser } = useContext(UserContext);
@@ -11,7 +12,7 @@ const CreatePetButton = () => {
         sex: "Male",
         spayed_neutered: false,
         address: "",
-        behavorial_notes: "",
+        behavioral_notes: "",
         supplies_location: "",
         allergies: "",
         active: true,
@@ -45,152 +46,420 @@ const CreatePetButton = () => {
     };
 
     return (
-        <Container>
-            {!showForm ? (
-                <AddButton onClick={() => setShowForm(true)}>+ Add New Pet</AddButton>
-            ) : (
-                <FormContainer>
-                    <h2>New Pet Form</h2>
-                    <Form onSubmit={handleSubmit}>
-                        <Label>Name</Label>
-                        <Input name="name" value={formData.name} onChange={handleChange} required />
+        <>
+            <AddButton onClick={() => setShowForm(true)}>
+                <Plus size={20} />
+                Add New Pet
+            </AddButton>
+            
+            {showForm && (
+                <Overlay onClick={() => setShowForm(false)}>
+                    <ModalContainer onClick={(e) => e.stopPropagation()}>
+                        <ModalHeader>
+                            <ModalTitle>Add New Pet</ModalTitle>
+                            <CloseButton onClick={() => setShowForm(false)}>
+                                <X size={24} />
+                            </CloseButton>
+                        </ModalHeader>
+                        
+                        <Form onSubmit={handleSubmit}>
+                            <InputGroup>
+                                <Label>Pet Name *</Label>
+                                <Input 
+                                    name="name" 
+                                    value={formData.name} 
+                                    onChange={handleChange} 
+                                    placeholder="Enter pet's name"
+                                    required 
+                                />
+                            </InputGroup>
 
-                        <Label>Birthdate</Label>
-                        <Input type="date" name="birthdate" value={formData.birthdate} onChange={handleChange} required />
+                            <InputGroup>
+                                <Label>Birthdate *</Label>
+                                <Input 
+                                    type="date" 
+                                    name="birthdate" 
+                                    value={formData.birthdate} 
+                                    onChange={handleChange} 
+                                    required 
+                                />
+                            </InputGroup>
 
-                        <Label>Sex</Label>
-                        <Select name="sex" value={formData.sex} onChange={handleChange}>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                        </Select>
+                            <TwoColumnGroup>
+                                <InputGroup>
+                                    <Label>Sex</Label>
+                                    <Select name="sex" value={formData.sex} onChange={handleChange}>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </Select>
+                                </InputGroup>
 
-                        <Label>Spayed/Neutered</Label>
-                        <Select name="spayed_neutered" value={formData.spayed_neutered} onChange={(e) => setFormData({ ...formData, spayed_neutered: e.target.value === 'true' })}>
-                            <option value={true}>Yes</option>
-                            <option value={false}>No</option>
-                        </Select>
+                                <InputGroup>
+                                    <Label>Spayed/Neutered</Label>
+                                    <Select name="spayed_neutered" value={formData.spayed_neutered} onChange={(e) => setFormData({ ...formData, spayed_neutered: e.target.value === 'true' })}>
+                                        <option value={true}>Yes</option>
+                                        <option value={false}>No</option>
+                                    </Select>
+                                </InputGroup>
+                            </TwoColumnGroup>
 
-                        <Label>Address</Label>
-                        <Input name="address" value={formData.address} onChange={handleChange} />
+                            <InputGroup>
+                                <Label>Address</Label>
+                                <Input 
+                                    name="address" 
+                                    value={formData.address} 
+                                    onChange={handleChange} 
+                                    placeholder="Pet's primary address"
+                                />
+                            </InputGroup>
 
-                        <Label>Behavioral Notes</Label>
-                        <Textarea name="behavorial_notes" value={formData.behavorial_notes} onChange={handleChange} />
+                            <InputGroup>
+                                <Label>Behavioral Notes</Label>
+                                <Textarea 
+                                    name="behavioral_notes" 
+                                    value={formData.behavioral_notes} 
+                                    onChange={handleChange} 
+                                    placeholder="Any behavioral notes or special instructions..."
+                                />
+                            </InputGroup>
 
-                        <Label>Supplies Location</Label>
-                        <Textarea name="supplies_location" value={formData.supplies_location} onChange={handleChange} />
+                            <InputGroup>
+                                <Label>Supplies Location</Label>
+                                <Textarea 
+                                    name="supplies_location" 
+                                    value={formData.supplies_location} 
+                                    onChange={handleChange} 
+                                    placeholder="Where are leashes, treats, etc. located?"
+                                />
+                            </InputGroup>
 
-                        <Label>Allergies</Label>
-                        <Input name="allergies" value={formData.allergies} onChange={handleChange} />
+                            <InputGroup>
+                                <Label>Allergies</Label>
+                                <Input 
+                                    name="allergies" 
+                                    value={formData.allergies} 
+                                    onChange={handleChange} 
+                                    placeholder="Food allergies, medication allergies, etc."
+                                />
+                            </InputGroup>
 
-                        <ButtonContainer>
-                            <SubmitButton type="submit">Submit</SubmitButton>
-                            <CancelButton type="button" onClick={() => setShowForm(false)}>Cancel</CancelButton>
-                        </ButtonContainer>
-                    </Form>
-                </FormContainer>
+                            <ButtonContainer>
+                                <SubmitButton type="submit">Add Pet</SubmitButton>
+                                <CancelButton type="button" onClick={() => setShowForm(false)}>Cancel</CancelButton>
+                            </ButtonContainer>
+                        </Form>
+                    </ModalContainer>
+                </Overlay>
             )}
-        </Container>
+        </>
     );
 };
 
 export default CreatePetButton;
 
-const Container = styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-`;
-
 const AddButton = styled.button`
-    background-color: #007bff;
-    color: white;
-    padding: 12px 20px;
+    background: linear-gradient(135deg, #8b5a8c, #a569a7);
+    color: #ffffff;
+    padding: 10px 18px;
     border: none;
-    border-radius: 8px;
+    border-radius: 15px;
     cursor: pointer;
-    font-size: 18px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
     font-weight: 600;
-    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+    box-shadow: 0px 2px 12px rgba(139, 90, 140, 0.25);
+    margin: 8px 0;
+    width: fit-content;
+    
     &:hover {
-        background-color: #0056b3;
-        transform: scale(1.05);
+        background: linear-gradient(135deg, #7d527e, #936394);
+        transform: translateY(-1px);
+        box-shadow: 0px 4px 16px rgba(139, 90, 140, 0.35);
+    }
+    
+    &:active {
+        transform: translateY(0);
+    }
+    
+    @media (max-width: 768px) {
+        padding: 12px 20px;
+        font-size: 0.85rem;
     }
 `;
 
-const FormContainer = styled.div`
-    background: white;
-    padding: 25px;
+const Overlay = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+`;
+
+const ModalContainer = styled.div`
+    background: linear-gradient(145deg, rgba(74, 26, 74, 0.95), rgba(107, 43, 107, 0.9));
+    border-radius: 24px;
+    box-shadow: 0px 20px 60px rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(139, 90, 140, 0.5);
+    backdrop-filter: blur(20px);
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    
+    @media (max-width: 768px) {
+        margin: 0;
+        border-radius: 20px;
+        max-height: 95vh;
+    }
+`;
+
+const ModalHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 28px 16px;
+    border-bottom: 2px solid rgba(139, 90, 140, 0.3);
+    
+    @media (max-width: 768px) {
+        padding: 20px 24px 12px;
+    }
+`;
+
+const ModalTitle = styled.h2`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    
+    @media (max-width: 768px) {
+        font-size: 1.5rem;
+    }
+`;
+
+const CloseButton = styled.button`
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
-    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
-    width: 340px;
+    color: #ffffff;
+    padding: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    
+    &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: scale(1.1);
+    }
 `;
 
 const Form = styled.form`
+    padding: 20px 28px 28px;
     display: flex;
     flex-direction: column;
+    gap: 20px;
+    
+    @media (max-width: 768px) {
+        padding: 16px 24px 24px;
+        gap: 18px;
+    }
+`;
+
+const InputGroup = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+`;
+
+const TwoColumnGroup = styled.div`
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
 `;
 
 const Label = styled.label`
-    margin-top: 12px;
+    font-family: 'Poppins', sans-serif;
     font-weight: 600;
-    color: #333;
+    font-size: 0.95rem;
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 `;
 
 const Input = styled.input`
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 16px;
+    padding: 14px 16px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+    
+    &:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    }
+    
+    &::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    @media (max-width: 768px) {
+        padding: 16px;
+        font-size: 16px;
+    }
 `;
 
 const Textarea = styled.textarea`
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    height: 80px;
+    padding: 14px 16px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    min-height: 80px;
     resize: vertical;
-    font-size: 16px;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+    
+    &:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    }
+    
+    &::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    @media (max-width: 768px) {
+        padding: 16px;
+        font-size: 16px;
+        min-height: 100px;
+    }
 `;
 
 const Select = styled.select`
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 16px;
+    padding: 14px 16px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+    
+    &:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    }
+    
+    option {
+        background: #4a1a4a;
+        color: #ffffff;
+    }
+    
+    @media (max-width: 768px) {
+        padding: 16px;
+        font-size: 16px;
+    }
 `;
 
 const ButtonContainer = styled.div`
     display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
+    gap: 12px;
+    margin-top: 12px;
+    
+    @media (max-width: 768px) {
+        flex-direction: column;
+        gap: 12px;
+    }
 `;
 
 const SubmitButton = styled.button`
-    background-color: #28a745;
-    color: white;
-    padding: 12px 16px;
+    flex: 1;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #ffffff;
+    padding: 14px 24px;
     border: none;
-    border-radius: 6px;
+    border-radius: 12px;
     cursor: pointer;
-    font-size: 16px;
-    transition: all 0.3s;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+    
     &:hover {
-        background-color: #218838;
-        transform: scale(1.05);
+        background: linear-gradient(135deg, #16a34a, #15803d);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+    }
+    
+    &:active {
+        transform: translateY(0);
+    }
+    
+    @media (max-width: 768px) {
+        padding: 16px;
+        font-size: 1.1rem;
     }
 `;
 
 const CancelButton = styled.button`
-    background-color: #dc3545;
-    color: white;
-    padding: 12px 16px;
-    border: none;
-    border-radius: 6px;
+    flex: 1;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    padding: 14px 24px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
     cursor: pointer;
-    font-size: 16px;
-    transition: all 0.3s;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    
     &:hover {
-        background-color: #c82333;
-        transform: scale(1.05);
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.4);
+        transform: translateY(-1px);
+    }
+    
+    &:active {
+        transform: translateY(0);
+    }
+    
+    @media (max-width: 768px) {
+        padding: 16px;
+        font-size: 1.1rem;
     }
 `;

@@ -9,7 +9,7 @@ class Pet < ApplicationRecord
   validates :name, presence: true
   validates :address, presence: true
   validates :supplies_location, presence: true
-  validates :behavorial_notes, presence: true
+  validates :behavioral_notes, presence: true
   validates :birthdate, presence: true
 
   before_validation :ensure_birthdate_is_valid

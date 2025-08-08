@@ -1,8 +1,28 @@
 import React, { useContext, useState, useEffect } from "react";
+import ReactDOM from "react-dom";
 import styled from "styled-components";
 import dayjs from "dayjs";
+import { 
+    Search, 
+    Dog, 
+    Cat, 
+    Bird, 
+    Rabbit, 
+    Fish,
+    MapPin,
+    CheckCircle,
+    Pause,
+    ChevronRight,
+    Heart,
+    AlertCircle,
+    Calendar,
+    CalendarDays,
+    Clock,
+    X,
+    Save,
+    Trash2
+} from "lucide-react";
 import { UserContext } from "../context/user";
-import dogPlaceholder from "../assets/dog.png";
 import PetInvoices from "./PetInvoices";
 import NewAppointmentForm from "./NewAppointmentForm";
 import CancellationModal from "./CancellationModal";
@@ -11,32 +31,117 @@ import CreatePetButton from "./CreatePetButton";
 
 dayjs.extend(isSameOrAfter);
 
+// Helper function to get animal icon based on pet name
+const getAnimalIcon = (name) => {
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes('cat') || lowerName.includes('kitty') || lowerName.includes('felix') || lowerName.includes('whiskers')) {
+        return <Cat size={48} />;
+    }
+    if (lowerName.includes('bird') || lowerName.includes('tweet') || lowerName.includes('chirp') || lowerName.includes('parrot')) {
+        return <Bird size={48} />;
+    }
+    if (lowerName.includes('fish') || lowerName.includes('gold') || lowerName.includes('nemo')) {
+        return <Fish size={48} />;
+    }
+    if (lowerName.includes('rabbit') || lowerName.includes('bunny')) {
+        return <Rabbit size={48} />;
+    }
+    // Default to dog for any other pet
+    return <Dog size={48} />;
+};
+
+
 export default function PetsPage() {
     const { user } = useContext(UserContext);
     const [selectedPet, setSelectedPet] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    // Filter pets based on search term only
+    const filteredPets = user?.pets
+        ?.filter(pet => 
+            pet.name.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        ?.sort((a, b) => a.name.localeCompare(b.name)) || [];
 
     return (
         <Container>
             {!selectedPet && (
                 <>
-                    <TitleOne>Your Pets</TitleOne>
-                    <SubtitleOne>Select a pet to view or edit their details, appointments, & invoices.</SubtitleOne>
-                    <CreatePetButton />
-                    <PetGrid>
-                        {user?.pets
-                            ?.slice()
-                            .sort((a, b) => a.name.localeCompare(b.name))
-                            .map((pet) => (
-                                <PetCard key={pet.id} onClick={() => setSelectedPet(pet)}>
-                                    <PetImage
-                                        src={pet.profile_pic || dogPlaceholder}
-                                        onError={(e) => (e.target.src = dogPlaceholder)}
-                                        alt={pet.name}
-                                    />
-                                    <PetName>{pet.name}</PetName>
-                                </PetCard>
+                    <HeaderSection>
+                        <TitleSection>
+                            <Title>
+                                <Heart size={32} />
+                                Your Pets
+                            </Title>
+                            <PetSubtitle>Manage your furry friends</PetSubtitle>
+                            <PetSummaryText>
+                                <Dog size={16} />
+                                {filteredPets?.length || 0} {(filteredPets?.length || 0) === 1 ? 'pet' : 'pets'} registered
+                            </PetSummaryText>
+                        </TitleSection>
+                    </HeaderSection>
+                    
+                    <ActionSection>
+                        <CreatePetButton />
+                    </ActionSection>
+                    
+                    <SearchContainer>
+                        <SearchInputContainer>
+                            <Search size={16} />
+                            <SearchInput
+                                type="text"
+                                placeholder="Search pets by name..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </SearchInputContainer>
+                    </SearchContainer>
+                    
+                    {filteredPets?.length === 0 ? (
+                        <EmptyState>
+                            <EmptyIcon>
+                                {searchTerm ? <AlertCircle size={64} /> : <Heart size={64} />}
+                            </EmptyIcon>
+                            <EmptyTitle>
+                                {searchTerm ? 'No pets found' : 'No pets yet'}
+                            </EmptyTitle>
+                            <EmptyText>
+                                {searchTerm ? 'Try adjusting your search' : 'Add your first pet to get started!'}
+                            </EmptyText>
+                        </EmptyState>
+                    ) : (
+                        <PetsList>
+                            {filteredPets.map((pet) => (
+                                <PetListItem key={pet.id} onClick={() => setSelectedPet(pet)}>
+                                    <PetIcon>
+                                        {getAnimalIcon(pet.name)}
+                                    </PetIcon>
+                                    <PetInfo>
+                                        <PetName>{pet.name}</PetName>
+                                        <PetDetailsContainer>
+                                            <PetDetail>
+                                                <MapPin size={16} /> {pet.address?.split(',')[0] || 'No address'}
+                                            </PetDetail>
+                                        </PetDetailsContainer>
+                                    </PetInfo>
+                                    <StatusBadge active={pet.active}>
+                                        {pet.active ? (
+                                            <>
+                                                <CheckCircle size={14} /> Active
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Pause size={14} /> Inactive
+                                            </>
+                                        )}
+                                    </StatusBadge>
+                                    <ArrowIcon>
+                                        <ChevronRight size={24} />
+                                    </ArrowIcon>
+                                </PetListItem>
                             ))}
-                    </PetGrid>
+                        </PetsList>
+                    )}
                 </>
             )}
 
@@ -122,7 +227,7 @@ const PetDetails = ({ pet, setSelectedPet }) => {
                 <Label>Birthdate:</Label>
                 <Input type="date" name="birthdate" value={dayjs(formData.birthdate).format("YYYY-MM-DD")} onChange={handleChange} />
                 <Label>Behavioral Notes:</Label>
-                <Textarea name="behavorial_notes" value={formData.behavorial_notes || ""} onChange={handleChange} />
+                <Textarea name="behavioral_notes" value={formData.behavioral_notes || ""} onChange={handleChange} />
                 <Label>Address:</Label>
                 <Input name="address" value={formData.address || ""} onChange={handleChange} />
                 <Label>Sex:</Label>
@@ -147,7 +252,7 @@ const PetDetails = ({ pet, setSelectedPet }) => {
 
 const PetAppointments = ({ pet, appointments }) => {
     const [selectedAppointment, setSelectedAppointment] = useState(null);
-    const { user, setUser } = useContext(UserContext);
+    const { setUser } = useContext(UserContext);
 
 
     useEffect(() => {
@@ -189,7 +294,7 @@ const PetAppointments = ({ pet, appointments }) => {
         };
 
         deletePastCancellations();
-    }, [appointments]);
+    }, [appointments, setUser]);
 
     return (
         <AppointmentsContainer>
@@ -241,11 +346,29 @@ const AppointmentDetails = ({ appointment, setSelectedAppointment }) => {
         end_time: dayjs(appointment.end_time).format("HH:mm"),
     });
 
+    // Lock body scroll when modal is open and handle ESC key
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                setSelectedAppointment(null);
+            }
+        };
+        
+        document.addEventListener('keydown', handleKeyDown);
+        
+        return () => {
+            document.body.style.overflow = 'unset';
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [setSelectedAppointment]);
+
     const handleChange = (e) => {
-        const { name, type, value } = e.target;
+        const { name, type, value, checked } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: type === "checkbox" ? !prev[name] : value
+            [name]: type === "checkbox" ? checked : value
         }));
     };
 
@@ -280,7 +403,7 @@ const AppointmentDetails = ({ appointment, setSelectedAppointment }) => {
         const response = await fetch(`/appointments/${appointment.id}/canceled`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ canceled: true }) // Ensure we send the update
+            body: JSON.stringify({ canceled: true })
         });
 
         if (response.ok) {
@@ -296,27 +419,35 @@ const AppointmentDetails = ({ appointment, setSelectedAppointment }) => {
         }
     };
 
-    const handleTimeChange = (e) => {
-        setFormData(prev => ({
-            ...prev,
-            [e.target.name]: e.target.value
-        }));
+    const handleOverlayClick = (e) => {
+        if (e.target === e.currentTarget) {
+            setSelectedAppointment(null);
+        }
     };
 
-    return (
-        <Overlay>
-            <ModalContainer>
-                <HeaderContainer>
-                    <TitleOne>Edit Form</TitleOne>
-                    <CloseButton onClick={() => setSelectedAppointment(null)}>✖ Close</CloseButton>
-                </HeaderContainer>
-                <Form>
+    const modalContent = (
+        <EditModalOverlay onClick={handleOverlayClick}>
+            <EditModalContainer>
+                <EditModalHeader>
+                    <EditModalTitle>
+                        <Calendar size={20} />
+                        Edit Appointment
+                    </EditModalTitle>
+                    <EditModalCloseButton onClick={() => setSelectedAppointment(null)}>
+                        <X size={18} />
+                    </EditModalCloseButton>
+                </EditModalHeader>
+                
+                <EditModalForm>
                     {formData.recurring ? (
-                        <>
-                            <LabelOne style={{ textAlign: 'center' }}>Recurring Days:</LabelOne>
-                            <DaysContainer>
+                        <EditInputGroup>
+                            <EditLabel>
+                                <CalendarDays size={16} />
+                                Recurring Days
+                            </EditLabel>
+                            <EditDaysContainer>
                                 {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map(day => (
-                                    <DayToggle key={day}>
+                                    <EditDayToggle key={day} $checked={formData[day]}>
                                         <input
                                             type="checkbox"
                                             name={day}
@@ -324,46 +455,92 @@ const AppointmentDetails = ({ appointment, setSelectedAppointment }) => {
                                             onChange={handleChange}
                                         />
                                         <span>{day.charAt(0).toUpperCase() + day.slice(1)}</span>
-                                    </DayToggle>
+                                    </EditDayToggle>
                                 ))}
-                            </DaysContainer>
-                        </>
+                            </EditDaysContainer>
+                        </EditInputGroup>
                     ) : (
-                        <>
-                            <LabelOne>Appointment Date:</LabelOne>
-                            <Input
+                        <EditInputGroup>
+                            <EditLabel>
+                                <CalendarDays size={16} />
+                                Appointment Date
+                            </EditLabel>
+                            <EditInput
                                 type="date"
                                 name="appointment_date"
                                 value={dayjs(formData.appointment_date).format("YYYY-MM-DD")}
                                 onChange={handleChange}
                             />
-                        </>
+                        </EditInputGroup>
                     )}
-                    {appointment.recurring && (<CancellationModal setSelectedAppointment={setSelectedAppointment} appointment={appointment}>Add Cancellations</CancellationModal>)}
-                    <LabelOne>Start Time:</LabelOne>
-                    <Input
-                        type="time"
-                        name="start_time"
-                        value={formData.start_time || ""}
-                        onChange={handleTimeChange}
-                    />
-                    <LabelOne>End Time:</LabelOne>
-                    <Input
-                        type="time"
-                        name="end_time"
-                        value={formData.end_time || ""}
-                        onChange={handleTimeChange}
-                    />
-                    <LabelOne>Duration:</LabelOne>
-                    <Input type="number" name="duration" value={formData.duration} onChange={handleChange} />
-                    <HeaderContainer>
-                        <UpdateButton onClick={handleUpdate}>Save Changes</UpdateButton>
-                        <DeleteButton onClick={handleCancel}>Cancel Appointment</DeleteButton>
-                    </HeaderContainer>
-                </Form>
-            </ModalContainer>
-        </Overlay>
+
+                    {appointment.recurring && (
+                        <EditInputGroup>
+                            <CancellationModal setSelectedAppointment={setSelectedAppointment} appointment={appointment}>
+                                Add Cancellations
+                            </CancellationModal>
+                        </EditInputGroup>
+                    )}
+
+                    <EditTwoColumnGroup>
+                        <EditInputGroup>
+                            <EditLabel>
+                                <Clock size={16} />
+                                Start Time
+                            </EditLabel>
+                            <EditInput
+                                type="time"
+                                name="start_time"
+                                value={formData.start_time || ""}
+                                onChange={handleChange}
+                                required
+                            />
+                        </EditInputGroup>
+
+                        <EditInputGroup>
+                            <EditLabel>
+                                <Clock size={16} />
+                                End Time
+                            </EditLabel>
+                            <EditInput
+                                type="time"
+                                name="end_time"
+                                value={formData.end_time || ""}
+                                onChange={handleChange}
+                                required
+                            />
+                        </EditInputGroup>
+                    </EditTwoColumnGroup>
+
+                    <EditInputGroup>
+                        <EditLabel>
+                            <Clock size={16} />
+                            Duration (minutes)
+                        </EditLabel>
+                        <EditSelect name="duration" value={formData.duration} onChange={handleChange}>
+                            <option value={30}>30 minutes</option>
+                            <option value={45}>45 minutes</option>
+                            <option value={60}>60 minutes</option>
+                        </EditSelect>
+                    </EditInputGroup>
+
+                    <EditButtonGroup>
+                        <EditSaveButton onClick={handleUpdate}>
+                            <Save size={16} />
+                            Save Changes
+                        </EditSaveButton>
+                        <EditDeleteButton onClick={handleCancel}>
+                            <Trash2 size={16} />
+                            Cancel Appointment
+                        </EditDeleteButton>
+                    </EditButtonGroup>
+                </EditModalForm>
+            </EditModalContainer>
+        </EditModalOverlay>
     );
+
+    // Render modal in a portal to escape parent constraints
+    return ReactDOM.createPortal(modalContent, document.body);
 };
 
 const HeaderContainer = styled.div`
@@ -375,86 +552,418 @@ const HeaderContainer = styled.div`
 `;
 
 const Container = styled.div`
-    background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+    background: linear-gradient(135deg, #ff6b9d, #c44569, #f8a5c2, #fdcb6e);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
     min-height: 100vh;
-    padding: 40px 35px;
-    padding-top: 80px;
+    padding: 40px 20px;
+    padding-top: 120px;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-`;
-
-const Title = styled.h2`
-    font-size: 2rem;
-    color: #4B0082;
-    margin-bottom: 2px;
-    margin-top: 2px;
-    text-align: left;
-`;
-
-const TitleOne = styled.h2`
-    font-size: 2rem;
-    color: white;
-    margin-bottom: 2px;
-    margin-top: 5px;
-`;
-
-const Subtitle = styled.h3`
-    font-size: 1.25rem;
-    color: #4B0082;
-`;
-const SubtitleOne = styled.h3`
-    font-size: 1.25rem;
-    color: white;
-`;
-
-const PetGrid = styled.div`
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    justify-content: center;
-    margin-top: 20px;
-`;
-
-const PetCard = styled.div`
-    background: rgba(255, 255, 255, 0.2);
-    padding: 10px;
-    border-radius: 12px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    cursor: pointer;
-    transition: 0.3s ease-in-out;
-    width: 75px;
-    height: 125px;
-
-    &:hover {
-        transform: scale(1.05);
+    
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    @media (max-width: 768px) {
+        padding: 20px 16px;
+        padding-top: 100px;
     }
 `;
 
-const PetImage = styled.img`
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
+const HeaderSection = styled.div`
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: 32px;
+    
+    @media (max-width: 768px) {
+        margin-bottom: 24px;
+    }
 `;
 
-const PetName = styled.h4`
-    color: white;
-    margin-top: 5px;
+const TitleSection = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+`;
+
+const Title = styled.h1`
+    font-family: 'Poppins', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    
+    @media (max-width: 768px) {
+        font-size: 2rem;
+        gap: 8px;
+    }
+`;
+
+
+const Subtitle = styled.h3`
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+`;
+
+const PetSubtitle = styled.h2`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0 0 12px 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    
+    @media (max-width: 768px) {
+        font-size: 1.2rem;
+    }
+`;
+
+const PetSummaryText = styled.p`
+    font-family: 'Poppins', sans-serif;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    
+    @media (max-width: 768px) {
+        font-size: 0.9rem;
+    }
+`;
+
+const ActionSection = styled.div`
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    
+    @media (max-width: 768px) {
+        margin-bottom: 16px;
+    }
+`;
+
+const SearchContainer = styled.div`
+    display: flex;
+    width: 100%;
+    max-width: 800px;
+    margin: 16px 0;
+
+    @media (max-width: 768px) {
+        margin: 12px 0;
+    }
+`;
+
+const SearchInputContainer = styled.div`
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    svg {
+        position: absolute;
+        left: 12px;
+        color: rgba(255, 255, 255, 0.6);
+        z-index: 1;
+        width: 16px;
+        height: 16px;
+    }
+
+    @media (max-width: 768px) {
+        width: 100%;
+    }
+`;
+
+const SearchInput = styled.input`
+    width: 100%;
+    padding: 12px 16px 12px 40px;
+    border-radius: 20px;
+    border: 2px solid rgba(139, 90, 140, 0.3);
+    background: rgba(74, 26, 74, 0.9);
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #ffffff;
+    box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+
+    &:focus {
+        outline: none;
+        border-color: #a569a7;
+        box-shadow: 0px 4px 20px rgba(165, 105, 167, 0.25);
+        background: rgba(74, 26, 74, 1);
+    }
+
+    &::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    @media (max-width: 768px) {
+        padding: 14px 16px 14px 40px;
+        font-size: 16px;
+    }
+`;
+
+
+const EmptyState = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    background: linear-gradient(145deg, rgba(74, 26, 74, 0.9), rgba(107, 43, 107, 0.8));
+    border-radius: 24px;
+    margin-top: 20px;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0px 6px 30px rgba(0, 0, 0, 0.3), 0px 2px 8px rgba(0, 0, 0, 0.2);
+    border: 2px solid rgba(139, 90, 140, 0.5);
+    backdrop-filter: blur(15px);
+    
+    @media (max-width: 768px) {
+        padding: 32px 16px;
+        border-radius: 20px;
+    }
+`;
+
+const EmptyIcon = styled.div`
+    margin-bottom: 16px;
+    opacity: 0.8;
+    color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+`;
+
+const EmptyTitle = styled.h3`
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #ffffff;
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    
+    @media (max-width: 768px) {
+        font-size: 1.3rem;
+    }
+`;
+
+const EmptyText = styled.p`
+    color: rgba(255, 255, 255, 0.9);
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+    max-width: 400px;
+    line-height: 1.6;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    
+    @media (max-width: 768px) {
+        font-size: 0.9rem;
+        max-width: 300px;
+    }
+`;
+
+const PetsList = styled.div`
+    width: 100%;
+    max-width: 800px;
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+`;
+
+const PetListItem = styled.div`
+    background: linear-gradient(145deg, rgba(74, 26, 74, 0.9), rgba(107, 43, 107, 0.8));
+    padding: 24px;
+    border-radius: 20px;
+    box-shadow: 0px 6px 30px rgba(0, 0, 0, 0.25), 0px 2px 8px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: flex-start;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid rgba(139, 90, 140, 0.4);
+    backdrop-filter: blur(15px);
+    min-height: 80px;
+    gap: 16px;
+
+    &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0px 12px 40px rgba(0, 0, 0, 0.35), 0px 4px 12px rgba(0, 0, 0, 0.2);
+        border-color: #a569a7;
+        background: linear-gradient(145deg, rgba(74, 26, 74, 1), rgba(107, 43, 107, 0.9));
+    }
+
+    @media (max-width: 768px) {
+        padding: 20px;
+        min-height: auto;
+        border-radius: 18px;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 12px;
+        &:active {
+            transform: scale(0.98);
+        }
+    }
+`;
+
+const PetIcon = styled.div`
+    margin-right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 64px;
+    height: 64px;
+    color: #ffffff;
+    background: linear-gradient(135deg, rgba(165, 105, 167, 0.3), rgba(139, 90, 140, 0.2));
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    flex-shrink: 0;
+
+    @media (max-width: 768px) {
+        min-width: 56px;
+        height: 56px;
+    }
+`;
+
+const PetInfo = styled.div`
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+`;
+
+const PetName = styled.h3`
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #ffffff;
+    margin: 0 0 4px 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    text-align: left;
+    width: 100%;
+    
+    @media (max-width: 768px) {
+        font-size: 1.3rem;
+        margin-bottom: 8px;
+    }
+`;
+
+const PetDetailsContainer = styled.div`
+    display: flex;
+    gap: 16px;
+    margin-top: 0;
+    width: 100%;
+    flex-wrap: wrap;
+
+    @media (max-width: 768px) {
+        flex-direction: column;
+        gap: 6px;
+    }
+`;
+
+const PetDetail = styled.span`
+    color: rgba(255, 255, 255, 0.9);
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+
+    svg {
+        color: rgba(255, 255, 255, 0.8);
+        flex-shrink: 0;
+    }
+    
+    @media (max-width: 768px) {
+        font-size: 0.85rem;
+    }
+`;
+
+const StatusBadge = styled.div.withConfig({
+    shouldForwardProp: (prop) => prop !== 'active',
+})`
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: ${props => props.active ? 'rgba(134, 239, 172, 0.8)' : 'rgba(253, 230, 138, 0.8)'};
+    color: ${props => props.active ? '#065f46' : '#92400e'};
+    border: 2px solid ${props => props.active ? 'rgba(134, 239, 172, 0.6)' : 'rgba(253, 230, 138, 0.6)'};
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    backdrop-filter: blur(5px);
+
+    @media (max-width: 768px) {
+        padding: 10px 16px;
+        font-size: 0.75rem;
+    }
+`;
+
+const ArrowIcon = styled.div`
+    color: rgba(255, 255, 255, 0.7);
+    margin-left: 16px;
+    opacity: 0.6;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+
+    ${PetListItem}:hover & {
+        opacity: 1;
+        transform: translateX(4px);
+        color: rgba(255, 255, 255, 1);
+    }
+
+    @media (max-width: 768px) {
+        margin-left: 12px;
+        opacity: 0.8;
+    }
 `;
 
 const DetailsContainer = styled.div`
-    background: rgba(255, 255, 255, 0.2);
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(145deg, rgba(74, 26, 74, 0.95), rgba(107, 43, 107, 0.9));
+    padding: 32px;
+    border-radius: 24px;
+    box-shadow: 0px 8px 40px rgba(0, 0, 0, 0.3), 0px 2px 8px rgba(0, 0, 0, 0.2);
     width: 100%;
-    max-width: 600px;
+    max-width: 700px;
     margin-top: 20px;
     text-align: center;
+    border: 2px solid rgba(139, 90, 140, 0.5);
+    backdrop-filter: blur(15px);
+    
+    @media (max-width: 768px) {
+        padding: 24px;
+        border-radius: 20px;
+        margin: 16px;
+        width: calc(100% - 32px);
+    }
 `;
 
 const CloseButton = styled.button`
@@ -478,133 +987,594 @@ const Form = styled.div`
 `;
 
 const Label = styled.label`
-    color: #4B0082;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #ffffff;
+    font-weight: 600;
     text-align: left;
+    font-size: 0.9rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    
+    @media (max-width: 768px) {
+        font-size: 1rem;
+    }
 `;
 
-const LabelOne = styled.label`
-    color: white;
-    text-align: left;
-`;
 
 const Input = styled.input`
-    padding: 8px;
-    border-radius: 6px;
-    border: none;
-    width: 97%;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    width: 100%;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.15);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    
+    &[type="file"] {
+        padding: 12px 14px;
+        
+        &::file-selector-button {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 12px;
+            transition: all 0.3s ease;
+            
+            &:hover {
+                background: rgba(255, 255, 255, 0.3);
+                border-color: rgba(255, 255, 255, 0.4);
+            }
+        }
+    }
+    
+    &:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.5);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.2);
+    }
+    
+    &::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    @media (max-width: 768px) {
+        padding: 16px;
+        font-size: 16px;
+        border-radius: 14px;
+        
+        &[type="file"] {
+            padding: 14px;
+        }
+    }
 `;
 
 const Select = styled.select`
-    padding: 8px;
-    border-radius: 6px;
-    border: none;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
     width: 100%;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.15);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    
+    &:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.5);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.2);
+    }
+    
+    option {
+        background: #4a1a4a;
+        color: #ffffff;
+    }
+    
+    @media (max-width: 768px) {
+        padding: 16px;
+        font-size: 16px;
+        border-radius: 14px;
+    }
 `;
 
 const Textarea = styled.textarea`
-    padding: 8px;
-    border-radius: 6px;
-    border: none;
-    width: 97%;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 1rem;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.15);
+    min-height: 80px;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s ease;
+    resize: vertical;
+    backdrop-filter: blur(5px);
+    
+    &:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.5);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.2);
+    }
+    
+    &::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    @media (max-width: 768px) {
+        padding: 16px;
+        font-size: 16px;
+        border-radius: 14px;
+        min-height: 100px;
+    }
 `;
 
 const UpdateButton = styled.button`
-    background: #007bff;
+    background: linear-gradient(135deg, #8b5a8c, #a569a7);
     color: white;
-    padding: 10px;
+    padding: 14px 28px;
     border: none;
-    border-radius: 6px;
+    border-radius: 12px;
     cursor: pointer;
-    font-weight: bold;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
     width: fit-content;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(139, 90, 140, 0.3);
     
     &:hover {
-        background: darkblue;
+        background: linear-gradient(135deg, #7d527e, #936394);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(139, 90, 140, 0.4);
+    }
+    
+    &:active {
+        transform: translateY(0);
+    }
+    
+    @media (max-width: 768px) {
+        padding: 16px 32px;
+        font-size: 1.1rem;
+        border-radius: 14px;
+        width: 100%;
     }
 `;
 
 const AppointmentsContainer = styled.div`
-    margin-top: 20px;
+    margin-top: 32px;
     text-align: left;
+    background: linear-gradient(145deg, rgba(107, 43, 107, 0.7), rgba(139, 90, 140, 0.6));
+    padding: 24px;
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    
+    @media (max-width: 768px) {
+        padding: 20px;
+        border-radius: 14px;
+        margin-top: 24px;
+    }
 `;
 
 const AppointmentCard = styled.div`
-    background: rgba(255, 255, 255, 0.2);
-    padding: 10px;
-    border-radius: 8px;
-    margin-top: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 18px;
+    border-radius: 12px;
+    margin-top: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    
+    &:hover {
+        border-color: rgba(255, 255, 255, 0.4);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        transform: translateY(-1px);
+        background: rgba(255, 255, 255, 0.15);
+    }
+    
+    @media (max-width: 768px) {
+        padding: 20px;
+        border-radius: 14px;
+        &:active {
+            transform: scale(0.98);
+        }
+    }
 `;
 
 const Text = styled.p`
-    color: #4B0082;
-`;
-
-const DeleteButton = styled.button`
-    background: red;
-    color: white;
-    padding: 10px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    width: fit-content;
-
-    &:hover {
-        background: darkred;
+    color: rgba(255, 255, 255, 0.95);
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    line-height: 1.6;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    
+    @media (max-width: 768px) {
+        font-size: 0.95rem;
     }
 `;
 
-const Overlay = styled.div`
+
+
+
+
+
+// New styled components for the edit appointment modal
+const EditModalOverlay = styled.div`
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.6);
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 10000;
+    backdrop-filter: blur(8px);
+    padding: 20px;
+    box-sizing: border-box;
+    animation: modalFadeIn 0.3s ease-out;
+    
+    @keyframes modalFadeIn {
+        from {
+            opacity: 0;
+            backdrop-filter: blur(0px);
+        }
+        to {
+            opacity: 1;
+            backdrop-filter: blur(8px);
+        }
+    }
 `;
 
-const ModalContainer = styled.div`
-    background: white;
-    width: 80%;
-    max-width: 600px;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3);
-    background-color: #4B0082;
-    text-align: center;
-    max-height: 90vh;
+const EditModalContainer = styled.div`
+    background: linear-gradient(145deg, rgba(107, 43, 107, 0.95), rgba(139, 90, 140, 0.9));
+    width: 100%;
+    max-width: 500px;
+    border-radius: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(20px);
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.4),
+        0 8px 32px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    max-height: calc(100vh - 40px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: center center;
+    
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        width: 100%;
+        max-width: 400px;
+        border-radius: 16px;
+        max-height: calc(100vh - 40px);
+    }
+    
+    @media (max-width: 480px) {
+        max-width: 350px;
+        border-radius: 14px;
+    }
+`;
+
+const EditModalHeader = styled.div`
+    padding: 24px 24px 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    background: linear-gradient(145deg, rgba(107, 43, 107, 0.3), rgba(139, 90, 140, 0.2));
+    border-radius: 20px 20px 0 0;
+    flex-shrink: 0;
+    
+    @media (max-width: 768px) {
+        padding: 20px 20px 16px 20px;
+        border-radius: 16px 16px 0 0;
+    }
+    
+    @media (max-width: 480px) {
+        border-radius: 14px 14px 0 0;
+    }
+`;
+
+const EditModalTitle = styled.h2`
+    font-family: 'Poppins', sans-serif;
+    color: #ffffff;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    
+    @media (max-width: 768px) {
+        font-size: 1.2rem;
+    }
+`;
+
+const EditModalCloseButton = styled.button`
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+    
+    &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
+    }
+    
+    @media (max-width: 768px) {
+        padding: 10px 12px;
+    }
+`;
+
+const EditModalForm = styled.div`
+    flex: 1;
     overflow-y: auto;
+    padding: 0 24px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    
+    /* Custom scrollbar for better UX */
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        margin: 8px 0;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 3px;
+        
+        &:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        padding: 0 20px 20px 20px;
+        gap: 18px;
+    }
 `;
 
-const DaysContainer = styled.div`
+const EditInputGroup = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+`;
+
+const EditTwoColumnGroup = styled.div`
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+`;
+
+const EditLabel = styled.label`
+    font-family: 'Poppins', sans-serif;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+`;
+
+const EditInput = styled.input`
+    padding: 12px 14px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+    
+    &:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    }
+    
+    &::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    @media (max-width: 768px) {
+        padding: 14px 16px;
+        font-size: 16px;
+    }
+`;
+
+const EditSelect = styled.select`
+    padding: 12px 14px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+    
+    &:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    }
+    
+    option {
+        background: #4a1a4a;
+        color: #ffffff;
+    }
+    
+    @media (max-width: 768px) {
+        padding: 14px 16px;
+        font-size: 16px;
+    }
+`;
+
+const EditDaysContainer = styled.div`
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
-    margin-bottom: 15px;
+    gap: 8px;
+    justify-content: flex-start;
+    
+    @media (max-width: 768px) {
+        justify-content: center;
+    }
 `;
 
-const DayToggle = styled.label`
+const EditDayToggle = styled.label`
     display: flex;
     align-items: center;
-    gap: 5px;
-    background: rgba(255, 255, 255, 0.2);
+    gap: 6px;
+    background: ${props => props.$checked ? 'rgba(139, 90, 140, 0.6)' : 'rgba(255, 255, 255, 0.1)'};
+    border: 2px solid ${props => props.$checked ? 'rgba(139, 90, 140, 0.8)' : 'rgba(255, 255, 255, 0.2)'};
     padding: 8px 12px;
-    border-radius: 6px;
+    border-radius: 10px;
     cursor: pointer;
-    font-size: 0.9rem;
-    color: white;
-    transition: background 0.3s;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #ffffff;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
 
     input {
         cursor: pointer;
+        accent-color: #8b5a8c;
     }
 
     &:hover {
-        background: rgba(255, 255, 255, 0.3);
+        background: ${props => props.$checked ? 'rgba(139, 90, 140, 0.7)' : 'rgba(255, 255, 255, 0.15)'};
+        border-color: ${props => props.$checked ? 'rgba(139, 90, 140, 0.9)' : 'rgba(255, 255, 255, 0.3)'};
+        transform: translateY(-1px);
+    }
+    
+    @media (max-width: 768px) {
+        padding: 10px 14px;
+        font-size: 0.75rem;
+    }
+`;
+
+const EditButtonGroup = styled.div`
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    
+    @media (max-width: 768px) {
+        flex-direction: column;
+    }
+`;
+
+const EditSaveButton = styled.button`
+    flex: 1;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #ffffff;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+    
+    &:hover {
+        background: linear-gradient(135deg, #16a34a, #15803d);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+    }
+    
+    @media (max-width: 768px) {
+        padding: 16px;
+        font-size: 1rem;
+    }
+`;
+
+const EditDeleteButton = styled.button`
+    flex: 1;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #ffffff;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+    
+    &:hover {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+    }
+    
+    @media (max-width: 768px) {
+        padding: 16px;
+        font-size: 1rem;
     }
 `;

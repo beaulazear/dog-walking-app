@@ -36,7 +36,7 @@ class SessionsController < ApplicationController
           sex: pet.sex,
           spayed_neutered: pet.spayed_neutered,
           address: pet.address,
-          behavorial_notes: pet.behavorial_notes,
+          behavioral_notes: pet.behavioral_notes,
           supplies_location: pet.supplies_location,
           allergies: pet.allergies,
           active: pet.active,
