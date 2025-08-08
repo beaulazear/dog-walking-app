@@ -1,15 +1,17 @@
 import React, { useState, useContext } from "react";
+import ReactDOM from "react-dom";
 import styled from "styled-components";
 import dayjs from "dayjs";
 import { UserContext } from "../context/user";
 import CopyableInvoicesModal from "./CopyableInvoiceModal";
-import { DollarSign, Calendar, Trash2, CreditCard, Receipt, Eye } from "lucide-react";
+import { DollarSign, Calendar, Trash2, CreditCard, Receipt, Eye, Plus, X, Save } from "lucide-react";
 
 const PetInvoices = ({ pet }) => {
     const { user, setUser } = useContext(UserContext);
     const [activeTab, setActiveTab] = useState("unpaid");
     const [invoiceLimit, setInvoiceLimit] = useState(15);
     const [showModal, setShowModal] = useState(false);
+    const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
 
     const petInvoices = user.invoices.filter(invoice => invoice.pet_id === pet.id);
 
@@ -87,6 +89,10 @@ const PetInvoices = ({ pet }) => {
                             </EmptyIcon>
                             <EmptyTitle>No unpaid invoices</EmptyTitle>
                             <EmptyText>All invoices for this pet are paid up!</EmptyText>
+                            <CreateInvoiceButton onClick={() => setShowCreateInvoiceModal(true)}>
+                                <Plus size={16} />
+                                Create Manual Invoice
+                            </CreateInvoiceButton>
                         </EmptyState>
                     ) : (
                         <>
@@ -125,6 +131,10 @@ const PetInvoices = ({ pet }) => {
                                         <Eye size={16} />
                                         View Copyable
                                     </SecondaryButton>
+                                    <CreateInvoiceButton onClick={() => setShowCreateInvoiceModal(true)}>
+                                        <Plus size={16} />
+                                        Create Invoice
+                                    </CreateInvoiceButton>
                                 </ActionButtons>
                             </SummarySection>
                             
@@ -178,8 +188,190 @@ const PetInvoices = ({ pet }) => {
                     )}
                 </PaidSection>
             )}
+            
+            {showCreateInvoiceModal && (
+                <CreateInvoiceModal 
+                    pet={pet}
+                    user={user}
+                    onClose={() => setShowCreateInvoiceModal(false)}
+                    onInvoiceCreated={(newInvoice) => {
+                        setUser(prevUser => ({
+                            ...prevUser,
+                            invoices: [...prevUser.invoices, newInvoice]
+                        }));
+                        setShowCreateInvoiceModal(false);
+                    }}
+                />
+            )}
         </InvoicesContainer>
     );
+};
+
+// Create Invoice Modal Component
+const CreateInvoiceModal = ({ pet, user, onClose, onInvoiceCreated }) => {
+    const [formData, setFormData] = useState({
+        appointment_id: '',
+        title: '',
+        compensation: '',
+        date_completed: dayjs().format('YYYY-MM-DD')
+    });
+
+    // Get appointments for this pet that could be associated with an invoice
+    const availableAppointments = user.appointments?.filter(apt => 
+        apt.pet_id === pet.id && !apt.canceled
+    ) || [];
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        if (!formData.appointment_id || !formData.title || !formData.compensation) {
+            alert('Please fill in all required fields');
+            return;
+        }
+
+        try {
+            const response = await fetch('/invoices', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    invoice: {
+                        appointment_id: parseInt(formData.appointment_id),
+                        pet_id: pet.id,
+                        title: formData.title,
+                        compensation: parseFloat(formData.compensation),
+                        date_completed: dayjs(formData.date_completed).toISOString(),
+                        paid: false
+                    }
+                })
+            });
+
+            if (response.ok) {
+                const newInvoice = await response.json();
+                onInvoiceCreated(newInvoice);
+                alert('Manual invoice created successfully!');
+            } else {
+                const errorData = await response.json();
+                alert(errorData.errors?.join(', ') || 'Failed to create invoice');
+            }
+        } catch (error) {
+            console.error('Error creating invoice:', error);
+            alert('Failed to create invoice. Please try again.');
+        }
+    };
+
+    const handleOverlayClick = (e) => {
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
+    React.useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.body.style.overflow = 'unset';
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [onClose]);
+
+    const modalContent = (
+        <CreateModalOverlay onClick={handleOverlayClick}>
+            <CreateModalContainer>
+                <CreateModalHeader>
+                    <CreateModalTitle>
+                        <Plus size={24} />
+                        Create Manual Invoice
+                    </CreateModalTitle>
+                    <CreateModalCloseButton onClick={onClose}>
+                        <X size={18} />
+                    </CreateModalCloseButton>
+                </CreateModalHeader>
+                
+                <CreateModalContent>
+                    <CreateModalSubtitle>
+                        Creating invoice for {pet.name}
+                    </CreateModalSubtitle>
+                    
+                    <CreateForm onSubmit={handleSubmit}>
+                        <CreateFormGroup>
+                            <CreateFormLabel>Associated Appointment *</CreateFormLabel>
+                            <CreateFormSelect
+                                value={formData.appointment_id}
+                                onChange={(e) => setFormData({...formData, appointment_id: e.target.value})}
+                                required
+                            >
+                                <option value="">Select an appointment...</option>
+                                {availableAppointments.map(apt => (
+                                    <option key={apt.id} value={apt.id}>
+                                        {apt.recurring ? 'Recurring' : dayjs(apt.appointment_date).format('MMM D, YYYY')} - 
+                                        {apt.duration} min walk
+                                    </option>
+                                ))}
+                            </CreateFormSelect>
+                            <CreateFormHint>
+                                Required: Invoices must be associated with an existing appointment
+                            </CreateFormHint>
+                        </CreateFormGroup>
+
+                        <CreateFormGroup>
+                            <CreateFormLabel>Service Description *</CreateFormLabel>
+                            <CreateFormInput
+                                type="text"
+                                value={formData.title}
+                                onChange={(e) => setFormData({...formData, title: e.target.value})}
+                                placeholder="e.g., 30 min walk, Pet sitting, etc."
+                                required
+                            />
+                        </CreateFormGroup>
+
+                        <CreateFormGroup>
+                            <CreateFormLabel>Amount *</CreateFormLabel>
+                            <AmountInputWrapper>
+                                <DollarSign size={16} />
+                                <CreateFormInput
+                                    type="number"
+                                    value={formData.compensation}
+                                    onChange={(e) => setFormData({...formData, compensation: e.target.value})}
+                                    placeholder="0.00"
+                                    step="0.01"
+                                    min="0"
+                                    required
+                                />
+                            </AmountInputWrapper>
+                        </CreateFormGroup>
+
+                        <CreateFormGroup>
+                            <CreateFormLabel>Service Date *</CreateFormLabel>
+                            <CreateFormInput
+                                type="date"
+                                value={formData.date_completed}
+                                onChange={(e) => setFormData({...formData, date_completed: e.target.value})}
+                                required
+                            />
+                        </CreateFormGroup>
+
+                        <CreateModalButtonGroup>
+                            <CreateSubmitButton type="submit">
+                                <Save size={16} />
+                                Create Invoice
+                            </CreateSubmitButton>
+                            <CreateCancelButton type="button" onClick={onClose}>
+                                <X size={16} />
+                                Cancel
+                            </CreateCancelButton>
+                        </CreateModalButtonGroup>
+                    </CreateForm>
+                </CreateModalContent>
+            </CreateModalContainer>
+        </CreateModalOverlay>
+    );
+
+    return ReactDOM.createPortal(modalContent, document.body);
 };
 
 export default PetInvoices;
@@ -414,9 +606,19 @@ const TotalAmount = styled.div`
 const ActionButtons = styled.div`
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
     
     @media (max-width: 768px) {
         flex-direction: column;
+    }
+    
+    @media (max-width: 980px) {
+        flex-wrap: wrap;
+        
+        > button {
+            flex: 1;
+            min-width: 140px;
+        }
     }
 `;
 
@@ -510,5 +712,265 @@ const LimitSelect = styled.select`
     option {
         background: #4a1a4a;
         color: #ffffff;
+    }
+`;
+
+const CreateInvoiceButton = styled.button`
+    background: linear-gradient(135deg, #8b5a8c, #a569a7);
+    color: #ffffff;
+    padding: 12px 20px;
+    border: 2px solid rgba(165, 105, 167, 0.4);
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 16px rgba(139, 90, 140, 0.3);
+    
+    &:hover {
+        background: linear-gradient(135deg, #7d527e, #936394);
+        border-color: rgba(165, 105, 167, 0.6);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(139, 90, 140, 0.4);
+    }
+    
+    @media (max-width: 768px) {
+        justify-content: center;
+        padding: 14px;
+    }
+`;
+
+// Create Invoice Modal Styled Components
+const CreateModalOverlay = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10003;
+    padding: 20px;
+`;
+
+const CreateModalContainer = styled.div`
+    background: linear-gradient(145deg, rgba(74, 26, 74, 0.95), rgba(107, 43, 107, 0.9));
+    border-radius: 24px;
+    border: 2px solid rgba(139, 90, 140, 0.5);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+`;
+
+const CreateModalHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 24px 0;
+    margin-bottom: 20px;
+`;
+
+const CreateModalTitle = styled.h2`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+`;
+
+const CreateModalCloseButton = styled.button`
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
+    
+    &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        transform: scale(1.1);
+    }
+`;
+
+const CreateModalContent = styled.div`
+    padding: 0 24px 24px;
+`;
+
+const CreateModalSubtitle = styled.p`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0 0 24px 0;
+    font-weight: 500;
+`;
+
+const CreateForm = styled.form`
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+`;
+
+const CreateFormGroup = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+`;
+
+const CreateFormLabel = styled.label`
+    font-family: 'Poppins', sans-serif;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+`;
+
+const CreateFormInput = styled.input`
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #ffffff;
+    transition: all 0.3s ease;
+    
+    &::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+    
+    &:focus {
+        outline: none;
+        border-color: #a569a7;
+        background: rgba(255, 255, 255, 0.15);
+    }
+`;
+
+const CreateFormSelect = styled.select`
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #ffffff;
+    transition: all 0.3s ease;
+    
+    &:focus {
+        outline: none;
+        border-color: #a569a7;
+        background: rgba(255, 255, 255, 0.15);
+    }
+    
+    option {
+        background: #4a1a4a;
+        color: #ffffff;
+        padding: 8px;
+    }
+`;
+
+const CreateFormHint = styled.p`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+    font-style: italic;
+`;
+
+const AmountInputWrapper = styled.div`
+    position: relative;
+    display: flex;
+    align-items: center;
+    
+    svg {
+        position: absolute;
+        left: 16px;
+        color: rgba(255, 255, 255, 0.7);
+        z-index: 1;
+    }
+    
+    input {
+        padding-left: 44px;
+    }
+`;
+
+const CreateModalButtonGroup = styled.div`
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    
+    @media (max-width: 768px) {
+        flex-direction: column;
+    }
+`;
+
+const CreateSubmitButton = styled.button`
+    flex: 1;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border: none;
+    border-radius: 14px;
+    padding: 16px 24px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 6px 24px rgba(34, 197, 94, 0.3);
+    
+    &:hover {
+        background: linear-gradient(135deg, #16a34a, #15803d);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(34, 197, 94, 0.4);
+    }
+`;
+
+const CreateCancelButton = styled.button`
+    flex: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 14px;
+    padding: 16px 24px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    
+    &:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
     }
 `;

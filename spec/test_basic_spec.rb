@@ -13,7 +13,7 @@ RSpec.describe 'Basic Test' do
       sixty: 60,
       solo_rate: 35
     )
-    
+
     expect(user.persisted?).to be true
     expect(user.username).to eq('testuser')
   end

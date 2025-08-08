@@ -10,132 +10,133 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_08_07_235904) do
+ActiveRecord::Schema[7.2].define(version: 20_250_807_235_904) do
   # These are extensions that must be enabled in order to support this database
-  enable_extension "plpgsql"
+  enable_extension 'plpgsql'
 
-  create_table "active_storage_attachments", force: :cascade do |t|
-    t.string "name", null: false
-    t.string "record_type", null: false
-    t.bigint "record_id", null: false
-    t.bigint "blob_id", null: false
-    t.datetime "created_at", precision: nil, null: false
-    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
-    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  create_table 'active_storage_attachments', force: :cascade do |t|
+    t.string 'name', null: false
+    t.string 'record_type', null: false
+    t.bigint 'record_id', null: false
+    t.bigint 'blob_id', null: false
+    t.datetime 'created_at', precision: nil, null: false
+    t.index ['blob_id'], name: 'index_active_storage_attachments_on_blob_id'
+    t.index %w[record_type record_id name blob_id], name: 'index_active_storage_attachments_uniqueness',
+                                                    unique: true
   end
 
-  create_table "active_storage_blobs", force: :cascade do |t|
-    t.string "key", null: false
-    t.string "filename", null: false
-    t.string "content_type"
-    t.text "metadata"
-    t.string "service_name", null: false
-    t.bigint "byte_size", null: false
-    t.string "checksum", null: false
-    t.datetime "created_at", precision: nil, null: false
-    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  create_table 'active_storage_blobs', force: :cascade do |t|
+    t.string 'key', null: false
+    t.string 'filename', null: false
+    t.string 'content_type'
+    t.text 'metadata'
+    t.string 'service_name', null: false
+    t.bigint 'byte_size', null: false
+    t.string 'checksum', null: false
+    t.datetime 'created_at', precision: nil, null: false
+    t.index ['key'], name: 'index_active_storage_blobs_on_key', unique: true
   end
 
-  create_table "active_storage_variant_records", force: :cascade do |t|
-    t.bigint "blob_id", null: false
-    t.string "variation_digest", null: false
-    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  create_table 'active_storage_variant_records', force: :cascade do |t|
+    t.bigint 'blob_id', null: false
+    t.string 'variation_digest', null: false
+    t.index %w[blob_id variation_digest], name: 'index_active_storage_variant_records_uniqueness', unique: true
   end
 
-  create_table "additional_incomes", force: :cascade do |t|
-    t.string "description"
-    t.datetime "date_added", precision: nil
-    t.integer "compensation"
-    t.bigint "pet_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["pet_id"], name: "index_additional_incomes_on_pet_id"
+  create_table 'additional_incomes', force: :cascade do |t|
+    t.string 'description'
+    t.datetime 'date_added', precision: nil
+    t.integer 'compensation'
+    t.bigint 'pet_id', null: false
+    t.datetime 'created_at', null: false
+    t.datetime 'updated_at', null: false
+    t.index ['pet_id'], name: 'index_additional_incomes_on_pet_id'
   end
 
-  create_table "appointments", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.bigint "pet_id", null: false
-    t.boolean "recurring"
-    t.datetime "appointment_date", precision: nil
-    t.time "start_time"
-    t.time "end_time"
-    t.integer "duration"
-    t.integer "price"
-    t.boolean "monday"
-    t.boolean "tuesday"
-    t.boolean "wednesday"
-    t.boolean "thursday"
-    t.boolean "friday"
-    t.boolean "saturday"
-    t.boolean "sunday"
-    t.boolean "completed"
-    t.boolean "canceled"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.boolean "solo"
-    t.index ["pet_id"], name: "index_appointments_on_pet_id"
-    t.index ["user_id"], name: "index_appointments_on_user_id"
+  create_table 'appointments', force: :cascade do |t|
+    t.bigint 'user_id', null: false
+    t.bigint 'pet_id', null: false
+    t.boolean 'recurring'
+    t.datetime 'appointment_date', precision: nil
+    t.time 'start_time'
+    t.time 'end_time'
+    t.integer 'duration'
+    t.integer 'price'
+    t.boolean 'monday'
+    t.boolean 'tuesday'
+    t.boolean 'wednesday'
+    t.boolean 'thursday'
+    t.boolean 'friday'
+    t.boolean 'saturday'
+    t.boolean 'sunday'
+    t.boolean 'completed'
+    t.boolean 'canceled'
+    t.datetime 'created_at', null: false
+    t.datetime 'updated_at', null: false
+    t.boolean 'solo'
+    t.index ['pet_id'], name: 'index_appointments_on_pet_id'
+    t.index ['user_id'], name: 'index_appointments_on_user_id'
   end
 
-  create_table "cancellations", force: :cascade do |t|
-    t.datetime "date", precision: nil
-    t.bigint "appointment_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["appointment_id"], name: "index_cancellations_on_appointment_id"
+  create_table 'cancellations', force: :cascade do |t|
+    t.datetime 'date', precision: nil
+    t.bigint 'appointment_id', null: false
+    t.datetime 'created_at', null: false
+    t.datetime 'updated_at', null: false
+    t.index ['appointment_id'], name: 'index_cancellations_on_appointment_id'
   end
 
-  create_table "invoices", force: :cascade do |t|
-    t.bigint "appointment_id", null: false
-    t.bigint "pet_id", null: false
-    t.datetime "date_completed", precision: nil
-    t.integer "compensation"
-    t.boolean "paid"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.boolean "pending"
-    t.string "title"
-    t.boolean "cancelled"
-    t.index ["appointment_id"], name: "index_invoices_on_appointment_id"
-    t.index ["pet_id"], name: "index_invoices_on_pet_id"
+  create_table 'invoices', force: :cascade do |t|
+    t.bigint 'appointment_id', null: false
+    t.bigint 'pet_id', null: false
+    t.datetime 'date_completed', precision: nil
+    t.integer 'compensation'
+    t.boolean 'paid'
+    t.datetime 'created_at', null: false
+    t.datetime 'updated_at', null: false
+    t.boolean 'pending'
+    t.string 'title'
+    t.boolean 'cancelled'
+    t.index ['appointment_id'], name: 'index_invoices_on_appointment_id'
+    t.index ['pet_id'], name: 'index_invoices_on_pet_id'
   end
 
-  create_table "pets", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.string "name"
-    t.datetime "birthdate", precision: nil
-    t.string "sex"
-    t.boolean "spayed_neutered"
-    t.string "address"
-    t.text "behavioral_notes"
-    t.text "supplies_location"
-    t.string "allergies"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.boolean "active", default: true, null: false
-    t.index ["user_id"], name: "index_pets_on_user_id"
+  create_table 'pets', force: :cascade do |t|
+    t.bigint 'user_id', null: false
+    t.string 'name'
+    t.datetime 'birthdate', precision: nil
+    t.string 'sex'
+    t.boolean 'spayed_neutered'
+    t.string 'address'
+    t.text 'behavioral_notes'
+    t.text 'supplies_location'
+    t.string 'allergies'
+    t.datetime 'created_at', null: false
+    t.datetime 'updated_at', null: false
+    t.boolean 'active', default: true, null: false
+    t.index ['user_id'], name: 'index_pets_on_user_id'
   end
 
-  create_table "users", force: :cascade do |t|
-    t.string "username"
-    t.string "password_digest"
-    t.string "name"
-    t.string "email_address"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.integer "thirty"
-    t.integer "fourty"
-    t.integer "sixty"
-    t.integer "solo_rate"
+  create_table 'users', force: :cascade do |t|
+    t.string 'username'
+    t.string 'password_digest'
+    t.string 'name'
+    t.string 'email_address'
+    t.datetime 'created_at', null: false
+    t.datetime 'updated_at', null: false
+    t.integer 'thirty'
+    t.integer 'fourty'
+    t.integer 'sixty'
+    t.integer 'solo_rate'
   end
 
-  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "additional_incomes", "pets"
-  add_foreign_key "appointments", "pets"
-  add_foreign_key "appointments", "users"
-  add_foreign_key "cancellations", "appointments"
-  add_foreign_key "invoices", "appointments"
-  add_foreign_key "invoices", "pets"
-  add_foreign_key "pets", "users"
+  add_foreign_key 'active_storage_attachments', 'active_storage_blobs', column: 'blob_id'
+  add_foreign_key 'active_storage_variant_records', 'active_storage_blobs', column: 'blob_id'
+  add_foreign_key 'additional_incomes', 'pets'
+  add_foreign_key 'appointments', 'pets'
+  add_foreign_key 'appointments', 'users'
+  add_foreign_key 'cancellations', 'appointments'
+  add_foreign_key 'invoices', 'appointments'
+  add_foreign_key 'invoices', 'pets'
+  add_foreign_key 'pets', 'users'
 end

@@ -119,7 +119,7 @@ RSpec.describe Appointment, type: :model do
     it 'can have multiple invoices' do
       invoice1 = create_invoice(appointment, pet)
       invoice2 = create_invoice(appointment, pet, title: 'Second invoice')
-      
+
       expect(appointment.invoices).to include(invoice1, invoice2)
       expect(appointment.invoices.count).to eq(2)
     end
@@ -127,7 +127,7 @@ RSpec.describe Appointment, type: :model do
     it 'can have multiple cancellations' do
       cancellation1 = create_cancellation(appointment, date: Date.current + 3.days)
       cancellation2 = create_cancellation(appointment, date: Date.current + 5.days)
-      
+
       expect(appointment.cancellations).to include(cancellation1, cancellation2)
       expect(appointment.cancellations.count).to eq(2)
     end

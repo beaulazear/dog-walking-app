@@ -11,10 +11,7 @@ import {
     Settings, 
     Heart,
     Cake,
-    LogOut,
-    User,
-    Users,
-    Sparkles
+    LogOut
 } from "lucide-react";
 
 const getUpcomingBirthday = (pets) => {
@@ -156,11 +153,8 @@ export default function Dashboard() {
         <Container>
             <HeaderSection>
                 <WelcomeTitle>
-                    <Sparkles size={32} />
                     Welcome back, {user?.name}!
-                    <Heart size={28} />
                 </WelcomeTitle>
-                <SubtitleText>Manage your pet care business from your dashboard</SubtitleText>
             </HeaderSection>
 
             <ContentSections>
@@ -366,11 +360,6 @@ const WelcomeTitle = styled.h1`
     gap: 20px;
     text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     
-    svg:first-child {
-        color: rgba(255, 255, 255, 0.8);
-        animation: sparkle 2s ease-in-out infinite alternate;
-    }
-    
     svg:last-child {
         color: #ff6b9d;
         animation: heartbeat 1.5s ease-in-out infinite;
@@ -403,16 +392,32 @@ const WelcomeTitle = styled.h1`
     }
 `;
 
-const SubtitleText = styled.p`
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.2rem;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.9);
-    margin: 0;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+const HeartIcon = styled.span`
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 50%;
+    padding: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 255, 255, 0.5);
+    animation: heartbeat 1.5s ease-in-out infinite;
+    
+    @media (max-width: 768px) {
+        padding: 6px;
+        
+        svg {
+            width: 28px !important;
+            height: 28px !important;
+        }
+    }
     
     @media (max-width: 480px) {
-        font-size: 1.1rem;
+        padding: 5px;
+        
+        svg {
+            width: 24px !important;
+            height: 24px !important;
+        }
     }
 `;
 

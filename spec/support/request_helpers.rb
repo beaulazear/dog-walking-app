@@ -6,16 +6,16 @@ module RequestHelpers
   def create_and_login_user(attributes = {})
     user_attrs = {
       username: "testuser#{rand(1000)}",
-      name: "Test User",
+      name: 'Test User',
       email_address: "test#{rand(1000)}@example.com",
-      password: "password123",
-      password_confirmation: "password123",
+      password: 'password123',
+      password_confirmation: 'password123',
       thirty: 30,
       fourty: 40,
       sixty: 60,
       solo_rate: 35
     }.merge(attributes)
-    
+
     user = User.create!(user_attrs)
     login_user(user)
     user
@@ -32,14 +32,14 @@ module RequestHelpers
   def create_test_pet(user, attributes = {})
     Pet.create!({
       user: user,
-      name: "Buddy",
+      name: 'Buddy',
       birthdate: Date.current - 2.years,
-      sex: "male",
+      sex: 'male',
       spayed_neutered: true,
-      address: "123 Test Street, Test City, TC 12345",
-      behavorial_notes: "Friendly and energetic dog",
-      supplies_location: "Garage on left side",
-      allergies: "None"
+      address: '123 Test Street, Test City, TC 12345',
+      behavorial_notes: 'Friendly and energetic dog',
+      supplies_location: 'Garage on left side',
+      allergies: 'None'
     }.merge(attributes))
   end
 
@@ -48,8 +48,8 @@ module RequestHelpers
       user: user,
       pet: pet,
       appointment_date: Date.current + 1.day,
-      start_time: "09:00",
-      end_time: "10:00",
+      start_time: '09:00',
+      end_time: '10:00',
       duration: 60,
       price: 30,
       recurring: false,

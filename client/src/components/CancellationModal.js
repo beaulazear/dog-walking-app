@@ -3,22 +3,27 @@ import ReactDOM from "react-dom";
 import styled from "styled-components";
 import { UserContext } from "../context/user";
 import dayjs from "dayjs";
-import { Calendar, X, Plus, Trash2, CalendarDays, CalendarRange } from "lucide-react";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import { Calendar, X, Plus, Trash2, CalendarDays, CalendarRange, CheckSquare } from "lucide-react";
+
+dayjs.extend(isSameOrBefore);
 
 export default function CancellationModal({ appointment, setSelectedAppointment }) {
     const { setUser } = useContext(UserContext);
     const [showModal, setShowModal] = useState(false);
     const [selectedDate, setSelectedDate] = useState("");
-    const [useRange, setUseRange] = useState(false);
+    const [dateMode, setDateMode] = useState('single'); // 'single', 'range', 'multi'
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
+    const [selectedDates, setSelectedDates] = useState([]);
 
     const handleOpenModal = () => setShowModal(true);
     const handleCloseModal = () => {
         setSelectedDate("");
         setStartDate("");
         setEndDate("");
-        setUseRange(false);
+        setSelectedDates([]);
+        setDateMode('single');
         setShowModal(false);
     };
 
@@ -151,15 +156,108 @@ export default function CancellationModal({ appointment, setSelectedAppointment 
         }
     }
 
+    async function handleMultipleCancellations(appointmentId, dates) {
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const date of dates) {
+            const success = await handleNewCancellation(appointmentId, date);
+            if (success) {
+                successCount++;
+            } else {
+                failCount++;
+            }
+        }
+
+        if (successCount > 0) {
+            alert(`Successfully added ${successCount} cancellation${successCount > 1 ? 's' : ''}${failCount > 0 ? ` (${failCount} failed)` : ''}.`);
+            setSelectedAppointment(null);
+            return true;
+        } else {
+            alert("Failed to add any cancellations.");
+            return false;
+        }
+    }
+
+    // Group consecutive dates for better display
+    const groupConsecutiveDates = (cancellations) => {
+        if (!cancellations?.length) return [];
+        
+        const sortedCancellations = [...cancellations].sort((a, b) => 
+            dayjs(a.date).valueOf() - dayjs(b.date).valueOf()
+        );
+
+        const groups = [];
+        let currentGroup = [sortedCancellations[0]];
+
+        for (let i = 1; i < sortedCancellations.length; i++) {
+            const current = dayjs(sortedCancellations[i].date);
+            const previous = dayjs(sortedCancellations[i - 1].date);
+            
+            if (current.diff(previous, 'day') === 1) {
+                currentGroup.push(sortedCancellations[i]);
+            } else {
+                groups.push(currentGroup);
+                currentGroup = [sortedCancellations[i]];
+            }
+        }
+        groups.push(currentGroup);
+        
+        return groups;
+    };
+
+    const handleDateToggle = (date) => {
+        setSelectedDates(prev => {
+            if (prev.includes(date)) {
+                return prev.filter(d => d !== date);
+            } else {
+                return [...prev, date].sort();
+            }
+        });
+    };
+
+    const generateDateOptions = () => {
+        const dates = [];
+        const today = dayjs();
+        const maxDate = today.add(6, 'months'); // Allow selection up to 6 months ahead
+        
+        let current = today;
+        while (current.isSameOrBefore(maxDate)) {
+            // Only show dates that match the appointment schedule for recurring appointments
+            if (appointment.recurring) {
+                const dayName = current.format('dddd').toLowerCase();
+                if (appointment[dayName]) {
+                    dates.push(current.format('YYYY-MM-DD'));
+                }
+            } else {
+                // For non-recurring, only show the specific appointment date if it's in the future
+                if (current.format('YYYY-MM-DD') === dayjs(appointment.appointment_date).format('YYYY-MM-DD')) {
+                    dates.push(current.format('YYYY-MM-DD'));
+                }
+            }
+            current = current.add(1, 'day');
+        }
+        return dates;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (useRange) {
+        if (dateMode === 'range') {
             if (!startDate || !endDate) {
                 alert("Please select both start and end dates for the range.");
                 return;
             }
             const success = await handleBulkCancellation(appointment.id, startDate, endDate);
+            if (success) {
+                handleCloseModal();
+            }
+        } else if (dateMode === 'multi') {
+            if (selectedDates.length === 0) {
+                alert("Please select at least one date for cancellation.");
+                return;
+            }
+            const success = await handleMultipleCancellations(appointment.id, selectedDates);
             if (success) {
                 handleCloseModal();
             }
@@ -219,29 +317,37 @@ export default function CancellationModal({ appointment, setSelectedAppointment 
                 <CancelModalForm>
                     <CancelInputGroup>
                         <CancelLabel>
-                            {useRange ? <CalendarRange size={16} /> : <Calendar size={16} />}
-                            Add New Cancellation{useRange ? 's' : ''}
+                            {dateMode === 'range' ? <CalendarRange size={16} /> : 
+                             dateMode === 'multi' ? <CheckSquare size={16} /> : <Calendar size={16} />}
+                            Add New Cancellation{dateMode === 'single' ? '' : 's'}
                         </CancelLabel>
                         
                         <ToggleContainer>
                             <ToggleOption 
-                                $active={!useRange} 
-                                onClick={() => setUseRange(false)}
+                                $active={dateMode === 'single'} 
+                                onClick={() => setDateMode('single')}
                             >
                                 <Calendar size={14} />
                                 Single Date
                             </ToggleOption>
                             <ToggleOption 
-                                $active={useRange} 
-                                onClick={() => setUseRange(true)}
+                                $active={dateMode === 'range'} 
+                                onClick={() => setDateMode('range')}
                             >
                                 <CalendarRange size={14} />
                                 Date Range
                             </ToggleOption>
+                            <ToggleOption 
+                                $active={dateMode === 'multi'} 
+                                onClick={() => setDateMode('multi')}
+                            >
+                                <CheckSquare size={14} />
+                                Select Multiple
+                            </ToggleOption>
                         </ToggleContainer>
 
                         <CancelForm onSubmit={handleSubmit}>
-                            {useRange ? (
+                            {dateMode === 'range' ? (
                                 <DateRangeContainer>
                                     <DateInputGroup>
                                         <DateInputLabel>Start Date</DateInputLabel>
@@ -264,6 +370,24 @@ export default function CancellationModal({ appointment, setSelectedAppointment 
                                         />
                                     </DateInputGroup>
                                 </DateRangeContainer>
+                            ) : dateMode === 'multi' ? (
+                                <MultiSelectContainer>
+                                    <MultiSelectInfo>
+                                        Select multiple dates ({selectedDates.length} selected)
+                                    </MultiSelectInfo>
+                                    <DateGridContainer>
+                                        {generateDateOptions().slice(0, 30).map(date => (
+                                            <DateOption
+                                                key={date}
+                                                $selected={selectedDates.includes(date)}
+                                                onClick={() => handleDateToggle(date)}
+                                            >
+                                                <DateDay>{dayjs(date).format('D')}</DateDay>
+                                                <DateMonth>{dayjs(date).format('MMM')}</DateMonth>
+                                            </DateOption>
+                                        ))}
+                                    </DateGridContainer>
+                                </MultiSelectContainer>
                             ) : (
                                 <CancelInput
                                     type="date"
@@ -275,7 +399,7 @@ export default function CancellationModal({ appointment, setSelectedAppointment 
                             )}
                             <CancelSubmitButton type="submit">
                                 <Plus size={16} />
-                                Add Cancellation{useRange ? 's' : ''}
+                                Add Cancellation{dateMode === 'single' ? '' : 's'}
                             </CancelSubmitButton>
                         </CancelForm>
                     </CancelInputGroup>
@@ -284,18 +408,53 @@ export default function CancellationModal({ appointment, setSelectedAppointment 
                         <CancelInputGroup>
                             <CancelLabel>
                                 <Trash2 size={16} />
-                                Existing Cancellations
+                                Existing Cancellations ({appointment.cancellations.length})
                             </CancelLabel>
                             <CancellationList>
-                                {appointment.cancellations.map((cancellation) => (
-                                    <CancellationItem key={cancellation.id}>
-                                        <CancellationDate>
-                                            {dayjs(cancellation.date).format("MMMM D, YYYY")}
-                                        </CancellationDate>
-                                        <CancelDeleteButton onClick={() => handleDeleteCancellation(cancellation.id)}>
-                                            <Trash2 size={14} />
-                                        </CancelDeleteButton>
-                                    </CancellationItem>
+                                {groupConsecutiveDates(appointment.cancellations).map((group, groupIndex) => (
+                                    <CancellationGroup key={groupIndex}>
+                                        {group.length > 2 ? (
+                                            // Show as date range for 3+ consecutive dates
+                                            <CancellationRangeItem>
+                                                <CancellationRangeInfo>
+                                                    <CalendarRange size={16} />
+                                                    <CancellationRangeText>
+                                                        <CancellationRangeDates>
+                                                            {dayjs(group[0].date).format("MMM D")} - {dayjs(group[group.length - 1].date).format("MMM D, YYYY")}
+                                                        </CancellationRangeDates>
+                                                        <CancellationRangeCount>
+                                                            {group.length} consecutive days
+                                                        </CancellationRangeCount>
+                                                    </CancellationRangeText>
+                                                </CancellationRangeInfo>
+                                                <CancellationRangeActions>
+                                                    <CancelDeleteButton 
+                                                        onClick={() => {
+                                                            if (window.confirm(`Delete all ${group.length} cancellations from ${dayjs(group[0].date).format("MMM D")} to ${dayjs(group[group.length - 1].date).format("MMM D")}?`)) {
+                                                                group.forEach(cancellation => handleDeleteCancellation(cancellation.id));
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Trash2 size={14} />
+                                                        Delete All
+                                                    </CancelDeleteButton>
+                                                </CancellationRangeActions>
+                                            </CancellationRangeItem>
+                                        ) : (
+                                            // Show individual dates for 1-2 dates
+                                            group.map((cancellation) => (
+                                                <CancellationItem key={cancellation.id}>
+                                                    <CancellationDate>
+                                                        <Calendar size={14} />
+                                                        {dayjs(cancellation.date).format("MMMM D, YYYY")}
+                                                    </CancellationDate>
+                                                    <CancelDeleteButton onClick={() => handleDeleteCancellation(cancellation.id)}>
+                                                        <Trash2 size={14} />
+                                                    </CancelDeleteButton>
+                                                </CancellationItem>
+                                            ))
+                                        )}
+                                    </CancellationGroup>
                                 ))}
                             </CancellationList>
                         </CancelInputGroup>
@@ -587,25 +746,38 @@ const CancellationItem = styled.div`
     }
 `;
 
-const CancellationDate = styled.span`
+const CancellationDate = styled.div`
     font-family: 'Poppins', sans-serif;
     color: #ffffff;
     font-size: 0.9rem;
     font-weight: 500;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    svg {
+        color: rgba(255, 255, 255, 0.6);
+        flex-shrink: 0;
+    }
 `;
 
 const CancelDeleteButton = styled.button`
     background: rgba(239, 68, 68, 0.2);
     color: #fca5a5;
     border: 2px solid rgba(239, 68, 68, 0.3);
-    padding: 6px 8px;
+    padding: 8px 12px;
     border-radius: 8px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 6px;
     transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
     
     &:hover {
         background: rgba(239, 68, 68, 0.3);
@@ -618,17 +790,17 @@ const CancelDeleteButton = styled.button`
 // New styled components for range functionality
 const ToggleContainer = styled.div`
     display: flex;
-    gap: 8px;
+    gap: 4px;
     margin-bottom: 12px;
     background: rgba(255, 255, 255, 0.05);
     padding: 4px;
-    border-radius: 10px;
+    border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 const ToggleOption = styled.button`
     flex: 1;
-    padding: 8px 12px;
+    padding: 10px 8px;
     border: none;
     border-radius: 8px;
     background: ${({ $active }) => 
@@ -636,14 +808,15 @@ const ToggleOption = styled.button`
     };
     color: #ffffff;
     font-family: 'Poppins', sans-serif;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-weight: 500;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 4px;
     transition: all 0.3s ease;
+    text-align: center;
     
     &:hover {
         background: ${({ $active }) => 
@@ -651,6 +824,18 @@ const ToggleOption = styled.button`
                 ? 'linear-gradient(135deg, #936394, #7d527e)' 
                 : 'rgba(255, 255, 255, 0.1)'
         };
+    }
+    
+    @media (max-width: 480px) {
+        flex-direction: column;
+        gap: 2px;
+        font-size: 0.7rem;
+        padding: 8px 4px;
+        
+        svg {
+            width: 12px;
+            height: 12px;
+        }
     }
 `;
 
@@ -676,3 +861,165 @@ const DateInputLabel = styled.label`
     font-size: 0.8rem;
     font-weight: 500;
 `;
+
+// Multi-select styled components
+const MultiSelectContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+`;
+
+const MultiSelectInfo = styled.div`
+    font-family: 'Poppins', sans-serif;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+`;
+
+const DateGridContainer = styled.div`
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    gap: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 4px;
+    
+    &::-webkit-scrollbar {
+        width: 4px;
+    }
+    
+    &::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+        
+        &:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+    }
+`;
+
+const DateOption = styled.button`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px;
+    border: 2px solid ${({ $selected }) => 
+        $selected ? '#a569a7' : 'rgba(255, 255, 255, 0.2)'
+    };
+    border-radius: 10px;
+    background: ${({ $selected }) => 
+        $selected 
+            ? 'linear-gradient(135deg, #a569a7, #8b5a8c)' 
+            : 'rgba(255, 255, 255, 0.1)'
+    };
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+    min-height: 50px;
+    
+    &:hover {
+        border-color: ${({ $selected }) => 
+            $selected ? '#936394' : 'rgba(255, 255, 255, 0.4)'
+        };
+        background: ${({ $selected }) => 
+            $selected 
+                ? 'linear-gradient(135deg, #936394, #7d527e)' 
+                : 'rgba(255, 255, 255, 0.15)'
+        };
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+`;
+
+const DateDay = styled.div`
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1;
+`;
+
+const DateMonth = styled.div`
+    font-size: 0.7rem;
+    font-weight: 500;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+`;
+
+// Improved cancellation list styled components
+const CancellationGroup = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+`;
+
+const CancellationRangeItem = styled.div`
+    background: linear-gradient(145deg, rgba(139, 90, 140, 0.2), rgba(107, 43, 107, 0.15));
+    border: 2px solid rgba(165, 105, 167, 0.3);
+    padding: 16px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    margin-bottom: 8px;
+
+    &:hover {
+        transform: translateY(-1px);
+        border-color: rgba(165, 105, 167, 0.4);
+        box-shadow: 0 6px 20px rgba(139, 90, 140, 0.2);
+    }
+`;
+
+const CancellationRangeInfo = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    
+    svg {
+        color: #a569a7;
+        flex-shrink: 0;
+    }
+`;
+
+const CancellationRangeText = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+`;
+
+const CancellationRangeDates = styled.div`
+    font-family: 'Poppins', sans-serif;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+`;
+
+const CancellationRangeCount = styled.div`
+    font-family: 'Poppins', sans-serif;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8rem;
+    font-weight: 500;
+    font-style: italic;
+`;
+
+const CancellationRangeActions = styled.div`
+    display: flex;
+    gap: 8px;
+`;
+
+// Individual cancellation date styling is defined above

@@ -2,7 +2,12 @@ class InvoicesController < ApplicationController
   before_action :current_user
 
   def create
-    pet = @current_user.pets.find_by(id: params[:pet_id])
+    pet = @current_user.pets.find_by(id: invoice_params[:pet_id])
+    
+    unless pet
+      render json: { errors: ['Pet not found'] }, status: :not_found
+      return
+    end
 
     invoice = pet.invoices.build(invoice_params)
 

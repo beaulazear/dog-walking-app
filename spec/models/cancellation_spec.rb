@@ -38,7 +38,7 @@ RSpec.describe Cancellation, type: :model do
     it 'validates uniqueness of date scoped to appointment_id' do
       create_cancellation(appointment, date: Date.current + 3.days)
       duplicate_cancellation = Cancellation.new(valid_attributes.merge(date: Date.current + 3.days))
-      
+
       expect(duplicate_cancellation).to_not be_valid
       expect(duplicate_cancellation.errors[:date]).to include('already selected for cancellation')
     end
@@ -46,12 +46,12 @@ RSpec.describe Cancellation, type: :model do
     it 'allows same date for different appointments' do
       another_appointment = create_appointment(user, pet)
       create_cancellation(appointment, date: Date.current + 3.days)
-      
+
       another_cancellation = Cancellation.new(
         appointment: another_appointment,
         date: Date.current + 3.days
       )
-      
+
       expect(another_cancellation).to be_valid
     end
   end

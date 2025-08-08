@@ -1,16 +1,14 @@
 class CancellationsController < ApplicationController
   before_action :current_user
-  
+
   def create
     # Find appointment and ensure it belongs to current user
     appointment = @current_user.appointments.find_by(id: cancellation_params[:appointment_id])
-    
-    if appointment.nil?
-      return render json: { error: 'Appointment not found or unauthorized' }, status: :not_found
-    end
-    
+
+    return render json: { error: 'Appointment not found or unauthorized' }, status: :not_found if appointment.nil?
+
     cancellation = appointment.cancellations.build(cancellation_params)
-    
+
     if cancellation.save
       render json: cancellation.as_json(only: %i[id appointment_id date]), status: :created
     else

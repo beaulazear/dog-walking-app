@@ -17,7 +17,7 @@ RSpec.describe 'User Model' do
     expect(user.username).to eq('testuser')
     expect(user.name).to eq('Test User')
   end
-  
+
   it 'validates username presence' do
     user = User.new(
       password: 'password123',

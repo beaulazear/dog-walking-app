@@ -115,6 +115,7 @@ const WalkCard = ({ appointment }) => {
         hasCancelledInvoiceForToday(appointment, user?.invoices)
     );
     const [showCompletionModal, setShowCompletionModal] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
     const [showPetModal, setShowPetModal] = useState(false);
 
     const handleCompleteWalk = async (offset = 0) => {
@@ -149,10 +150,7 @@ const WalkCard = ({ appointment }) => {
         }
     };
 
-    const handleCancelWalk = async () => {
-        const cancellationFee = prompt("Enter a cancellation fee (or leave blank for $0):", "0");
-        if (cancellationFee === null) return;
-
+    const handleCancelWalk = async (cancellationFee = 0) => {
         const response = await fetch("/invoices", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -173,18 +171,22 @@ const WalkCard = ({ appointment }) => {
                 ...prevUser,
                 invoices: [...prevUser.invoices, newInvoice]
             }));
-            setIsCancelled(true)
+            setIsCancelled(true);
+            setShowCancelModal(false);
         }
     };
 
     return (
         <Card $completed={isCompleted} $cancelled={isCancelled}>
-            <PetImageContainer onClick={() => setShowPetModal(true)}>
+            <PetImageContainer onClick={() => setShowPetModal(true)} title="Click to view pet details">
                 <PetImage
                     src={appointment.pet?.profile_pic || dogPlaceholder}
                     onError={(e) => (e.target.src = dogPlaceholder)}
                     alt={appointment.pet?.name}
                 />
+                <ClickHint>
+                    <Info size={12} />
+                </ClickHint>
             </PetImageContainer>
             
             <WalkDetails>
@@ -211,7 +213,7 @@ const WalkCard = ({ appointment }) => {
                         <CheckCircle size={16} />
                         Complete
                     </CompleteButton>
-                    <CancelButton onClick={handleCancelWalk}>
+                    <CancelButton onClick={() => setShowCancelModal(true)}>
                         <X size={16} />
                         Cancel
                     </CancelButton>
@@ -224,6 +226,14 @@ const WalkCard = ({ appointment }) => {
                     user={user}
                     onComplete={handleCompleteWalk}
                     onClose={() => setShowCompletionModal(false)}
+                />
+            )}
+
+            {showCancelModal && (
+                <CancelModal 
+                    appointment={appointment}
+                    onCancel={handleCancelWalk}
+                    onClose={() => setShowCancelModal(false)}
                 />
             )}
 
@@ -382,8 +392,104 @@ const CompletionModal = ({ appointment, user, onComplete, onClose }) => {
     return ReactDOM.createPortal(modalContent, document.body);
 };
 
+// Cancel Modal Component
+const CancelModal = ({ appointment, onCancel, onClose }) => {
+    const [cancellationFee, setCancellationFee] = useState(0);
+
+    const handleSubmit = () => {
+        onCancel(cancellationFee);
+    };
+
+    const handleOverlayClick = (e) => {
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
+    React.useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.body.style.overflow = 'unset';
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [onClose]);
+
+    const modalContent = (
+        <CancelModalOverlay onClick={handleOverlayClick}>
+            <CancelModalContainer>
+                <CancelModalHeader>
+                    <CancelModalTitle>
+                        <X size={24} />
+                        Cancel Walk
+                    </CancelModalTitle>
+                    <CancelModalCloseButton onClick={onClose}>
+                        <X size={18} />
+                    </CancelModalCloseButton>
+                </CancelModalHeader>
+                
+                <CancelModalContent>
+                    <WalkSummary>
+                        <PetInfo>
+                            <PetAvatar
+                                src={appointment.pet?.profile_pic || dogPlaceholder}
+                                onError={(e) => (e.target.src = dogPlaceholder)}
+                                alt={appointment.pet?.name}
+                            />
+                            <div>
+                                <PetNameText>{appointment.pet?.name}</PetNameText>
+                                <WalkInfoText>
+                                    {appointment.duration} min • {appointment.solo ? 'Solo' : 'Group'} walk
+                                </WalkInfoText>
+                            </div>
+                        </PetInfo>
+                    </WalkSummary>
+
+                    <CancellationSection>
+                        <SectionTitle>Cancellation Fee (Optional)</SectionTitle>
+                        
+                        <FeeInput>
+                            <DollarSign size={16} />
+                            <input
+                                type="number"
+                                value={cancellationFee}
+                                onChange={(e) => setCancellationFee(parseFloat(e.target.value) || 0)}
+                                placeholder="0.00"
+                                step="0.01"
+                                min="0"
+                            />
+                        </FeeInput>
+
+                        <FeeNote>
+                            Enter any cancellation fee to charge for this cancelled walk. Leave as $0 for no charge.
+                        </FeeNote>
+                    </CancellationSection>
+
+                    <ModalButtonGroup>
+                        <CancelWalkButton onClick={handleSubmit}>
+                            <X size={16} />
+                            Cancel Walk
+                        </CancelWalkButton>
+                        <CancelModalButton onClick={onClose}>
+                            Keep Walk
+                        </CancelModalButton>
+                    </ModalButtonGroup>
+                </CancelModalContent>
+            </CancelModalContainer>
+        </CancelModalOverlay>
+    );
+
+    return ReactDOM.createPortal(modalContent, document.body);
+};
+
 // Pet Details Modal Component
 const PetDetailsModal = ({ pet, onClose }) => {
+
     const handleOverlayClick = (e) => {
         if (e.target === e.currentTarget) {
             onClose();
@@ -439,7 +545,7 @@ const PetDetailsModal = ({ pet, onClose }) => {
                         />
                         <PetNameContainer>
                             <PetModalName>{pet?.name || 'Unknown'}</PetModalName>
-                            <PetBreed>{pet?.breed || 'Mixed Breed'}</PetBreed>
+                            <PetBreed>Beloved Pet</PetBreed>
                         </PetNameContainer>
                     </PetMainInfo>
 
@@ -466,69 +572,43 @@ const PetDetailsModal = ({ pet, onClose }) => {
 
                         <PetDetailItem>
                             <DetailIcon>
-                                <Dog size={18} />
+                                <MapPin size={18} />
                             </DetailIcon>
                             <DetailContent>
-                                <DetailLabel>Size</DetailLabel>
-                                <DetailValue>{pet?.size || 'Not specified'}</DetailValue>
+                                <DetailLabel>Address</DetailLabel>
+                                <DetailValue>{pet?.address || 'Not specified'}</DetailValue>
                             </DetailContent>
                         </PetDetailItem>
 
-                        {pet?.owner && (
-                            <>
-                                <PetDetailItem>
-                                    <DetailIcon>
-                                        <Users size={18} />
-                                    </DetailIcon>
-                                    <DetailContent>
-                                        <DetailLabel>Owner</DetailLabel>
-                                        <DetailValue>{pet.owner.name || 'Not specified'}</DetailValue>
-                                    </DetailContent>
-                                </PetDetailItem>
-
-                                {pet.owner.email && (
-                                    <PetDetailItem>
-                                        <DetailIcon>
-                                            <Mail size={18} />
-                                        </DetailIcon>
-                                        <DetailContent>
-                                            <DetailLabel>Email</DetailLabel>
-                                            <DetailValue>{pet.owner.email}</DetailValue>
-                                        </DetailContent>
-                                    </PetDetailItem>
-                                )}
-
-                                {pet.owner.phone && (
-                                    <PetDetailItem>
-                                        <DetailIcon>
-                                            <Phone size={18} />
-                                        </DetailIcon>
-                                        <DetailContent>
-                                            <DetailLabel>Phone</DetailLabel>
-                                            <DetailValue>{pet.owner.phone}</DetailValue>
-                                        </DetailContent>
-                                    </PetDetailItem>
-                                )}
-
-                                {pet.owner.address && (
-                                    <PetDetailItem>
-                                        <DetailIcon>
-                                            <MapPin size={18} />
-                                        </DetailIcon>
-                                        <DetailContent>
-                                            <DetailLabel>Address</DetailLabel>
-                                            <DetailValue>{pet.owner.address}</DetailValue>
-                                        </DetailContent>
-                                    </PetDetailItem>
-                                )}
-                            </>
-                        )}
+                        <PetDetailItem>
+                            <DetailIcon>
+                                <Heart size={18} />
+                            </DetailIcon>
+                            <DetailContent>
+                                <DetailLabel>Spayed/Neutered</DetailLabel>
+                                <DetailValue>{pet?.spayed_neutered ? 'Yes' : 'No'}</DetailValue>
+                            </DetailContent>
+                        </PetDetailItem>
                     </PetDetailsGrid>
 
-                    {pet?.notes && (
+                    {pet?.allergies && pet.allergies.trim() && pet.allergies.toLowerCase() !== 'none' && (
                         <NotesSection>
-                            <NotesTitle>Additional Notes</NotesTitle>
-                            <NotesText>{pet.notes}</NotesText>
+                            <NotesTitle>🚫 Allergies</NotesTitle>
+                            <NotesText>{pet.allergies}</NotesText>
+                        </NotesSection>
+                    )}
+
+                    {pet?.behavioral_notes && pet.behavioral_notes.trim() && (
+                        <NotesSection>
+                            <NotesTitle>🐕 Behavioral Notes</NotesTitle>
+                            <NotesText>{pet.behavioral_notes}</NotesText>
+                        </NotesSection>
+                    )}
+
+                    {pet?.supplies_location && pet.supplies_location.trim() && (
+                        <NotesSection>
+                            <NotesTitle>🎒 Supplies Location</NotesTitle>
+                            <NotesText>{pet.supplies_location}</NotesText>
                         </NotesSection>
                     )}
                 </PetModalContent>
@@ -756,11 +836,56 @@ const PetImageContainer = styled.div`
     border: 2px solid rgba(255, 255, 255, 0.3);
     cursor: pointer;
     transition: all 0.3s ease;
+    position: relative;
     
     &:hover {
         background: rgba(255, 255, 255, 0.3);
         border-color: rgba(255, 255, 255, 0.5);
         transform: scale(1.05);
+    }
+`;
+
+const ClickHint = styled.div`
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    background: rgba(74, 26, 74, 0.9);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.8);
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    
+    ${PetImageContainer}:hover & {
+        opacity: 1;
+        color: #ffffff;
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: scale(1.1);
+    }
+    
+    @media (max-width: 768px) {
+        width: 18px;
+        height: 18px;
+        
+        svg {
+            width: 10px;
+            height: 10px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        width: 16px;
+        height: 16px;
+        
+        svg {
+            width: 8px;
+            height: 8px;
+        }
     }
 `;
 
@@ -1256,6 +1381,169 @@ const CancelModalButton = styled.button`
     }
 `;
 
+// Cancel Modal Styled Components
+const CancelModalOverlay = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10002;
+    padding: 20px;
+`;
+
+const CancelModalContainer = styled.div`
+    background: linear-gradient(145deg, rgba(74, 26, 74, 0.95), rgba(107, 43, 107, 0.9));
+    border-radius: 24px;
+    border: 2px solid rgba(139, 90, 140, 0.5);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 450px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+`;
+
+const CancelModalHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 24px 0;
+    margin-bottom: 20px;
+`;
+
+const CancelModalTitle = styled.h2`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ff6b6b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+`;
+
+const CancelModalCloseButton = styled.button`
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
+    
+    &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        transform: scale(1.1);
+    }
+`;
+
+const CancelModalContent = styled.div`
+    padding: 0 24px 24px;
+`;
+
+const CancellationSection = styled.div`
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+`;
+
+const FeeInput = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+    
+    &:focus-within {
+        border-color: #ff6b6b;
+        background: rgba(255, 255, 255, 0.15);
+    }
+    
+    svg {
+        color: rgba(255, 255, 255, 0.7);
+        flex-shrink: 0;
+    }
+    
+    input {
+        background: none;
+        border: none;
+        outline: none;
+        color: #ffffff;
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 600;
+        flex: 1;
+        text-align: right;
+        
+        &::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        &[type=number] {
+            -moz-appearance: textfield;
+        }
+    }
+`;
+
+const FeeNote = styled.p`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+    line-height: 1.4;
+    font-style: italic;
+`;
+
+const CancelWalkButton = styled.button`
+    flex: 1;
+    background: linear-gradient(135deg, #ff6b6b, #e55555);
+    border: none;
+    border-radius: 14px;
+    padding: 16px 24px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 6px 24px rgba(255, 107, 107, 0.3);
+    
+    &:hover {
+        background: linear-gradient(135deg, #e55555, #d94444);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(255, 107, 107, 0.4);
+    }
+`;
+
 // Pet Details Modal Styled Components
 const PetModalOverlay = styled.div`
     position: fixed;
@@ -1434,6 +1722,11 @@ const NotesSection = styled.div`
     border-radius: 16px;
     padding: 20px;
     border: 1px solid rgba(255, 255, 255, 0.12);
+    margin-bottom: 16px;
+    
+    &:last-child {
+        margin-bottom: 0;
+    }
 `;
 
 const NotesTitle = styled.h4`

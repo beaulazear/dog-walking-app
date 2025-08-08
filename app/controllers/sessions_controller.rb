@@ -69,6 +69,14 @@ class SessionsController < ApplicationController
           pet: {
             id: appointment.pet.id,
             name: appointment.pet.name,
+            birthdate: appointment.pet.birthdate,
+            sex: appointment.pet.sex,
+            spayed_neutered: appointment.pet.spayed_neutered,
+            address: appointment.pet.address,
+            behavioral_notes: appointment.pet.behavioral_notes,
+            supplies_location: appointment.pet.supplies_location,
+            allergies: appointment.pet.allergies,
+            active: appointment.pet.active,
             profile_pic: if appointment.pet.profile_pic.attached?
                            Rails.application.routes.url_helpers.rails_blob_url(
                              appointment.pet.profile_pic, only_path: true

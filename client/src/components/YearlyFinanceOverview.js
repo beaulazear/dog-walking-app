@@ -6,7 +6,6 @@ import {
     TrendingUp, 
     DollarSign, 
     Calendar, 
-    Calculator,
     PiggyBank,
     Receipt
 } from "lucide-react";
@@ -89,21 +88,23 @@ export default function YearlyFinanceOverview() {
                         <StatValue>${taxEstimate.toLocaleString()}</StatValue>
                     </StatContent>
                 </StatCard>
-            </StatsGrid>
 
-            <TaxSelector>
-                <TaxLabel>
-                    <PiggyBank size={18} />
-                    Tax Rate
-                </TaxLabel>
-                <TaxSelectWrapper>
-                    <Select onChange={handleTaxChange} value={taxPercentage}>
-                        <option value={15}>15%</option>
-                        <option value={20}>20%</option>
-                        <option value={25}>25%</option>
-                    </Select>
-                </TaxSelectWrapper>
-            </TaxSelector>
+                <StatCard>
+                    <StatIcon>
+                        <PiggyBank size={20} />
+                    </StatIcon>
+                    <StatContent>
+                        <StatLabel>Tax Rate</StatLabel>
+                        <TaxSelectWrapper>
+                            <CompactSelect onChange={handleTaxChange} value={taxPercentage}>
+                                <option value={15}>15%</option>
+                                <option value={20}>20%</option>
+                                <option value={25}>25%</option>
+                            </CompactSelect>
+                        </TaxSelectWrapper>
+                    </StatContent>
+                </StatCard>
+            </StatsGrid>
         </Container>
     );
 }
@@ -247,54 +248,24 @@ const StatValue = styled.div`
     }
 `;
 
-const TaxSelector = styled.div`
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    
-    /* Mobile-first: stack vertically with smaller padding */
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: stretch;
-    
-    /* Larger screens: horizontal layout with more padding */
-    @media (min-width: 481px) {
-        padding: 16px;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-    }
-`;
-
-const TaxLabel = styled.label`
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-`;
-
 const TaxSelectWrapper = styled.div`
     position: relative;
 `;
 
-const Select = styled.select`
+const CompactSelect = styled.select`
     background: rgba(255, 255, 255, 0.1);
     border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
-    padding: 10px 16px;
+    padding: 8px 12px;
     font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    font-weight: 500;
+    font-size: 1.1rem;
+    font-weight: 700;
     color: #ffffff;
     cursor: pointer;
     transition: all 0.3s ease;
     min-width: 80px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    margin-top: 4px;
     
     &:focus {
         outline: none;
@@ -311,5 +282,9 @@ const Select = styled.select`
         background: #4a1a4a;
         color: #ffffff;
         padding: 8px;
+    }
+    
+    @media (min-width: 769px) {
+        font-size: 1.2rem;
     }
 `;

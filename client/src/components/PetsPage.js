@@ -35,19 +35,19 @@ dayjs.extend(isSameOrAfter);
 const getAnimalIcon = (name) => {
     const lowerName = name.toLowerCase();
     if (lowerName.includes('cat') || lowerName.includes('kitty') || lowerName.includes('felix') || lowerName.includes('whiskers')) {
-        return <Cat size={48} />;
+        return <Cat />;
     }
     if (lowerName.includes('bird') || lowerName.includes('tweet') || lowerName.includes('chirp') || lowerName.includes('parrot')) {
-        return <Bird size={48} />;
+        return <Bird />;
     }
     if (lowerName.includes('fish') || lowerName.includes('gold') || lowerName.includes('nemo')) {
-        return <Fish size={48} />;
+        return <Fish />;
     }
     if (lowerName.includes('rabbit') || lowerName.includes('bunny')) {
-        return <Rabbit size={48} />;
+        return <Rabbit />;
     }
     // Default to dog for any other pet
-    return <Dog size={48} />;
+    return <Dog />;
 };
 
 
@@ -55,12 +55,17 @@ export default function PetsPage() {
     const { user } = useContext(UserContext);
     const [selectedPet, setSelectedPet] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'active', 'inactive'
 
-    // Filter pets based on search term only
+    // Filter pets based on search term and activity status
     const filteredPets = user?.pets
-        ?.filter(pet => 
-            pet.name.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+        ?.filter(pet => {
+            const matchesSearch = pet.name.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesFilter = activeFilter === 'all' ? true : 
+                                  activeFilter === 'active' ? pet.active : 
+                                  !pet.active;
+            return matchesSearch && matchesFilter;
+        })
         ?.sort((a, b) => a.name.localeCompare(b.name)) || [];
 
     return (
@@ -97,6 +102,29 @@ export default function PetsPage() {
                         </SearchInputContainer>
                     </SearchContainer>
                     
+                    <FilterTabsContainer>
+                        <FilterTab 
+                            $active={activeFilter === 'all'} 
+                            onClick={() => setActiveFilter('all')}
+                        >
+                            All
+                        </FilterTab>
+                        <FilterTab 
+                            $active={activeFilter === 'active'} 
+                            onClick={() => setActiveFilter('active')}
+                        >
+                            <CheckCircle size={14} />
+                            Active
+                        </FilterTab>
+                        <FilterTab 
+                            $active={activeFilter === 'inactive'} 
+                            onClick={() => setActiveFilter('inactive')}
+                        >
+                            <Pause size={14} />
+                            Inactive
+                        </FilterTab>
+                    </FilterTabsContainer>
+                    
                     {filteredPets?.length === 0 ? (
                         <EmptyState>
                             <EmptyIcon>
@@ -120,23 +148,23 @@ export default function PetsPage() {
                                         <PetName>{pet.name}</PetName>
                                         <PetDetailsContainer>
                                             <PetDetail>
-                                                <MapPin size={16} /> {pet.address?.split(',')[0] || 'No address'}
+                                                <MapPin /> {pet.address?.split(',')[0] || 'No address'}
                                             </PetDetail>
                                         </PetDetailsContainer>
                                     </PetInfo>
                                     <StatusBadge active={pet.active}>
                                         {pet.active ? (
                                             <>
-                                                <CheckCircle size={14} /> Active
+                                                <CheckCircle /> Active
                                             </>
                                         ) : (
                                             <>
-                                                <Pause size={14} /> Inactive
+                                                <Pause /> Inactive
                                             </>
                                         )}
                                     </StatusBadge>
                                     <ArrowIcon>
-                                        <ChevronRight size={24} />
+                                        <ChevronRight />
                                     </ArrowIcon>
                                 </PetListItem>
                             ))}
@@ -178,7 +206,15 @@ const PetDetails = ({ pet, setSelectedPet }) => {
     }, [pet, user]);
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        let processedValue = value;
+        
+        // Handle boolean values for select fields
+        if ((name === 'active' || name === 'spayed_neutered') && typeof value === 'string') {
+            processedValue = value === 'true';
+        }
+        
+        setFormData({ ...formData, [name]: processedValue });
     };
 
     const handleFileChange = (e) => {
@@ -234,6 +270,11 @@ const PetDetails = ({ pet, setSelectedPet }) => {
                 <Select name="sex" value={formData.sex || ""} onChange={handleChange}>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
+                </Select>
+                <Label>Status:</Label>
+                <Select name="active" value={formData.active !== undefined ? formData.active : true} onChange={handleChange}>
+                    <option value={true}>Active</option>
+                    <option value={false}>Inactive</option>
                 </Select>
                 <Label>Spayed/Neutered:</Label>
                 <Select name="spayed_neutered" value={formData.spayed_neutered || false} onChange={handleChange}>
@@ -724,6 +765,92 @@ const SearchInput = styled.input`
     }
 `;
 
+const FilterTabsContainer = styled.div`
+    display: flex;
+    background: rgba(74, 26, 74, 0.6);
+    border-radius: 12px;
+    padding: 4px;
+    margin-top: 16px;
+    border: 1.5px solid rgba(139, 90, 140, 0.3);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+    
+    @media (max-width: 768px) {
+        margin: 12px auto 0 auto;
+        width: 100%;
+        max-width: 400px;
+        align-self: center;
+    }
+    
+    @media (max-width: 480px) {
+        max-width: 320px;
+        margin: 12px auto 0 auto;
+        align-self: center;
+    }
+`;
+
+const FilterTab = styled.button`
+    flex: 1;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    background: ${({ $active }) => 
+        $active ? 'linear-gradient(135deg, #a569a7, #8b5a8c)' : 'transparent'
+    };
+    color: ${({ $active }) => 
+        $active ? '#ffffff' : 'rgba(255, 255, 255, 0.7)'
+    };
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.8rem;
+    font-weight: ${({ $active }) => $active ? '600' : '500'};
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+    min-width: 70px;
+    text-shadow: ${({ $active }) => 
+        $active ? '0 1px 2px rgba(0, 0, 0, 0.3)' : 'none'
+    };
+    
+    svg {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+    }
+    
+    &:hover {
+        background: ${({ $active }) => 
+            $active 
+                ? 'linear-gradient(135deg, #936394, #7d527e)' 
+                : 'rgba(255, 255, 255, 0.1)'
+        };
+        color: ${({ $active }) => 
+            $active ? '#ffffff' : 'rgba(255, 255, 255, 0.9)'
+        };
+    }
+    
+    @media (max-width: 768px) {
+        padding: 10px 12px;
+        font-size: 0.75rem;
+        min-width: 0;
+        
+        svg {
+            width: 12px;
+            height: 12px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        padding: 8px 10px;
+        gap: 4px;
+    }
+`;
 
 const EmptyState = styled.div`
     display: flex;
@@ -795,54 +922,86 @@ const PetsList = styled.div`
 
 const PetListItem = styled.div`
     background: linear-gradient(145deg, rgba(74, 26, 74, 0.9), rgba(107, 43, 107, 0.8));
-    padding: 24px;
-    border-radius: 20px;
-    box-shadow: 0px 6px 30px rgba(0, 0, 0, 0.25), 0px 2px 8px rgba(0, 0, 0, 0.15);
+    padding: 16px 20px;
+    border-radius: 14px;
+    border: 1.5px solid rgba(139, 90, 140, 0.4);
+    backdrop-filter: blur(20px);
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     cursor: pointer;
-    transition: all 0.3s ease;
-    border: 2px solid rgba(139, 90, 140, 0.4);
-    backdrop-filter: blur(15px);
-    min-height: 80px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     gap: 16px;
+    height: 72px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 
     &:hover {
-        transform: translateY(-3px);
-        box-shadow: 0px 12px 40px rgba(0, 0, 0, 0.35), 0px 4px 12px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px);
         border-color: #a569a7;
         background: linear-gradient(145deg, rgba(74, 26, 74, 1), rgba(107, 43, 107, 0.9));
+        box-shadow: 0 8px 25px rgba(139, 90, 140, 0.3);
     }
 
     @media (max-width: 768px) {
-        padding: 20px;
-        min-height: auto;
-        border-radius: 18px;
-        flex-direction: row;
-        align-items: flex-start;
-        gap: 12px;
+        padding: 14px 16px;
+        height: 68px;
+        border-radius: 12px;
+        gap: 14px;
+        
         &:active {
-            transform: scale(0.98);
+            transform: translateY(0) scale(0.98);
         }
+    }
+
+    @media (max-width: 480px) {
+        padding: 12px 14px;
+        height: 64px;
+        border-radius: 10px;
+        gap: 12px;
     }
 `;
 
 const PetIcon = styled.div`
-    margin-right: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 64px;
-    height: 64px;
-    color: #ffffff;
-    background: linear-gradient(135deg, rgba(165, 105, 167, 0.3), rgba(139, 90, 140, 0.2));
-    border-radius: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    width: 44px;
+    height: 44px;
+    color: rgba(255, 255, 255, 0.9);
+    background: linear-gradient(135deg, rgba(165, 105, 167, 0.2), rgba(139, 90, 140, 0.15));
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     flex-shrink: 0;
+    transition: all 0.3s ease;
+
+    svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    ${PetListItem}:hover & {
+        background: linear-gradient(135deg, rgba(165, 105, 167, 0.3), rgba(139, 90, 140, 0.25));
+        border-color: rgba(255, 255, 255, 0.3);
+        color: #ffffff;
+    }
 
     @media (max-width: 768px) {
-        min-width: 56px;
-        height: 56px;
+        width: 40px;
+        height: 40px;
+        
+        svg {
+            width: 18px;
+            height: 18px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        width: 36px;
+        height: 36px;
+        
+        svg {
+            width: 16px;
+            height: 16px;
+        }
     }
 `;
 
@@ -850,89 +1009,114 @@ const PetInfo = styled.div`
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    justify-content: center;
+    gap: 4px;
+    min-width: 0; /* Allows text to truncate */
     align-items: flex-start;
 `;
 
 const PetName = styled.h3`
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
     color: #ffffff;
-    margin: 0 0 4px 0;
-    font-size: 1.4rem;
+    margin: 0;
+    font-size: 1.1rem;
     font-weight: 700;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    text-align: left;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     width: 100%;
+    text-align: left;
     
     @media (max-width: 768px) {
-        font-size: 1.3rem;
-        margin-bottom: 8px;
+        font-size: 1rem;
+    }
+    
+    @media (max-width: 480px) {
+        font-size: 0.95rem;
     }
 `;
 
 const PetDetailsContainer = styled.div`
     display: flex;
-    gap: 16px;
-    margin-top: 0;
-    width: 100%;
-    flex-wrap: wrap;
-
-    @media (max-width: 768px) {
-        flex-direction: column;
-        gap: 6px;
-    }
+    align-items: center;
 `;
 
 const PetDetail = styled.span`
     color: rgba(255, 255, 255, 0.9);
     font-family: 'Poppins', sans-serif;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 500;
     display: flex;
     align-items: center;
-    gap: 6px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    gap: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 
     svg {
         color: rgba(255, 255, 255, 0.8);
         flex-shrink: 0;
+        width: 14px;
+        height: 14px;
     }
     
     @media (max-width: 768px) {
-        font-size: 0.85rem;
+        font-size: 0.75rem;
     }
 `;
 
 const StatusBadge = styled.div.withConfig({
     shouldForwardProp: (prop) => prop !== 'active',
 })`
-    padding: 8px 14px;
-    border-radius: 20px;
+    padding: 4px 8px;
+    border-radius: 12px;
     font-family: 'Poppins', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 600;
-    background: ${props => props.active ? 'rgba(134, 239, 172, 0.8)' : 'rgba(253, 230, 138, 0.8)'};
-    color: ${props => props.active ? '#065f46' : '#92400e'};
-    border: 2px solid ${props => props.active ? 'rgba(134, 239, 172, 0.6)' : 'rgba(253, 230, 138, 0.6)'};
+    font-size: 0.7rem;
+    font-weight: 500;
+    background: ${props => props.active 
+        ? 'rgba(34, 197, 94, 0.15)' 
+        : 'rgba(251, 191, 36, 0.15)'};
+    color: ${props => props.active ? '#22c55e' : '#f59e0b'};
+    border: 1px solid ${props => props.active 
+        ? 'rgba(34, 197, 94, 0.3)' 
+        : 'rgba(251, 191, 36, 0.3)'};
     white-space: nowrap;
     display: flex;
     align-items: center;
     gap: 4px;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(10px);
+
+    svg {
+        width: 12px;
+        height: 12px;
+    }
 
     @media (max-width: 768px) {
-        padding: 10px 16px;
-        font-size: 0.75rem;
+        padding: 3px 6px;
+        font-size: 0.65rem;
+        
+        svg {
+            width: 10px;
+            height: 10px;
+        }
     }
 `;
 
 const ArrowIcon = styled.div`
-    color: rgba(255, 255, 255, 0.7);
-    margin-left: 16px;
-    opacity: 0.6;
+    color: rgba(255, 255, 255, 0.5);
+    margin-left: 8px;
+    opacity: 0.8;
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
+    
+    svg {
+        width: 18px;
+        height: 18px;
+    }
 
     ${PetListItem}:hover & {
         opacity: 1;

@@ -1,7 +1,7 @@
 require 'rails_helper'
 
-RSpec.describe "Users API", type: :request do
-  describe "POST /users (User Registration)" do
+RSpec.describe 'Users API', type: :request do
+  describe 'POST /users (User Registration)' do
     let(:valid_params) do
       {
         username: 'newuser',
@@ -33,7 +33,7 @@ RSpec.describe "Users API", type: :request do
 
       it 'logs the user in after registration' do
         post '/users', params: valid_params
-        
+
         get '/me'
         expect(response).to have_http_status(:ok)
       end
@@ -42,7 +42,7 @@ RSpec.describe "Users API", type: :request do
     context 'with invalid parameters' do
       it 'returns errors for missing username' do
         post '/users', params: valid_params.except(:username)
-        
+
         expect(response).to have_http_status(:unprocessable_entity)
         expect(json_response).to have_key('errors')
         expect(json_response['errors']).to include("Username can't be blank")
@@ -51,28 +51,31 @@ RSpec.describe "Users API", type: :request do
       it 'returns errors for duplicate username' do
         User.create!(valid_params)
         post '/users', params: valid_params
-        
+
         expect(response).to have_http_status(:unprocessable_entity)
         expect(json_response['errors']).to include('Username has already been taken')
       end
 
       it 'returns errors for password mismatch' do
         post '/users', params: valid_params.merge(password_confirmation: 'different')
-        
+
         expect(response).to have_http_status(:unprocessable_entity)
         expect(json_response['errors']).to include("Password confirmation doesn't match Password")
       end
     end
   end
 
-  describe "GET /users (Index)" do
+  describe 'GET /users (Index)' do
     context 'when user is logged in' do
       let!(:user) { create_and_login_user }
-      let!(:other_user) { User.create!(username: 'other', password: 'pass', name: 'Other', email_address: 'other@test.com', thirty: 30, fourty: 40, sixty: 60, solo_rate: 35) }
+      let!(:other_user) do
+        User.create!(username: 'other', password: 'pass', name: 'Other', email_address: 'other@test.com', thirty: 30,
+                     fourty: 40, sixty: 60, solo_rate: 35)
+      end
 
       it 'returns all users' do
         get '/users'
-        
+
         expect(response).to have_http_status(:ok)
         expect(json_response).to be_an(Array)
         expect(json_response.length).to be >= 2
@@ -82,13 +85,13 @@ RSpec.describe "Users API", type: :request do
     context 'when user is not logged in' do
       it 'returns unauthorized' do
         get '/users'
-        
+
         expect(response).to have_http_status(:unauthorized)
       end
     end
   end
 
-  describe "GET /me (Show Current User)" do
+  describe 'GET /me (Show Current User)' do
     context 'when user is logged in' do
       let!(:user) { create_and_login_user }
       let!(:pet) { create_test_pet(user) }
@@ -96,7 +99,7 @@ RSpec.describe "Users API", type: :request do
 
       it 'returns current user with associated data' do
         get '/me'
-        
+
         expect(response).to have_http_status(:ok)
         expect(json_response).to include(
           'id' => user.id,
@@ -112,13 +115,13 @@ RSpec.describe "Users API", type: :request do
     context 'when user is not logged in' do
       it 'returns unauthorized' do
         get '/me'
-        
+
         expect(response).to have_http_status(:unauthorized)
       end
     end
   end
 
-  describe "PATCH /change_rates" do
+  describe 'PATCH /change_rates' do
     context 'when user is logged in' do
       let!(:user) { create_and_login_user }
 
@@ -129,7 +132,7 @@ RSpec.describe "Users API", type: :request do
           sixty: 65,
           solo_rate: 40
         }
-        
+
         expect(response).to have_http_status(:ok)
         expect(json_response).to include(
           'thirty' => 35,
@@ -144,7 +147,7 @@ RSpec.describe "Users API", type: :request do
           thirty: 'invalid',
           fourty: 45
         }
-        
+
         expect(response).to have_http_status(:unprocessable_entity)
         expect(json_response).to have_key('errors')
       end
@@ -153,7 +156,7 @@ RSpec.describe "Users API", type: :request do
     context 'when user is not logged in' do
       it 'returns unauthorized' do
         patch '/change_rates', params: { thirty: 35 }
-        
+
         expect(response).to have_http_status(:unauthorized)
       end
     end

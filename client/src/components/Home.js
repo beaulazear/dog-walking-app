@@ -5,8 +5,7 @@ import {
     Calendar, 
     DollarSign, 
     Users, 
-    Clock,
-    Sparkles
+    Clock
 } from "lucide-react";
 
 export default function Home() {
@@ -17,7 +16,6 @@ export default function Home() {
                     <Title>
                         <Heart size={40} />
                         Pocket Walks
-                        <Sparkles size={32} />
                     </Title>
                     <SubTitle>
                         Manage your pet care appointments, invoices, and more in one beautiful place.
