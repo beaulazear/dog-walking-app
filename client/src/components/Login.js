@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import styled, { keyframes } from "styled-components";
 import { Link } from "react-router-dom";
 import { UserContext } from "../context/user.js";
-import dogImage from "../assets/dog.png"; // Make sure the path to your image is correct
+import { LogIn, User, Lock, Eye, EyeOff, Shield } from "lucide-react";
 
 const Login = () => {
     const { setUser } = useContext(UserContext);
@@ -10,6 +10,8 @@ const Login = () => {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [showPassword, setShowPassword] = useState(false);
+    const [focusedField, setFocusedField] = useState(null);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -34,38 +36,94 @@ const Login = () => {
 
     return (
         <LoginWrapper>
-            <DogContainer>
-                <DogImage src={dogImage} alt="Pocket Walks Mascot" />
-                <GreetingText>Welcome Back!</GreetingText>
-            </DogContainer>
+            <FloatingPaws delay="0s" startX="10%" />
+            <FloatingPaws delay="2s" startX="30%" />
+            <FloatingPaws delay="4s" startX="50%" />
+            <FloatingPaws delay="6s" startX="70%" />
+            <FloatingPaws delay="8s" startX="90%" />
+            <FloatingPaws delay="1s" startX="20%" />
+            <FloatingPaws delay="3s" startX="40%" />
+            <FloatingPaws delay="5s" startX="60%" />
+            <FloatingPaws delay="7s" startX="80%" />
+            
+            <ContentContainer>
+                <HeaderContainer>
+                    <IconWrapper>
+                        <Shield size={40} strokeWidth={1.5} />
+                    </IconWrapper>
+                    <WelcomeText>
+                        Welcome Back
+                    </WelcomeText>
+                </HeaderContainer>
 
-            <LoginBox>
-                <Title>Login to your account</Title>
-                <Form onSubmit={handleSubmit}>
-                    <Input
-                        type="text"
-                        placeholder="Username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                    />
-                    <Input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                    {error && <ErrorMessage>{error}</ErrorMessage>}
-                    <LoginButton type="submit" disabled={loading}>
-                        {loading ? "Logging in..." : "Login"}
-                    </LoginButton>
-                </Form>
-                <Divider />
-                <SignupPrompt>
-                    Don't have an account? <SignupLink to="/signup">Sign Up</SignupLink>
-                </SignupPrompt>
-            </LoginBox>
+                <LoginBox>
+                    <Form onSubmit={handleSubmit}>
+                        <InputGroup>
+                            <InputWrapper focused={focusedField === 'username'}>
+                                <InputIcon>
+                                    <User size={18} />
+                                </InputIcon>
+                                <Input
+                                    type="text"
+                                    placeholder="Username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    onFocus={() => setFocusedField('username')}
+                                    onBlur={() => setFocusedField(null)}
+                                    required
+                                />
+                            </InputWrapper>
+                        </InputGroup>
+                        
+                        <InputGroup>
+                            <InputWrapper focused={focusedField === 'password'}>
+                                <InputIcon>
+                                    <Lock size={18} />
+                                </InputIcon>
+                                <Input
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    onFocus={() => setFocusedField('password')}
+                                    onBlur={() => setFocusedField(null)}
+                                    required
+                                />
+                                <TogglePassword onClick={() => setShowPassword(!showPassword)} type="button">
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </TogglePassword>
+                            </InputWrapper>
+                        </InputGroup>
+                        
+                        {error && (
+                            <ErrorMessage>
+                                <span>⚠️</span> {error}
+                            </ErrorMessage>
+                        )}
+                        
+                        <LoginButton type="submit" disabled={loading}>
+                            {loading ? (
+                                <>
+                                    <LoadingSpinner />
+                                    <span>Logging in...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <LogIn size={18} />
+                                    <span>Login</span>
+                                </>
+                            )}
+                        </LoginButton>
+                    </Form>
+                    
+                    <SignupPrompt>
+                        <SignupLink to="/signup">
+                            Sign Up
+                            <span>→</span>
+                        </SignupLink>
+                    </SignupPrompt>
+                </LoginBox>
+            </ContentContainer>
         </LoginWrapper>
     );
 };
@@ -73,130 +131,442 @@ const Login = () => {
 export default Login;
 
 const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { 
+    opacity: 0; 
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0);
+  }
+`;
+
+const float = keyframes`
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-10px) rotate(-5deg); }
+  75% { transform: translateY(5px) rotate(5deg); }
+`;
+
+const pulse = keyframes`
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+`;
+
+const spin = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
+
+const pawFloat = keyframes`
+  0% {
+    transform: translateY(100vh) rotate(0deg) scale(0.8);
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.2;
+    transform: translateY(50vh) rotate(180deg) scale(1);
+  }
+  95% {
+    opacity: 0.15;
+  }
+  100% {
+    transform: translateY(-50px) rotate(360deg) scale(0.8);
+    opacity: 0;
+  }
 `;
 
 const LoginWrapper = styled.div`
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 20px;
-    height: 100vh;
-    background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+            radial-gradient(circle at 20% 20%, rgba(255,255,255,0.05) 2px, transparent 2px),
+            radial-gradient(circle at 80% 40%, rgba(255,255,255,0.03) 1.5px, transparent 1.5px),
+            radial-gradient(circle at 40% 60%, rgba(255,255,255,0.04) 1px, transparent 1px),
+            radial-gradient(circle at 70% 80%, rgba(255,255,255,0.06) 2.5px, transparent 2.5px),
+            radial-gradient(circle at 15% 70%, rgba(255,255,255,0.02) 1px, transparent 1px),
+            radial-gradient(circle at 90% 15%, rgba(255,255,255,0.04) 1.5px, transparent 1.5px);
+        background-size: 80px 80px, 60px 60px, 40px 40px, 100px 100px, 30px 30px, 70px 70px;
+        animation: ${float} 30s linear infinite;
+        pointer-events: none;
+    }
 `;
 
-const DogContainer = styled.div`
+const FloatingPaws = styled.div`
+    position: absolute;
+    font-size: 1.5rem;
+    animation: ${pawFloat} 20s linear infinite;
+    animation-delay: ${props => props.delay || '0s'};
+    pointer-events: none;
+    opacity: 0.15;
+    left: ${props => props.startX || '0%'};
+    
+    &::before {
+        content: '🐾';
+        filter: grayscale(20%) brightness(1.2);
+    }
+`;
+
+const ContentContainer = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 2rem;
+    z-index: 1;
+    animation: ${fadeIn} 0.8s ease-out;
+    padding-top: 4rem;
+`;
+
+const HeaderContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0;
+`;
+
+const IconWrapper = styled.div`
+    display: flex;
+    align-items: center;
     justify-content: center;
-    margin-bottom: 20px;
-    animation: ${fadeIn} 1s ease-in-out;
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    color: #ffffff;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    
+    &:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+    }
 `;
 
-const DogImage = styled.img`
-    width: 150px;
-    height: auto;
-    animation: ${fadeIn} 1s ease-in-out;
-`;
-
-const GreetingText = styled.h1`
-    font-size: 22px;
-    color: white;
-    font-weight: bold;
-    margin-top: 10px;
+const WelcomeText = styled.h1`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0;
     text-align: center;
-    animation: ${fadeIn} 1s ease-in-out;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    letter-spacing: -0.5px;
 `;
 
 const LoginBox = styled.div`
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
-    width: 90%;
-    max-width: 400px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+`;
+
+const FormHeader = styled.div`
     text-align: center;
+    margin-bottom: 1rem;
 `;
 
 const Title = styled.h2`
-    font-size: 24px;
-    font-weight: 600;
-    color: #ffffff;
-    margin-bottom: 20px;
-    margin-top: 5px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0 0 0.5rem 0;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+`;
+
+const Subtitle = styled.p`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    color: #4a5568;
+    margin: 0;
+    font-weight: 500;
 `;
 
 const Form = styled.form`
     display: flex;
     flex-direction: column;
+    gap: 1.5rem;
+`;
+
+const InputGroup = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    position: relative;
+`;
+
+const InputLabel = styled.label`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: ${props => props.focused ? '#2d3748' : '#1a202c'};
+    transition: all 0.2s ease;
+    margin-left: 0.25rem;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+`;
+
+const InputWrapper = styled.div`
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 2px solid ${props => props.focused ? '#4c51bf' : '#cbd5e0'};
+    border-radius: 16px;
+    box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    &:hover {
+        transform: translateY(-1px);
+        box-shadow: 
+            0 8px 20px rgba(0, 0, 0, 0.2),
+            0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+        border-color: ${props => props.focused ? '#4c51bf' : '#a0aec0'};
+    }
+    
+    &:focus-within {
+        border-color: #4c51bf;
+        box-shadow: 
+            0 8px 20px rgba(0, 0, 0, 0.2),
+            0 0 0 3px rgba(76, 81, 191, 0.1),
+            0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+    }
+`;
+
+const InputIcon = styled.div`
+    position: absolute;
+    left: 1rem;
+    color: #4a5568;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 1;
 `;
 
 const Input = styled.input`
-    width: 92%;
-    padding: 12px;
-    margin-bottom: 12px;
+    width: 100%;
+    padding: 0.875rem 3rem;
     border: none;
-    border-radius: 6px;
-    font-size: 16px;
-    background: rgba(255, 255, 255, 0.3);
-    color: #fff;
+    background: transparent;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #1a202c;
     outline: none;
-    transition: 0.3s ease-in-out;
+    
+    &::placeholder {
+        color: #718096;
+        opacity: 1;
+    }
+`;
 
+const TogglePassword = styled.button`
+    position: absolute;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: #4a5568;
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    
+    &:hover {
+        color: #1a202c;
+        background-color: rgba(0, 0, 0, 0.05);
+        transform: scale(1.05);
+    }
+    
     &:focus {
-        background: rgba(255, 255, 255, 0.5);
+        outline: 2px solid #4c51bf;
+        outline-offset: 2px;
+    }
+    
+    &:active {
+        transform: scale(0.95);
     }
 `;
 
 const LoginButton = styled.button`
-    background: #ff758c;
+    background: linear-gradient(135deg, #4c51bf 0%, #553c9a 100%);
     color: white;
-    padding: 12px;
-    font-size: 16px;
+    padding: 1rem 2rem;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
     border: none;
-    border-radius: 6px;
+    border-radius: 12px;
     cursor: pointer;
-    font-weight: bold;
-    transition: background 0.3s ease-in-out;
-
-    &:hover {
-        background: #ff5864;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    box-shadow: 0 6px 20px rgba(76, 81, 191, 0.3);
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s ease;
     }
-
+    
+    &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #553c9a 0%, #44337a 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 10px 30px rgba(76, 81, 191, 0.4);
+        
+        &::before {
+            left: 100%;
+        }
+    }
+    
+    &:focus {
+        outline: 3px solid rgba(76, 81, 191, 0.5);
+        outline-offset: 2px;
+    }
+    
+    &:active:not(:disabled) {
+        transform: translateY(0) scale(0.98);
+    }
+    
     &:disabled {
-        background: #aaa;
+        background: #a0aec0;
         cursor: not-allowed;
+        box-shadow: none;
+        opacity: 0.6;
     }
 `;
 
-const ErrorMessage = styled.p`
-    color: #ffdddd;
-    font-size: 14px;
-    margin-bottom: 12px;
+const LoadingSpinner = styled.div`
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: ${spin} 0.8s linear infinite;
 `;
 
-const Divider = styled.hr`
-    margin: 20px 0;
-    border: none;
+const ErrorMessage = styled.div`
+    background: #fed7d7;
+    color: #742a2a;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    border: 2px solid #fc8181;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    animation: ${fadeIn} 0.3s ease;
+    
+    span {
+        font-size: 1rem;
+        font-weight: 700;
+    }
+`;
+
+const Divider = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.5rem 0;
+`;
+
+const DividerLine = styled.div`
+    flex: 1;
     height: 1px;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.4);
 `;
 
-const SignupPrompt = styled.p`
-    color: white;
-    font-size: 14px;
+const DividerText = styled.span`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    color: #ffffff;
+    font-weight: 600;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+`;
+
+const SignupPrompt = styled.div`
+    font-family: 'Poppins', sans-serif;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 500;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: center;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 `;
 
 const SignupLink = styled(Link)`
-    color: #fff;
-    font-weight: bold;
-    text-decoration: none;
-
+    color: #ffffff;
+    font-weight: 700;
+    text-decoration: underline;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: all 0.2s ease;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.1);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    
+    span {
+        transition: transform 0.2s ease;
+    }
+    
     &:hover {
-        text-decoration: underline;
+        background-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-1px);
+        
+        span {
+            transform: translateX(4px);
+        }
+    }
+    
+    &:focus {
+        outline: 2px solid #ffffff;
+        outline-offset: 2px;
     }
 `;

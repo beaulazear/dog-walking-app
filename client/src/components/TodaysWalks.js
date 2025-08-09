@@ -619,11 +619,8 @@ const PetDetailsModal = ({ pet, onClose }) => {
     return ReactDOM.createPortal(modalContent, document.body);
 };
 
-// Main container with matching gradient background
 const Container = styled.div`
-    background: linear-gradient(135deg, #ff6b9d, #c44569, #f8a5c2, #fdcb6e);
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     padding: 40px 20px;
     padding-top: 120px;
@@ -631,11 +628,25 @@ const Container = styled.div`
     flex-direction: column;
     align-items: center;
     text-align: center;
+    position: relative;
+    overflow: hidden;
     
-    @keyframes gradientShift {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+            radial-gradient(circle at 20% 20%, rgba(255,255,255,0.05) 2px, transparent 2px),
+            radial-gradient(circle at 80% 40%, rgba(255,255,255,0.03) 1.5px, transparent 1.5px),
+            radial-gradient(circle at 40% 60%, rgba(255,255,255,0.04) 1px, transparent 1px),
+            radial-gradient(circle at 70% 80%, rgba(255,255,255,0.06) 2.5px, transparent 2.5px),
+            radial-gradient(circle at 15% 70%, rgba(255,255,255,0.02) 1px, transparent 1px),
+            radial-gradient(circle at 90% 15%, rgba(255,255,255,0.04) 1.5px, transparent 1.5px);
+        background-size: 80px 80px, 60px 60px, 40px 40px, 100px 100px, 30px 30px, 70px 70px;
+        pointer-events: none;
     }
     
     @media (max-width: 768px) {
@@ -1307,8 +1318,9 @@ const AmountInput = styled.div`
 `;
 
 const FinalTotal = styled.div`
-    background: ${({ $positive }) => 
-        $positive ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #ef4444, #dc2626)'
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid ${({ $positive }) => 
+        $positive ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)'
     };
     border-radius: 16px;
     padding: 20px;
@@ -1320,11 +1332,18 @@ const FinalTotal = styled.div`
     font-family: 'Poppins', sans-serif;
     font-size: 1.4rem;
     font-weight: 700;
-    color: #ffffff;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    box-shadow: 0 8px 32px ${({ $positive }) => 
-        $positive ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'
+    color: ${({ $positive }) => 
+        $positive ? '#22c55e' : '#ef4444'
     };
+    text-shadow: none;
+    box-shadow: none;
+    cursor: default;
+    
+    svg {
+        color: ${({ $positive }) => 
+            $positive ? '#22c55e' : '#ef4444'
+        };
+    }
 `;
 
 const ModalButtonGroup = styled.div`

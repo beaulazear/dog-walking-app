@@ -20,7 +20,8 @@ import {
     Clock,
     X,
     Save,
-    Trash2
+    Trash2,
+    Plus
 } from "lucide-react";
 import { UserContext } from "../context/user";
 import PetInvoices from "./PetInvoices";
@@ -52,10 +53,22 @@ const getAnimalIcon = (name) => {
 
 
 export default function PetsPage() {
-    const { user } = useContext(UserContext);
+    const { user, setUser } = useContext(UserContext);
     const [selectedPet, setSelectedPet] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'active', 'inactive'
+    const [activeFilter, setActiveFilter] = useState('active'); // 'all', 'active', 'inactive'
+    const [showCreateForm, setShowCreateForm] = useState(false);
+    const [newPetFormData, setNewPetFormData] = useState({
+        name: "",
+        birthdate: "",
+        sex: "Male",
+        spayed_neutered: false,
+        address: "",
+        behavioral_notes: "",
+        supplies_location: "",
+        allergies: "",
+        active: true,
+    });
 
     // Filter pets based on search term and activity status
     const filteredPets = user?.pets
@@ -68,6 +81,47 @@ export default function PetsPage() {
         })
         ?.sort((a, b) => a.name.localeCompare(b.name)) || [];
 
+    // Get total pets count for the "All" tab badge
+    const totalPetsCount = user?.pets?.length || 0;
+
+    const handleNewPetChange = (e) => {
+        const { name, value } = e.target;
+        setNewPetFormData({ ...newPetFormData, [name]: value });
+    };
+
+    const handleNewPetSubmit = async (e) => {
+        e.preventDefault();
+
+        const response = await fetch("/pets", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newPetFormData),
+        });
+
+        if (response.ok) {
+            const newPet = await response.json();
+            setUser(prevUser => ({
+                ...prevUser,
+                pets: [...prevUser.pets, newPet],
+            }));
+            setShowCreateForm(false);
+            setNewPetFormData({
+                name: "",
+                birthdate: "",
+                sex: "Male",
+                spayed_neutered: false,
+                address: "",
+                behavioral_notes: "",
+                supplies_location: "",
+                allergies: "",
+                active: true,
+            });
+            alert("Pet successfully added!");
+        } else {
+            alert("Error adding pet. Please try again.");
+        }
+    };
+
     return (
         <Container>
             {!selectedPet && (
@@ -79,16 +133,8 @@ export default function PetsPage() {
                                 Your Pets
                             </Title>
                             <PetSubtitle>Manage your furry friends</PetSubtitle>
-                            <PetSummaryText>
-                                <Dog size={16} />
-                                {filteredPets?.length || 0} {(filteredPets?.length || 0) === 1 ? 'pet' : 'pets'} registered
-                            </PetSummaryText>
                         </TitleSection>
                     </HeaderSection>
-                    
-                    <ActionSection>
-                        <CreatePetButton />
-                    </ActionSection>
                     
                     <SearchContainer>
                         <SearchInputContainer>
@@ -108,6 +154,7 @@ export default function PetsPage() {
                             onClick={() => setActiveFilter('all')}
                         >
                             All
+                            <CountBadge>{totalPetsCount}</CountBadge>
                         </FilterTab>
                         <FilterTab 
                             $active={activeFilter === 'active'} 
@@ -122,6 +169,14 @@ export default function PetsPage() {
                         >
                             <Pause size={14} />
                             Inactive
+                        </FilterTab>
+                        <FilterTab 
+                            $active={false}
+                            onClick={() => setShowCreateForm(true)}
+                            $isNewPet={true}
+                        >
+                            <Plus size={14} />
+                            New Pet
                         </FilterTab>
                     </FilterTabsContainer>
                     
@@ -174,6 +229,106 @@ export default function PetsPage() {
             )}
 
             {selectedPet && <PetDetails key={selectedPet.id} pet={selectedPet} setSelectedPet={setSelectedPet} />}
+            
+            {showCreateForm && (
+                <CreatePetModal onClick={() => setShowCreateForm(false)}>
+                    <CreatePetModalContainer onClick={(e) => e.stopPropagation()}>
+                        <CreatePetModalHeader>
+                            <CreatePetModalTitle>Add New Pet</CreatePetModalTitle>
+                            <CreatePetCloseButton onClick={() => setShowCreateForm(false)}>
+                                <X size={24} />
+                            </CreatePetCloseButton>
+                        </CreatePetModalHeader>
+                        
+                        <CreatePetForm onSubmit={handleNewPetSubmit}>
+                            <CreatePetInputGroup>
+                                <CreatePetLabel>Pet Name *</CreatePetLabel>
+                                <CreatePetInput 
+                                    name="name" 
+                                    value={newPetFormData.name} 
+                                    onChange={handleNewPetChange} 
+                                    placeholder="Enter pet's name"
+                                    required 
+                                />
+                            </CreatePetInputGroup>
+
+                            <CreatePetInputGroup>
+                                <CreatePetLabel>Birthdate *</CreatePetLabel>
+                                <CreatePetInput 
+                                    type="date" 
+                                    name="birthdate" 
+                                    value={newPetFormData.birthdate} 
+                                    onChange={handleNewPetChange} 
+                                    required 
+                                />
+                            </CreatePetInputGroup>
+
+                            <CreatePetTwoColumnGroup>
+                                <CreatePetInputGroup>
+                                    <CreatePetLabel>Sex</CreatePetLabel>
+                                    <CreatePetSelect name="sex" value={newPetFormData.sex} onChange={handleNewPetChange}>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </CreatePetSelect>
+                                </CreatePetInputGroup>
+
+                                <CreatePetInputGroup>
+                                    <CreatePetLabel>Spayed/Neutered</CreatePetLabel>
+                                    <CreatePetSelect name="spayed_neutered" value={newPetFormData.spayed_neutered} onChange={(e) => setNewPetFormData({ ...newPetFormData, spayed_neutered: e.target.value === 'true' })}>
+                                        <option value={true}>Yes</option>
+                                        <option value={false}>No</option>
+                                    </CreatePetSelect>
+                                </CreatePetInputGroup>
+                            </CreatePetTwoColumnGroup>
+
+                            <CreatePetInputGroup>
+                                <CreatePetLabel>Address</CreatePetLabel>
+                                <CreatePetInput 
+                                    name="address" 
+                                    value={newPetFormData.address} 
+                                    onChange={handleNewPetChange} 
+                                    placeholder="Pet's primary address"
+                                />
+                            </CreatePetInputGroup>
+
+                            <CreatePetInputGroup>
+                                <CreatePetLabel>Behavioral Notes</CreatePetLabel>
+                                <CreatePetTextarea 
+                                    name="behavioral_notes" 
+                                    value={newPetFormData.behavioral_notes} 
+                                    onChange={handleNewPetChange} 
+                                    placeholder="Any behavioral notes or special instructions..."
+                                />
+                            </CreatePetInputGroup>
+
+                            <CreatePetInputGroup>
+                                <CreatePetLabel>Supplies Location</CreatePetLabel>
+                                <CreatePetTextarea 
+                                    name="supplies_location" 
+                                    value={newPetFormData.supplies_location} 
+                                    onChange={handleNewPetChange} 
+                                    placeholder="Where are leashes, treats, etc. located?"
+                                />
+                            </CreatePetInputGroup>
+
+                            <CreatePetInputGroup>
+                                <CreatePetLabel>Allergies</CreatePetLabel>
+                                <CreatePetInput 
+                                    name="allergies" 
+                                    value={newPetFormData.allergies} 
+                                    onChange={handleNewPetChange} 
+                                    placeholder="Food allergies, medication allergies, etc."
+                                />
+                            </CreatePetInputGroup>
+
+                            <CreatePetButtonContainer>
+                                <CreatePetSubmitButton type="submit">Add Pet</CreatePetSubmitButton>
+                                <CreatePetCancelButton type="button" onClick={() => setShowCreateForm(false)}>Cancel</CreatePetCancelButton>
+                            </CreatePetButtonContainer>
+                        </CreatePetForm>
+                    </CreatePetModalContainer>
+                </CreatePetModal>
+            )}
         </Container>
     );
 }
@@ -264,6 +419,8 @@ const PetDetails = ({ pet, setSelectedPet }) => {
                 <Input type="date" name="birthdate" value={dayjs(formData.birthdate).format("YYYY-MM-DD")} onChange={handleChange} />
                 <Label>Behavioral Notes:</Label>
                 <Textarea name="behavioral_notes" value={formData.behavioral_notes || ""} onChange={handleChange} />
+                <Label>Supplies Location:</Label>
+                <Textarea name="supplies_location" value={formData.supplies_location || ""} onChange={handleChange} placeholder="Where are leashes, treats, etc. located?" />
                 <Label>Address:</Label>
                 <Input name="address" value={formData.address || ""} onChange={handleChange} />
                 <Label>Sex:</Label>
@@ -593,9 +750,7 @@ const HeaderContainer = styled.div`
 `;
 
 const Container = styled.div`
-    background: linear-gradient(135deg, #ff6b9d, #c44569, #f8a5c2, #fdcb6e);
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     padding: 40px 20px;
     padding-top: 120px;
@@ -603,11 +758,25 @@ const Container = styled.div`
     flex-direction: column;
     align-items: center;
     text-align: center;
+    position: relative;
+    overflow: hidden;
     
-    @keyframes gradientShift {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+            radial-gradient(circle at 20% 20%, rgba(255,255,255,0.05) 2px, transparent 2px),
+            radial-gradient(circle at 80% 40%, rgba(255,255,255,0.03) 1.5px, transparent 1.5px),
+            radial-gradient(circle at 40% 60%, rgba(255,255,255,0.04) 1px, transparent 1px),
+            radial-gradient(circle at 70% 80%, rgba(255,255,255,0.06) 2.5px, transparent 2.5px),
+            radial-gradient(circle at 15% 70%, rgba(255,255,255,0.02) 1px, transparent 1px),
+            radial-gradient(circle at 90% 15%, rgba(255,255,255,0.04) 1.5px, transparent 1.5px);
+        background-size: 80px 80px, 60px 60px, 40px 40px, 100px 100px, 30px 30px, 70px 70px;
+        pointer-events: none;
     }
     
     @media (max-width: 768px) {
@@ -797,9 +966,11 @@ const FilterTab = styled.button`
     padding: 8px 16px;
     border: none;
     border-radius: 8px;
-    background: ${({ $active }) => 
-        $active ? 'linear-gradient(135deg, #a569a7, #8b5a8c)' : 'transparent'
-    };
+    background: ${({ $active, $isNewPet }) => {
+        if ($active && $isNewPet) return 'linear-gradient(135deg, #22c55e, #16a34a)';
+        if ($active) return 'linear-gradient(135deg, #a569a7, #8b5a8c)';
+        return 'transparent';
+    }};
     color: ${({ $active }) => 
         $active ? '#ffffff' : 'rgba(255, 255, 255, 0.7)'
     };
@@ -817,6 +988,9 @@ const FilterTab = styled.button`
     text-shadow: ${({ $active }) => 
         $active ? '0 1px 2px rgba(0, 0, 0, 0.3)' : 'none'
     };
+    box-shadow: ${({ $active, $isNewPet }) => 
+        $active && $isNewPet ? '0 3px 12px rgba(34, 197, 94, 0.3)' : 'none'
+    };
     
     svg {
         width: 14px;
@@ -825,13 +999,16 @@ const FilterTab = styled.button`
     }
     
     &:hover {
-        background: ${({ $active }) => 
-            $active 
-                ? 'linear-gradient(135deg, #936394, #7d527e)' 
-                : 'rgba(255, 255, 255, 0.1)'
-        };
+        background: ${({ $active, $isNewPet }) => {
+            if ($active && $isNewPet) return 'linear-gradient(135deg, #16a34a, #15803d)';
+            if ($active) return 'linear-gradient(135deg, #936394, #7d527e)';
+            return 'rgba(255, 255, 255, 0.1)';
+        }};
         color: ${({ $active }) => 
             $active ? '#ffffff' : 'rgba(255, 255, 255, 0.9)'
+        };
+        box-shadow: ${({ $active, $isNewPet }) => 
+            $active && $isNewPet ? '0 4px 16px rgba(34, 197, 94, 0.4)' : 'none'
         };
     }
     
@@ -852,25 +1029,72 @@ const FilterTab = styled.button`
     }
 `;
 
+const CountBadge = styled.span`
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 50%;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+    
+    ${FilterTab}:hover & {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.4);
+    }
+    
+    @media (max-width: 768px) {
+        font-size: 0.65rem;
+        min-width: 16px;
+        height: 16px;
+        padding: 1px 5px;
+    }
+    
+    @media (max-width: 480px) {
+        font-size: 0.6rem;
+        min-width: 14px;
+        height: 14px;
+        padding: 1px 4px;
+        margin-left: 4px;
+    }
+`;
+
 const EmptyState = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px 20px;
+    padding: 60px 40px;
     text-align: center;
     background: linear-gradient(145deg, rgba(74, 26, 74, 0.9), rgba(107, 43, 107, 0.8));
     border-radius: 24px;
-    margin-top: 20px;
-    width: 100%;
+    margin: 32px 20px;
+    width: calc(100% - 40px);
     max-width: 600px;
     box-shadow: 0px 6px 30px rgba(0, 0, 0, 0.3), 0px 2px 8px rgba(0, 0, 0, 0.2);
     border: 2px solid rgba(139, 90, 140, 0.5);
     backdrop-filter: blur(15px);
+    align-self: center;
     
     @media (max-width: 768px) {
-        padding: 32px 16px;
+        padding: 40px 24px;
         border-radius: 20px;
+        margin: 24px 16px;
+        width: calc(100% - 32px);
+    }
+    
+    @media (max-width: 480px) {
+        padding: 32px 20px;
+        margin: 20px 12px;
+        width: calc(100% - 24px);
     }
 `;
 
@@ -1760,5 +1984,279 @@ const EditDeleteButton = styled.button`
     @media (max-width: 768px) {
         padding: 16px;
         font-size: 1rem;
+    }
+`;
+
+// CreatePet Modal Styled Components
+const CreatePetModal = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+`;
+
+const CreatePetModalContainer = styled.div`
+    background: linear-gradient(145deg, rgba(74, 26, 74, 0.95), rgba(107, 43, 107, 0.9));
+    border-radius: 24px;
+    box-shadow: 0px 20px 60px rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(139, 90, 140, 0.5);
+    backdrop-filter: blur(20px);
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    
+    @media (max-width: 768px) {
+        margin: 0;
+        border-radius: 20px;
+        max-height: 95vh;
+    }
+`;
+
+const CreatePetModalHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 28px 16px;
+    border-bottom: 2px solid rgba(139, 90, 140, 0.3);
+    
+    @media (max-width: 768px) {
+        padding: 20px 24px 12px;
+    }
+`;
+
+const CreatePetModalTitle = styled.h2`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    
+    @media (max-width: 768px) {
+        font-size: 1.5rem;
+    }
+`;
+
+const CreatePetCloseButton = styled.button`
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    color: #ffffff;
+    padding: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    
+    &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: scale(1.1);
+    }
+`;
+
+const CreatePetForm = styled.form`
+    padding: 20px 28px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    
+    @media (max-width: 768px) {
+        padding: 16px 24px 24px;
+        gap: 18px;
+    }
+`;
+
+const CreatePetInputGroup = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+`;
+
+const CreatePetTwoColumnGroup = styled.div`
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+`;
+
+const CreatePetLabel = styled.label`
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+`;
+
+const CreatePetInput = styled.input`
+    padding: 14px 16px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+    
+    &:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    }
+    
+    &::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    @media (max-width: 768px) {
+        padding: 16px;
+        font-size: 16px;
+    }
+`;
+
+const CreatePetTextarea = styled.textarea`
+    padding: 14px 16px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    min-height: 80px;
+    resize: vertical;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+    
+    &:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    }
+    
+    &::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    @media (max-width: 768px) {
+        padding: 16px;
+        font-size: 16px;
+        min-height: 100px;
+    }
+`;
+
+const CreatePetSelect = styled.select`
+    padding: 14px 16px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+    
+    &:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    }
+    
+    option {
+        background: #4a1a4a;
+        color: #ffffff;
+    }
+    
+    @media (max-width: 768px) {
+        padding: 16px;
+        font-size: 16px;
+    }
+`;
+
+const CreatePetButtonContainer = styled.div`
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    
+    @media (max-width: 768px) {
+        flex-direction: column;
+        gap: 12px;
+    }
+`;
+
+const CreatePetSubmitButton = styled.button`
+    flex: 1;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #ffffff;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+    
+    &:hover {
+        background: linear-gradient(135deg, #16a34a, #15803d);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+    }
+    
+    &:active {
+        transform: translateY(0);
+    }
+    
+    @media (max-width: 768px) {
+        padding: 16px;
+        font-size: 1.1rem;
+    }
+`;
+
+const CreatePetCancelButton = styled.button`
+    flex: 1;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    padding: 14px 24px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    
+    &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.4);
+        transform: translateY(-1px);
+    }
+    
+    &:active {
+        transform: translateY(0);
+    }
+    
+    @media (max-width: 768px) {
+        padding: 16px;
+        font-size: 1.1rem;
     }
 `;
