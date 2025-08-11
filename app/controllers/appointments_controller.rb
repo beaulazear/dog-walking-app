@@ -20,42 +20,45 @@ class AppointmentsController < ApplicationController
   def canceled
     appointment = @current_user.appointments.find_by(id: params[:id])
     if appointment
-      appointment.update(params_for_cancel)
-      render json: {
-        id: appointment.id,
-        pet_id: appointment.pet_id,
-        appointment_date: appointment.appointment_date,
-        start_time: appointment.start_time,
-        end_time: appointment.end_time,
-        duration: appointment.duration,
-        recurring: appointment.recurring,
-        solo: appointment.solo,
-        completed: appointment.completed,
-        canceled: appointment.canceled,
-        monday: appointment.monday,
-        tuesday: appointment.tuesday,
-        wednesday: appointment.wednesday,
-        thursday: appointment.thursday,
-        friday: appointment.friday,
-        saturday: appointment.saturday,
-        sunday: appointment.sunday,
-        pet: {
-          id: appointment.pet.id,
-          name: appointment.pet.name,
-          birthdate: appointment.pet.birthdate,
-          sex: appointment.pet.sex,
-          spayed_neutered: appointment.pet.spayed_neutered,
-          address: appointment.pet.address,
-          behavioral_notes: appointment.pet.behavioral_notes,
-          supplies_location: appointment.pet.supplies_location,
-          allergies: appointment.pet.allergies,
-          active: appointment.pet.active,
-          profile_pic: if appointment.pet.profile_pic.attached?
-                         rails_blob_url(appointment.pet.profile_pic, only_path: true)
-                       end
-        },
-        cancellations: appointment.cancellations.map { |c| { id: c.id, date: c.date } }
-      }
+      if appointment.update(params_for_cancel)
+        render json: {
+          id: appointment.id,
+          pet_id: appointment.pet_id,
+          appointment_date: appointment.appointment_date,
+          start_time: appointment.start_time,
+          end_time: appointment.end_time,
+          duration: appointment.duration,
+          recurring: appointment.recurring,
+          solo: appointment.solo,
+          completed: appointment.completed,
+          canceled: appointment.canceled,
+          monday: appointment.monday,
+          tuesday: appointment.tuesday,
+          wednesday: appointment.wednesday,
+          thursday: appointment.thursday,
+          friday: appointment.friday,
+          saturday: appointment.saturday,
+          sunday: appointment.sunday,
+          pet: {
+            id: appointment.pet.id,
+            name: appointment.pet.name,
+            birthdate: appointment.pet.birthdate,
+            sex: appointment.pet.sex,
+            spayed_neutered: appointment.pet.spayed_neutered,
+            address: appointment.pet.address,
+            behavioral_notes: appointment.pet.behavioral_notes,
+            supplies_location: appointment.pet.supplies_location,
+            allergies: appointment.pet.allergies,
+            active: appointment.pet.active,
+            profile_pic: if appointment.pet.profile_pic.attached?
+                           rails_blob_url(appointment.pet.profile_pic, only_path: true)
+                         end
+          },
+          cancellations: appointment.cancellations.map { |c| { id: c.id, date: c.date } }
+        }
+      else
+        render json: { errors: appointment.errors.full_messages }, status: :unprocessable_entity
+      end
     else
       render json: { error: 'Appointment not found' }, status: :not_found
     end
@@ -91,44 +94,51 @@ class AppointmentsController < ApplicationController
   def update
     appointment = @current_user.appointments.find_by(id: params[:id])
     if appointment
-      appointment.update(appointment_params)
-      render json: {
-        id: appointment.id,
-        pet_id: appointment.pet_id,
-        appointment_date: appointment.appointment_date,
-        start_time: appointment.start_time,
-        end_time: appointment.end_time,
-        duration: appointment.duration,
-        recurring: appointment.recurring,
-        solo: appointment.solo,
-        completed: appointment.completed,
-        canceled: appointment.canceled,
-        monday: appointment.monday,
-        tuesday: appointment.tuesday,
-        wednesday: appointment.wednesday,
-        thursday: appointment.thursday,
-        friday: appointment.friday,
-        saturday: appointment.saturday,
-        sunday: appointment.sunday,
-        pet: {
-          id: appointment.pet.id,
-          name: appointment.pet.name,
-          birthdate: appointment.pet.birthdate,
-          sex: appointment.pet.sex,
-          spayed_neutered: appointment.pet.spayed_neutered,
-          address: appointment.pet.address,
-          behavioral_notes: appointment.pet.behavioral_notes,
-          supplies_location: appointment.pet.supplies_location,
-          allergies: appointment.pet.allergies,
-          active: appointment.pet.active,
-          profile_pic: if appointment.pet.profile_pic.attached?
-                         Rails.application.routes.url_helpers.rails_blob_url(
-                           appointment.pet.profile_pic, only_path: true
-                         )
-                       end
-        },
-        cancellations: appointment.cancellations.map { |c| { id: c.id, date: c.date } }
-      }, status: :ok
+      Rails.logger.info "Update params: #{appointment_params.inspect}"
+      Rails.logger.info "Appointment before update: price=#{appointment.price}, duration=#{appointment.duration}"
+      
+      if appointment.update(appointment_params)
+        render json: {
+          id: appointment.id,
+          pet_id: appointment.pet_id,
+          appointment_date: appointment.appointment_date,
+          start_time: appointment.start_time,
+          end_time: appointment.end_time,
+          duration: appointment.duration,
+          recurring: appointment.recurring,
+          solo: appointment.solo,
+          completed: appointment.completed,
+          canceled: appointment.canceled,
+          monday: appointment.monday,
+          tuesday: appointment.tuesday,
+          wednesday: appointment.wednesday,
+          thursday: appointment.thursday,
+          friday: appointment.friday,
+          saturday: appointment.saturday,
+          sunday: appointment.sunday,
+          pet: {
+            id: appointment.pet.id,
+            name: appointment.pet.name,
+            birthdate: appointment.pet.birthdate,
+            sex: appointment.pet.sex,
+            spayed_neutered: appointment.pet.spayed_neutered,
+            address: appointment.pet.address,
+            behavioral_notes: appointment.pet.behavioral_notes,
+            supplies_location: appointment.pet.supplies_location,
+            allergies: appointment.pet.allergies,
+            active: appointment.pet.active,
+            profile_pic: if appointment.pet.profile_pic.attached?
+                           Rails.application.routes.url_helpers.rails_blob_url(
+                             appointment.pet.profile_pic, only_path: true
+                           )
+                         end
+          },
+          cancellations: appointment.cancellations.map { |c| { id: c.id, date: c.date } }
+        }, status: :ok
+      else
+        Rails.logger.error "Update failed with errors: #{appointment.errors.full_messages.inspect}"
+        render json: { errors: appointment.errors.full_messages }, status: :unprocessable_entity
+      end
     else
       render json: { error: 'appointment not found' }, status: :not_found
     end
@@ -138,7 +148,7 @@ class AppointmentsController < ApplicationController
 
   def appointment_params
     params.require(:appointment).permit(:user_id, :pet_id, :appointment_date, :start_time, :id, :canceled,
-                                        :completed, :end_time, :recurring, :solo, :duration, :monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday)
+                                        :completed, :end_time, :recurring, :solo, :duration, :price, :monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday)
   end
 
   def params_for_cancel

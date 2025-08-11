@@ -8,7 +8,7 @@ class Appointment < ApplicationRecord
   validates :start_time, presence: true
   validates :end_time, presence: true
   validates :duration, presence: true, numericality: { greater_than: 0 }
-  validates :price, presence: true, numericality: { greater_than: 0 }
+  validates :price, presence: true, numericality: { greater_than: 0 }, on: :create
 
   validate :end_time_after_start_time
 
