@@ -1,4 +1,5 @@
 class AppointmentsController < ApplicationController
+  include Rails.application.routes.url_helpers
   before_action :current_user
 
   def create
@@ -20,8 +21,41 @@ class AppointmentsController < ApplicationController
     appointment = @current_user.appointments.find_by(id: params[:id])
     if appointment
       appointment.update(params_for_cancel)
-      render json: appointment.as_json(only: %i[id appointment_date start_time end_time duration
-                                                recurring completed canceled])
+      render json: {
+        id: appointment.id,
+        pet_id: appointment.pet_id,
+        appointment_date: appointment.appointment_date,
+        start_time: appointment.start_time,
+        end_time: appointment.end_time,
+        duration: appointment.duration,
+        recurring: appointment.recurring,
+        solo: appointment.solo,
+        completed: appointment.completed,
+        canceled: appointment.canceled,
+        monday: appointment.monday,
+        tuesday: appointment.tuesday,
+        wednesday: appointment.wednesday,
+        thursday: appointment.thursday,
+        friday: appointment.friday,
+        saturday: appointment.saturday,
+        sunday: appointment.sunday,
+        pet: {
+          id: appointment.pet.id,
+          name: appointment.pet.name,
+          birthdate: appointment.pet.birthdate,
+          sex: appointment.pet.sex,
+          spayed_neutered: appointment.pet.spayed_neutered,
+          address: appointment.pet.address,
+          behavioral_notes: appointment.pet.behavioral_notes,
+          supplies_location: appointment.pet.supplies_location,
+          allergies: appointment.pet.allergies,
+          active: appointment.pet.active,
+          profile_pic: if appointment.pet.profile_pic.attached?
+                         rails_blob_url(appointment.pet.profile_pic, only_path: true)
+                       end
+        },
+        cancellations: appointment.cancellations.map { |c| { id: c.id, date: c.date } }
+      }
     else
       render json: { error: 'Appointment not found' }, status: :not_found
     end
@@ -58,11 +92,43 @@ class AppointmentsController < ApplicationController
     appointment = @current_user.appointments.find_by(id: params[:id])
     if appointment
       appointment.update(appointment_params)
-      render json: appointment.as_json(
-        only: %i[id pet_id appointment_date start_time end_time duration recurring solo completed canceled
-                 monday tuesday wednesday thursday friday saturday sunday],
-        include: { cancellations: { only: %i[id date] } }, status: :ok
-      )
+      render json: {
+        id: appointment.id,
+        pet_id: appointment.pet_id,
+        appointment_date: appointment.appointment_date,
+        start_time: appointment.start_time,
+        end_time: appointment.end_time,
+        duration: appointment.duration,
+        recurring: appointment.recurring,
+        solo: appointment.solo,
+        completed: appointment.completed,
+        canceled: appointment.canceled,
+        monday: appointment.monday,
+        tuesday: appointment.tuesday,
+        wednesday: appointment.wednesday,
+        thursday: appointment.thursday,
+        friday: appointment.friday,
+        saturday: appointment.saturday,
+        sunday: appointment.sunday,
+        pet: {
+          id: appointment.pet.id,
+          name: appointment.pet.name,
+          birthdate: appointment.pet.birthdate,
+          sex: appointment.pet.sex,
+          spayed_neutered: appointment.pet.spayed_neutered,
+          address: appointment.pet.address,
+          behavioral_notes: appointment.pet.behavioral_notes,
+          supplies_location: appointment.pet.supplies_location,
+          allergies: appointment.pet.allergies,
+          active: appointment.pet.active,
+          profile_pic: if appointment.pet.profile_pic.attached?
+                         Rails.application.routes.url_helpers.rails_blob_url(
+                           appointment.pet.profile_pic, only_path: true
+                         )
+                       end
+        },
+        cancellations: appointment.cancellations.map { |c| { id: c.id, date: c.date } }
+      }, status: :ok
     else
       render json: { error: 'appointment not found' }, status: :not_found
     end

@@ -603,7 +603,7 @@ const AppointmentDetails = ({ appointment, setSelectedAppointment }) => {
         const response = await fetch(`/appointments/${appointment.id}/canceled`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ canceled: true })
+            body: JSON.stringify({ appointment: { canceled: true } })
         });
 
         if (response.ok) {
