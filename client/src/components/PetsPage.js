@@ -575,9 +575,11 @@ const AppointmentDetails = ({ appointment, setSelectedAppointment }) => {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                ...formData,
-                start_time: formData.start_time.length > 5 ? formData.start_time.slice(11, 16) : formData.start_time,
-                end_time: formData.end_time.length > 5 ? formData.end_time.slice(11, 16) : formData.end_time,
+                appointment: {
+                    ...formData,
+                    start_time: formData.start_time.length > 5 ? formData.start_time.slice(11, 16) : formData.start_time,
+                    end_time: formData.end_time.length > 5 ? formData.end_time.slice(11, 16) : formData.end_time,
+                }
             }),
         });
 
