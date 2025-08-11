@@ -7,15 +7,15 @@ import dogImage from "../assets/dog.png";
 export default function Home() {
     return (
         <Container>
-            <FloatingPaws delay="0s" startX="10%" />
-            <FloatingPaws delay="2s" startX="30%" />
-            <FloatingPaws delay="4s" startX="50%" />
-            <FloatingPaws delay="6s" startX="70%" />
-            <FloatingPaws delay="8s" startX="90%" />
-            <FloatingPaws delay="1s" startX="20%" />
-            <FloatingPaws delay="3s" startX="40%" />
-            <FloatingPaws delay="5s" startX="60%" />
-            <FloatingPaws delay="7s" startX="80%" />
+            <FloatingPaws $delay="0s" $startX="10%" />
+            <FloatingPaws $delay="2s" $startX="30%" />
+            <FloatingPaws $delay="4s" $startX="50%" />
+            <FloatingPaws $delay="6s" $startX="70%" />
+            <FloatingPaws $delay="8s" $startX="90%" />
+            <FloatingPaws $delay="1s" $startX="20%" />
+            <FloatingPaws $delay="3s" $startX="40%" />
+            <FloatingPaws $delay="5s" $startX="60%" />
+            <FloatingPaws $delay="7s" $startX="80%" />
             
             <ContentContainer>
                 <HeroSection>
@@ -146,10 +146,10 @@ const FloatingPaws = styled.div`
     position: absolute;
     font-size: 1.5rem;
     animation: ${pawFloat} 20s linear infinite;
-    animation-delay: ${props => props.delay || '0s'};
+    animation-delay: ${props => props.$delay || '0s'};
     pointer-events: none;
     opacity: 0.15;
-    left: ${props => props.startX || '0%'};
+    left: ${props => props.$startX || '0%'};
     
     &::before {
         content: '🐾';

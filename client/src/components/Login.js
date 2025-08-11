@@ -36,15 +36,15 @@ const Login = () => {
 
     return (
         <LoginWrapper>
-            <FloatingPaws delay="0s" startX="10%" />
-            <FloatingPaws delay="2s" startX="30%" />
-            <FloatingPaws delay="4s" startX="50%" />
-            <FloatingPaws delay="6s" startX="70%" />
-            <FloatingPaws delay="8s" startX="90%" />
-            <FloatingPaws delay="1s" startX="20%" />
-            <FloatingPaws delay="3s" startX="40%" />
-            <FloatingPaws delay="5s" startX="60%" />
-            <FloatingPaws delay="7s" startX="80%" />
+            <FloatingPaws $delay="0s" $startX="10%" />
+            <FloatingPaws $delay="2s" $startX="30%" />
+            <FloatingPaws $delay="4s" $startX="50%" />
+            <FloatingPaws $delay="6s" $startX="70%" />
+            <FloatingPaws $delay="8s" $startX="90%" />
+            <FloatingPaws $delay="1s" $startX="20%" />
+            <FloatingPaws $delay="3s" $startX="40%" />
+            <FloatingPaws $delay="5s" $startX="60%" />
+            <FloatingPaws $delay="7s" $startX="80%" />
             
             <ContentContainer>
                 <HeaderContainer>
@@ -59,7 +59,7 @@ const Login = () => {
                 <LoginBox>
                     <Form onSubmit={handleSubmit}>
                         <InputGroup>
-                            <InputWrapper focused={focusedField === 'username'}>
+                            <InputWrapper $focused={focusedField === 'username'}>
                                 <InputIcon>
                                     <User size={18} />
                                 </InputIcon>
@@ -76,7 +76,7 @@ const Login = () => {
                         </InputGroup>
                         
                         <InputGroup>
-                            <InputWrapper focused={focusedField === 'password'}>
+                            <InputWrapper $focused={focusedField === 'password'}>
                                 <InputIcon>
                                     <Lock size={18} />
                                 </InputIcon>
@@ -212,10 +212,10 @@ const FloatingPaws = styled.div`
     position: absolute;
     font-size: 1.5rem;
     animation: ${pawFloat} 20s linear infinite;
-    animation-delay: ${props => props.delay || '0s'};
+    animation-delay: ${props => props.$delay || '0s'};
     pointer-events: none;
     opacity: 0.15;
-    left: ${props => props.startX || '0%'};
+    left: ${props => props.$startX || '0%'};
     
     &::before {
         content: '🐾';
@@ -332,7 +332,7 @@ const InputWrapper = styled.div`
     align-items: center;
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
-    border: 2px solid ${props => props.focused ? '#4c51bf' : '#cbd5e0'};
+    border: 2px solid ${props => props.$focused ? '#4c51bf' : '#cbd5e0'};
     border-radius: 16px;
     box-shadow: 
         0 4px 12px rgba(0, 0, 0, 0.15),

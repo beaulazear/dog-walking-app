@@ -53,15 +53,15 @@ const Signup = () => {
 
     return (
         <SignupWrapper>
-            <FloatingPaws delay="0s" startX="10%" />
-            <FloatingPaws delay="2s" startX="30%" />
-            <FloatingPaws delay="4s" startX="50%" />
-            <FloatingPaws delay="6s" startX="70%" />
-            <FloatingPaws delay="8s" startX="90%" />
-            <FloatingPaws delay="1s" startX="20%" />
-            <FloatingPaws delay="3s" startX="40%" />
-            <FloatingPaws delay="5s" startX="60%" />
-            <FloatingPaws delay="7s" startX="80%" />
+            <FloatingPaws $delay="0s" $startX="10%" />
+            <FloatingPaws $delay="2s" $startX="30%" />
+            <FloatingPaws $delay="4s" $startX="50%" />
+            <FloatingPaws $delay="6s" $startX="70%" />
+            <FloatingPaws $delay="8s" $startX="90%" />
+            <FloatingPaws $delay="1s" $startX="20%" />
+            <FloatingPaws $delay="3s" $startX="40%" />
+            <FloatingPaws $delay="5s" $startX="60%" />
+            <FloatingPaws $delay="7s" $startX="80%" />
             
             <ContentContainer>
                 <HeaderContainer>
@@ -77,7 +77,7 @@ const Signup = () => {
                     <Form onSubmit={handleSubmit}>
                         <InputRow>
                             <InputGroup>
-                                <InputWrapper focused={focusedField === 'username'}>
+                                <InputWrapper $focused={focusedField === 'username'}>
                                     <InputIcon>
                                         <User size={18} />
                                     </InputIcon>
@@ -94,7 +94,7 @@ const Signup = () => {
                             </InputGroup>
                             
                             <InputGroup>
-                                <InputWrapper focused={focusedField === 'name'}>
+                                <InputWrapper $focused={focusedField === 'name'}>
                                     <InputIcon>
                                         <UserCircle size={18} />
                                     </InputIcon>
@@ -112,7 +112,7 @@ const Signup = () => {
                         </InputRow>
                         
                         <InputGroup>
-                            <InputWrapper focused={focusedField === 'email'}>
+                            <InputWrapper $focused={focusedField === 'email'}>
                                 <InputIcon>
                                     <Mail size={18} />
                                 </InputIcon>
@@ -129,7 +129,7 @@ const Signup = () => {
                         </InputGroup>
                         
                         <InputGroup>
-                            <InputWrapper focused={focusedField === 'password'}>
+                            <InputWrapper $focused={focusedField === 'password'}>
                                 <InputIcon>
                                     <Lock size={18} />
                                 </InputIcon>
@@ -149,7 +149,7 @@ const Signup = () => {
                         </InputGroup>
                         
                         <InputGroup>
-                            <InputWrapper focused={focusedField === 'confirmPassword'} valid={passwordsMatch}>
+                            <InputWrapper $focused={focusedField === 'confirmPassword'} $valid={passwordsMatch}>
                                 <InputIcon>
                                     <Lock size={18} />
                                 </InputIcon>
@@ -285,10 +285,10 @@ const FloatingPaws = styled.div`
     position: absolute;
     font-size: 1.5rem;
     animation: ${pawFloat} 20s linear infinite;
-    animation-delay: ${props => props.delay || '0s'};
+    animation-delay: ${props => props.$delay || '0s'};
     pointer-events: none;
     opacity: 0.15;
-    left: ${props => props.startX || '0%'};
+    left: ${props => props.$startX || '0%'};
     
     &::before {
         content: '🐾';
@@ -416,8 +416,8 @@ const InputWrapper = styled.div`
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border: 2px solid ${props => 
-        props.valid ? '#38a169' : 
-        props.focused ? '#4c51bf' : '#cbd5e0'
+        props.$valid ? '#38a169' : 
+        props.$focused ? '#4c51bf' : '#cbd5e0'
     };
     border-radius: 16px;
     box-shadow: 

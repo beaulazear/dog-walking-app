@@ -212,96 +212,133 @@ export default function Dashboard() {
             </HeaderSection>
 
             <ContentSections>
-                <Section>
-                    <SectionHeader>
-                        <SectionTitle>
-                            <Calendar size={20} />
-                            Week Overview
-                        </SectionTitle>
-                        <CalendarControls>
-                            <MonthViewButton onClick={() => setShowMonthView(true)}>
-                                <CalendarDays size={16} />
-                                View Month
-                            </MonthViewButton>
-                            <NavigationControls>
-                                <NavButton onClick={() => navigateWeek(-1)}>
-                                    <ChevronLeft size={16} />
-                                </NavButton>
-                                <DateDisplay>
-                                    {weekDays[0].format('MMM D')} - {weekDays[6].format('MMM D, YYYY')}
-                                </DateDisplay>
-                                <NavButton onClick={() => navigateWeek(1)}>
-                                    <ChevronRight size={16} />
-                                </NavButton>
-                            </NavigationControls>
-                        </CalendarControls>
-                    </SectionHeader>
+                <WeekOverviewSection>
+                    <WeekHeader>
+                        <WeekHeaderTop>
+                            <WeekTitle>
+                                <Calendar size={18} />
+                                This Week
+                            </WeekTitle>
+                            <MonthToggle onClick={() => setShowMonthView(true)}>
+                                <CalendarDays size={18} />
+                            </MonthToggle>
+                        </WeekHeaderTop>
+                        
+                        <WeekNavigation>
+                            <WeekNavButton onClick={() => navigateWeek(-1)}>
+                                <ChevronLeft size={20} />
+                            </WeekNavButton>
+                            <WeekDateRange>
+                                {weekDays[0].format('MMM D')} - {weekDays[6].format('MMM D')}
+                            </WeekDateRange>
+                            <WeekNavButton onClick={() => navigateWeek(1)}>
+                                <ChevronRight size={20} />
+                            </WeekNavButton>
+                        </WeekNavigation>
+                    </WeekHeader>
                     
-                    <SectionContent>
-                        <WeekWrapper>
-                            <WeekGrid>
-                                {weekDays.map((day) => {
-                                    const dayAppointments = getAppointmentsForDate(day.format("YYYY-MM-DD"));
-                                    const isToday = day.isSame(dayjs(), 'day');
+                    <WeekCardsContainer>
+                        {weekDays.map((day, index) => {
+                            const dayAppointments = getAppointmentsForDate(day.format("YYYY-MM-DD"));
+                            const isToday = day.isSame(dayjs(), 'day');
+                            const isPast = day.isBefore(dayjs(), 'day');
+                            
+                            return (
+                                <DayCard 
+                                    key={day.format("YYYY-MM-DD")} 
+                                    $isToday={isToday}
+                                    $isPast={isPast}
+                                    $hasAppointments={dayAppointments.length > 0}
+                                    $delay={index * 0.05}
+                                    onClick={() => handleDayClick(day, dayAppointments)}
+                                >
+                                    <DayCardHeader $isToday={isToday}>
+                                        <DayName>{day.format('ddd')}</DayName>
+                                        <DayDate $isToday={isToday}>{day.format('D')}</DayDate>
+                                    </DayCardHeader>
                                     
-                                    return (
-                                        <WeekDayCell 
-                                            key={day.format("YYYY-MM-DD")} 
-                                            $isToday={isToday}
-                                            $hasAppointments={dayAppointments.length > 0}
-                                            onClick={() => handleDayClick(day, dayAppointments)}
-                                        >
-                                            <WeekDayNumber $isToday={isToday}>
-                                                {day.format('ddd D')}
-                                            </WeekDayNumber>
-                                            
-                                            {dayAppointments.length > 0 && (
-                                                <WeekWalkBadge>
-                                                    {dayAppointments.length} walk{dayAppointments.length > 1 ? 's' : ''}
-                                                </WeekWalkBadge>
-                                            )}
-                                        </WeekDayCell>
-                                    );
-                                })}
-                            </WeekGrid>
-                        </WeekWrapper>
-                    </SectionContent>
-                </Section>
+                                    <DayCardContent>
+                                        {dayAppointments.length > 0 ? (
+                                            <>
+                                                <WalkCount $count={dayAppointments.length}>
+                                                    {dayAppointments.length}
+                                                </WalkCount>
+                                                <WalkLabel>
+                                                    walk{dayAppointments.length > 1 ? 's' : ''}
+                                                </WalkLabel>
+                                                <PreviewDots>
+                                                    {dayAppointments.slice(0, 3).map((_, i) => (
+                                                        <Dot key={i} $delay={i * 0.1} />
+                                                    ))}
+                                                </PreviewDots>
+                                            </>
+                                        ) : (
+                                            <EmptyDay>
+                                                <EmptyIcon>—</EmptyIcon>
+                                                <EmptyText>Free</EmptyText>
+                                            </EmptyDay>
+                                        )}
+                                    </DayCardContent>
+                                    
+                                    {isToday && <TodayIndicator />}
+                                </DayCard>
+                            );
+                        })}
+                    </WeekCardsContainer>
+                </WeekOverviewSection>
 
                 {upcomingBirthdayPet && (
-                    <Section>
-                        <SectionTitle>
-                            <Cake size={20} />
-                            Upcoming Birthday
-                        </SectionTitle>
-                        <BirthdayContent>
-                            <BirthdayPetImage
-                                src={upcomingBirthdayPet.profile_pic || dogPlaceholder}
-                                onError={(e) => (e.target.src = dogPlaceholder)}
-                                alt={upcomingBirthdayPet.name}
-                            />
-                            <BirthdayInfo>
-                                <BirthdayPetName>{upcomingBirthdayPet.name}</BirthdayPetName>
-                                <BirthdayDate>
+                    <ModernBirthdayCard>
+                        <BirthdayHeader>
+                            <BirthdayIcon>
+                                <Cake size={20} />
+                            </BirthdayIcon>
+                            <BirthdayTitle>Birthday Coming Up!</BirthdayTitle>
+                        </BirthdayHeader>
+                        <ModernBirthdayContent>
+                            <BirthdayImageWrapper>
+                                <ModernBirthdayImage
+                                    src={upcomingBirthdayPet.profile_pic || dogPlaceholder}
+                                    onError={(e) => (e.target.src = dogPlaceholder)}
+                                    alt={upcomingBirthdayPet.name}
+                                />
+                                <BirthdayBadge>🎉</BirthdayBadge>
+                            </BirthdayImageWrapper>
+                            <ModernBirthdayInfo>
+                                <ModernPetName>{upcomingBirthdayPet.name}</ModernPetName>
+                                <ModernBirthdayDate>
                                     {dayjs(upcomingBirthdayPet.birthdate).format("MMMM D")}
-                                </BirthdayDate>
-                            </BirthdayInfo>
-                        </BirthdayContent>
-                    </Section>
+                                </ModernBirthdayDate>
+                                <DaysUntil>
+                                    {(() => {
+                                        const days = dayjs(upcomingBirthdayPet.upcomingBirthday).diff(dayjs(), 'day');
+                                        if (days === 0) return "Today! 🎂";
+                                        if (days === 1) return "Tomorrow!";
+                                        return `In ${days} days`;
+                                    })()}
+                                </DaysUntil>
+                            </ModernBirthdayInfo>
+                        </ModernBirthdayContent>
+                    </ModernBirthdayCard>
                 )}
 
-                <Section>
-                    <SectionTitle>
-                        <Settings size={20} />
-                        Update Your Rates
-                    </SectionTitle>
-                    <Form onSubmit={handleRateUpdate}>
-                        <RateGrid>
-                            <RateInputGroup>
-                                <RateLabel>30 min</RateLabel>
-                                <RateInputWrapper>
-                                    <DollarSign size={14} />
-                                    <RateInput 
+                <ModernRatesCard>
+                    <RatesHeader>
+                        <RatesIcon>
+                            <DollarSign size={18} />
+                        </RatesIcon>
+                        <RatesTitle>Service Rates</RatesTitle>
+                    </RatesHeader>
+                    <ModernForm onSubmit={handleRateUpdate}>
+                        <ModernRateGrid>
+                            <ModernRateCard>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: '45px' }}>
+                                    <RateDuration>30</RateDuration>
+                                    <RateMinutes>min</RateMinutes>
+                                </div>
+                                <ModernRateInput>
+                                    <DollarSymbol>$</DollarSymbol>
+                                    <RateField
                                         type="number" 
                                         name="thirty" 
                                         value={rates.thirty} 
@@ -310,14 +347,17 @@ export default function Dashboard() {
                                         step="0.01"
                                         required 
                                     />
-                                </RateInputWrapper>
-                            </RateInputGroup>
+                                </ModernRateInput>
+                            </ModernRateCard>
 
-                            <RateInputGroup>
-                                <RateLabel>40 min</RateLabel>
-                                <RateInputWrapper>
-                                    <DollarSign size={14} />
-                                    <RateInput 
+                            <ModernRateCard>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: '45px' }}>
+                                    <RateDuration>40</RateDuration>
+                                    <RateMinutes>min</RateMinutes>
+                                </div>
+                                <ModernRateInput>
+                                    <DollarSymbol>$</DollarSymbol>
+                                    <RateField
                                         type="number" 
                                         name="fourty" 
                                         value={rates.fourty} 
@@ -326,14 +366,17 @@ export default function Dashboard() {
                                         step="0.01"
                                         required 
                                     />
-                                </RateInputWrapper>
-                            </RateInputGroup>
+                                </ModernRateInput>
+                            </ModernRateCard>
 
-                            <RateInputGroup>
-                                <RateLabel>60 min</RateLabel>
-                                <RateInputWrapper>
-                                    <DollarSign size={14} />
-                                    <RateInput 
+                            <ModernRateCard>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: '45px' }}>
+                                    <RateDuration>60</RateDuration>
+                                    <RateMinutes>min</RateMinutes>
+                                </div>
+                                <ModernRateInput>
+                                    <DollarSymbol>$</DollarSymbol>
+                                    <RateField
                                         type="number" 
                                         name="sixty" 
                                         value={rates.sixty} 
@@ -342,14 +385,17 @@ export default function Dashboard() {
                                         step="0.01"
                                         required 
                                     />
-                                </RateInputWrapper>
-                            </RateInputGroup>
+                                </ModernRateInput>
+                            </ModernRateCard>
 
-                            <RateInputGroup>
-                                <RateLabel>Solo</RateLabel>
-                                <RateInputWrapper>
-                                    <DollarSign size={14} />
-                                    <RateInput 
+                            <ModernRateCard $solo>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: '45px' }}>
+                                    <RateDuration>Solo</RateDuration>
+                                    <RateMinutes>walk</RateMinutes>
+                                </div>
+                                <ModernRateInput>
+                                    <DollarSymbol>$</DollarSymbol>
+                                    <RateField
                                         type="number" 
                                         name="solo_rate" 
                                         value={rates.solo_rate} 
@@ -358,15 +404,15 @@ export default function Dashboard() {
                                         step="0.01"
                                         required 
                                     />
-                                </RateInputWrapper>
-                            </RateInputGroup>
-                        </RateGrid>
-                        <UpdateButton type="submit">
+                                </ModernRateInput>
+                            </ModernRateCard>
+                        </ModernRateGrid>
+                        <ModernUpdateButton type="submit">
                             <Settings size={14} />
-                            Update Rates
-                        </UpdateButton>
-                    </Form>
-                </Section>
+                            Save Rates
+                        </ModernUpdateButton>
+                    </ModernForm>
+                </ModernRatesCard>
             </ContentSections>
 
             <YearlyFinanceOverview />
@@ -594,13 +640,605 @@ const HeartIcon = styled.span`
 const ContentSections = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
     width: 100%;
-    max-width: 600px;
+    max-width: 800px;
+    margin-bottom: 16px;
+    
+    @media (max-width: 768px) {
+        gap: 16px;
+    }
+`;
+
+// New Week Overview Section
+const WeekOverviewSection = styled.div`
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: fadeInUp 0.5s ease;
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        padding: 16px;
+        border-radius: 20px;
+    }
+`;
+
+const WeekHeader = styled.div`
+    margin-bottom: 24px;
+    
+    @media (max-width: 768px) {
+        margin-bottom: 20px;
+    }
+`;
+
+const WeekHeaderTop = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 16px;
 `;
 
-// Simplified section component
+const WeekTitle = styled.h2`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+    
+    @media (max-width: 768px) {
+        font-size: 1rem;
+    }
+`;
+
+const MonthToggle = styled.button`
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 8px;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.05);
+    }
+`;
+
+const WeekNavigation = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+`;
+
+const WeekNavButton = styled.button`
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.1);
+    }
+    
+    &:active {
+        transform: scale(0.95);
+    }
+`;
+
+const WeekDateRange = styled.div`
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 500;
+    min-width: 140px;
+    text-align: center;
+    
+    @media (max-width: 768px) {
+        font-size: 0.9rem;
+        min-width: 120px;
+    }
+`;
+
+const WeekCardsContainer = styled.div`
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    
+    @media (max-width: 768px) {
+        gap: 8px;
+        overflow-x: auto;
+        display: flex;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 8px;
+        
+        &::-webkit-scrollbar {
+            height: 4px;
+        }
+        
+        &::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+        
+        &::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+        }
+    }
+`;
+
+const DayCard = styled.div`
+    background: ${props => props.$hasAppointments 
+        ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.1))' 
+        : 'rgba(255, 255, 255, 0.05)'};
+    border: 1px solid ${props => props.$isToday 
+        ? 'rgba(255, 255, 255, 0.4)' 
+        : 'rgba(255, 255, 255, 0.1)'};
+    border-radius: 16px;
+    padding: 12px;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: ${props => props.$hasAppointments ? 'pointer' : 'default'};
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    opacity: ${props => props.$isPast ? 0.6 : 1};
+    animation: slideIn ${props => 0.5 + props.$delay}s ease;
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    &:hover {
+        transform: ${props => props.$hasAppointments ? 'translateY(-4px) scale(1.02)' : 'none'};
+        background: ${props => props.$hasAppointments 
+            ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.15))' 
+            : 'rgba(255, 255, 255, 0.08)'};
+        box-shadow: ${props => props.$hasAppointments 
+            ? '0 8px 20px rgba(0, 0, 0, 0.2)' 
+            : 'none'};
+    }
+    
+    @media (max-width: 768px) {
+        min-width: 90px;
+        flex: 0 0 auto;
+        scroll-snap-align: center;
+        padding: 10px 8px;
+        min-height: 90px;
+    }
+`;
+
+const DayCardHeader = styled.div`
+    text-align: center;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+`;
+
+const DayName = styled.div`
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+`;
+
+const DayDate = styled.div`
+    color: ${props => props.$isToday ? '#ffffff' : 'rgba(255, 255, 255, 0.9)'};
+    font-size: 1.2rem;
+    font-weight: ${props => props.$isToday ? '700' : '600'};
+`;
+
+const DayCardContent = styled.div`
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+`;
+
+const WalkCount = styled.div`
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ffffff;
+    background: ${props => {
+        if (props.$count >= 5) return 'linear-gradient(135deg, #f59e0b, #dc2626)';
+        if (props.$count >= 3) return 'linear-gradient(135deg, #3b82f6, #8b5cf6)';
+        return 'linear-gradient(135deg, #10b981, #06b6d4)';
+    }};
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    
+    @media (max-width: 768px) {
+        font-size: 1.6rem;
+    }
+`;
+
+const WalkLabel = styled.div`
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-top: 2px;
+`;
+
+const PreviewDots = styled.div`
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+`;
+
+const Dot = styled.div`
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    animation: pulse ${props => 2 + props.$delay}s infinite;
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 0.4; transform: scale(1); }
+        50% { opacity: 0.8; transform: scale(1.2); }
+    }
+`;
+
+const EmptyDay = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+`;
+
+const EmptyIcon = styled.div`
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 1.2rem;
+`;
+
+const EmptyText = styled.div`
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.7rem;
+    font-weight: 500;
+`;
+
+const TodayIndicator = styled.div`
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+    animation: todayPulse 2s infinite;
+    
+    @keyframes todayPulse {
+        0%, 100% { 
+            transform: scale(1);
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+        }
+        50% { 
+            transform: scale(1.2);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+        }
+    }
+`;
+
+// Modern Birthday Card
+const ModernBirthdayCard = styled.div`
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: fadeInUp 0.6s ease;
+    
+    @media (max-width: 768px) {
+        padding: 16px;
+        border-radius: 20px;
+    }
+`;
+
+const BirthdayHeader = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+`;
+
+const BirthdayIcon = styled.div`
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+`;
+
+const BirthdayTitle = styled.h3`
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+`;
+
+const ModernBirthdayContent = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 20px;
+`;
+
+const BirthdayImageWrapper = styled.div`
+    position: relative;
+`;
+
+const ModernBirthdayImage = styled.img`
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    object-fit: cover;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+`;
+
+const BirthdayBadge = styled.div`
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    background: linear-gradient(135deg, #ec4899, #f43f5e);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4);
+`;
+
+const ModernBirthdayInfo = styled.div`
+    flex: 1;
+`;
+
+const ModernPetName = styled.h3`
+    color: #ffffff;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+`;
+
+const ModernBirthdayDate = styled.p`
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1rem;
+    margin: 0 0 8px 0;
+`;
+
+const DaysUntil = styled.div`
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.1);
+    color: #10b981;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+`;
+
+// Modern Rates Card - Compact Version
+const ModernRatesCard = styled.div`
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: fadeInUp 0.7s ease;
+    
+    @media (max-width: 768px) {
+        padding: 14px;
+        border-radius: 18px;
+    }
+`;
+
+const RatesHeader = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+`;
+
+const RatesIcon = styled.div`
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #10b981, #06b6d4);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+`;
+
+const RatesTitle = styled.h3`
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+    flex: 1;
+`;
+
+const RatesSubtitle = styled.p`
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.75rem;
+    margin: 0;
+`;
+
+const ModernForm = styled.form`
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+`;
+
+const ModernRateGrid = styled.div`
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    
+    @media (max-width: 480px) {
+        gap: 8px;
+    }
+`;
+
+const ModernRateCard = styled.div`
+    background: ${props => props.$solo 
+        ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(168, 85, 247, 0.08))' 
+        : 'rgba(255, 255, 255, 0.04)'};
+    border: 1px solid ${props => props.$solo 
+        ? 'rgba(168, 85, 247, 0.25)' 
+        : 'rgba(255, 255, 255, 0.08)'};
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    
+    &:hover {
+        transform: translateY(-1px);
+        background: ${props => props.$solo 
+            ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(168, 85, 247, 0.1))' 
+            : 'rgba(255, 255, 255, 0.06)'};
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+`;
+
+const RateDuration = styled.div`
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1;
+    min-width: 35px;
+`;
+
+const RateMinutes = styled.div`
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1;
+`;
+
+const ModernRateInput = styled.div`
+    display: flex;
+    align-items: center;
+    flex: 1;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 6px 8px;
+    transition: all 0.3s ease;
+    
+    &:focus-within {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(16, 185, 129, 0.4);
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.08);
+    }
+`;
+
+const DollarSymbol = styled.span`
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-right: 2px;
+`;
+
+const RateField = styled.input`
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    width: 60px;
+    outline: none;
+    
+    &::placeholder {
+        color: rgba(255, 255, 255, 0.25);
+    }
+    
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+`;
+
+const ModernUpdateButton = styled.button`
+    background: linear-gradient(135deg, #10b981, #06b6d4);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    box-shadow: 0 3px 10px rgba(16, 185, 129, 0.25);
+    margin-top: 4px;
+    
+    &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);
+    }
+    
+    &:active {
+        transform: translateY(0);
+    }
+`;
+
+// Simplified section component (keeping for other uses)
 const Section = styled.div`
     background: linear-gradient(145deg, rgba(74, 26, 74, 0.9), rgba(107, 43, 107, 0.8));
     border-radius: 16px;
