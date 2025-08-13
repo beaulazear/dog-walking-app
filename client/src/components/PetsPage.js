@@ -96,6 +96,7 @@ export default function PetsPage() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(newPetFormData),
+            credentials: "include"
         });
 
         if (response.ok) {
@@ -392,6 +393,7 @@ const PetDetails = ({ pet, setSelectedPet }) => {
         const response = await fetch(`/pets/${pet.id}`, {
             method: "PATCH",
             body: formDataToSend,
+            credentials: "include"
         });
 
         if (response.ok) {
@@ -469,6 +471,7 @@ const PetAppointments = ({ pet, appointments }) => {
                             try {
                                 const response = await fetch(`/cancellations/${c.id}`, {
                                     method: "DELETE",
+                                    credentials: "include"
                                 });
 
                                 if (response.ok) {
@@ -581,6 +584,7 @@ const AppointmentDetails = ({ appointment, setSelectedAppointment }) => {
                     end_time: formData.end_time.length > 5 ? formData.end_time.slice(11, 16) : formData.end_time,
                 }
             }),
+            credentials: "include"
         });
 
         if (response.ok) {
@@ -594,6 +598,9 @@ const AppointmentDetails = ({ appointment, setSelectedAppointment }) => {
             }));
             alert("Appointment updated!");
             setSelectedAppointment(null);
+        } else {
+            const errorData = await response.json().catch(() => ({}));
+            alert(errorData.error || errorData.errors?.join(', ') || "Failed to update appointment. Please try again.");
         }
     };
 
@@ -603,7 +610,8 @@ const AppointmentDetails = ({ appointment, setSelectedAppointment }) => {
         const response = await fetch(`/appointments/${appointment.id}/canceled`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ appointment: { canceled: true } })
+            body: JSON.stringify({ appointment: { canceled: true } }),
+            credentials: "include"
         });
 
         if (response.ok) {
@@ -616,6 +624,9 @@ const AppointmentDetails = ({ appointment, setSelectedAppointment }) => {
             }));
             alert("Appointment canceled!");
             setSelectedAppointment(null);
+        } else {
+            const errorData = await response.json().catch(() => ({}));
+            alert(errorData.error || errorData.errors?.join(', ') || "Failed to cancel appointment. Please try again.");
         }
     };
 
