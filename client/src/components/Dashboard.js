@@ -332,7 +332,7 @@ export default function Dashboard() {
                     <ModernForm onSubmit={handleRateUpdate}>
                         <ModernRateGrid>
                             <ModernRateCard>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: '45px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                                     <RateDuration>30</RateDuration>
                                     <RateMinutes>min</RateMinutes>
                                 </div>
@@ -351,7 +351,7 @@ export default function Dashboard() {
                             </ModernRateCard>
 
                             <ModernRateCard>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: '45px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                                     <RateDuration>40</RateDuration>
                                     <RateMinutes>min</RateMinutes>
                                 </div>
@@ -370,7 +370,7 @@ export default function Dashboard() {
                             </ModernRateCard>
 
                             <ModernRateCard>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: '45px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                                     <RateDuration>60</RateDuration>
                                     <RateMinutes>min</RateMinutes>
                                 </div>
@@ -389,7 +389,7 @@ export default function Dashboard() {
                             </ModernRateCard>
 
                             <ModernRateCard $solo>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: '45px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                                     <RateDuration>Solo</RateDuration>
                                     <RateMinutes>walk</RateMinutes>
                                 </div>
@@ -1121,6 +1121,8 @@ const ModernRateGrid = styled.div`
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
     
     @media (max-width: 480px) {
         gap: 8px;
@@ -1138,8 +1140,11 @@ const ModernRateCard = styled.div`
     padding: 10px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     transition: all 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
     
     &:hover {
         transform: translateY(-1px);
@@ -1148,14 +1153,23 @@ const ModernRateCard = styled.div`
             : 'rgba(255, 255, 255, 0.06)'};
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
+    
+    @media (max-width: 480px) {
+        padding: 8px;
+        gap: 6px;
+    }
 `;
 
 const RateDuration = styled.div`
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: #ffffff;
     line-height: 1;
-    min-width: 35px;
+    white-space: nowrap;
+    
+    @media (max-width: 480px) {
+        font-size: 1rem;
+    }
 `;
 
 const RateMinutes = styled.div`
@@ -1175,11 +1189,17 @@ const ModernRateInput = styled.div`
     border-radius: 8px;
     padding: 6px 8px;
     transition: all 0.3s ease;
+    min-width: 0;
+    overflow: hidden;
     
     &:focus-within {
         background: rgba(255, 255, 255, 0.1);
         border-color: rgba(16, 185, 129, 0.4);
         box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.08);
+    }
+    
+    @media (max-width: 480px) {
+        padding: 5px 6px;
     }
 `;
 
@@ -1194,9 +1214,10 @@ const RateField = styled.input`
     background: transparent;
     border: none;
     color: #ffffff;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 600;
-    width: 60px;
+    width: 100%;
+    max-width: 60px;
     outline: none;
     
     &::placeholder {
@@ -1207,6 +1228,11 @@ const RateField = styled.input`
     &::-webkit-inner-spin-button {
         -webkit-appearance: none;
         margin: 0;
+    }
+    
+    @media (max-width: 480px) {
+        font-size: 0.85rem;
+        max-width: 50px;
     }
 `;
 
