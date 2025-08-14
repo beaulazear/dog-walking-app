@@ -4,7 +4,6 @@ import { UserContext } from "./context/user";
 import Navbar from "./components/Navbar";
 import Login from "./components/Login";
 import Signup from "./components/Signup";
-import Home from "./components/Home";
 import Dashboard from "./components/Dashboard";
 import TodaysWalks from "./components/TodaysWalks";
 import PetsPage from "./components/PetsPage";
@@ -30,9 +29,8 @@ function App() {
         </>
       ) : (
         <Routes>
-          <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="*" element={<Home />} />
+          <Route path="*" element={<Login />} />
         </Routes>
       )}
     </>

@@ -2,7 +2,8 @@ import React, { useState, useContext } from "react";
 import styled, { keyframes } from "styled-components";
 import { Link } from "react-router-dom";
 import { UserContext } from "../context/user.js";
-import { UserPlus, User, Mail, Lock, UserCircle, Eye, EyeOff, Check, Sparkles } from "lucide-react";
+import { UserPlus, User, Mail, Lock, UserCircle, Eye, EyeOff, Check } from "lucide-react";
+import dogImage from "../assets/dog.png";
 
 const Signup = () => {
     const { setUser } = useContext(UserContext);
@@ -16,6 +17,25 @@ const Signup = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [focusedField, setFocusedField] = useState(null);
+    const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+
+    const handleFocus = (field) => {
+        setFocusedField(field);
+        setIsKeyboardOpen(true);
+        setTimeout(() => {
+            const element = document.activeElement;
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
+    };
+
+    const handleBlur = () => {
+        setFocusedField(null);
+        setTimeout(() => {
+            setIsKeyboardOpen(false);
+        }, 100);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -52,7 +72,7 @@ const Signup = () => {
     const passwordLength = password.length >= 6;
 
     return (
-        <SignupWrapper>
+        <SignupWrapper $isKeyboardOpen={isKeyboardOpen}>
             <FloatingPaws $delay="0s" $startX="10%" />
             <FloatingPaws $delay="2s" $startX="30%" />
             <FloatingPaws $delay="4s" $startX="50%" />
@@ -63,11 +83,11 @@ const Signup = () => {
             <FloatingPaws $delay="5s" $startX="60%" />
             <FloatingPaws $delay="7s" $startX="80%" />
             
-            <ContentContainer>
+            <ContentContainer $isKeyboardOpen={isKeyboardOpen}>
                 <HeaderContainer>
-                    <IconWrapper>
-                        <Sparkles size={40} strokeWidth={1.5} />
-                    </IconWrapper>
+                    <DogImageWrapper>
+                        <DogImage src={dogImage} alt="Pocket Walks Mascot" />
+                    </DogImageWrapper>
                     <WelcomeText>
                         Create Account
                     </WelcomeText>
@@ -86,8 +106,8 @@ const Signup = () => {
                                         placeholder="Username"
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
-                                        onFocus={() => setFocusedField('username')}
-                                        onBlur={() => setFocusedField(null)}
+                                        onFocus={() => handleFocus('username')}
+                                        onBlur={handleBlur}
                                         required
                                     />
                                 </InputWrapper>
@@ -103,8 +123,8 @@ const Signup = () => {
                                         placeholder="Full Name"
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
-                                        onFocus={() => setFocusedField('name')}
-                                        onBlur={() => setFocusedField(null)}
+                                        onFocus={() => handleFocus('name')}
+                                        onBlur={handleBlur}
                                         required
                                     />
                                 </InputWrapper>
@@ -121,8 +141,8 @@ const Signup = () => {
                                     placeholder="Email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    onFocus={() => setFocusedField('email')}
-                                    onBlur={() => setFocusedField(null)}
+                                    onFocus={() => handleFocus('email')}
+                                    onBlur={handleBlur}
                                     required
                                 />
                             </InputWrapper>
@@ -138,8 +158,8 @@ const Signup = () => {
                                     placeholder="Password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    onFocus={() => setFocusedField('password')}
-                                    onBlur={() => setFocusedField(null)}
+                                    onFocus={() => handleFocus('password')}
+                                    onBlur={handleBlur}
                                     required
                                 />
                                 <TogglePassword onClick={() => setShowPassword(!showPassword)} type="button">
@@ -158,8 +178,8 @@ const Signup = () => {
                                     placeholder="Confirm Password"
                                     value={passwordConfirmation}
                                     onChange={(e) => setPasswordConfirmation(e.target.value)}
-                                    onFocus={() => setFocusedField('confirmPassword')}
-                                    onBlur={() => setFocusedField(null)}
+                                    onFocus={() => handleFocus('confirmPassword')}
+                                    onBlur={handleBlur}
                                     required
                                 />
                                 <TogglePassword onClick={() => setShowConfirmPassword(!showConfirmPassword)} type="button">
@@ -255,11 +275,19 @@ const SignupWrapper = styled.div`
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     display: flex;
-    align-items: center;
+    align-items: ${props => props.$isKeyboardOpen ? 'flex-start' : 'center'};
     justify-content: center;
     padding: 20px;
+    padding-top: ${props => props.$isKeyboardOpen ? '20px' : '20px'};
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+    transition: all 0.3s ease;
+    
+    @media (max-width: 768px) {
+        align-items: ${props => props.$isKeyboardOpen ? 'flex-start' : 'flex-start'};
+        padding-top: ${props => props.$isKeyboardOpen ? '10px' : '30px'};
+    }
     
     &::before {
         content: '';
@@ -300,58 +328,80 @@ const ContentContainer = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2rem;
+    gap: ${props => props.$isKeyboardOpen ? '1rem' : '2rem'};
     z-index: 1;
     animation: ${fadeIn} 0.8s ease-out;
-    padding-top: 4rem;
+    padding-top: 3rem;
+    transition: all 0.3s ease;
+    transform: ${props => props.$isKeyboardOpen ? 'translateY(-20px)' : 'translateY(0)'};
+    
+    @media (max-width: 768px) {
+        padding-top: 2.5rem;
+        gap: ${props => props.$isKeyboardOpen ? '0.75rem' : '1.5rem'};
+        transform: ${props => props.$isKeyboardOpen ? 'translateY(-30px)' : 'translateY(0)'};
+    }
 `;
 
 const HeaderContainer = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
     margin-bottom: 0;
-`;
-
-const IconWrapper = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 80px;
-    height: 80px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    color: #ffffff;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
     
-    &:hover {
-        background: rgba(255, 255, 255, 0.15);
-        border-color: rgba(255, 255, 255, 0.3);
-        transform: translateY(-2px);
+    @media (max-width: 768px) {
+        gap: 0.5rem;
     }
 `;
 
+const DogImageWrapper = styled.div`
+    position: relative;
+`;
+
+const DogImage = styled.img`
+    width: 80px;
+    height: auto;
+    filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.2));
+    transition: transform 0.3s ease;
+    
+    @media (max-width: 768px) {
+        width: 70px;
+    }
+    
+    &:hover {
+        transform: scale(1.05);
+    }
+`;
+
+
 const WelcomeText = styled.h1`
     font-family: 'Poppins', sans-serif;
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 600;
     color: #ffffff;
     margin: 0;
     text-align: center;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     letter-spacing: -0.5px;
+    
+    @media (max-width: 768px) {
+        font-size: 1.25rem;
+    }
 `;
 
 const SignupBox = styled.div`
-    padding: 2rem;
+    padding: 1.5rem;
     width: 100%;
     max-width: 520px;
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.5rem;
+    
+    @media (max-width: 768px) {
+        padding: 1rem;
+        gap: 1.25rem;
+        max-width: 100%;
+    }
 `;
 
 const FormHeader = styled.div`
@@ -379,16 +429,21 @@ const Subtitle = styled.p`
 const Form = styled.form`
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 1rem;
+    
+    @media (max-width: 768px) {
+        gap: 0.875rem;
+    }
 `;
 
 const InputRow = styled.div`
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    gap: 0.875rem;
     
-    @media (max-width: 480px) {
+    @media (max-width: 768px) {
         grid-template-columns: 1fr;
+        gap: 0.75rem;
     }
 `;
 
