@@ -23,7 +23,7 @@ const LoaderContainer = styled.div`
   align-items: center;
   height: 100vh;
   width: 100vw;
-  background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   text-align: center;
   animation: ${fadeIn} 1s ease-in-out;
 `;
