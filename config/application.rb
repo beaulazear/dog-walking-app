@@ -27,6 +27,7 @@ module ReactRailsApiProjectTemplate
 
     # Use SameSite=Strict for all cookies to help protect against CSRF
     # https://owasp.org/www-community/SameSite
+    # Note: Session cookie expiration is configured in config/initializers/session_store.rb
     config.action_dispatch.cookies_same_site_protection = :strict
 
     # Initialize configuration defaults for originally generated Rails version.

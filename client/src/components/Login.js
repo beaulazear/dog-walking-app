@@ -3,6 +3,7 @@ import styled, { keyframes } from "styled-components";
 import { Link } from "react-router-dom";
 import { UserContext } from "../context/user.js";
 import { LogIn, User, Lock, Eye, EyeOff } from "lucide-react";
+import dogImage from "../assets/dog.png";
 
 const Login = () => {
     const { setUser } = useContext(UserContext);
@@ -68,6 +69,9 @@ const Login = () => {
             
             <ContentContainer $isKeyboardOpen={isKeyboardOpen}>
                 <HeaderContainer>
+                    <DogImageWrapper>
+                        <DogImage src={dogImage} alt="Dog" />
+                    </DogImageWrapper>
                     <WelcomeText>
                         Welcome Back
                     </WelcomeText>

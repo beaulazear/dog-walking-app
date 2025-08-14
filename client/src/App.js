@@ -18,9 +18,9 @@ function App() {
 
   return (
     <>
-      <Navbar />
       {user ? (
         <>
+          <Navbar />
           <Routes>
             <Route path="/todays-walks" element={<TodaysWalks />} />
             <Route path="/pets-page" element={<PetsPage />} />

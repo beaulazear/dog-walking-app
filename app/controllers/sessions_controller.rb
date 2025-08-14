@@ -1,6 +1,7 @@
 class SessionsController < ApplicationController
   skip_before_action :authorized, only: :create
 
+  # Creates a user session that persists for 1 week (configured in config/initializers/session_store.rb)
   def create
     user = User.find_by(username: params[:username])
     if user&.authenticate(params[:password])
