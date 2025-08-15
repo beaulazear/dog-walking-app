@@ -204,6 +204,13 @@ const Overlay = styled.div`
     justify-content: center;
     z-index: 1000;
     padding: 20px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    
+    @media (max-width: 768px) {
+        padding: 10px;
+        align-items: flex-start;
+    }
 `;
 
 const ModalContainer = styled.div`
@@ -216,11 +223,14 @@ const ModalContainer = styled.div`
     max-width: 500px;
     max-height: 90vh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
     
     @media (max-width: 768px) {
-        margin: 0;
+        margin: 20px 0;
         border-radius: 20px;
-        max-height: 95vh;
+        max-height: none;
+        height: auto;
     }
 `;
 
