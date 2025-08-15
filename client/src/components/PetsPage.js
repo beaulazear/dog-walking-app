@@ -21,14 +21,20 @@ import {
     X,
     Save,
     Trash2,
-    Plus
+    Plus,
+    Edit2,
+    DollarSign,
+    User,
+    Home,
+    FileText,
+    Activity,
+    ArrowLeft
 } from "lucide-react";
 import { UserContext } from "../context/user";
 import PetInvoices from "./PetInvoices";
 import NewAppointmentForm from "./NewAppointmentForm";
 import CancellationModal from "./CancellationModal";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
-import CreatePetButton from "./CreatePetButton";
 
 dayjs.extend(isSameOrAfter);
 
@@ -47,16 +53,14 @@ const getAnimalIcon = (name) => {
     if (lowerName.includes('rabbit') || lowerName.includes('bunny')) {
         return <Rabbit />;
     }
-    // Default to dog for any other pet
     return <Dog />;
 };
-
 
 export default function PetsPage() {
     const { user, setUser } = useContext(UserContext);
     const [selectedPet, setSelectedPet] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeFilter, setActiveFilter] = useState('active'); // 'all', 'active', 'inactive'
+    const [activeFilter, setActiveFilter] = useState('active');
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [newPetFormData, setNewPetFormData] = useState({
         name: "",
@@ -81,12 +85,12 @@ export default function PetsPage() {
         })
         ?.sort((a, b) => a.name.localeCompare(b.name)) || [];
 
-    // Get total pets count for the "All" tab badge
-    const totalPetsCount = user?.pets?.length || 0;
-
     const handleNewPetChange = (e) => {
-        const { name, value } = e.target;
-        setNewPetFormData({ ...newPetFormData, [name]: value });
+        const { name, value, type, checked } = e.target;
+        setNewPetFormData({ 
+            ...newPetFormData, 
+            [name]: type === 'checkbox' ? checked : value 
+        });
     };
 
     const handleNewPetSubmit = async (e) => {
@@ -101,9 +105,9 @@ export default function PetsPage() {
 
         if (response.ok) {
             const newPet = await response.json();
-            setUser(prevUser => ({
-                ...prevUser,
-                pets: [...prevUser.pets, newPet],
+            setUser(user => ({
+                ...user,
+                pets: [...user.pets, newPet]
             }));
             setShowCreateForm(false);
             setNewPetFormData({
@@ -117,238 +121,237 @@ export default function PetsPage() {
                 allergies: "",
                 active: true,
             });
-            alert("Pet successfully added!");
+            alert("Pet added successfully!");
         } else {
-            alert("Error adding pet. Please try again.");
+            alert("Failed to add pet. Please try again.");
         }
     };
 
     return (
         <Container>
-            {!selectedPet && (
-                <>
-                    <HeaderSection>
-                        <TitleSection>
-                            <Title>
-                                <Heart size={32} />
-                                Your Pets
-                            </Title>
-                            <PetSubtitle>Manage your furry friends</PetSubtitle>
-                        </TitleSection>
-                    </HeaderSection>
+            <Header>
+                <HeaderTop>
+                    <Title>My Pets</Title>
+                </HeaderTop>
+                
+                <SearchAndFilter>
+                    <SearchBar>
+                        <Search size={20} />
+                        <input
+                            type="text"
+                            placeholder="Search pets..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </SearchBar>
                     
-                    <SearchContainer>
-                        <SearchInputContainer>
-                            <Search size={16} />
-                            <SearchInput
-                                type="text"
-                                placeholder="Search pets by name..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </SearchInputContainer>
-                    </SearchContainer>
-                    
-                    <FilterTabsContainer>
+                    <FilterTabs>
                         <FilterTab 
                             $active={activeFilter === 'all'} 
                             onClick={() => setActiveFilter('all')}
                         >
-                            All
-                            <CountBadge>{totalPetsCount}</CountBadge>
+                            All ({user?.pets?.length || 0})
                         </FilterTab>
                         <FilterTab 
                             $active={activeFilter === 'active'} 
                             onClick={() => setActiveFilter('active')}
                         >
-                            <CheckCircle size={14} />
+                            <CheckCircle size={16} />
                             Active
                         </FilterTab>
                         <FilterTab 
                             $active={activeFilter === 'inactive'} 
                             onClick={() => setActiveFilter('inactive')}
                         >
-                            <Pause size={14} />
+                            <Pause size={16} />
                             Inactive
                         </FilterTab>
-                        <FilterTab 
-                            $active={false}
-                            onClick={() => setShowCreateForm(true)}
-                            $isNewPet={true}
-                        >
-                            <Plus size={14} />
-                            New Pet
-                        </FilterTab>
-                    </FilterTabsContainer>
-                    
-                    {filteredPets?.length === 0 ? (
-                        <EmptyState>
-                            <EmptyIcon>
-                                {searchTerm ? <AlertCircle size={64} /> : <Heart size={64} />}
-                            </EmptyIcon>
-                            <EmptyTitle>
-                                {searchTerm ? 'No pets found' : 'No pets yet'}
-                            </EmptyTitle>
-                            <EmptyText>
-                                {searchTerm ? 'Try adjusting your search' : 'Add your first pet to get started!'}
-                            </EmptyText>
-                        </EmptyState>
-                    ) : (
-                        <PetsList>
-                            {filteredPets.map((pet) => (
-                                <PetListItem key={pet.id} onClick={() => setSelectedPet(pet)}>
-                                    <PetIcon>
-                                        {getAnimalIcon(pet.name)}
-                                    </PetIcon>
-                                    <PetInfo>
-                                        <PetName>{pet.name}</PetName>
-                                        <PetDetailsContainer>
-                                            <PetDetail>
-                                                <MapPin /> {pet.address?.split(',')[0] || 'No address'}
-                                            </PetDetail>
-                                        </PetDetailsContainer>
-                                    </PetInfo>
-                                    <StatusBadge active={pet.active}>
-                                        {pet.active ? (
-                                            <>
-                                                <CheckCircle /> Active
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Pause /> Inactive
-                                            </>
-                                        )}
-                                    </StatusBadge>
-                                    <ArrowIcon>
-                                        <ChevronRight />
-                                    </ArrowIcon>
-                                </PetListItem>
-                            ))}
-                        </PetsList>
-                    )}
-                </>
+                        <AddPetTab onClick={() => setShowCreateForm(true)}>
+                            <Plus size={16} />
+                            New
+                        </AddPetTab>
+                    </FilterTabs>
+                </SearchAndFilter>
+            </Header>
+
+            <PetsGrid>
+                {filteredPets.map(pet => (
+                    <PetCard 
+                        key={pet.id} 
+                        onClick={() => setSelectedPet(pet)}
+                        $active={pet.active}
+                    >
+                        <PetCardHeader>
+                            <PetIcon>{getAnimalIcon(pet.name)}</PetIcon>
+                            <PetName>{pet.name}</PetName>
+                            <StatusBadge $active={pet.active}>
+                                {pet.active ? <CheckCircle size={14} /> : <Pause size={14} />}
+                                {pet.active ? 'Active' : 'Inactive'}
+                            </StatusBadge>
+                        </PetCardHeader>
+                        
+                        <PetCardInfo>
+                            <InfoRow>
+                                <MapPin size={14} />
+                                <span>{pet.address || 'No address'}</span>
+                            </InfoRow>
+                            <InfoRow>
+                                <Calendar size={14} />
+                                <span>Age: {pet.birthdate ? `${dayjs().diff(dayjs(pet.birthdate), 'year')} years` : 'Unknown'}</span>
+                            </InfoRow>
+                        </PetCardInfo>
+                        
+                        <ViewDetailsButton>
+                            View Details
+                            <ChevronRight size={16} />
+                        </ViewDetailsButton>
+                    </PetCard>
+                ))}
+            </PetsGrid>
+
+            {filteredPets.length === 0 && (
+                <EmptyState>
+                    <EmptyIcon>{searchTerm ? <Search size={48} /> : <Heart size={48} />}</EmptyIcon>
+                    <EmptyTitle>
+                        {searchTerm ? 'No pets found' : 'No pets yet'}
+                    </EmptyTitle>
+                    <EmptyText>
+                        {searchTerm ? 'Try adjusting your search' : 'Add your first pet to get started'}
+                    </EmptyText>
+                </EmptyState>
             )}
 
-            {selectedPet && <PetDetails key={selectedPet.id} pet={selectedPet} setSelectedPet={setSelectedPet} />}
-            
+            {selectedPet && (
+                <PetDetailsModal pet={selectedPet} onClose={() => setSelectedPet(null)} />
+            )}
+
             {showCreateForm && (
-                <CreatePetModal onClick={() => setShowCreateForm(false)}>
-                    <CreatePetModalContainer onClick={(e) => e.stopPropagation()}>
-                        <CreatePetModalHeader>
-                            <CreatePetModalTitle>Add New Pet</CreatePetModalTitle>
-                            <CreatePetCloseButton onClick={() => setShowCreateForm(false)}>
+                <CreatePetModal onClick={(e) => e.target === e.currentTarget && setShowCreateForm(false)}>
+                    <ModalContainer style={{ maxWidth: '600px' }}>
+                        <ModalHeader>
+                            <ModalTitle>Add New Pet</ModalTitle>
+                            <CloseButton onClick={() => setShowCreateForm(false)}>
                                 <X size={24} />
-                            </CreatePetCloseButton>
-                        </CreatePetModalHeader>
+                            </CloseButton>
+                        </ModalHeader>
                         
                         <CreatePetForm onSubmit={handleNewPetSubmit}>
-                            <CreatePetInputGroup>
-                                <CreatePetLabel>Pet Name *</CreatePetLabel>
-                                <CreatePetInput 
+                        <FormGrid>
+                            <FormGroup>
+                                <Label>Pet Name *</Label>
+                                <Input 
                                     name="name" 
                                     value={newPetFormData.name} 
                                     onChange={handleNewPetChange} 
-                                    placeholder="Enter pet's name"
                                     required 
+                                    placeholder="Enter pet's name"
                                 />
-                            </CreatePetInputGroup>
+                            </FormGroup>
 
-                            <CreatePetInputGroup>
-                                <CreatePetLabel>Birthdate *</CreatePetLabel>
-                                <CreatePetInput 
+                            <FormGroup>
+                                <Label>Birthdate</Label>
+                                <Input 
                                     type="date" 
                                     name="birthdate" 
                                     value={newPetFormData.birthdate} 
                                     onChange={handleNewPetChange} 
-                                    required 
                                 />
-                            </CreatePetInputGroup>
+                            </FormGroup>
 
-                            <CreatePetTwoColumnGroup>
-                                <CreatePetInputGroup>
-                                    <CreatePetLabel>Sex</CreatePetLabel>
-                                    <CreatePetSelect name="sex" value={newPetFormData.sex} onChange={handleNewPetChange}>
-                                        <option value="Male">Male</option>
-                                        <option value="Female">Female</option>
-                                    </CreatePetSelect>
-                                </CreatePetInputGroup>
+                            <FormGroup>
+                                <Label>Sex</Label>
+                                <Select name="sex" value={newPetFormData.sex} onChange={handleNewPetChange}>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </Select>
+                            </FormGroup>
 
-                                <CreatePetInputGroup>
-                                    <CreatePetLabel>Spayed/Neutered</CreatePetLabel>
-                                    <CreatePetSelect name="spayed_neutered" value={newPetFormData.spayed_neutered} onChange={(e) => setNewPetFormData({ ...newPetFormData, spayed_neutered: e.target.value === 'true' })}>
-                                        <option value={true}>Yes</option>
-                                        <option value={false}>No</option>
-                                    </CreatePetSelect>
-                                </CreatePetInputGroup>
-                            </CreatePetTwoColumnGroup>
+                            <FormGroup>
+                                <Label>Spayed/Neutered</Label>
+                                <Select 
+                                    name="spayed_neutered" 
+                                    value={newPetFormData.spayed_neutered} 
+                                    onChange={handleNewPetChange}
+                                >
+                                    <option value={false}>No</option>
+                                    <option value={true}>Yes</option>
+                                </Select>
+                            </FormGroup>
+                        </FormGrid>
 
-                            <CreatePetInputGroup>
-                                <CreatePetLabel>Address</CreatePetLabel>
-                                <CreatePetInput 
-                                    name="address" 
-                                    value={newPetFormData.address} 
-                                    onChange={handleNewPetChange} 
-                                    placeholder="Pet's primary address"
-                                />
-                            </CreatePetInputGroup>
+                        <FormGroup>
+                            <Label>Address</Label>
+                            <Input 
+                                name="address" 
+                                value={newPetFormData.address} 
+                                onChange={handleNewPetChange} 
+                                placeholder="Pet's home address"
+                            />
+                        </FormGroup>
 
-                            <CreatePetInputGroup>
-                                <CreatePetLabel>Behavioral Notes</CreatePetLabel>
-                                <CreatePetTextarea 
-                                    name="behavioral_notes" 
-                                    value={newPetFormData.behavioral_notes} 
-                                    onChange={handleNewPetChange} 
-                                    placeholder="Any behavioral notes or special instructions..."
-                                />
-                            </CreatePetInputGroup>
+                        <FormGroup>
+                            <Label>Behavioral Notes</Label>
+                            <Textarea 
+                                name="behavioral_notes" 
+                                value={newPetFormData.behavioral_notes} 
+                                onChange={handleNewPetChange} 
+                                placeholder="Any behavioral notes or special instructions..."
+                            />
+                        </FormGroup>
 
-                            <CreatePetInputGroup>
-                                <CreatePetLabel>Supplies Location</CreatePetLabel>
-                                <CreatePetTextarea 
-                                    name="supplies_location" 
-                                    value={newPetFormData.supplies_location} 
-                                    onChange={handleNewPetChange} 
-                                    placeholder="Where are leashes, treats, etc. located?"
-                                />
-                            </CreatePetInputGroup>
+                        <FormGroup>
+                            <Label>Supplies Location</Label>
+                            <Textarea 
+                                name="supplies_location" 
+                                value={newPetFormData.supplies_location} 
+                                onChange={handleNewPetChange} 
+                                placeholder="Where are leashes, treats, etc. located?"
+                            />
+                        </FormGroup>
 
-                            <CreatePetInputGroup>
-                                <CreatePetLabel>Allergies</CreatePetLabel>
-                                <CreatePetInput 
-                                    name="allergies" 
-                                    value={newPetFormData.allergies} 
-                                    onChange={handleNewPetChange} 
-                                    placeholder="Food allergies, medication allergies, etc."
-                                />
-                            </CreatePetInputGroup>
+                        <FormGroup>
+                            <Label>Allergies</Label>
+                            <Input 
+                                name="allergies" 
+                                value={newPetFormData.allergies} 
+                                onChange={handleNewPetChange} 
+                                placeholder="Food allergies, medication allergies, etc."
+                            />
+                        </FormGroup>
 
-                            <CreatePetButtonContainer>
-                                <CreatePetSubmitButton type="submit">Add Pet</CreatePetSubmitButton>
-                                <CreatePetCancelButton type="button" onClick={() => setShowCreateForm(false)}>Cancel</CreatePetCancelButton>
-                            </CreatePetButtonContainer>
-                        </CreatePetForm>
-                    </CreatePetModalContainer>
+                        <FormButtons>
+                            <SaveButton type="submit">
+                                <Save size={18} />
+                                Add Pet
+                            </SaveButton>
+                            <CancelButton type="button" onClick={() => setShowCreateForm(false)}>
+                                Cancel
+                            </CancelButton>
+                        </FormButtons>
+                    </CreatePetForm>
+                    </ModalContainer>
                 </CreatePetModal>
             )}
         </Container>
     );
 }
 
-const PetDetails = ({ pet, setSelectedPet }) => {
-    const { setUser, user } = useContext(UserContext);
+// New Pet Details Modal Component with Tabs
+const PetDetailsModal = ({ pet, onClose }) => {
+    const { user, setUser } = useContext(UserContext);
+    const [activeTab, setActiveTab] = useState('info');
     const [formData, setFormData] = useState(pet);
-    const [appointments, setAppointments] = useState(pet.appointments || []);
     const [newProfilePic, setNewProfilePic] = useState(null);
+    const [appointments, setAppointments] = useState([]);
+    const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [showCancellationModal, setShowCancellationModal] = useState(false);
+    const [editMode, setEditMode] = useState(false);
 
     useEffect(() => {
-        setFormData(pet);
-
         if (user?.appointments) {
             const today = dayjs().startOf("day");
-
             const filteredAppointments = user.appointments.filter(apt => {
                 const appointmentDate = dayjs(apt.appointment_date).startOf("day");
-
                 return (
                     apt.pet_id === pet.id &&
                     !apt.completed &&
@@ -356,7 +359,6 @@ const PetDetails = ({ pet, setSelectedPet }) => {
                     (apt.recurring || appointmentDate.isSameOrAfter(today))
                 );
             });
-
             setAppointments(filteredAppointments);
         }
     }, [pet, user]);
@@ -365,7 +367,6 @@ const PetDetails = ({ pet, setSelectedPet }) => {
         const { name, value } = e.target;
         let processedValue = value;
         
-        // Handle boolean values for select fields
         if ((name === 'active' || name === 'spayed_neutered') && typeof value === 'string') {
             processedValue = value === 'true';
         }
@@ -398,1878 +399,1403 @@ const PetDetails = ({ pet, setSelectedPet }) => {
 
         if (response.ok) {
             const updatedPet = await response.json();
-            console.log(user, user.pets)
             setUser(user => ({
                 ...user,
-                pets: [...user.pets.map(p => (p.id === updatedPet.id ? { ...updatedPet } : p))]
+                pets: user.pets.map(p => (p.id === updatedPet.id ? updatedPet : p))
             }));
             alert("Pet details updated!");
-            setSelectedPet(null);
+            setEditMode(false);
         }
     };
 
-    return (
-        <DetailsContainer>
-            <HeaderContainer>
-                <Title>{pet.name}</Title>
-                <CloseButton onClick={() => setSelectedPet(null)}>✖ Exit</CloseButton>
-            </HeaderContainer>
-            <Form>
-                <Label>Name:</Label>
-                <Input name="name" value={formData.name || ""} onChange={handleChange} />
-                <Label>Birthdate:</Label>
-                <Input type="date" name="birthdate" value={dayjs(formData.birthdate).format("YYYY-MM-DD")} onChange={handleChange} />
-                <Label>Behavioral Notes:</Label>
-                <Textarea name="behavioral_notes" value={formData.behavioral_notes || ""} onChange={handleChange} />
-                <Label>Supplies Location:</Label>
-                <Textarea name="supplies_location" value={formData.supplies_location || ""} onChange={handleChange} placeholder="Where are leashes, treats, etc. located?" />
-                <Label>Address:</Label>
-                <Input name="address" value={formData.address || ""} onChange={handleChange} />
-                <Label>Sex:</Label>
-                <Select name="sex" value={formData.sex || ""} onChange={handleChange}>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                </Select>
-                <Label>Status:</Label>
-                <Select name="active" value={formData.active !== undefined ? formData.active : true} onChange={handleChange}>
-                    <option value={true}>Active</option>
-                    <option value={false}>Inactive</option>
-                </Select>
-                <Label>Spayed/Neutered:</Label>
-                <Select name="spayed_neutered" value={formData.spayed_neutered || false} onChange={handleChange}>
-                    <option value={true}>Yes</option>
-                    <option value={false}>No</option>
-                </Select>
-                <Label>Profile Picture:</Label>
-                <Input type="file" accept="image/*" onChange={handleFileChange} />
-                <UpdateButton onClick={handleUpdate}>Update details</UpdateButton>
-            </Form>
+    const handleDeleteAppointment = async (appointmentId) => {
+        if (!window.confirm("Are you sure you want to delete this appointment?")) return;
 
-            <PetAppointments appointments={appointments} pet={pet} />
-        </DetailsContainer>
-    );
-};
-
-const PetAppointments = ({ pet, appointments }) => {
-    const [selectedAppointment, setSelectedAppointment] = useState(null);
-    const { setUser } = useContext(UserContext);
-
-
-    useEffect(() => {
-        const deletePastCancellations = async () => {
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1); // Moves the threshold to yesterday
-            yesterday.setHours(0, 0, 0, 0); // Normalize to midnight
-
-            for (const apt of appointments) {
-                if (apt.cancellations) {
-                    for (const c of apt.cancellations) {
-                        const cancellationDate = new Date(c.date);
-                        cancellationDate.setHours(0, 0, 0, 0); // Normalize cancellation date
-
-                        if (cancellationDate <= yesterday) { // Only delete if it's at least a day old
-                            try {
-                                const response = await fetch(`/cancellations/${c.id}`, {
-                                    method: "DELETE",
-                                    credentials: "include"
-                                });
-
-                                if (response.ok) {
-                                    setUser(user => ({
-                                        ...user,
-                                        appointments: user.appointments.map(apt => ({
-                                            ...apt,
-                                            cancellations: apt.cancellations.filter(cancel => cancel.id !== c.id)
-                                        }))
-                                    }));
-                                } else {
-                                    console.error(`Failed to delete cancellation ID: ${c.id}`);
-                                }
-                            } catch (error) {
-                                console.error("Error deleting cancellation:", error);
-                            }
-                        }
-                    }
-                }
-            }
-        };
-
-        deletePastCancellations();
-    }, [appointments, setUser]);
-
-    return (
-        <AppointmentsContainer>
-            <Subtitle>📅 Appointments</Subtitle>
-            {appointments.length > 0 && (<Text>Click on an appointment to edit, delete, or add cancellations</Text>)}
-            {appointments.length === 0 ? (
-                <Text>No appointments scheduled.</Text>
-            ) : (
-                appointments.map((apt) => (
-                    <AppointmentCard key={apt.id} onClick={() => setSelectedAppointment(apt)}>
-                        <Text><strong>{apt.recurring ? 'Recurring' : 'One Time'} {apt.duration} min {apt.solo ? 'solo' : 'group'} walk</strong></Text>
-                        {apt.recurring && (
-                            <Text>
-                                Days of week: {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-                                    .filter((day) => apt[day.toLowerCase()])
-                                    .join(", ")}
-                            </Text>
-                        )}
-                        {!apt.recurring && (<Text>{dayjs(apt.appointment_date).format("MMM D, YYYY")}</Text>)}
-                        <Text>{dayjs(apt.start_time).format("h:mm A")} - {dayjs(apt.end_time).format("h:mm A")}</Text>
-                        {(apt.recurring && apt.cancellations?.length > 0) && (
-                            <ul>
-                                {apt.cancellations.map((cancellation) => (
-                                    <li key={cancellation.id}>{dayjs(cancellation.date).format("MMMM D, YYYY")}</li>
-                                ))}
-                            </ul>
-                        )}
-                    </AppointmentCard>
-                ))
-            )}
-            {selectedAppointment && (
-                <AppointmentDetails
-                    appointment={selectedAppointment}
-                    setSelectedAppointment={setSelectedAppointment}
-                />
-            )}
-            <NewAppointmentForm pet={pet} />
-            <Subtitle>💰 Invoices</Subtitle>
-            <PetInvoices pet={pet} />
-        </AppointmentsContainer>
-    );
-};
-
-const AppointmentDetails = ({ appointment, setSelectedAppointment }) => {
-    const { setUser } = useContext(UserContext);
-    const [formData, setFormData] = useState({
-        ...appointment,
-        start_time: dayjs(appointment.start_time).format("HH:mm"),
-        end_time: dayjs(appointment.end_time).format("HH:mm"),
-    });
-
-    // Lock body scroll when modal is open and handle ESC key
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        
-        const handleKeyDown = (e) => {
-            if (e.key === 'Escape') {
-                setSelectedAppointment(null);
-            }
-        };
-        
-        document.addEventListener('keydown', handleKeyDown);
-        
-        return () => {
-            document.body.style.overflow = 'unset';
-            document.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [setSelectedAppointment]);
-
-    const handleChange = (e) => {
-        const { name, type, value, checked } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === "checkbox" ? checked : value
-        }));
-    };
-
-    const handleUpdate = async () => {
-        const response = await fetch(`/appointments/${appointment.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                appointment: {
-                    ...formData,
-                    start_time: formData.start_time.length > 5 ? formData.start_time.slice(11, 16) : formData.start_time,
-                    end_time: formData.end_time.length > 5 ? formData.end_time.slice(11, 16) : formData.end_time,
-                }
-            }),
+        const response = await fetch(`/appointments/${appointmentId}`, {
+            method: "DELETE",
             credentials: "include"
         });
 
         if (response.ok) {
-            const updatedAppointment = await response.json();
-            console.log("Updated Appointment:", updatedAppointment);
-            setUser(prevUser => ({
-                ...prevUser,
-                appointments: prevUser.appointments.map(a =>
-                    a.id === updatedAppointment.id ? updatedAppointment : a
-                )
+            setUser(user => ({
+                ...user,
+                appointments: user.appointments.filter(apt => apt.id !== appointmentId)
             }));
-            alert("Appointment updated!");
             setSelectedAppointment(null);
-        } else {
-            const errorData = await response.json().catch(() => ({}));
-            alert(errorData.error || errorData.errors?.join(', ') || "Failed to update appointment. Please try again.");
-        }
-    };
-
-    const handleCancel = async () => {
-        if (!window.confirm("Are you sure you want to cancel this appointment?")) return;
-
-        const response = await fetch(`/appointments/${appointment.id}/canceled`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ appointment: { canceled: true } }),
-            credentials: "include"
-        });
-
-        if (response.ok) {
-            const updatedAppointment = await response.json();
-            setUser(prevUser => ({
-                ...prevUser,
-                appointments: prevUser.appointments.map(a =>
-                    a.id === updatedAppointment.id ? updatedAppointment : a
-                )
-            }));
-            alert("Appointment canceled!");
-            setSelectedAppointment(null);
-        } else {
-            const errorData = await response.json().catch(() => ({}));
-            alert(errorData.error || errorData.errors?.join(', ') || "Failed to cancel appointment. Please try again.");
-        }
-    };
-
-    const handleOverlayClick = (e) => {
-        if (e.target === e.currentTarget) {
-            setSelectedAppointment(null);
+            alert("Appointment deleted successfully!");
         }
     };
 
     const modalContent = (
-        <EditModalOverlay onClick={handleOverlayClick}>
-            <EditModalContainer>
-                <EditModalHeader>
-                    <EditModalTitle>
-                        <Calendar size={20} />
-                        Edit Appointment
-                    </EditModalTitle>
-                    <EditModalCloseButton onClick={() => setSelectedAppointment(null)}>
-                        <X size={18} />
-                    </EditModalCloseButton>
-                </EditModalHeader>
-                
-                <EditModalForm>
-                    {formData.recurring ? (
-                        <EditInputGroup>
-                            <EditLabel>
-                                <CalendarDays size={16} />
-                                Recurring Days
-                            </EditLabel>
-                            <EditDaysContainer>
-                                {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map(day => (
-                                    <EditDayToggle key={day} $checked={formData[day]}>
-                                        <input
-                                            type="checkbox"
-                                            name={day}
-                                            checked={formData[day]}
-                                            onChange={handleChange}
+        <ModalOverlay onClick={(e) => e.target === e.currentTarget && onClose()}>
+            <ModalContainer>
+                <ModalHeader>
+                    <ModalHeaderLeft>
+                        <BackButton onClick={onClose}>
+                            <ArrowLeft size={24} />
+                        </BackButton>
+                        <PetModalIcon>{getAnimalIcon(pet.name)}</PetModalIcon>
+                        <div>
+                            <ModalTitle>{pet.name}</ModalTitle>
+                            <ModalSubtitle>
+                                <StatusBadge $active={pet.active} style={{ marginLeft: 0 }}>
+                                    {pet.active ? <CheckCircle size={14} /> : <Pause size={14} />}
+                                    {pet.active ? 'Active' : 'Inactive'}
+                                </StatusBadge>
+                            </ModalSubtitle>
+                        </div>
+                    </ModalHeaderLeft>
+                </ModalHeader>
+
+                <TabContainer>
+                    <Tab 
+                        $active={activeTab === 'info'} 
+                        onClick={() => setActiveTab('info')}
+                    >
+                        <User size={18} />
+                        <span>Info</span>
+                    </Tab>
+                    <Tab 
+                        $active={activeTab === 'appointments'} 
+                        onClick={() => setActiveTab('appointments')}
+                    >
+                        <Calendar size={18} />
+                        <span>Appts</span>
+                    </Tab>
+                    <Tab 
+                        $active={activeTab === 'invoices'} 
+                        onClick={() => setActiveTab('invoices')}
+                    >
+                        <DollarSign size={18} />
+                        <span>Bills</span>
+                    </Tab>
+                </TabContainer>
+
+                <TabContent>
+                    {activeTab === 'info' && (
+                        <InfoTab>
+                            <InfoHeader>
+                                <InfoTitle>Pet Information</InfoTitle>
+                                {!editMode ? (
+                                    <EditButton onClick={() => setEditMode(true)}>
+                                        <Edit2 size={16} />
+                                        Edit Details
+                                    </EditButton>
+                                ) : (
+                                    <ButtonGroup>
+                                        <SaveButton onClick={handleUpdate}>
+                                            <Save size={16} />
+                                            Save Changes
+                                        </SaveButton>
+                                        <CancelButton onClick={() => {
+                                            setEditMode(false);
+                                            setFormData(pet);
+                                        }}>
+                                            Cancel
+                                        </CancelButton>
+                                    </ButtonGroup>
+                                )}
+                            </InfoHeader>
+
+                            {!editMode ? (
+                                <InfoGrid>
+                                    <InfoItem>
+                                        <InfoLabel>Name</InfoLabel>
+                                        <InfoValue>{formData.name}</InfoValue>
+                                    </InfoItem>
+                                    <InfoItem>
+                                        <InfoLabel>Birthdate</InfoLabel>
+                                        <InfoValue>
+                                            {formData.birthdate ? dayjs(formData.birthdate).format("MMM D, YYYY") : 'Not set'}
+                                        </InfoValue>
+                                    </InfoItem>
+                                    <InfoItem>
+                                        <InfoLabel>Age</InfoLabel>
+                                        <InfoValue>
+                                            {formData.birthdate ? `${dayjs().diff(dayjs(formData.birthdate), 'year')} years` : 'Unknown'}
+                                        </InfoValue>
+                                    </InfoItem>
+                                    <InfoItem>
+                                        <InfoLabel>Sex</InfoLabel>
+                                        <InfoValue>{formData.sex}</InfoValue>
+                                    </InfoItem>
+                                    <InfoItem>
+                                        <InfoLabel>Spayed/Neutered</InfoLabel>
+                                        <InfoValue>{formData.spayed_neutered ? 'Yes' : 'No'}</InfoValue>
+                                    </InfoItem>
+                                    <InfoItem>
+                                        <InfoLabel>Status</InfoLabel>
+                                        <InfoValue>{formData.active ? 'Active' : 'Inactive'}</InfoValue>
+                                    </InfoItem>
+                                    <InfoItem $fullWidth>
+                                        <InfoLabel>Address</InfoLabel>
+                                        <InfoValue>{formData.address || 'Not provided'}</InfoValue>
+                                    </InfoItem>
+                                    <InfoItem $fullWidth>
+                                        <InfoLabel>Allergies</InfoLabel>
+                                        <InfoValue>{formData.allergies || 'None listed'}</InfoValue>
+                                    </InfoItem>
+                                    <InfoItem $fullWidth>
+                                        <InfoLabel>Behavioral Notes</InfoLabel>
+                                        <InfoValue>{formData.behavioral_notes || 'No notes'}</InfoValue>
+                                    </InfoItem>
+                                    <InfoItem $fullWidth>
+                                        <InfoLabel>Supplies Location</InfoLabel>
+                                        <InfoValue>{formData.supplies_location || 'Not specified'}</InfoValue>
+                                    </InfoItem>
+                                </InfoGrid>
+                            ) : (
+                                <EditForm>
+                                    <FormGrid>
+                                        <FormGroup>
+                                            <Label>Name</Label>
+                                            <Input 
+                                                name="name" 
+                                                value={formData.name || ""} 
+                                                onChange={handleChange} 
+                                            />
+                                        </FormGroup>
+                                        <FormGroup>
+                                            <Label>Birthdate</Label>
+                                            <Input 
+                                                type="date" 
+                                                name="birthdate" 
+                                                value={formData.birthdate ? dayjs(formData.birthdate).format("YYYY-MM-DD") : ""} 
+                                                onChange={handleChange} 
+                                            />
+                                        </FormGroup>
+                                        <FormGroup>
+                                            <Label>Sex</Label>
+                                            <Select name="sex" value={formData.sex || ""} onChange={handleChange}>
+                                                <option value="Male">Male</option>
+                                                <option value="Female">Female</option>
+                                            </Select>
+                                        </FormGroup>
+                                        <FormGroup>
+                                            <Label>Spayed/Neutered</Label>
+                                            <Select name="spayed_neutered" value={formData.spayed_neutered} onChange={handleChange}>
+                                                <option value={true}>Yes</option>
+                                                <option value={false}>No</option>
+                                            </Select>
+                                        </FormGroup>
+                                        <FormGroup>
+                                            <Label>Status</Label>
+                                            <Select name="active" value={formData.active} onChange={handleChange}>
+                                                <option value={true}>Active</option>
+                                                <option value={false}>Inactive</option>
+                                            </Select>
+                                        </FormGroup>
+                                        <FormGroup>
+                                            <Label>Profile Picture</Label>
+                                            <Input 
+                                                type="file" 
+                                                accept="image/*" 
+                                                onChange={handleFileChange} 
+                                            />
+                                        </FormGroup>
+                                    </FormGrid>
+                                    <FormGroup>
+                                        <Label>Address</Label>
+                                        <Input 
+                                            name="address" 
+                                            value={formData.address || ""} 
+                                            onChange={handleChange} 
                                         />
-                                        <span>{day.charAt(0).toUpperCase() + day.slice(1)}</span>
-                                    </EditDayToggle>
-                                ))}
-                            </EditDaysContainer>
-                        </EditInputGroup>
-                    ) : (
-                        <EditInputGroup>
-                            <EditLabel>
-                                <CalendarDays size={16} />
-                                Appointment Date
-                            </EditLabel>
-                            <EditInput
-                                type="date"
-                                name="appointment_date"
-                                value={dayjs(formData.appointment_date).format("YYYY-MM-DD")}
-                                onChange={handleChange}
-                            />
-                        </EditInputGroup>
+                                    </FormGroup>
+                                    <FormGroup>
+                                        <Label>Allergies</Label>
+                                        <Input 
+                                            name="allergies" 
+                                            value={formData.allergies || ""} 
+                                            onChange={handleChange} 
+                                            placeholder="Food allergies, medication allergies, etc."
+                                        />
+                                    </FormGroup>
+                                    <FormGroup>
+                                        <Label>Behavioral Notes</Label>
+                                        <Textarea 
+                                            name="behavioral_notes" 
+                                            value={formData.behavioral_notes || ""} 
+                                            onChange={handleChange} 
+                                        />
+                                    </FormGroup>
+                                    <FormGroup>
+                                        <Label>Supplies Location</Label>
+                                        <Textarea 
+                                            name="supplies_location" 
+                                            value={formData.supplies_location || ""} 
+                                            onChange={handleChange} 
+                                            placeholder="Where are leashes, treats, etc. located?" 
+                                        />
+                                    </FormGroup>
+                                </EditForm>
+                            )}
+                        </InfoTab>
                     )}
 
-                    {appointment.recurring && (
-                        <EditInputGroup>
-                            <CancellationModal setSelectedAppointment={setSelectedAppointment} appointment={appointment}>
-                                Add Cancellations
-                            </CancellationModal>
-                        </EditInputGroup>
+                    {activeTab === 'appointments' && (
+                        <AppointmentsTab>
+                            <AppointmentsHeader>
+                                <InfoTitle>Appointments</InfoTitle>
+                            </AppointmentsHeader>
+                            
+                            {appointments.length === 0 ? (
+                                <EmptyAppointments>
+                                    <Calendar size={48} />
+                                    <EmptyTitle>No appointments scheduled</EmptyTitle>
+                                    <EmptyText>Add an appointment to get started</EmptyText>
+                                </EmptyAppointments>
+                            ) : (
+                                <AppointmentsList>
+                                    {appointments.map((apt) => (
+                                        <AppointmentCard 
+                                            key={apt.id} 
+                                            onClick={() => setSelectedAppointment(apt)}
+                                        >
+                                            <AppointmentHeader>
+                                                <AppointmentType $recurring={apt.recurring}>
+                                                    {apt.recurring ? 'Recurring' : 'One-time'}
+                                                </AppointmentType>
+                                                <AppointmentDuration>
+                                                    {apt.duration} min {apt.solo ? 'solo' : 'group'} walk
+                                                </AppointmentDuration>
+                                            </AppointmentHeader>
+                                            
+                                            <AppointmentDetails>
+                                                {apt.recurring ? (
+                                                    <DetailRow>
+                                                        <CalendarDays size={16} />
+                                                        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                                                            .filter((day, i) => apt[["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"][i]])
+                                                            .join(", ")}
+                                                    </DetailRow>
+                                                ) : (
+                                                    <DetailRow>
+                                                        <Calendar size={16} />
+                                                        {dayjs(apt.appointment_date).format("MMM D, YYYY")}
+                                                    </DetailRow>
+                                                )}
+                                                <DetailRow>
+                                                    <Clock size={16} />
+                                                    {dayjs(apt.start_time).format("h:mm A")} - {dayjs(apt.end_time).format("h:mm A")}
+                                                </DetailRow>
+                                            </AppointmentDetails>
+
+                                            {apt.recurring && apt.cancellations?.length > 0 && (
+                                                <CancellationsList>
+                                                    <CancellationsTitle>Cancelled dates:</CancellationsTitle>
+                                                    {apt.cancellations.map((c) => (
+                                                        <CancellationDate key={c.id}>
+                                                            {dayjs(c.date).format("MMM D")}
+                                                        </CancellationDate>
+                                                    ))}
+                                                </CancellationsList>
+                                            )}
+                                        </AppointmentCard>
+                                    ))}
+                                </AppointmentsList>
+                            )}
+                            
+                            <NewAppointmentForm pet={pet} />
+
+                            {selectedAppointment && (
+                                <AppointmentModal onClick={(e) => e.target === e.currentTarget && setSelectedAppointment(null)}>
+                                    <ModalContainer style={{ maxWidth: '600px' }}>
+                                        <ModalHeader>
+                                            <ModalHeaderLeft>
+                                                <BackButton onClick={() => setSelectedAppointment(null)}>
+                                                    <ArrowLeft size={24} />
+                                                </BackButton>
+                                                <ModalTitle>Appointment Details</ModalTitle>
+                                            </ModalHeaderLeft>
+                                        </ModalHeader>
+                                        <AppointmentModalContent>
+                                        <InfoGrid>
+                                            <InfoItem>
+                                                <InfoLabel>Type</InfoLabel>
+                                                <InfoValue>{selectedAppointment.recurring ? 'Recurring' : 'One-time'}</InfoValue>
+                                            </InfoItem>
+                                            <InfoItem>
+                                                <InfoLabel>Duration</InfoLabel>
+                                                <InfoValue>{selectedAppointment.duration} minutes</InfoValue>
+                                            </InfoItem>
+                                            <InfoItem>
+                                                <InfoLabel>Walk Type</InfoLabel>
+                                                <InfoValue>{selectedAppointment.solo ? 'Solo' : 'Group'}</InfoValue>
+                                            </InfoItem>
+                                            <InfoItem>
+                                                <InfoLabel>Time</InfoLabel>
+                                                <InfoValue>
+                                                    {dayjs(selectedAppointment.start_time).format("h:mm A")} - 
+                                                    {dayjs(selectedAppointment.end_time).format("h:mm A")}
+                                                </InfoValue>
+                                            </InfoItem>
+                                        </InfoGrid>
+                                        
+                                        <ButtonGroup style={{ marginTop: '24px' }}>
+                                            {selectedAppointment.recurring && (
+                                                <PrimaryButton onClick={() => setShowCancellationModal(true)}>
+                                                    Add Cancellation Date
+                                                </PrimaryButton>
+                                            )}
+                                            <DeleteButton onClick={() => handleDeleteAppointment(selectedAppointment.id)}>
+                                                <Trash2 size={16} />
+                                                Delete Appointment
+                                            </DeleteButton>
+                                        </ButtonGroup>
+                                    </AppointmentModalContent>
+                                    </ModalContainer>
+                                </AppointmentModal>
+                            )}
+
+                            {showCancellationModal && selectedAppointment && (
+                                <CancellationModal
+                                    appointment={selectedAppointment}
+                                    onClose={() => setShowCancellationModal(false)}
+                                />
+                            )}
+                        </AppointmentsTab>
                     )}
 
-                    <EditTwoColumnGroup>
-                        <EditInputGroup>
-                            <EditLabel>
-                                <Clock size={16} />
-                                Start Time
-                            </EditLabel>
-                            <EditInput
-                                type="time"
-                                name="start_time"
-                                value={formData.start_time || ""}
-                                onChange={handleChange}
-                                required
-                            />
-                        </EditInputGroup>
-
-                        <EditInputGroup>
-                            <EditLabel>
-                                <Clock size={16} />
-                                End Time
-                            </EditLabel>
-                            <EditInput
-                                type="time"
-                                name="end_time"
-                                value={formData.end_time || ""}
-                                onChange={handleChange}
-                                required
-                            />
-                        </EditInputGroup>
-                    </EditTwoColumnGroup>
-
-                    <EditInputGroup>
-                        <EditLabel>
-                            <Clock size={16} />
-                            Duration (minutes)
-                        </EditLabel>
-                        <EditSelect name="duration" value={formData.duration} onChange={handleChange}>
-                            <option value={30}>30 minutes</option>
-                            <option value={45}>45 minutes</option>
-                            <option value={60}>60 minutes</option>
-                        </EditSelect>
-                    </EditInputGroup>
-
-                    <EditButtonGroup>
-                        <EditSaveButton onClick={handleUpdate}>
-                            <Save size={16} />
-                            Save Changes
-                        </EditSaveButton>
-                        <EditDeleteButton onClick={handleCancel}>
-                            <Trash2 size={16} />
-                            Cancel Appointment
-                        </EditDeleteButton>
-                    </EditButtonGroup>
-                </EditModalForm>
-            </EditModalContainer>
-        </EditModalOverlay>
+                    {activeTab === 'invoices' && (
+                        <InvoicesTab>
+                            <PetInvoices pet={pet} />
+                        </InvoicesTab>
+                    )}
+                </TabContent>
+            </ModalContainer>
+        </ModalOverlay>
     );
 
-    // Render modal in a portal to escape parent constraints
     return ReactDOM.createPortal(modalContent, document.body);
 };
 
-const HeaderContainer = styled.div`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    margin-bottom: 10px;
-`;
-
+// Styled Components
 const Container = styled.div`
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
-    padding: 40px 20px;
-    padding-top: 120px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-    
-    &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: 
-            radial-gradient(circle at 20% 20%, rgba(255,255,255,0.05) 2px, transparent 2px),
-            radial-gradient(circle at 80% 40%, rgba(255,255,255,0.03) 1.5px, transparent 1.5px),
-            radial-gradient(circle at 40% 60%, rgba(255,255,255,0.04) 1px, transparent 1px),
-            radial-gradient(circle at 70% 80%, rgba(255,255,255,0.06) 2.5px, transparent 2.5px),
-            radial-gradient(circle at 15% 70%, rgba(255,255,255,0.02) 1px, transparent 1px),
-            radial-gradient(circle at 90% 15%, rgba(255,255,255,0.04) 1.5px, transparent 1.5px);
-        background-size: 80px 80px, 60px 60px, 40px 40px, 100px 100px, 30px 30px, 70px 70px;
-        pointer-events: none;
-    }
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 2rem;
+    padding-top: 7rem; /* Increased top padding for more space */
     
     @media (max-width: 768px) {
-        padding: 20px 16px;
-        padding-top: 100px;
+        padding: 1rem;
+        padding-top: 5.5rem; /* More space on mobile too */
     }
 `;
 
-const HeaderSection = styled.div`
+const Header = styled.div`
+    max-width: 1200px;
+    margin: 0 auto 2.5rem;
+    padding: 0;
+    
+    @media (max-width: 768px) {
+        margin-bottom: 2rem;
+    }
+`;
+
+const HeaderTop = styled.div`
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 100%;
-    max-width: 800px;
-    margin-bottom: 32px;
+    margin-bottom: 2rem;
     
     @media (max-width: 768px) {
-        margin-bottom: 24px;
+        margin-bottom: 1.5rem;
     }
-`;
-
-const TitleSection = styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
 `;
 
 const Title = styled.h1`
     font-family: 'Poppins', sans-serif;
-    font-size: 2.5rem;
+    font-size: 3rem;
     font-weight: 800;
-    color: #ffffff;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    
-    @media (max-width: 768px) {
-        font-size: 2rem;
-        gap: 8px;
-    }
-`;
-
-
-const Subtitle = styled.h3`
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #ffffff;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-`;
-
-const PetSubtitle = styled.h2`
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.4rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
-    margin: 0 0 12px 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    
-    @media (max-width: 768px) {
-        font-size: 1.2rem;
-    }
-`;
-
-const PetSummaryText = styled.p`
-    font-family: 'Poppins', sans-serif;
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 1rem;
-    font-weight: 500;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    
-    @media (max-width: 768px) {
-        font-size: 0.9rem;
-    }
-`;
-
-const ActionSection = styled.div`
-    width: 100%;
-    max-width: 800px;
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
-    
-    @media (max-width: 768px) {
-        margin-bottom: 16px;
-    }
-`;
-
-const SearchContainer = styled.div`
-    display: flex;
-    width: 100%;
-    max-width: 800px;
-    margin: 16px 0;
-
-    @media (max-width: 768px) {
-        margin: 12px 0;
-    }
-`;
-
-const SearchInputContainer = styled.div`
-    flex: 1;
-    position: relative;
-    display: flex;
-    align-items: center;
-
-    svg {
-        position: absolute;
-        left: 12px;
-        color: rgba(255, 255, 255, 0.6);
-        z-index: 1;
-        width: 16px;
-        height: 16px;
-    }
-
-    @media (max-width: 768px) {
-        width: 100%;
-    }
-`;
-
-const SearchInput = styled.input`
-    width: 100%;
-    padding: 12px 16px 12px 40px;
-    border-radius: 20px;
-    border: 2px solid rgba(139, 90, 140, 0.3);
-    background: rgba(74, 26, 74, 0.9);
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #ffffff;
-    box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.15);
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-
-    &:focus {
-        outline: none;
-        border-color: #a569a7;
-        box-shadow: 0px 4px 20px rgba(165, 105, 167, 0.25);
-        background: rgba(74, 26, 74, 1);
-    }
-
-    &::placeholder {
-        color: rgba(255, 255, 255, 0.7);
-    }
-    
-    @media (max-width: 768px) {
-        padding: 14px 16px 14px 40px;
-        font-size: 16px;
-    }
-`;
-
-const FilterTabsContainer = styled.div`
-    display: flex;
-    background: rgba(74, 26, 74, 0.6);
-    border-radius: 12px;
-    padding: 4px;
-    margin-top: 16px;
-    border: 1.5px solid rgba(139, 90, 140, 0.3);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-    width: fit-content;
-    margin-left: auto;
-    margin-right: auto;
-    
-    @media (max-width: 768px) {
-        margin: 12px auto 0 auto;
-        width: 100%;
-        max-width: 400px;
-        align-self: center;
-    }
-    
-    @media (max-width: 480px) {
-        max-width: 320px;
-        margin: 12px auto 0 auto;
-        align-self: center;
-    }
-`;
-
-const FilterTab = styled.button`
-    flex: 1;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 8px;
-    background: ${({ $active, $isNewPet }) => {
-        if ($active && $isNewPet) return 'linear-gradient(135deg, #22c55e, #16a34a)';
-        if ($active) return 'linear-gradient(135deg, #a569a7, #8b5a8c)';
-        return 'transparent';
-    }};
-    color: ${({ $active }) => 
-        $active ? '#ffffff' : 'rgba(255, 255, 255, 0.7)'
-    };
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.8rem;
-    font-weight: ${({ $active }) => $active ? '600' : '500'};
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    white-space: nowrap;
-    min-width: 70px;
-    text-shadow: ${({ $active }) => 
-        $active ? '0 1px 2px rgba(0, 0, 0, 0.3)' : 'none'
-    };
-    box-shadow: ${({ $active, $isNewPet }) => 
-        $active && $isNewPet ? '0 3px 12px rgba(34, 197, 94, 0.3)' : 'none'
-    };
-    
-    svg {
-        width: 14px;
-        height: 14px;
-        flex-shrink: 0;
-    }
-    
-    &:hover {
-        background: ${({ $active, $isNewPet }) => {
-            if ($active && $isNewPet) return 'linear-gradient(135deg, #16a34a, #15803d)';
-            if ($active) return 'linear-gradient(135deg, #936394, #7d527e)';
-            return 'rgba(255, 255, 255, 0.1)';
-        }};
-        color: ${({ $active }) => 
-            $active ? '#ffffff' : 'rgba(255, 255, 255, 0.9)'
-        };
-        box-shadow: ${({ $active, $isNewPet }) => 
-            $active && $isNewPet ? '0 4px 16px rgba(34, 197, 94, 0.4)' : 'none'
-        };
-    }
-    
-    @media (max-width: 768px) {
-        padding: 10px 12px;
-        font-size: 0.75rem;
-        min-width: 0;
-        
-        svg {
-            width: 12px;
-            height: 12px;
-        }
-    }
-    
-    @media (max-width: 480px) {
-        padding: 8px 10px;
-        gap: 4px;
-    }
-`;
-
-const CountBadge = styled.span`
-    background: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 50%;
-    min-width: 18px;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(5px);
-    transition: all 0.3s ease;
-    
-    ${FilterTab}:hover & {
-        background: rgba(255, 255, 255, 0.3);
-        border-color: rgba(255, 255, 255, 0.4);
-    }
-    
-    @media (max-width: 768px) {
-        font-size: 0.65rem;
-        min-width: 16px;
-        height: 16px;
-        padding: 1px 5px;
-    }
-    
-    @media (max-width: 480px) {
-        font-size: 0.6rem;
-        min-width: 14px;
-        height: 14px;
-        padding: 1px 4px;
-        margin-left: 4px;
-    }
-`;
-
-const EmptyState = styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 40px;
-    text-align: center;
-    background: linear-gradient(145deg, rgba(74, 26, 74, 0.9), rgba(107, 43, 107, 0.8));
-    border-radius: 24px;
-    margin: 32px 20px;
-    width: calc(100% - 40px);
-    max-width: 600px;
-    box-shadow: 0px 6px 30px rgba(0, 0, 0, 0.3), 0px 2px 8px rgba(0, 0, 0, 0.2);
-    border: 2px solid rgba(139, 90, 140, 0.5);
-    backdrop-filter: blur(15px);
-    align-self: center;
-    
-    @media (max-width: 768px) {
-        padding: 40px 24px;
-        border-radius: 20px;
-        margin: 24px 16px;
-        width: calc(100% - 32px);
-    }
-    
-    @media (max-width: 480px) {
-        padding: 32px 20px;
-        margin: 20px 12px;
-        width: calc(100% - 24px);
-    }
-`;
-
-const EmptyIcon = styled.div`
-    margin-bottom: 16px;
-    opacity: 0.8;
-    color: rgba(255, 255, 255, 0.8);
-    display: flex;
-    justify-content: center;
-`;
-
-const EmptyTitle = styled.h3`
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
-    color: #ffffff;
-    font-size: 1.5rem;
-    margin-bottom: 8px;
-    font-weight: 700;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    
-    @media (max-width: 768px) {
-        font-size: 1.3rem;
-    }
-`;
-
-const EmptyText = styled.p`
-    color: rgba(255, 255, 255, 0.9);
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    font-weight: 500;
-    margin: 0;
-    max-width: 400px;
-    line-height: 1.6;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    
-    @media (max-width: 768px) {
-        font-size: 0.9rem;
-        max-width: 300px;
-    }
-`;
-
-const PetsList = styled.div`
-    width: 100%;
-    max-width: 800px;
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-`;
-
-const PetListItem = styled.div`
-    background: linear-gradient(145deg, rgba(74, 26, 74, 0.9), rgba(107, 43, 107, 0.8));
-    padding: 16px 20px;
-    border-radius: 14px;
-    border: 1.5px solid rgba(139, 90, 140, 0.4);
-    backdrop-filter: blur(20px);
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    gap: 16px;
-    height: 72px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-
-    &:hover {
-        transform: translateY(-2px);
-        border-color: #a569a7;
-        background: linear-gradient(145deg, rgba(74, 26, 74, 1), rgba(107, 43, 107, 0.9));
-        box-shadow: 0 8px 25px rgba(139, 90, 140, 0.3);
-    }
-
-    @media (max-width: 768px) {
-        padding: 14px 16px;
-        height: 68px;
-        border-radius: 12px;
-        gap: 14px;
-        
-        &:active {
-            transform: translateY(0) scale(0.98);
-        }
-    }
-
-    @media (max-width: 480px) {
-        padding: 12px 14px;
-        height: 64px;
-        border-radius: 10px;
-        gap: 12px;
-    }
-`;
-
-const PetIcon = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    color: rgba(255, 255, 255, 0.9);
-    background: linear-gradient(135deg, rgba(165, 105, 167, 0.2), rgba(139, 90, 140, 0.15));
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    flex-shrink: 0;
-    transition: all 0.3s ease;
-
-    svg {
-        width: 20px;
-        height: 20px;
-    }
-
-    ${PetListItem}:hover & {
-        background: linear-gradient(135deg, rgba(165, 105, 167, 0.3), rgba(139, 90, 140, 0.25));
-        border-color: rgba(255, 255, 255, 0.3);
-        color: #ffffff;
-    }
-
-    @media (max-width: 768px) {
-        width: 40px;
-        height: 40px;
-        
-        svg {
-            width: 18px;
-            height: 18px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        width: 36px;
-        height: 36px;
-        
-        svg {
-            width: 16px;
-            height: 16px;
-        }
-    }
-`;
-
-const PetInfo = styled.div`
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 4px;
-    min-width: 0; /* Allows text to truncate */
-    align-items: flex-start;
-`;
-
-const PetName = styled.h3`
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
-    color: #ffffff;
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 700;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-    line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
-    text-align: left;
-    
-    @media (max-width: 768px) {
-        font-size: 1rem;
-    }
-    
-    @media (max-width: 480px) {
-        font-size: 0.95rem;
-    }
-`;
-
-const PetDetailsContainer = styled.div`
-    display: flex;
-    align-items: center;
-`;
-
-const PetDetail = styled.span`
-    color: rgba(255, 255, 255, 0.9);
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-
-    svg {
-        color: rgba(255, 255, 255, 0.8);
-        flex-shrink: 0;
-        width: 14px;
-        height: 14px;
-    }
-    
-    @media (max-width: 768px) {
-        font-size: 0.75rem;
-    }
-`;
-
-const StatusBadge = styled.div.withConfig({
-    shouldForwardProp: (prop) => prop !== 'active',
-})`
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.7rem;
-    font-weight: 500;
-    background: ${props => props.active 
-        ? 'rgba(34, 197, 94, 0.15)' 
-        : 'rgba(251, 191, 36, 0.15)'};
-    color: ${props => props.active ? '#22c55e' : '#f59e0b'};
-    border: 1px solid ${props => props.active 
-        ? 'rgba(34, 197, 94, 0.3)' 
-        : 'rgba(251, 191, 36, 0.3)'};
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    backdrop-filter: blur(10px);
-
-    svg {
-        width: 12px;
-        height: 12px;
-    }
-
-    @media (max-width: 768px) {
-        padding: 3px 6px;
-        font-size: 0.65rem;
-        
-        svg {
-            width: 10px;
-            height: 10px;
-        }
-    }
-`;
-
-const ArrowIcon = styled.div`
-    color: rgba(255, 255, 255, 0.5);
-    margin-left: 8px;
-    opacity: 0.8;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    
-    svg {
-        width: 18px;
-        height: 18px;
-    }
-
-    ${PetListItem}:hover & {
-        opacity: 1;
-        transform: translateX(4px);
-        color: rgba(255, 255, 255, 1);
-    }
-
-    @media (max-width: 768px) {
-        margin-left: 12px;
-        opacity: 0.8;
-    }
-`;
-
-const DetailsContainer = styled.div`
-    background: linear-gradient(145deg, rgba(74, 26, 74, 0.95), rgba(107, 43, 107, 0.9));
-    padding: 32px;
-    border-radius: 24px;
-    box-shadow: 0px 8px 40px rgba(0, 0, 0, 0.3), 0px 2px 8px rgba(0, 0, 0, 0.2);
-    width: 100%;
-    max-width: 700px;
-    margin-top: 20px;
-    text-align: center;
-    border: 2px solid rgba(139, 90, 140, 0.5);
-    backdrop-filter: blur(15px);
-    
-    @media (max-width: 768px) {
-        padding: 24px;
-        border-radius: 20px;
-        margin: 16px;
-        width: calc(100% - 32px);
-    }
-`;
-
-const CloseButton = styled.button`
-    background: red;
-    color: black;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    top: 10px;
-    right: 10px;
-    &:hover {
-        background: darkred;
-    }
-`;
-
-const Form = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-`;
-
-const Label = styled.label`
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
-    color: #ffffff;
-    font-weight: 600;
-    text-align: left;
-    font-size: 0.9rem;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    
-    @media (max-width: 768px) {
-        font-size: 1rem;
-    }
-`;
-
-
-const Input = styled.input`
-    padding: 14px 16px;
-    border-radius: 12px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    width: 100%;
-    box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.15);
-    transition: all 0.3s ease;
-    backdrop-filter: blur(5px);
-    
-    &[type="file"] {
-        padding: 12px 14px;
-        
-        &::file-selector-button {
-            background: rgba(255, 255, 255, 0.2);
-            color: #ffffff;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-family: 'Poppins', sans-serif;
-            font-weight: 600;
-            cursor: pointer;
-            margin-right: 12px;
-            transition: all 0.3s ease;
-            
-            &:hover {
-                background: rgba(255, 255, 255, 0.3);
-                border-color: rgba(255, 255, 255, 0.4);
-            }
-        }
-    }
-    
-    &:focus {
-        outline: none;
-        border-color: rgba(255, 255, 255, 0.5);
-        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
-        background: rgba(255, 255, 255, 0.2);
-    }
-    
-    &::placeholder {
-        color: rgba(255, 255, 255, 0.7);
-    }
-    
-    @media (max-width: 768px) {
-        padding: 16px;
-        font-size: 16px;
-        border-radius: 14px;
-        
-        &[type="file"] {
-            padding: 14px;
-        }
-    }
-`;
-
-const Select = styled.select`
-    padding: 14px 16px;
-    border-radius: 12px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    width: 100%;
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.15);
-    transition: all 0.3s ease;
-    backdrop-filter: blur(5px);
-    
-    &:focus {
-        outline: none;
-        border-color: rgba(255, 255, 255, 0.5);
-        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
-        background: rgba(255, 255, 255, 0.2);
-    }
-    
-    option {
-        background: #4a1a4a;
-        color: #ffffff;
-    }
-    
-    @media (max-width: 768px) {
-        padding: 16px;
-        font-size: 16px;
-        border-radius: 14px;
-    }
-`;
-
-const Textarea = styled.textarea`
-    padding: 14px 16px;
-    border-radius: 12px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    width: 100%;
-    box-sizing: border-box;
-    font-size: 1rem;
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.15);
-    min-height: 80px;
-    font-family: 'Poppins', sans-serif;
-    transition: all 0.3s ease;
-    resize: vertical;
-    backdrop-filter: blur(5px);
-    
-    &:focus {
-        outline: none;
-        border-color: rgba(255, 255, 255, 0.5);
-        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
-        background: rgba(255, 255, 255, 0.2);
-    }
-    
-    &::placeholder {
-        color: rgba(255, 255, 255, 0.7);
-    }
-    
-    @media (max-width: 768px) {
-        padding: 16px;
-        font-size: 16px;
-        border-radius: 14px;
-        min-height: 100px;
-    }
-`;
-
-const UpdateButton = styled.button`
-    background: linear-gradient(135deg, #8b5a8c, #a569a7);
     color: white;
-    padding: 14px 28px;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    font-family: 'Poppins', sans-serif;
-    font-weight: 600;
-    font-size: 1rem;
-    width: fit-content;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 16px rgba(139, 90, 140, 0.3);
-    
-    &:hover {
-        background: linear-gradient(135deg, #7d527e, #936394);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(139, 90, 140, 0.4);
-    }
-    
-    &:active {
-        transform: translateY(0);
-    }
-    
-    @media (max-width: 768px) {
-        padding: 16px 32px;
-        font-size: 1.1rem;
-        border-radius: 14px;
-        width: 100%;
-    }
-`;
-
-const AppointmentsContainer = styled.div`
-    margin-top: 32px;
-    text-align: left;
-    background: linear-gradient(145deg, rgba(107, 43, 107, 0.7), rgba(139, 90, 140, 0.6));
-    padding: 24px;
-    border-radius: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
-    
-    @media (max-width: 768px) {
-        padding: 20px;
-        border-radius: 14px;
-        margin-top: 24px;
-    }
-`;
-
-const AppointmentCard = styled.div`
-    background: rgba(255, 255, 255, 0.1);
-    padding: 18px;
-    border-radius: 12px;
-    margin-top: 12px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-    
-    &:hover {
-        border-color: rgba(255, 255, 255, 0.4);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        transform: translateY(-1px);
-        background: rgba(255, 255, 255, 0.15);
-    }
-    
-    @media (max-width: 768px) {
-        padding: 20px;
-        border-radius: 14px;
-        &:active {
-            transform: scale(0.98);
-        }
-    }
-`;
-
-const Text = styled.p`
-    color: rgba(255, 255, 255, 0.95);
-    font-family: 'Poppins', sans-serif;
-    font-weight: 500;
-    line-height: 1.6;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    
-    @media (max-width: 768px) {
-        font-size: 0.95rem;
-    }
-`;
-
-
-
-
-
-
-// New styled components for the edit appointment modal
-const EditModalOverlay = styled.div`
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-    backdrop-filter: blur(8px);
-    padding: 20px;
-    box-sizing: border-box;
-    animation: modalFadeIn 0.3s ease-out;
-    
-    @keyframes modalFadeIn {
-        from {
-            opacity: 0;
-            backdrop-filter: blur(0px);
-        }
-        to {
-            opacity: 1;
-            backdrop-filter: blur(8px);
-        }
-    }
-`;
-
-const EditModalContainer = styled.div`
-    background: linear-gradient(145deg, rgba(107, 43, 107, 0.95), rgba(139, 90, 140, 0.9));
-    width: 100%;
-    max-width: 500px;
-    border-radius: 20px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(20px);
-    box-shadow: 
-        0 20px 60px rgba(0, 0, 0, 0.4),
-        0 8px 32px rgba(0, 0, 0, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    max-height: calc(100vh - 40px);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    transform-origin: center center;
-    
-    @keyframes modalSlideIn {
-        from {
-            opacity: 0;
-            transform: scale(0.9) translateY(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-        }
-    }
-    
-    @media (max-width: 768px) {
-        width: 100%;
-        max-width: 400px;
-        border-radius: 16px;
-        max-height: calc(100vh - 40px);
-    }
-    
-    @media (max-width: 480px) {
-        max-width: 350px;
-        border-radius: 14px;
-    }
-`;
-
-const EditModalHeader = styled.div`
-    padding: 24px 24px 20px 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    background: linear-gradient(145deg, rgba(107, 43, 107, 0.3), rgba(139, 90, 140, 0.2));
-    border-radius: 20px 20px 0 0;
-    flex-shrink: 0;
-    
-    @media (max-width: 768px) {
-        padding: 20px 20px 16px 20px;
-        border-radius: 16px 16px 0 0;
-    }
-    
-    @media (max-width: 480px) {
-        border-radius: 14px 14px 0 0;
-    }
-`;
-
-const EditModalTitle = styled.h2`
-    font-family: 'Poppins', sans-serif;
-    color: #ffffff;
-    font-size: 1.4rem;
-    font-weight: 700;
     margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    letter-spacing: -0.025em;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     
     @media (max-width: 768px) {
-        font-size: 1.2rem;
+        font-size: 2.25rem;
     }
 `;
 
-const EditModalCloseButton = styled.button`
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+const AddPetTab = styled.button`
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    border: none;
     border-radius: 10px;
-    padding: 8px 10px;
+    padding: 10px 20px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
     display: flex;
     align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(5px);
-    
-    &:hover {
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.3);
-        transform: scale(1.05);
-    }
+    gap: 6px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+    flex-shrink: 1;
+    min-width: 0;
     
     @media (max-width: 768px) {
-        padding: 10px 12px;
-    }
-`;
-
-const EditModalForm = styled.div`
-    flex: 1;
-    overflow-y: auto;
-    padding: 0 24px 24px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    
-    /* Custom scrollbar for better UX */
-    &::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    &::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 3px;
-        margin: 8px 0;
-    }
-    
-    &::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 3px;
+        padding: 8px 14px;
+        font-size: 0.85rem;
+        gap: 5px;
+        box-shadow: 0 1px 4px rgba(34, 197, 94, 0.3);
         
-        &:hover {
-            background: rgba(255, 255, 255, 0.4);
+        svg {
+            width: 15px;
+            height: 15px;
         }
     }
     
-    @media (max-width: 768px) {
-        padding: 0 20px 20px 20px;
-        gap: 18px;
-    }
-`;
-
-const EditInputGroup = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-`;
-
-const EditTwoColumnGroup = styled.div`
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    
-    @media (max-width: 768px) {
-        grid-template-columns: 1fr;
-        gap: 18px;
-    }
-`;
-
-const EditLabel = styled.label`
-    font-family: 'Poppins', sans-serif;
-    color: #ffffff;
-    font-size: 0.9rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-`;
-
-const EditInput = styled.input`
-    padding: 12px 14px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.9rem;
-    backdrop-filter: blur(5px);
-    transition: all 0.3s ease;
-    
-    &:focus {
-        outline: none;
-        border-color: rgba(255, 255, 255, 0.4);
-        background: rgba(255, 255, 255, 0.15);
-        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    @media (max-width: 480px) {
+        padding: 7px 10px;
+        font-size: 0.8rem;
+        gap: 4px;
+        
+        svg {
+            width: 14px;
+            height: 14px;
+        }
     }
     
-    &::placeholder {
-        color: rgba(255, 255, 255, 0.6);
-    }
-    
-    @media (max-width: 768px) {
-        padding: 14px 16px;
-        font-size: 16px;
-    }
-`;
-
-const EditSelect = styled.select`
-    padding: 12px 14px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.9rem;
-    backdrop-filter: blur(5px);
-    transition: all 0.3s ease;
-    
-    &:focus {
-        outline: none;
-        border-color: rgba(255, 255, 255, 0.4);
-        background: rgba(255, 255, 255, 0.15);
-        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
-    }
-    
-    option {
-        background: #4a1a4a;
-        color: #ffffff;
-    }
-    
-    @media (max-width: 768px) {
-        padding: 14px 16px;
-        font-size: 16px;
-    }
-`;
-
-const EditDaysContainer = styled.div`
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: flex-start;
-    
-    @media (max-width: 768px) {
-        justify-content: center;
-    }
-`;
-
-const EditDayToggle = styled.label`
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: ${props => props.$checked ? 'rgba(139, 90, 140, 0.6)' : 'rgba(255, 255, 255, 0.1)'};
-    border: 2px solid ${props => props.$checked ? 'rgba(139, 90, 140, 0.8)' : 'rgba(255, 255, 255, 0.2)'};
-    padding: 8px 12px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #ffffff;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(5px);
-
-    input {
-        cursor: pointer;
-        accent-color: #8b5a8c;
-    }
-
     &:hover {
-        background: ${props => props.$checked ? 'rgba(139, 90, 140, 0.7)' : 'rgba(255, 255, 255, 0.15)'};
-        border-color: ${props => props.$checked ? 'rgba(139, 90, 140, 0.9)' : 'rgba(255, 255, 255, 0.3)'};
         transform: translateY(-1px);
-    }
-    
-    @media (max-width: 768px) {
-        padding: 10px 14px;
-        font-size: 0.75rem;
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
     }
 `;
 
-const EditButtonGroup = styled.div`
+const SearchAndFilter = styled.div`
     display: flex;
-    gap: 12px;
-    margin-top: 8px;
+    gap: 1rem;
+    align-items: center;
     
     @media (max-width: 768px) {
         flex-direction: column;
     }
 `;
 
-const EditSaveButton = styled.button`
+const SearchBar = styled.div`
     flex: 1;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    color: #ffffff;
-    padding: 14px 20px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 600;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 12px 20px;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
     
-    &:hover {
-        background: linear-gradient(135deg, #16a34a, #15803d);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+    &:focus-within {
+        background: rgba(255, 255, 255, 1);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
     }
     
-    @media (max-width: 768px) {
-        padding: 16px;
+    input {
+        flex: 1;
+        border: none;
+        background: none;
+        font-family: 'Poppins', sans-serif;
         font-size: 1rem;
+        color: #111827;
+        outline: none;
+        
+        &::placeholder {
+            color: #9ca3af;
+        }
+    }
+    
+    svg {
+        color: #6b7280;
     }
 `;
 
-const EditDeleteButton = styled.button`
-    flex: 1;
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    color: #ffffff;
-    padding: 14px 20px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 600;
+const FilterTabs = styled.div`
     display: flex;
-    align-items: center;
-    justify-content: center;
     gap: 8px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
-    
-    &:hover {
-        background: linear-gradient(135deg, #dc2626, #b91c1c);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
-    }
+    background: rgba(255, 255, 255, 0.15);
+    padding: 6px;
+    border-radius: 14px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     
     @media (max-width: 768px) {
-        padding: 16px;
-        font-size: 1rem;
+        gap: 5px;
+        padding: 4px;
+        flex: 1;
+        justify-content: space-between;
+    }
+    
+    @media (max-width: 480px) {
+        gap: 3px;
+        padding: 3px;
     }
 `;
 
-// CreatePet Modal Styled Components
-const CreatePetModal = styled.div`
+const FilterTab = styled.button`
+    background: ${props => props.$active ? 'rgba(255, 255, 255, 0.95)' : 'transparent'};
+    color: ${props => props.$active ? '#6366f1' : 'rgba(255, 255, 255, 0.9)'};
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 1;
+    min-width: 0;
+    
+    @media (max-width: 768px) {
+        padding: 8px 14px;
+        font-size: 0.85rem;
+        gap: 5px;
+        
+        svg {
+            width: 15px;
+            height: 15px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        padding: 7px 10px;
+        font-size: 0.8rem;
+        gap: 4px;
+        
+        svg {
+            width: 14px;
+            height: 14px;
+        }
+    }
+    
+    &:hover {
+        background: ${props => props.$active ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 255, 255, 0.2)'};
+        transform: translateY(-1px);
+    }
+`;
+
+const PetsGrid = styled.div`
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+    }
+`;
+
+const PetCard = styled.div`
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    opacity: ${props => props.$active ? 1 : 0.8};
+    
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+`;
+
+const PetCardHeader = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1rem;
+`;
+
+const PetIcon = styled.div`
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    
+    svg {
+        width: 24px;
+        height: 24px;
+    }
+`;
+
+const PetName = styled.h3`
+    flex: 1;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+`;
+
+const StatusBadge = styled.span`
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: ${props => props.$active ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'};
+    color: ${props => props.$active ? '#16a34a' : '#dc2626'};
+    border: 1px solid ${props => props.$active ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'};
+`;
+
+const PetCardInfo = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 1rem;
+`;
+
+const InfoRow = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    
+    svg {
+        width: 14px;
+        height: 14px;
+        color: #999;
+    }
+`;
+
+const ViewDetailsButton = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px;
+    background: #6366f1;
+    color: white;
+    border-radius: 10px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    
+    &:hover {
+        background: #4f46e5;
+        transform: translateY(-1px);
+    }
+`;
+
+const EmptyState = styled.div`
+    max-width: 400px;
+    margin: 4rem auto;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 3rem 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+`;
+
+const EmptyIcon = styled.div`
+    margin-bottom: 1rem;
+    color: #9ca3af;
+    
+    svg {
+        width: 48px;
+        height: 48px;
+    }
+`;
+
+const EmptyTitle = styled.h3`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+    color: #1f2937;
+`;
+
+const EmptyText = styled.p`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    color: #6b7280;
+    margin: 0;
+`;
+
+// Modal Styles
+const ModalOverlay = styled.div`
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(5px);
+    background: rgba(0, 0, 0, 0.75);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
     padding: 20px;
-`;
-
-const CreatePetModalContainer = styled.div`
-    background: linear-gradient(145deg, rgba(74, 26, 74, 0.95), rgba(107, 43, 107, 0.9));
-    border-radius: 24px;
-    box-shadow: 0px 20px 60px rgba(0, 0, 0, 0.4);
-    border: 2px solid rgba(139, 90, 140, 0.5);
-    backdrop-filter: blur(20px);
-    width: 100%;
-    max-width: 500px;
-    max-height: 90vh;
     overflow-y: auto;
     
     @media (max-width: 768px) {
-        margin: 0;
-        border-radius: 20px;
-        max-height: 95vh;
+        padding: 0;
+        align-items: stretch;
     }
 `;
 
-const CreatePetModalHeader = styled.div`
+const ModalContainer = styled.div`
+    background: white;
+    border-radius: 24px;
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    
+    @media (max-width: 768px) {
+        max-height: 100vh;
+        height: 100vh;
+        border-radius: 0;
+        max-width: 100%;
+    }
+`;
+
+const CreatePetModal = styled(ModalOverlay)`
+    /* Inherits all styles from ModalOverlay */
+`;
+
+const ModalHeader = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 24px 28px 16px;
-    border-bottom: 2px solid rgba(139, 90, 140, 0.3);
+    padding: 24px;
+    border-bottom: 1px solid #e5e7eb;
     
     @media (max-width: 768px) {
-        padding: 20px 24px 12px;
+        padding: 16px;
     }
 `;
 
-const CreatePetModalTitle = styled.h2`
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #ffffff;
-    margin: 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+const ModalHeaderLeft = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 16px;
     
     @media (max-width: 768px) {
-        font-size: 1.5rem;
+        gap: 12px;
     }
 `;
 
-const CreatePetCloseButton = styled.button`
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    color: #ffffff;
-    padding: 8px;
-    cursor: pointer;
+const PetModalIcon = styled.div`
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: white;
+    
+    @media (max-width: 768px) {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+    }
+    
+    svg {
+        width: 28px;
+        height: 28px;
+        
+        @media (max-width: 768px) {
+            width: 22px;
+            height: 22px;
+        }
+    }
+`;
+
+const ModalTitle = styled.h2`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+    
+    @media (max-width: 768px) {
+        font-size: 1.25rem;
+    }
+`;
+
+const ModalSubtitle = styled.div`
+    margin-top: 4px;
+`;
+
+const CloseButton = styled.button`
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    
+    &:hover {
+        background: rgba(0, 0, 0, 0.05);
+        color: #333;
+    }
+`;
+
+const BackButton = styled.button`
+    background: none;
+    border: none;
+    color: #374151;
+    cursor: pointer;
+    padding: 8px;
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    
+    &:hover {
+        background: rgba(0, 0, 0, 0.08);
+        transform: translateX(-2px);
+    }
+    
+    @media (max-width: 768px) {
+        margin-right: 4px;
+    }
+`;
+
+const TabContainer = styled.div`
+    display: flex;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0 24px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    
+    @media (max-width: 768px) {
+        padding: 0 8px;
+        justify-content: space-around;
+        gap: 4px;
+    }
+    
+    &::-webkit-scrollbar {
+        display: none;
+    }
+`;
+
+const Tab = styled.button`
+    background: none;
+    border: none;
+    padding: 16px 24px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: ${props => props.$active ? '#6366f1' : '#6b7280'};
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 3px solid ${props => props.$active ? '#6366f1' : 'transparent'};
+    margin-bottom: -1px;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    white-space: nowrap;
+    
+    @media (max-width: 768px) {
+        padding: 10px 8px;
+        font-size: 0.75rem;
+        gap: 4px;
+        flex: 1;
+        justify-content: center;
+        min-width: 0;
+        
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+        
+        /* Show only icons on very small screens */
+        @media (max-width: 400px) {
+            padding: 12px 4px;
+            
+            span {
+                display: none;
+            }
+            
+            svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
+    }
+    
+    &:hover {
+        color: #6366f1;
+        background: rgba(99, 102, 241, 0.05);
+    }
+`;
+
+const TabContent = styled.div`
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    
+    @media (max-width: 768px) {
+        padding: 16px;
+    }
+`;
+
+const InfoTab = styled.div``;
+
+const InfoHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+`;
+
+const InfoTitle = styled.h3`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+`;
+
+const EditButton = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
     transition: all 0.3s ease;
     
     &:hover {
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.3);
-        transform: scale(1.1);
+        background: #4f46e5;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     }
 `;
 
-const CreatePetForm = styled.form`
-    padding: 20px 28px 28px;
-    display: flex;
-    flex-direction: column;
+const InfoGrid = styled.div`
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 20px;
     
     @media (max-width: 768px) {
-        padding: 16px 24px 24px;
-        gap: 18px;
+        grid-template-columns: 1fr;
+        gap: 16px;
     }
 `;
 
-const CreatePetInputGroup = styled.div`
+const InfoItem = styled.div`
+    ${props => props.$fullWidth && 'grid-column: 1 / -1;'}
+`;
+
+const InfoLabel = styled.div`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+`;
+
+const InfoValue = styled.div`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    color: #333;
+    padding: 10px 14px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+`;
+
+const EditForm = styled.form`
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+`;
+
+const FormGrid = styled.div`
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+`;
+
+const FormGroup = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+`;
+
+const Label = styled.label`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+`;
+
+const Input = styled.input`
+    padding: 10px 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    
+    &:focus {
+        outline: none;
+        border-color: #764ba2;
+        box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
+    }
+`;
+
+const Select = styled.select`
+    padding: 10px 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    &:focus {
+        outline: none;
+        border-color: #764ba2;
+        box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
+    }
+`;
+
+const Textarea = styled.textarea`
+    padding: 10px 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    min-height: 100px;
+    resize: vertical;
+    transition: all 0.3s ease;
+    
+    &:focus {
+        outline: none;
+        border-color: #764ba2;
+        box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
+    }
+`;
+
+const ButtonGroup = styled.div`
+    display: flex;
+    gap: 12px;
+`;
+
+const SaveButton = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    }
+`;
+
+const CancelButton = styled.button`
+    padding: 10px 20px;
+    background: #f3f4f6;
+    color: #666;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    &:hover {
+        background: #e5e7eb;
+    }
+`;
+
+const AppointmentsTab = styled.div``;
+
+const AppointmentsHeader = styled.div`
+    margin-bottom: 24px;
+`;
+
+const AppointmentsList = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+`;
+
+const AppointmentCard = styled.div`
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    &:hover {
+        border-color: #764ba2;
+        box-shadow: 0 4px 12px rgba(118, 75, 162, 0.1);
+    }
+`;
+
+const AppointmentHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+`;
+
+const AppointmentType = styled.span`
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: ${props => props.$recurring ? 'rgba(59, 130, 246, 0.1)' : 'rgba(168, 85, 247, 0.1)'};
+    color: ${props => props.$recurring ? '#2563eb' : '#7c3aed'};
+`;
+
+const AppointmentDuration = styled.span`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #333;
+`;
+
+const AppointmentDetails = styled.div`
     display: flex;
     flex-direction: column;
     gap: 8px;
 `;
 
-const CreatePetTwoColumnGroup = styled.div`
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
+const DetailRow = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
     
-    @media (max-width: 768px) {
-        grid-template-columns: 1fr;
-        gap: 18px;
+    svg {
+        width: 16px;
+        height: 16px;
+        color: #999;
     }
 `;
 
-const CreatePetLabel = styled.label`
+const CancellationsList = styled.div`
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+`;
+
+const CancellationsTitle = styled.div`
     font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
     font-weight: 600;
+    color: #dc2626;
+    margin-bottom: 6px;
+`;
+
+const CancellationDate = styled.span`
+    display: inline-block;
+    padding: 2px 8px;
+    margin: 2px;
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    border-radius: 4px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.8rem;
+`;
+
+const EmptyAppointments = styled.div`
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    
+    svg {
+        margin-bottom: 16px;
+        color: #ddd;
+    }
+`;
+
+const AppointmentModal = styled(ModalOverlay)``;
+
+const AppointmentModalContent = styled.div`
+    padding: 24px;
+`;
+
+const PrimaryButton = styled.button`
+    padding: 10px 20px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
     font-size: 0.95rem;
-    color: #ffffff;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-`;
-
-const CreatePetInput = styled.input`
-    padding: 14px 16px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    backdrop-filter: blur(5px);
+    font-weight: 600;
+    cursor: pointer;
     transition: all 0.3s ease;
     
-    &:focus {
-        outline: none;
-        border-color: rgba(255, 255, 255, 0.4);
-        background: rgba(255, 255, 255, 0.15);
-        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    &:hover {
+        background: #4f46e5;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     }
+`;
+
+const DeleteButton = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    border: 2px solid rgba(239, 68, 68, 0.2);
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
     
-    &::placeholder {
-        color: rgba(255, 255, 255, 0.6);
+    &:hover {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.3);
     }
+`;
+
+const InvoicesTab = styled.div``;
+
+const CreatePetForm = styled.form`
+    padding: 24px;
     
     @media (max-width: 768px) {
         padding: 16px;
-        font-size: 16px;
     }
 `;
 
-const CreatePetTextarea = styled.textarea`
-    padding: 14px 16px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    min-height: 80px;
-    resize: vertical;
-    backdrop-filter: blur(5px);
-    transition: all 0.3s ease;
-    
-    &:focus {
-        outline: none;
-        border-color: rgba(255, 255, 255, 0.4);
-        background: rgba(255, 255, 255, 0.15);
-        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
-    }
-    
-    &::placeholder {
-        color: rgba(255, 255, 255, 0.6);
-    }
-    
-    @media (max-width: 768px) {
-        padding: 16px;
-        font-size: 16px;
-        min-height: 100px;
-    }
-`;
-
-const CreatePetSelect = styled.select`
-    padding: 14px 16px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    backdrop-filter: blur(5px);
-    transition: all 0.3s ease;
-    
-    &:focus {
-        outline: none;
-        border-color: rgba(255, 255, 255, 0.4);
-        background: rgba(255, 255, 255, 0.15);
-        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
-    }
-    
-    option {
-        background: #4a1a4a;
-        color: #ffffff;
-    }
-    
-    @media (max-width: 768px) {
-        padding: 16px;
-        font-size: 16px;
-    }
-`;
-
-const CreatePetButtonContainer = styled.div`
+const FormButtons = styled.div`
     display: flex;
     gap: 12px;
-    margin-top: 12px;
-    
-    @media (max-width: 768px) {
-        flex-direction: column;
-        gap: 12px;
-    }
+    margin-top: 24px;
 `;
 
-const CreatePetSubmitButton = styled.button`
-    flex: 1;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    color: #ffffff;
-    padding: 14px 24px;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
-    
-    &:hover {
-        background: linear-gradient(135deg, #16a34a, #15803d);
-        transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
-    }
-    
-    &:active {
-        transform: translateY(0);
-    }
-    
-    @media (max-width: 768px) {
-        padding: 16px;
-        font-size: 1.1rem;
-    }
-`;
-
-const CreatePetCancelButton = styled.button`
-    flex: 1;
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-    padding: 14px 24px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 12px;
-    cursor: pointer;
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(5px);
-    
-    &:hover {
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.4);
-        transform: translateY(-1px);
-    }
-    
-    &:active {
-        transform: translateY(0);
-    }
-    
-    @media (max-width: 768px) {
-        padding: 16px;
-        font-size: 1.1rem;
-    }
-`;
+export {
+    Container,
+    Header,
+    HeaderTop,
+    Title,
+    AddPetTab,
+    SearchAndFilter,
+    SearchBar,
+    FilterTabs,
+    FilterTab,
+    PetsGrid,
+    PetCard,
+    PetCardHeader,
+    PetIcon,
+    PetName,
+    StatusBadge,
+    PetCardInfo,
+    InfoRow,
+    ViewDetailsButton,
+    EmptyState,
+    EmptyIcon,
+    EmptyTitle,
+    EmptyText,
+    ModalOverlay,
+    ModalContainer,
+    CreatePetModal,
+    ModalHeader,
+    ModalHeaderLeft,
+    PetModalIcon,
+    ModalTitle,
+    ModalSubtitle,
+    CloseButton,
+    BackButton,
+    TabContainer,
+    Tab,
+    TabContent,
+    InfoTab,
+    InfoHeader,
+    InfoTitle,
+    EditButton,
+    InfoGrid,
+    InfoItem,
+    InfoLabel,
+    InfoValue,
+    EditForm,
+    FormGrid,
+    FormGroup,
+    Label,
+    Input,
+    Select,
+    Textarea,
+    ButtonGroup,
+    SaveButton,
+    CancelButton,
+    AppointmentsTab,
+    AppointmentsHeader,
+    AppointmentsList,
+    AppointmentCard,
+    AppointmentHeader,
+    AppointmentType,
+    AppointmentDuration,
+    AppointmentDetails,
+    DetailRow,
+    CancellationsList,
+    CancellationsTitle,
+    CancellationDate,
+    EmptyAppointments,
+    AppointmentModal,
+    AppointmentModalContent,
+    PrimaryButton,
+    DeleteButton,
+    InvoicesTab,
+    CreatePetForm,
+    FormButtons
+};
