@@ -14,7 +14,6 @@ import {
     Pause,
     ChevronRight,
     Heart,
-    AlertCircle,
     Calendar,
     CalendarDays,
     Clock,
@@ -25,9 +24,6 @@ import {
     Edit2,
     DollarSign,
     User,
-    Home,
-    FileText,
-    Activity,
     ArrowLeft
 } from "lucide-react";
 import { UserContext } from "../context/user";
@@ -438,10 +434,10 @@ const PetDetailsModal = ({ pet, onClose }) => {
                         <div>
                             <ModalTitle>{pet.name}</ModalTitle>
                             <ModalSubtitle>
-                                <StatusBadge $active={pet.active} style={{ marginLeft: 0 }}>
+                                <ModalStatusBadge $active={pet.active}>
                                     {pet.active ? <CheckCircle size={14} /> : <Pause size={14} />}
                                     {pet.active ? 'Active' : 'Inactive'}
-                                </StatusBadge>
+                                </ModalStatusBadge>
                             </ModalSubtitle>
                         </div>
                     </ModalHeaderLeft>
@@ -1151,7 +1147,7 @@ const ModalOverlay = styled.div`
 `;
 
 const ModalContainer = styled.div`
-    background: white;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 24px;
     width: 100%;
     max-width: 900px;
@@ -1177,7 +1173,7 @@ const ModalHeader = styled.div`
     justify-content: space-between;
     align-items: center;
     padding: 24px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     
     @media (max-width: 768px) {
         padding: 16px;
@@ -1225,7 +1221,7 @@ const ModalTitle = styled.h2`
     font-family: 'Poppins', sans-serif;
     font-size: 1.5rem;
     font-weight: 700;
-    color: #333;
+    color: white;
     margin: 0;
     
     @media (max-width: 768px) {
@@ -1237,10 +1233,24 @@ const ModalSubtitle = styled.div`
     margin-top: 4px;
 `;
 
+const ModalStatusBadge = styled.span`
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: ${props => props.$active ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.2)'};
+    color: ${props => props.$active ? '#16a34a' : 'rgba(255, 255, 255, 0.9)'};
+    border: 1px solid ${props => props.$active ? 'white' : 'rgba(255, 255, 255, 0.3)'};
+`;
+
 const CloseButton = styled.button`
     background: none;
     border: none;
-    color: #666;
+    color: rgba(255, 255, 255, 0.8);
     cursor: pointer;
     padding: 8px;
     display: flex;
@@ -1250,15 +1260,15 @@ const CloseButton = styled.button`
     transition: all 0.2s ease;
     
     &:hover {
-        background: rgba(0, 0, 0, 0.05);
-        color: #333;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
     }
 `;
 
 const BackButton = styled.button`
     background: none;
     border: none;
-    color: #374151;
+    color: rgba(255, 255, 255, 0.9);
     cursor: pointer;
     padding: 8px;
     margin-right: 8px;
@@ -1269,7 +1279,7 @@ const BackButton = styled.button`
     transition: all 0.2s ease;
     
     &:hover {
-        background: rgba(0, 0, 0, 0.08);
+        background: rgba(255, 255, 255, 0.15);
         transform: translateX(-2px);
     }
     
@@ -1280,7 +1290,8 @@ const BackButton = styled.button`
 
 const TabContainer = styled.div`
     display: flex;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.1);
     padding: 0 24px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -1303,12 +1314,12 @@ const Tab = styled.button`
     font-family: 'Poppins', sans-serif;
     font-size: 0.95rem;
     font-weight: 600;
-    color: ${props => props.$active ? '#6366f1' : '#6b7280'};
+    color: ${props => props.$active ? 'white' : 'rgba(255, 255, 255, 0.7)'};
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 8px;
-    border-bottom: 3px solid ${props => props.$active ? '#6366f1' : 'transparent'};
+    border-bottom: 3px solid ${props => props.$active ? 'white' : 'transparent'};
     margin-bottom: -1px;
     transition: all 0.3s ease;
     flex-shrink: 0;
@@ -1343,8 +1354,8 @@ const Tab = styled.button`
     }
     
     &:hover {
-        color: #6366f1;
-        background: rgba(99, 102, 241, 0.05);
+        color: white;
+        background: rgba(255, 255, 255, 0.1);
     }
 `;
 
@@ -1371,7 +1382,7 @@ const InfoTitle = styled.h3`
     font-family: 'Poppins', sans-serif;
     font-size: 1.25rem;
     font-weight: 600;
-    color: #333;
+    color: white;
     margin: 0;
 `;
 
@@ -1416,7 +1427,7 @@ const InfoLabel = styled.div`
     font-family: 'Poppins', sans-serif;
     font-size: 0.85rem;
     font-weight: 600;
-    color: #666;
+    color: rgba(255, 255, 255, 0.8);
     margin-bottom: 4px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -1425,11 +1436,11 @@ const InfoLabel = styled.div`
 const InfoValue = styled.div`
     font-family: 'Poppins', sans-serif;
     font-size: 1rem;
-    color: #333;
+    color: white;
     padding: 10px 14px;
-    background: #f9fafb;
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 8px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 `;
 
 const EditForm = styled.form`
@@ -1459,55 +1470,63 @@ const Label = styled.label`
     font-family: 'Poppins', sans-serif;
     font-size: 0.9rem;
     font-weight: 600;
-    color: #333;
+    color: white;
 `;
 
 const Input = styled.input`
     padding: 10px 14px;
-    border: 2px solid #e5e7eb;
+    border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
     font-family: 'Poppins', sans-serif;
     font-size: 0.95rem;
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
     transition: all 0.3s ease;
     
     &:focus {
         outline: none;
-        border-color: #764ba2;
-        box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
+        border-color: white;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
     }
 `;
 
 const Select = styled.select`
     padding: 10px 14px;
-    border: 2px solid #e5e7eb;
+    border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
     font-family: 'Poppins', sans-serif;
     font-size: 0.95rem;
-    background: white;
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
     cursor: pointer;
     transition: all 0.3s ease;
     
     &:focus {
         outline: none;
-        border-color: #764ba2;
-        box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
+        border-color: white;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
     }
 `;
 
 const Textarea = styled.textarea`
     padding: 10px 14px;
-    border: 2px solid #e5e7eb;
+    border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
     font-family: 'Poppins', sans-serif;
     font-size: 0.95rem;
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
     min-height: 100px;
     resize: vertical;
     transition: all 0.3s ease;
     
     &:focus {
         outline: none;
-        border-color: #764ba2;
-        box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
+        border-color: white;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
     }
 `;
 
@@ -1568,16 +1587,17 @@ const AppointmentsList = styled.div`
 `;
 
 const AppointmentCard = styled.div`
-    background: #f9fafb;
-    border: 2px solid #e5e7eb;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
     padding: 16px;
     cursor: pointer;
     transition: all 0.3s ease;
     
     &:hover {
-        border-color: #764ba2;
-        box-shadow: 0 4px 12px rgba(118, 75, 162, 0.1);
+        border-color: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
     }
 `;
 
@@ -1602,7 +1622,7 @@ const AppointmentDuration = styled.span`
     font-family: 'Poppins', sans-serif;
     font-size: 0.95rem;
     font-weight: 600;
-    color: #333;
+    color: white;
 `;
 
 const AppointmentDetails = styled.div`
@@ -1615,21 +1635,21 @@ const DetailRow = styled.div`
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #666;
+    color: rgba(255, 255, 255, 0.9);
     font-family: 'Poppins', sans-serif;
     font-size: 0.9rem;
     
     svg {
         width: 16px;
         height: 16px;
-        color: #999;
+        color: rgba(255, 255, 255, 0.8);
     }
 `;
 
 const CancellationsList = styled.div`
     margin-top: 12px;
     padding-top: 12px;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
 `;
 
 const CancellationsTitle = styled.div`
@@ -1654,11 +1674,11 @@ const CancellationDate = styled.span`
 const EmptyAppointments = styled.div`
     text-align: center;
     padding: 40px;
-    color: #999;
+    color: rgba(255, 255, 255, 0.7);
     
     svg {
         margin-bottom: 16px;
-        color: #ddd;
+        color: rgba(255, 255, 255, 0.5);
     }
 `;
 
@@ -1755,6 +1775,7 @@ export {
     PetModalIcon,
     ModalTitle,
     ModalSubtitle,
+    ModalStatusBadge,
     CloseButton,
     BackButton,
     TabContainer,
