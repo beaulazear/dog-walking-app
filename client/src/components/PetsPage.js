@@ -231,6 +231,7 @@ export default function PetsPage() {
                             </CloseButton>
                         </ModalHeader>
                         
+                        <ModalScrollContent>
                         <CreatePetForm onSubmit={handleNewPetSubmit}>
                         <FormGrid>
                             <FormGroup>
@@ -325,6 +326,7 @@ export default function PetsPage() {
                             </CancelButton>
                         </FormButtons>
                     </CreatePetForm>
+                    </ModalScrollContent>
                     </ModalContainer>
                 </CreatePetModal>
             )}
@@ -342,6 +344,8 @@ const PetDetailsModal = ({ pet, onClose }) => {
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [showCancellationModal, setShowCancellationModal] = useState(false);
     const [editMode, setEditMode] = useState(false);
+    const [isEditingAppointment, setIsEditingAppointment] = useState(false);
+    const [editingAppointmentData, setEditingAppointmentData] = useState(null);
 
     useEffect(() => {
         if (user?.appointments) {
@@ -420,6 +424,73 @@ const PetDetailsModal = ({ pet, onClose }) => {
             setSelectedAppointment(null);
             alert("Appointment deleted successfully!");
         }
+    };
+
+    const handleUpdateAppointment = async () => {
+        const response = await fetch(`/appointments/${editingAppointmentData.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                appointment: {
+                    start_time: editingAppointmentData.start_time,
+                    end_time: editingAppointmentData.end_time,
+                    duration: editingAppointmentData.duration,
+                    solo: editingAppointmentData.solo,
+                    appointment_date: editingAppointmentData.appointment_date,
+                    recurring: editingAppointmentData.recurring,
+                    monday: editingAppointmentData.monday,
+                    tuesday: editingAppointmentData.tuesday,
+                    wednesday: editingAppointmentData.wednesday,
+                    thursday: editingAppointmentData.thursday,
+                    friday: editingAppointmentData.friday,
+                    saturday: editingAppointmentData.saturday,
+                    sunday: editingAppointmentData.sunday
+                }
+            }),
+            credentials: "include"
+        });
+
+        if (response.ok) {
+            const updatedAppointment = await response.json();
+            
+            setUser(prev => ({
+                ...prev,
+                appointments: prev.appointments.map(apt => 
+                    apt.id === updatedAppointment.id ? updatedAppointment : apt
+                )
+            }));
+            
+            setAppointments(prev => prev.map(apt => 
+                apt.id === updatedAppointment.id ? updatedAppointment : apt
+            ));
+            
+            setSelectedAppointment(updatedAppointment);
+            setIsEditingAppointment(false);
+            setEditingAppointmentData(null);
+            alert("Appointment updated successfully!");
+        } else {
+            const error = await response.json();
+            alert(`Error updating appointment: ${error.errors?.join(", ") || "Unknown error"}`);
+        }
+    };
+
+    const startEditingAppointment = () => {
+        setIsEditingAppointment(true);
+        setEditingAppointmentData({
+            ...selectedAppointment,
+            monday: selectedAppointment.monday || false,
+            tuesday: selectedAppointment.tuesday || false,
+            wednesday: selectedAppointment.wednesday || false,
+            thursday: selectedAppointment.thursday || false,
+            friday: selectedAppointment.friday || false,
+            saturday: selectedAppointment.saturday || false,
+            sunday: selectedAppointment.sunday || false,
+            solo: selectedAppointment.solo || false
+        });
+    };
+
+    const handleAppointmentFieldChange = (field, value) => {
+        setEditingAppointmentData(prev => ({ ...prev, [field]: value }));
     };
 
     const modalContent = (
@@ -699,47 +770,173 @@ const PetDetailsModal = ({ pet, onClose }) => {
                                     <ModalContainer style={{ maxWidth: '600px' }}>
                                         <ModalHeader>
                                             <ModalHeaderLeft>
-                                                <BackButton onClick={() => setSelectedAppointment(null)}>
+                                                <BackButton onClick={() => {
+                                                    setSelectedAppointment(null);
+                                                    setIsEditingAppointment(false);
+                                                    setEditingAppointmentData(null);
+                                                }}>
                                                     <ArrowLeft size={24} />
                                                 </BackButton>
                                                 <ModalTitle>Appointment Details</ModalTitle>
                                             </ModalHeaderLeft>
+                                            {!isEditingAppointment && (
+                                                <EditButton onClick={startEditingAppointment}>
+                                                    <Edit2 size={16} />
+                                                    Edit
+                                                </EditButton>
+                                            )}
                                         </ModalHeader>
                                         <AppointmentModalContent>
-                                        <InfoGrid>
-                                            <InfoItem>
-                                                <InfoLabel>Type</InfoLabel>
-                                                <InfoValue>{selectedAppointment.recurring ? 'Recurring' : 'One-time'}</InfoValue>
-                                            </InfoItem>
-                                            <InfoItem>
-                                                <InfoLabel>Duration</InfoLabel>
-                                                <InfoValue>{selectedAppointment.duration} minutes</InfoValue>
-                                            </InfoItem>
-                                            <InfoItem>
-                                                <InfoLabel>Walk Type</InfoLabel>
-                                                <InfoValue>{selectedAppointment.solo ? 'Solo' : 'Group'}</InfoValue>
-                                            </InfoItem>
-                                            <InfoItem>
-                                                <InfoLabel>Time</InfoLabel>
-                                                <InfoValue>
-                                                    {dayjs(selectedAppointment.start_time).format("h:mm A")} - 
-                                                    {dayjs(selectedAppointment.end_time).format("h:mm A")}
-                                                </InfoValue>
-                                            </InfoItem>
-                                        </InfoGrid>
-                                        
-                                        <ButtonGroup style={{ marginTop: '24px' }}>
-                                            {selectedAppointment.recurring && (
-                                                <PrimaryButton onClick={() => setShowCancellationModal(true)}>
-                                                    Add Cancellation Date
-                                                </PrimaryButton>
-                                            )}
-                                            <DeleteButton onClick={() => handleDeleteAppointment(selectedAppointment.id)}>
-                                                <Trash2 size={16} />
-                                                Delete Appointment
-                                            </DeleteButton>
-                                        </ButtonGroup>
-                                    </AppointmentModalContent>
+                                        {!isEditingAppointment ? (
+                                            <>
+                                                <InfoGrid>
+                                                    <InfoItem>
+                                                        <InfoLabel>Type</InfoLabel>
+                                                        <InfoValue>{selectedAppointment.recurring ? 'Recurring' : 'One-time'}</InfoValue>
+                                                    </InfoItem>
+                                                    <InfoItem>
+                                                        <InfoLabel>Duration</InfoLabel>
+                                                        <InfoValue>{selectedAppointment.duration} minutes</InfoValue>
+                                                    </InfoItem>
+                                                    <InfoItem>
+                                                        <InfoLabel>Walk Type</InfoLabel>
+                                                        <InfoValue>{selectedAppointment.solo ? 'Solo' : 'Group'}</InfoValue>
+                                                    </InfoItem>
+                                                    <InfoItem>
+                                                        <InfoLabel>Time</InfoLabel>
+                                                        <InfoValue>
+                                                            {dayjs(selectedAppointment.start_time).format("h:mm A")} - 
+                                                            {dayjs(selectedAppointment.end_time).format("h:mm A")}
+                                                        </InfoValue>
+                                                    </InfoItem>
+                                                    {selectedAppointment.recurring && (
+                                                        <InfoItem $fullWidth>
+                                                            <InfoLabel>Repeats on</InfoLabel>
+                                                            <InfoValue>
+                                                                {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                                                                    .filter((day, i) => selectedAppointment[["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"][i]])
+                                                                    .join(", ") || "No days selected"}
+                                                            </InfoValue>
+                                                        </InfoItem>
+                                                    )}
+                                                </InfoGrid>
+                                                
+                                                <ButtonGroup style={{ marginTop: '24px' }}>
+                                                    {selectedAppointment.recurring && (
+                                                        <PrimaryButton onClick={() => setShowCancellationModal(true)}>
+                                                            Add Cancellation Date
+                                                        </PrimaryButton>
+                                                    )}
+                                                    <DeleteButton onClick={() => handleDeleteAppointment(selectedAppointment.id)}>
+                                                        <Trash2 size={16} />
+                                                        Delete Appointment
+                                                    </DeleteButton>
+                                                </ButtonGroup>
+                                            </>
+                                        ) : (
+                                            <EditForm>
+                                                <FormGrid>
+                                                    <FormGroup>
+                                                        <Label>Start Time</Label>
+                                                        <Input
+                                                            type="time"
+                                                            value={dayjs(editingAppointmentData.start_time).format("HH:mm")}
+                                                            onChange={(e) => {
+                                                                const [hours, minutes] = e.target.value.split(':');
+                                                                const newTime = new Date(editingAppointmentData.start_time);
+                                                                newTime.setHours(hours, minutes);
+                                                                handleAppointmentFieldChange('start_time', newTime.toISOString());
+                                                            }}
+                                                        />
+                                                    </FormGroup>
+                                                    <FormGroup>
+                                                        <Label>End Time</Label>
+                                                        <Input
+                                                            type="time"
+                                                            value={dayjs(editingAppointmentData.end_time).format("HH:mm")}
+                                                            onChange={(e) => {
+                                                                const [hours, minutes] = e.target.value.split(':');
+                                                                const newTime = new Date(editingAppointmentData.end_time);
+                                                                newTime.setHours(hours, minutes);
+                                                                handleAppointmentFieldChange('end_time', newTime.toISOString());
+                                                            }}
+                                                        />
+                                                    </FormGroup>
+                                                    <FormGroup>
+                                                        <Label>Duration</Label>
+                                                        <Select
+                                                            value={editingAppointmentData.duration}
+                                                            onChange={(e) => handleAppointmentFieldChange('duration', parseInt(e.target.value))}
+                                                        >
+                                                            <option value={30}>30 minutes</option>
+                                                            <option value={45}>45 minutes</option>
+                                                            <option value={60}>60 minutes</option>
+                                                        </Select>
+                                                    </FormGroup>
+                                                    <FormGroup>
+                                                        <Label>Walk Type</Label>
+                                                        <Select
+                                                            value={editingAppointmentData.solo}
+                                                            onChange={(e) => handleAppointmentFieldChange('solo', e.target.value === 'true')}
+                                                        >
+                                                            <option value={false}>Group Walk</option>
+                                                            <option value={true}>Solo Walk</option>
+                                                        </Select>
+                                                    </FormGroup>
+                                                </FormGrid>
+
+                                                {!editingAppointmentData.recurring && (
+                                                    <FormGroup>
+                                                        <Label>Appointment Date</Label>
+                                                        <Input
+                                                            type="date"
+                                                            value={dayjs(editingAppointmentData.appointment_date).format("YYYY-MM-DD")}
+                                                            onChange={(e) => handleAppointmentFieldChange('appointment_date', e.target.value)}
+                                                        />
+                                                    </FormGroup>
+                                                )}
+
+                                                {editingAppointmentData.recurring && (
+                                                    <FormGroup>
+                                                        <Label>Repeat on these days:</Label>
+                                                        <DayCheckboxes>
+                                                            {[
+                                                                { key: 'monday', label: 'Monday' },
+                                                                { key: 'tuesday', label: 'Tuesday' },
+                                                                { key: 'wednesday', label: 'Wednesday' },
+                                                                { key: 'thursday', label: 'Thursday' },
+                                                                { key: 'friday', label: 'Friday' },
+                                                                { key: 'saturday', label: 'Saturday' },
+                                                                { key: 'sunday', label: 'Sunday' }
+                                                            ].map(day => (
+                                                                <DayCheckbox key={day.key}>
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={editingAppointmentData[day.key]}
+                                                                        onChange={(e) => handleAppointmentFieldChange(day.key, e.target.checked)}
+                                                                    />
+                                                                    <span>{day.label}</span>
+                                                                </DayCheckbox>
+                                                            ))}
+                                                        </DayCheckboxes>
+                                                    </FormGroup>
+                                                )}
+
+                                                <FormButtons>
+                                                    <SaveButton onClick={handleUpdateAppointment}>
+                                                        <Save size={16} />
+                                                        Save Changes
+                                                    </SaveButton>
+                                                    <CancelButton onClick={() => {
+                                                        setIsEditingAppointment(false);
+                                                        setEditingAppointmentData(null);
+                                                    }}>
+                                                        Cancel
+                                                    </CancelButton>
+                                                </FormButtons>
+                                            </EditForm>
+                                        )}
+                                        </AppointmentModalContent>
                                     </ModalContainer>
                                 </AppointmentModal>
                             )}
@@ -1161,6 +1358,31 @@ const ModalContainer = styled.div`
         height: 100vh;
         border-radius: 0;
         max-width: 100%;
+    }
+`;
+
+const ModalScrollContent = styled.div`
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    
+    /* Custom scrollbar styling */
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    &::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+    }
+    
+    &::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
     }
 `;
 
@@ -1688,6 +1910,37 @@ const AppointmentModalContent = styled.div`
     padding: 24px;
 `;
 
+const DayCheckboxes = styled.div`
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    margin-top: 8px;
+`;
+
+const DayCheckbox = styled.label`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    color: #374151;
+    
+    input[type="checkbox"] {
+        cursor: pointer;
+        width: 18px;
+        height: 18px;
+    }
+    
+    span {
+        user-select: none;
+    }
+    
+    &:hover {
+        color: #6366f1;
+    }
+`;
+
 const PrimaryButton = styled.button`
     padding: 10px 20px;
     background: #6366f1;
@@ -1769,6 +2022,7 @@ export {
     EmptyText,
     ModalOverlay,
     ModalContainer,
+    ModalScrollContent,
     CreatePetModal,
     ModalHeader,
     ModalHeaderLeft,
@@ -1814,6 +2068,8 @@ export {
     EmptyAppointments,
     AppointmentModal,
     AppointmentModalContent,
+    DayCheckboxes,
+    DayCheckbox,
     PrimaryButton,
     DeleteButton,
     InvoicesTab,
