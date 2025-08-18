@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import { UserContext } from "../context/user";
@@ -8,24 +8,24 @@ import { Calendar, X, Plus, Trash2, CalendarDays, CalendarRange, CheckSquare } f
 
 dayjs.extend(isSameOrBefore);
 
-export default function CancellationModal({ appointment, setSelectedAppointment }) {
+export default function CancellationModal({ appointment, setSelectedAppointment, onClose }) {
     const { setUser } = useContext(UserContext);
-    const [showModal, setShowModal] = useState(false);
+    const [showModal, setShowModal] = useState(true); // Changed to true since it's controlled externally
     const [selectedDate, setSelectedDate] = useState("");
     const [dateMode, setDateMode] = useState('single'); // 'single', 'range', 'multi'
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [selectedDates, setSelectedDates] = useState([]);
 
-    const handleOpenModal = () => setShowModal(true);
-    const handleCloseModal = () => {
+    const handleCloseModal = useCallback(() => {
         setSelectedDate("");
         setStartDate("");
         setEndDate("");
         setSelectedDates([]);
         setDateMode('single');
         setShowModal(false);
-    };
+        if (onClose) onClose(); // Call the external close handler
+    }, [onClose]);
 
     async function handleNewCancellation(appointmentId, date) {
         const today = new Date().toISOString().split("T")[0];
@@ -293,7 +293,7 @@ export default function CancellationModal({ appointment, setSelectedAppointment 
                 document.removeEventListener('keydown', handleKeyDown);
             };
         }
-    }, [showModal]);
+    }, [showModal, handleCloseModal]);
 
     const handleOverlayClick = (e) => {
         if (e.target === e.currentTarget) {
@@ -464,46 +464,8 @@ export default function CancellationModal({ appointment, setSelectedAppointment 
         </CancelModalOverlay>
     ) : null;
 
-    return (
-        <>
-            <ToggleButton onClick={handleOpenModal}>
-                <Plus size={16} />
-                Manage Cancellations
-            </ToggleButton>
-            {modalContent && ReactDOM.createPortal(modalContent, document.body)}
-        </>
-    );
+    return modalContent && ReactDOM.createPortal(modalContent, document.body);
 }
-
-const ToggleButton = styled.button`
-    background: linear-gradient(135deg, #8b5a8c, #a569a7);
-    color: #ffffff;
-    padding: 10px 16px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.3s ease;
-    box-shadow: 0 3px 12px rgba(139, 90, 140, 0.3);
-    width: 100%;
-    justify-content: center;
-
-    &:hover {
-        background: linear-gradient(135deg, #7d527e, #936394);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 16px rgba(139, 90, 140, 0.4);
-    }
-    
-    @media (max-width: 768px) {
-        padding: 12px 18px;
-        font-size: 0.8rem;
-    }
-`;
 
 // Modal styled components
 const CancelModalOverlay = styled.div`

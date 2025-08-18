@@ -814,7 +814,7 @@ const PetDetailsModal = ({ pet, onClose }) => {
                                                             <InfoLabel>Repeats on</InfoLabel>
                                                             <InfoValue>
                                                                 {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-                                                                    .filter((day, i) => selectedAppointment[["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"][i]])
+                                                                    .filter((day, i) => !!selectedAppointment[["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"][i]])
                                                                     .join(", ") || "No days selected"}
                                                             </InfoValue>
                                                         </InfoItem>
@@ -944,6 +944,7 @@ const PetDetailsModal = ({ pet, onClose }) => {
                             {showCancellationModal && selectedAppointment && (
                                 <CancellationModal
                                     appointment={selectedAppointment}
+                                    setSelectedAppointment={setSelectedAppointment}
                                     onClose={() => setShowCancellationModal(false)}
                                 />
                             )}
