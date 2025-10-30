@@ -168,10 +168,6 @@ const float = keyframes`
   75% { transform: translateY(5px) rotate(5deg); }
 `;
 
-const pulse = keyframes`
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-`;
 
 const spin = keyframes`
   from { transform: rotate(0deg); }
@@ -206,7 +202,7 @@ const LoginWrapper = styled.div`
     align-items: ${props => props.$isKeyboardOpen ? 'flex-start' : 'center'};
     justify-content: center;
     padding: 20px;
-    padding-top: ${props => props.$isKeyboardOpen ? '20px' : '20px'};
+    padding-top: ${props => props.$isKeyboardOpen ? '60px' : '80px'};
     position: relative;
     overflow-x: hidden;
     overflow-y: auto;
@@ -214,7 +210,7 @@ const LoginWrapper = styled.div`
     
     @media (max-width: 768px) {
         align-items: ${props => props.$isKeyboardOpen ? 'flex-start' : 'flex-start'};
-        padding-top: ${props => props.$isKeyboardOpen ? '10px' : '40px'};
+        padding-top: ${props => props.$isKeyboardOpen ? '40px' : '60px'};
     }
     
     &::before {
@@ -259,12 +255,12 @@ const ContentContainer = styled.div`
     gap: ${props => props.$isKeyboardOpen ? '1rem' : '2rem'};
     z-index: 1;
     animation: ${fadeIn} 0.8s ease-out;
-    padding-top: 3rem;
+    padding-top: 1rem;
     transition: all 0.3s ease;
     transform: ${props => props.$isKeyboardOpen ? 'translateY(-20px)' : 'translateY(0)'};
     
     @media (max-width: 768px) {
-        padding-top: 2.5rem;
+        padding-top: 0.5rem;
         gap: ${props => props.$isKeyboardOpen ? '0.75rem' : '1.5rem'};
         transform: ${props => props.$isKeyboardOpen ? 'translateY(-40px)' : 'translateY(0)'};
     }
@@ -331,35 +327,13 @@ const LoginBox = styled.div`
     }
 `;
 
-const FormHeader = styled.div`
-    text-align: center;
-    margin-bottom: 1rem;
-`;
-
-const Title = styled.h2`
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #1a202c;
-    margin: 0 0 0.5rem 0;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-`;
-
-const Subtitle = styled.p`
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.9rem;
-    color: #4a5568;
-    margin: 0;
-    font-weight: 500;
-`;
-
 const Form = styled.form`
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
-    
+    gap: 1rem;
+
     @media (max-width: 768px) {
-        gap: 1rem;
+        gap: 0.875rem;
     }
 `;
 
@@ -368,16 +342,6 @@ const InputGroup = styled.div`
     flex-direction: column;
     gap: 0.5rem;
     position: relative;
-`;
-
-const InputLabel = styled.label`
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: ${props => props.focused ? '#2d3748' : '#1a202c'};
-    transition: all 0.2s ease;
-    margin-left: 0.25rem;
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 `;
 
 const InputWrapper = styled.div`
@@ -394,19 +358,6 @@ const InputWrapper = styled.div`
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     
     &:hover {
-        transform: translateY(-1px);
-        box-shadow: 
-            0 8px 20px rgba(0, 0, 0, 0.2),
-            0 0 0 1px rgba(255, 255, 255, 0.9) inset;
-        border-color: ${props => props.focused ? '#4c51bf' : '#a0aec0'};
-    }
-    
-    &:focus-within {
-        border-color: #4c51bf;
-        box-shadow: 
-            0 8px 20px rgba(0, 0, 0, 0.2),
-            0 0 0 3px rgba(76, 81, 191, 0.1),
-            0 0 0 1px rgba(255, 255, 255, 0.9) inset;
     }
 `;
 
@@ -555,31 +506,6 @@ const ErrorMessage = styled.div`
     }
 `;
 
-const Divider = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin: 1.5rem 0;
-`;
-
-const DividerLine = styled.div`
-    flex: 1;
-    height: 1px;
-    background: rgba(255, 255, 255, 0.4);
-`;
-
-const DividerText = styled.span`
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.85rem;
-    color: #ffffff;
-    font-weight: 600;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    background-color: rgba(0, 0, 0, 0.1);
-    padding: 0.25rem 0.75rem;
-    border-radius: 12px;
-    backdrop-filter: blur(5px);
-`;
-
 const SignupPrompt = styled.div`
     font-family: 'Poppins', sans-serif;
     color: #ffffff;
@@ -605,20 +531,20 @@ const SignupLink = styled(Link)`
     border-radius: 6px;
     background-color: rgba(255, 255, 255, 0.1);
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-    
+
     span {
         transition: transform 0.2s ease;
     }
-    
+
     &:hover {
         background-color: rgba(255, 255, 255, 0.2);
         transform: translateY(-1px);
-        
+
         span {
             transform: translateX(4px);
         }
     }
-    
+
     &:focus {
         outline: 2px solid #ffffff;
         outline-offset: 2px;

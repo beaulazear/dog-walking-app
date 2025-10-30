@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useMemo } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import dayjs from "dayjs";
@@ -53,8 +53,8 @@ const getAnimalIcon = (name) => {
 };
 
 export default function PetsPage() {
-    const { user, setUser } = useContext(UserContext);
-    const [selectedPet, setSelectedPet] = useState(null);
+    const { user, addPet } = useContext(UserContext);
+    const [selectedPetId, setSelectedPetId] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilter, setActiveFilter] = useState('active');
     const [showCreateForm, setShowCreateForm] = useState(false);
@@ -69,6 +69,12 @@ export default function PetsPage() {
         allergies: "",
         active: true,
     });
+
+    // Get the selected pet from user.pets using the ID
+    const selectedPet = useMemo(() => {
+        if (!selectedPetId || !user?.pets) return null;
+        return user.pets.find(p => p.id === selectedPetId);
+    }, [selectedPetId, user?.pets]);
 
     // Filter pets based on search term and activity status
     const filteredPets = user?.pets
@@ -101,10 +107,8 @@ export default function PetsPage() {
 
         if (response.ok) {
             const newPet = await response.json();
-            setUser(user => ({
-                ...user,
-                pets: [...user.pets, newPet]
-            }));
+            // Use smart update - prevents full re-render
+            addPet(newPet);
             setShowCreateForm(false);
             setNewPetFormData({
                 name: "",
@@ -174,7 +178,7 @@ export default function PetsPage() {
                 {filteredPets.map(pet => (
                     <PetCard 
                         key={pet.id} 
-                        onClick={() => setSelectedPet(pet)}
+                        onClick={() => setSelectedPetId(pet.id)}
                         $active={pet.active}
                     >
                         <PetCardHeader>
@@ -218,7 +222,7 @@ export default function PetsPage() {
             )}
 
             {selectedPet && (
-                <PetDetailsModal pet={selectedPet} onClose={() => setSelectedPet(null)} />
+                <PetDetailsModal pet={selectedPet} onClose={() => setSelectedPetId(null)} />
             )}
 
             {showCreateForm && (
@@ -336,16 +340,17 @@ export default function PetsPage() {
 
 // New Pet Details Modal Component with Tabs
 const PetDetailsModal = ({ pet, onClose }) => {
-    const { user, setUser } = useContext(UserContext);
+    const { user, updatePet, updateAppointment, removeAppointment } = useContext(UserContext);
     const [activeTab, setActiveTab] = useState('info');
     const [formData, setFormData] = useState(pet);
-    const [newProfilePic, setNewProfilePic] = useState(null);
+    // Profile pic removed - using icons instead
     const [appointments, setAppointments] = useState([]);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [showCancellationModal, setShowCancellationModal] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [isEditingAppointment, setIsEditingAppointment] = useState(false);
     const [editingAppointmentData, setEditingAppointmentData] = useState(null);
+
 
     useEffect(() => {
         if (user?.appointments) {
@@ -374,22 +379,14 @@ const PetDetailsModal = ({ pet, onClose }) => {
         setFormData({ ...formData, [name]: processedValue });
     };
 
-    const handleFileChange = (e) => {
-        setNewProfilePic(e.target.files[0]);
-    };
+    // File upload removed - using icons instead
 
     const handleUpdate = async () => {
         const formDataToSend = new FormData();
 
         Object.keys(formData).forEach(key => {
-            if (key !== "profile_pic") {
-                formDataToSend.append(key, formData[key]);
-            }
+            formDataToSend.append(key, formData[key]);
         });
-
-        if (newProfilePic instanceof File) {
-            formDataToSend.append("profile_pic", newProfilePic);
-        }
 
         const response = await fetch(`/pets/${pet.id}`, {
             method: "PATCH",
@@ -399,10 +396,8 @@ const PetDetailsModal = ({ pet, onClose }) => {
 
         if (response.ok) {
             const updatedPet = await response.json();
-            setUser(user => ({
-                ...user,
-                pets: user.pets.map(p => (p.id === updatedPet.id ? updatedPet : p))
-            }));
+            // Use smart update - prevents full re-render
+            updatePet(updatedPet);
             alert("Pet details updated!");
             setEditMode(false);
         }
@@ -417,10 +412,8 @@ const PetDetailsModal = ({ pet, onClose }) => {
         });
 
         if (response.ok) {
-            setUser(user => ({
-                ...user,
-                appointments: user.appointments.filter(apt => apt.id !== appointmentId)
-            }));
+            // Use smart update - prevents full re-render
+            removeAppointment(appointmentId);
             setSelectedAppointment(null);
             alert("Appointment deleted successfully!");
         }
@@ -452,22 +445,24 @@ const PetDetailsModal = ({ pet, onClose }) => {
 
         if (response.ok) {
             const updatedAppointment = await response.json();
-            
-            setUser(prev => ({
-                ...prev,
-                appointments: prev.appointments.map(apt => 
-                    apt.id === updatedAppointment.id ? updatedAppointment : apt
-                )
-            }));
-            
-            setAppointments(prev => prev.map(apt => 
+
+            // Ensure cancellations is always an array
+            if (!updatedAppointment.cancellations) {
+                updatedAppointment.cancellations = [];
+            }
+
+            // Use smart update - prevents full re-render
+            updateAppointment(updatedAppointment);
+
+            setAppointments(prev => prev.map(apt =>
                 apt.id === updatedAppointment.id ? updatedAppointment : apt
             ));
             
             setSelectedAppointment(updatedAppointment);
             setIsEditingAppointment(false);
             setEditingAppointmentData(null);
-            alert("Appointment updated successfully!");
+            // Use setTimeout to avoid blocking the React update cycle
+            setTimeout(() => alert("Appointment updated successfully!"), 0);
         } else {
             const error = await response.json();
             alert(`Error updating appointment: ${error.errors?.join(", ") || "Unknown error"}`);
@@ -651,14 +646,6 @@ const PetDetailsModal = ({ pet, onClose }) => {
                                                 <option value={true}>Active</option>
                                                 <option value={false}>Inactive</option>
                                             </Select>
-                                        </FormGroup>
-                                        <FormGroup>
-                                            <Label>Profile Picture</Label>
-                                            <Input 
-                                                type="file" 
-                                                accept="image/*" 
-                                                onChange={handleFileChange} 
-                                            />
                                         </FormGroup>
                                     </FormGrid>
                                     <FormGroup>
@@ -909,7 +896,7 @@ const PetDetailsModal = ({ pet, onClose }) => {
                                                                 { key: 'saturday', label: 'Saturday' },
                                                                 { key: 'sunday', label: 'Sunday' }
                                                             ].map(day => (
-                                                                <DayCheckbox key={day.key}>
+                                                                <DayCheckbox key={day.key} onClick={(e) => e.stopPropagation()}>
                                                                     <input
                                                                         type="checkbox"
                                                                         checked={editingAppointmentData[day.key]}

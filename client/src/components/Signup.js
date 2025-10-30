@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import styled, { keyframes } from "styled-components";
 import { Link } from "react-router-dom";
 import { UserContext } from "../context/user.js";
-import { UserPlus, User, Mail, Lock, UserCircle, Eye, EyeOff, Check } from "lucide-react";
+import { UserPlus, User, Mail, Lock, UserCircle, Eye, EyeOff } from "lucide-react";
 import dogImage from "../assets/dog.png";
 
 const Signup = () => {
@@ -69,7 +69,6 @@ const Signup = () => {
     };
 
     const passwordsMatch = password && passwordConfirmation && password === passwordConfirmation;
-    const passwordLength = password.length >= 6;
 
     return (
         <SignupWrapper $isKeyboardOpen={isKeyboardOpen}>
@@ -240,11 +239,6 @@ const float = keyframes`
   75% { transform: translateY(5px) rotate(5deg); }
 `;
 
-const pulse = keyframes`
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-`;
-
 const spin = keyframes`
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -278,7 +272,7 @@ const SignupWrapper = styled.div`
     align-items: ${props => props.$isKeyboardOpen ? 'flex-start' : 'center'};
     justify-content: center;
     padding: 20px;
-    padding-top: ${props => props.$isKeyboardOpen ? '20px' : '20px'};
+    padding-top: ${props => props.$isKeyboardOpen ? '60px' : '80px'};
     position: relative;
     overflow-x: hidden;
     overflow-y: auto;
@@ -286,7 +280,7 @@ const SignupWrapper = styled.div`
     
     @media (max-width: 768px) {
         align-items: ${props => props.$isKeyboardOpen ? 'flex-start' : 'flex-start'};
-        padding-top: ${props => props.$isKeyboardOpen ? '10px' : '30px'};
+        padding-top: ${props => props.$isKeyboardOpen ? '40px' : '60px'};
     }
     
     &::before {
@@ -331,12 +325,12 @@ const ContentContainer = styled.div`
     gap: ${props => props.$isKeyboardOpen ? '1rem' : '2rem'};
     z-index: 1;
     animation: ${fadeIn} 0.8s ease-out;
-    padding-top: 3rem;
+    padding-top: 1rem;
     transition: all 0.3s ease;
     transform: ${props => props.$isKeyboardOpen ? 'translateY(-20px)' : 'translateY(0)'};
     
     @media (max-width: 768px) {
-        padding-top: 2.5rem;
+        padding-top: 0.5rem;
         gap: ${props => props.$isKeyboardOpen ? '0.75rem' : '1.5rem'};
         transform: ${props => props.$isKeyboardOpen ? 'translateY(-30px)' : 'translateY(0)'};
     }
@@ -396,34 +390,12 @@ const SignupBox = styled.div`
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    
+
     @media (max-width: 768px) {
         padding: 1rem;
         gap: 1.25rem;
         max-width: 100%;
     }
-`;
-
-const FormHeader = styled.div`
-    text-align: center;
-    margin-bottom: 1rem;
-`;
-
-const Title = styled.h2`
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #1a202c;
-    margin: 0 0 0.5rem 0;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-`;
-
-const Subtitle = styled.p`
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.9rem;
-    color: #4a5568;
-    margin: 0;
-    font-weight: 500;
 `;
 
 const Form = styled.form`
@@ -452,16 +424,6 @@ const InputGroup = styled.div`
     flex-direction: column;
     gap: 0.5rem;
     position: relative;
-`;
-
-const InputLabel = styled.label`
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: ${props => props.focused ? '#2d3748' : '#1a202c'};
-    transition: all 0.2s ease;
-    margin-left: 0.25rem;
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 `;
 
 const InputWrapper = styled.div`
@@ -558,30 +520,6 @@ const TogglePassword = styled.button`
     }
 `;
 
-const PasswordStrength = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    margin-top: -0.5rem;
-    padding: 0 0.5rem;
-`;
-
-const PasswordCheck = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: ${props => props.valid ? '#2f855a' : '#4a5568'};
-    transition: color 0.2s ease;
-    
-    svg {
-        color: #38a169;
-        font-weight: bold;
-    }
-`;
-
 const SignupButton = styled.button`
     background: linear-gradient(135deg, #4c51bf 0%, #553c9a 100%);
     color: white;
@@ -667,31 +605,6 @@ const ErrorMessage = styled.div`
         font-size: 1rem;
         font-weight: 700;
     }
-`;
-
-const Divider = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin: 1.5rem 0;
-`;
-
-const DividerLine = styled.div`
-    flex: 1;
-    height: 1px;
-    background: rgba(255, 255, 255, 0.4);
-`;
-
-const DividerText = styled.span`
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.85rem;
-    color: #ffffff;
-    font-weight: 600;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    background-color: rgba(0, 0, 0, 0.1);
-    padding: 0.25rem 0.75rem;
-    border-radius: 12px;
-    backdrop-filter: blur(5px);
 `;
 
 const LoginPrompt = styled.div`

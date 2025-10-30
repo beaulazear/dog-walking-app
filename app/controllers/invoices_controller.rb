@@ -50,11 +50,26 @@ class InvoicesController < ApplicationController
   end
 
   def index
+    page = params[:page] || 1
+    per_page = params[:per_page] || 50
+
     # Only return invoices for the current user's pets
     pet_ids = @current_user.pets.pluck(:id)
     invoices = Invoice.where(pet_id: pet_ids)
-    render json: invoices.as_json(only: %i[id appointment_id pet_id date_completed compensation paid pending title cancelled]),
-           status: :ok
+                      .order(date_completed: :desc)
+                      .page(page)
+                      .per(per_page)
+
+    render json: {
+      invoices: invoices.as_json(only: %i[id appointment_id pet_id date_completed compensation paid pending title
+                                          cancelled]),
+      pagination: {
+        current_page: invoices.current_page,
+        total_pages: invoices.total_pages,
+        total_count: invoices.total_count,
+        per_page: per_page.to_i
+      }
+    }, status: :ok
   end
 
   def destroy

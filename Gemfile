@@ -24,12 +24,6 @@ gem 'turbo-rails'
 # Hotwire's modest JavaScript framework
 gem 'stimulus-rails'
 
-# Build JSON APIs with ease
-gem 'jbuilder'
-
-# Use Redis adapter to run Action Cable in production
-gem 'redis', '~> 4.0'
-
 # Enable Cross-Origin Resource Sharing (CORS)
 gem 'rack-cors', require: 'rack/cors'
 
@@ -39,14 +33,8 @@ gem 'aws-sdk-s3'
 # Environment variables management
 gem 'dotenv-rails', groups: %i[development test]
 
-# SendGrid for sending emails
-gem 'sendgrid-ruby', '~> 6.7.0'
-
-# OpenAI API integration
-gem 'ruby-openai'
-
-# Simple HTTP requests
-gem 'httparty'
+# Pagination
+gem 'kaminari', '~> 1.2'
 
 # Reduces boot times through caching
 gem 'bootsnap', require: false

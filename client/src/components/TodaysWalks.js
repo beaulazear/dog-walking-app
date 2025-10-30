@@ -1,16 +1,16 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useMemo } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import dayjs from "dayjs";
 import { UserContext } from "../context/user";
 import dogPlaceholder from "../assets/dog.png";
-import { 
-    Calendar, 
-    Clock, 
-    CheckCircle, 
-    X, 
-    Dog, 
-    Users, 
+import {
+    Calendar,
+    Clock,
+    CheckCircle,
+    X,
+    Dog,
+    Users,
     User,
     CalendarDays,
     Heart,
@@ -19,41 +19,42 @@ import {
     Minus,
     Info,
     MapPin,
-    Phone,
-    Mail,
     Cake
 } from "lucide-react";
 
 export default function TodaysWalks() {
     const { user } = useContext(UserContext);
 
-    const todaysAppointments = (user?.appointments
-        ?.filter(appointment => {
-            if (appointment.canceled) return false;
+    // Memoize expensive filtering and sorting operation
+    const todaysAppointments = useMemo(() => {
+        return (user?.appointments
+            ?.filter(appointment => {
+                if (appointment.canceled) return false;
 
-            const todayFormatted = dayjs().format("YYYY-MM-DD");
+                const todayFormatted = dayjs().format("YYYY-MM-DD");
 
-            const hasCancellationToday = appointment.cancellations?.some(cancellation =>
-                dayjs(cancellation.date).format("YYYY-MM-DD") === todayFormatted
-            );
+                const hasCancellationToday = appointment.cancellations?.some(cancellation =>
+                    dayjs(cancellation.date).format("YYYY-MM-DD") === todayFormatted
+                );
 
-            if (appointment.recurring) {
-                return appointment[dayjs().format("dddd").toLowerCase()] && !hasCancellationToday;
-            }
+                if (appointment.recurring) {
+                    return appointment[dayjs().format("dddd").toLowerCase()] && !hasCancellationToday;
+                }
 
-            return dayjs(appointment.appointment_date).format("YYYY-MM-DD") === todayFormatted;
-        })
-        ?.sort((a, b) => {
-            const startA = dayjs(a.start_time, "HH:mm");
-            const startB = dayjs(b.start_time, "HH:mm");
-            const endA = dayjs(a.end_time, "HH:mm");
-            const endB = dayjs(b.end_time, "HH:mm");
+                return dayjs(appointment.appointment_date).format("YYYY-MM-DD") === todayFormatted;
+            })
+            ?.sort((a, b) => {
+                const startA = dayjs(a.start_time, "HH:mm");
+                const startB = dayjs(b.start_time, "HH:mm");
+                const endA = dayjs(a.end_time, "HH:mm");
+                const endB = dayjs(b.end_time, "HH:mm");
 
-            if (startA.isBefore(startB)) return -1;
-            if (startA.isAfter(startB)) return 1;
+                if (startA.isBefore(startB)) return -1;
+                if (startA.isAfter(startB)) return 1;
 
-            return endA.isBefore(endB) ? -1 : 1;
-        }) || []);
+                return endA.isBefore(endB) ? -1 : 1;
+            }) || []);
+    }, [user?.appointments]);
 
     return (
         <Container>
@@ -106,8 +107,8 @@ const hasCancelledInvoiceForToday = (appointment, invoices) => {
     });
 };
 
-const WalkCard = ({ appointment }) => {
-    const { user, setUser } = useContext(UserContext);
+const WalkCard = React.memo(({ appointment }) => {
+    const { user, addInvoice } = useContext(UserContext);
     const [isCompleted, setIsCompleted] = useState(
         hasInvoiceForToday(appointment, user?.invoices)
     );
@@ -119,13 +120,13 @@ const WalkCard = ({ appointment }) => {
     const [showPetModal, setShowPetModal] = useState(false);
 
     const handleCompleteWalk = async (offset = 0) => {
-        let compensation = appointment.duration === 30 ? user.thirty 
-            : appointment.duration === 40 ? user.fourty 
-            : appointment.duration === 60 ? user.sixty 
+        let compensation = appointment.duration === 30 ? user.thirty
+            : appointment.duration === 40 ? user.fourty
+            : appointment.duration === 60 ? user.sixty
             : 0;
-    
+
         compensation += offset;
-    
+
         const response = await fetch("/invoices", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -138,13 +139,11 @@ const WalkCard = ({ appointment }) => {
                 title: `${appointment.duration} min walk`
             }),
         });
-    
+
         if (response.ok) {
             const newInvoice = await response.json();
-            setUser(prevUser => ({
-                ...prevUser,
-                invoices: [...prevUser.invoices, newInvoice]
-            }));
+            // Use smart update - prevents full re-render
+            addInvoice(newInvoice);
             setIsCompleted(true);
             setShowCompletionModal(false);
         }
@@ -167,10 +166,8 @@ const WalkCard = ({ appointment }) => {
 
         if (response.ok) {
             const newInvoice = await response.json();
-            setUser(prevUser => ({
-                ...prevUser,
-                invoices: [...prevUser.invoices, newInvoice]
-            }));
+            // Use smart update - prevents full re-render
+            addInvoice(newInvoice);
             setIsCancelled(true);
             setShowCancelModal(false);
         }
@@ -180,8 +177,7 @@ const WalkCard = ({ appointment }) => {
         <Card $completed={isCompleted} $cancelled={isCancelled}>
             <PetImageContainer onClick={() => setShowPetModal(true)} title="Click to view pet details">
                 <PetImage
-                    src={appointment.pet?.profile_pic || dogPlaceholder}
-                    onError={(e) => (e.target.src = dogPlaceholder)}
+                    src={dogPlaceholder}
                     alt={appointment.pet?.name}
                 />
                 <ClickHint>
@@ -258,7 +254,7 @@ const WalkCard = ({ appointment }) => {
             )}
         </Card>
     );
-};
+});
 
 // Completion Modal Component
 const CompletionModal = ({ appointment, user, onComplete, onClose }) => {
@@ -314,8 +310,7 @@ const CompletionModal = ({ appointment, user, onComplete, onClose }) => {
                     <WalkSummary>
                         <PetInfo>
                             <PetAvatar
-                                src={appointment.pet?.profile_pic || dogPlaceholder}
-                                onError={(e) => (e.target.src = dogPlaceholder)}
+                                src={dogPlaceholder}
                                 alt={appointment.pet?.name}
                             />
                             <div>
@@ -437,8 +432,7 @@ const CancelModal = ({ appointment, onCancel, onClose }) => {
                     <WalkSummary>
                         <PetInfo>
                             <PetAvatar
-                                src={appointment.pet?.profile_pic || dogPlaceholder}
-                                onError={(e) => (e.target.src = dogPlaceholder)}
+                                src={dogPlaceholder}
                                 alt={appointment.pet?.name}
                             />
                             <div>
@@ -539,8 +533,7 @@ const PetDetailsModal = ({ pet, onClose }) => {
                 <PetModalContent>
                     <PetMainInfo>
                         <PetModalAvatar
-                            src={pet?.profile_pic || dogPlaceholder}
-                            onError={(e) => (e.target.src = dogPlaceholder)}
+                            src={dogPlaceholder}
                             alt={pet?.name}
                         />
                         <PetNameContainer>

@@ -1,8 +1,8 @@
 class Appointment < ApplicationRecord
   belongs_to :user
   belongs_to :pet
-  has_many :invoices
-  has_many :cancellations
+  has_many :invoices, dependent: :nullify
+  has_many :cancellations, dependent: :destroy
 
   validates :appointment_date, presence: true
   validates :start_time, presence: true

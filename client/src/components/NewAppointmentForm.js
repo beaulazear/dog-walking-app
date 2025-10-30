@@ -5,7 +5,7 @@ import { UserContext } from "../context/user";
 import { Calendar, Clock, Plus, X, Users, Repeat, CalendarDays } from "lucide-react";
 
 const NewAppointmentForm = ({ pet }) => {
-    const { user, setUser } = useContext(UserContext);
+    const { user, addAppointment } = useContext(UserContext);
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({
         user_id: user.id,
@@ -71,10 +71,8 @@ const NewAppointmentForm = ({ pet }) => {
 
             const createdAppointment = await response.json();
 
-            setUser(prevUser => ({
-                ...prevUser,
-                appointments: [...prevUser.appointments, createdAppointment],
-            }));
+            // Use smart update - prevents full re-render
+            addAppointment(createdAppointment);
 
             alert("Appointment created successfully!");
             toggleForm();

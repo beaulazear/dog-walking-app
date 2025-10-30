@@ -9,7 +9,7 @@ import { Calendar, X, Plus, Trash2, CalendarDays, CalendarRange, CheckSquare } f
 dayjs.extend(isSameOrBefore);
 
 export default function CancellationModal({ appointment, setSelectedAppointment, onClose }) {
-    const { setUser } = useContext(UserContext);
+    const { updateAppointment } = useContext(UserContext);
     const [showModal, setShowModal] = useState(true); // Changed to true since it's controlled externally
     const [selectedDate, setSelectedDate] = useState("");
     const [dateMode, setDateMode] = useState('single'); // 'single', 'range', 'multi'
@@ -50,14 +50,12 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
 
             const newCancellation = await response.json();
 
-            setUser((prevUser) => ({
-                ...prevUser,
-                appointments: prevUser.appointments.map((apt) =>
-                    apt.id === appointmentId
-                        ? { ...apt, cancellations: [...(apt.cancellations || []), newCancellation] }
-                        : apt
-                ),
-            }));
+            // Smart update - only update the specific appointment
+            const updatedAppointment = {
+                ...appointment,
+                cancellations: [...(appointment.cancellations || []), newCancellation]
+            };
+            updateAppointment(updatedAppointment);
             return true;
         } catch (error) {
             console.error("Error adding cancellation:", error);
@@ -139,14 +137,12 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
                 return;
             }
 
-            setUser((prevUser) => ({
-                ...prevUser,
-                appointments: prevUser.appointments.map((apt) =>
-                    apt.id === appointment.id
-                        ? { ...apt, cancellations: apt.cancellations.filter(c => c.id !== cancellationId) }
-                        : apt
-                ),
-            }));
+            // Smart update - only update the specific appointment
+            const updatedAppointment = {
+                ...appointment,
+                cancellations: appointment.cancellations.filter(c => c.id !== cancellationId)
+            };
+            updateAppointment(updatedAppointment);
 
             alert("Cancellation removed.");
             setSelectedAppointment(null)

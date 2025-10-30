@@ -26,9 +26,7 @@ class PetsController < ApplicationController
     pet = @current_user.pets.find_by(id: params[:id])
 
     if pet
-      if params[:profile_pic].present? && params[:profile_pic].is_a?(ActionDispatch::Http::UploadedFile)
-        pet.profile_pic.attach(params[:profile_pic])
-      end
+      # Profile pic upload removed - using frontend icons instead
 
       if pet.update(pet_params_update)
         render json: {
@@ -41,12 +39,8 @@ class PetsController < ApplicationController
           behavioral_notes: pet.behavioral_notes,
           supplies_location: pet.supplies_location,
           allergies: pet.allergies,
-          active: pet.active,
-          profile_pic: if pet.profile_pic.attached?
-                         Rails.application.routes.url_helpers.rails_blob_url(
-                           pet.profile_pic, only_path: true
-                         )
-                       end
+          active: pet.active
+          # profile_pic removed - using frontend icons instead
         }, status: :ok
       else
         render json: { errors: pet.errors.full_messages }, status: :unprocessable_entity
@@ -80,11 +74,11 @@ class PetsController < ApplicationController
 
   def pet_params
     params.require(:pet).permit(:user_id, :name, :spayed_neutered, :supplies_location, :behavioral_notes,
-                                :birthdate, :sex, :allergies, :address, :profile_pic, :id, :active)
+                                :birthdate, :sex, :allergies, :address, :id, :active)
   end
 
   def pet_params_update
     params.permit(:name, :spayed_neutered, :supplies_location, :behavioral_notes,
-                  :birthdate, :sex, :allergies, :address, :active, :profile_pic)
+                  :birthdate, :sex, :allergies, :address, :active)
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 20_250_807_235_904) do
+ActiveRecord::Schema[7.2].define(version: 20_251_030_225_659) do
   # These are extensions that must be enabled in order to support this database
   enable_extension 'plpgsql'
 
@@ -75,6 +75,8 @@ ActiveRecord::Schema[7.2].define(version: 20_250_807_235_904) do
     t.datetime 'updated_at', null: false
     t.boolean 'solo'
     t.index ['pet_id'], name: 'index_appointments_on_pet_id'
+    t.index %w[user_id appointment_date], name: 'index_appointments_on_user_and_date'
+    t.index %w[user_id recurring canceled completed], name: 'index_appointments_on_user_and_status'
     t.index ['user_id'], name: 'index_appointments_on_user_id'
   end
 
@@ -83,6 +85,7 @@ ActiveRecord::Schema[7.2].define(version: 20_250_807_235_904) do
     t.bigint 'appointment_id', null: false
     t.datetime 'created_at', null: false
     t.datetime 'updated_at', null: false
+    t.index %w[appointment_id date], name: 'index_cancellations_on_appointment_and_date'
     t.index ['appointment_id'], name: 'index_cancellations_on_appointment_id'
   end
 
@@ -98,6 +101,7 @@ ActiveRecord::Schema[7.2].define(version: 20_250_807_235_904) do
     t.string 'title'
     t.boolean 'cancelled'
     t.index ['appointment_id'], name: 'index_invoices_on_appointment_id'
+    t.index %w[pet_id paid pending], name: 'index_invoices_on_pet_and_payment_status'
     t.index ['pet_id'], name: 'index_invoices_on_pet_id'
   end
 
