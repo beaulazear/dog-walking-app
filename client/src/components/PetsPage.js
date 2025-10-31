@@ -2,12 +2,12 @@ import React, { useContext, useState, useEffect, useMemo } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import dayjs from "dayjs";
-import { 
-    Search, 
-    Dog, 
-    Cat, 
-    Bird, 
-    Rabbit, 
+import {
+    Search,
+    Dog,
+    Cat,
+    Bird,
+    Rabbit,
     Fish,
     MapPin,
     CheckCircle,
@@ -31,6 +31,9 @@ import PetInvoices from "./PetInvoices";
 import NewAppointmentForm from "./NewAppointmentForm";
 import CancellationModal from "./CancellationModal";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import toast from 'react-hot-toast';
+import { useConfirm } from '../hooks/useConfirm';
+import ConfirmModal from './ConfirmModal';
 
 dayjs.extend(isSameOrAfter);
 
@@ -55,9 +58,11 @@ const getAnimalIcon = (name) => {
 export default function PetsPage() {
     const { user, addPet } = useContext(UserContext);
     const [selectedPetId, setSelectedPetId] = useState(null);
+    const [selectedTab, setSelectedTab] = useState('info');
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilter, setActiveFilter] = useState('active');
     const [showCreateForm, setShowCreateForm] = useState(false);
+    const [isCreatingPet, setIsCreatingPet] = useState(false);
     const [newPetFormData, setNewPetFormData] = useState({
         name: "",
         birthdate: "",
@@ -80,12 +85,32 @@ export default function PetsPage() {
     const filteredPets = user?.pets
         ?.filter(pet => {
             const matchesSearch = pet.name.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesFilter = activeFilter === 'all' ? true : 
-                                  activeFilter === 'active' ? pet.active : 
+            const matchesFilter = activeFilter === 'all' ? true :
+                                  activeFilter === 'active' ? pet.active :
                                   !pet.active;
             return matchesSearch && matchesFilter;
         })
         ?.sort((a, b) => a.name.localeCompare(b.name)) || [];
+
+    // Helper function to get upcoming appointments count for a pet
+    const getUpcomingAppointmentsCount = (petId) => {
+        if (!user?.appointments) return 0;
+        const today = dayjs().startOf("day");
+        return user.appointments.filter(apt => {
+            const appointmentDate = dayjs(apt.appointment_date).startOf("day");
+            return (
+                apt.pet_id === petId &&
+                !apt.completed &&
+                !apt.canceled &&
+                (apt.recurring || appointmentDate.isSameOrAfter(today))
+            );
+        }).length;
+    };
+
+    const handlePetClick = (petId, tab = 'info') => {
+        setSelectedPetId(petId);
+        setSelectedTab(tab);
+    };
 
     const handleNewPetChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -98,42 +123,53 @@ export default function PetsPage() {
     const handleNewPetSubmit = async (e) => {
         e.preventDefault();
 
-        const response = await fetch("/pets", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newPetFormData),
-            credentials: "include"
-        });
+        if (isCreatingPet) return;
 
-        if (response.ok) {
-            const newPet = await response.json();
-            // Use smart update - prevents full re-render
-            addPet(newPet);
-            setShowCreateForm(false);
-            setNewPetFormData({
-                name: "",
-                birthdate: "",
-                sex: "Male",
-                spayed_neutered: false,
-                address: "",
-                behavioral_notes: "",
-                supplies_location: "",
-                allergies: "",
-                active: true,
+        setIsCreatingPet(true);
+        try {
+            const response = await fetch("/pets", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(newPetFormData),
+                credentials: "include"
             });
-            alert("Pet added successfully!");
-        } else {
-            alert("Failed to add pet. Please try again.");
+
+            if (response.ok) {
+                const newPet = await response.json();
+                // Use smart update - prevents full re-render
+                addPet(newPet);
+                setShowCreateForm(false);
+                setNewPetFormData({
+                    name: "",
+                    birthdate: "",
+                    sex: "Male",
+                    spayed_neutered: false,
+                    address: "",
+                    behavioral_notes: "",
+                    supplies_location: "",
+                    allergies: "",
+                    active: true,
+                });
+                toast.success("Pet added successfully!");
+            } else {
+                toast.error("Failed to add pet. Please try again.");
+            }
+        } finally {
+            setIsCreatingPet(false);
         }
     };
 
     return (
         <Container>
             <Header>
-                <HeaderTop>
-                    <Title>My Pets</Title>
-                </HeaderTop>
-                
+                <HeaderTopRow>
+                    <HeaderTitle>My Pets</HeaderTitle>
+                    <AddPetButton onClick={() => setShowCreateForm(true)}>
+                        <Plus size={20} />
+                        Add New Pet
+                    </AddPetButton>
+                </HeaderTopRow>
+
                 <SearchAndFilter>
                     <SearchBar>
                         <Search size={20} />
@@ -144,85 +180,128 @@ export default function PetsPage() {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </SearchBar>
-                    
+
                     <FilterTabs>
-                        <FilterTab 
-                            $active={activeFilter === 'all'} 
+                        <FilterTab
+                            $active={activeFilter === 'all'}
                             onClick={() => setActiveFilter('all')}
                         >
                             All ({user?.pets?.length || 0})
                         </FilterTab>
-                        <FilterTab 
-                            $active={activeFilter === 'active'} 
+                        <FilterTab
+                            $active={activeFilter === 'active'}
                             onClick={() => setActiveFilter('active')}
                         >
                             <CheckCircle size={16} />
                             Active
                         </FilterTab>
-                        <FilterTab 
-                            $active={activeFilter === 'inactive'} 
+                        <FilterTab
+                            $active={activeFilter === 'inactive'}
                             onClick={() => setActiveFilter('inactive')}
                         >
                             <Pause size={16} />
                             Inactive
                         </FilterTab>
-                        <AddPetTab onClick={() => setShowCreateForm(true)}>
-                            <Plus size={16} />
-                            New
-                        </AddPetTab>
                     </FilterTabs>
                 </SearchAndFilter>
             </Header>
 
             <PetsGrid>
-                {filteredPets.map(pet => (
-                    <PetCard 
-                        key={pet.id} 
-                        onClick={() => setSelectedPetId(pet.id)}
-                        $active={pet.active}
-                    >
-                        <PetCardHeader>
-                            <PetIcon>{getAnimalIcon(pet.name)}</PetIcon>
-                            <PetName>{pet.name}</PetName>
-                            <StatusBadge $active={pet.active}>
-                                {pet.active ? <CheckCircle size={14} /> : <Pause size={14} />}
-                                {pet.active ? 'Active' : 'Inactive'}
-                            </StatusBadge>
-                        </PetCardHeader>
-                        
-                        <PetCardInfo>
-                            <InfoRow>
-                                <MapPin size={14} />
-                                <span>{pet.address || 'No address'}</span>
-                            </InfoRow>
-                            <InfoRow>
-                                <Calendar size={14} />
-                                <span>Age: {pet.birthdate ? `${dayjs().diff(dayjs(pet.birthdate), 'year')} years` : 'Unknown'}</span>
-                            </InfoRow>
-                        </PetCardInfo>
-                        
-                        <ViewDetailsButton>
-                            View Details
-                            <ChevronRight size={16} />
-                        </ViewDetailsButton>
-                    </PetCard>
-                ))}
+                {filteredPets.map(pet => {
+                    const appointmentCount = getUpcomingAppointmentsCount(pet.id);
+                    return (
+                        <PetCard
+                            key={pet.id}
+                            $active={pet.active}
+                        >
+                            <PetCardHeader onClick={() => handlePetClick(pet.id, 'info')}>
+                                <PetIcon>{getAnimalIcon(pet.name)}</PetIcon>
+                                <PetName>{pet.name}</PetName>
+                                <StatusBadge $active={pet.active}>
+                                    {pet.active ? <CheckCircle size={14} /> : <Pause size={14} />}
+                                    {pet.active ? 'Active' : 'Inactive'}
+                                </StatusBadge>
+                            </PetCardHeader>
+
+                            <PetCardInfo onClick={() => handlePetClick(pet.id, 'info')}>
+                                <InfoRow>
+                                    <MapPin size={14} />
+                                    <span>{pet.address || 'No address'}</span>
+                                </InfoRow>
+                                <InfoRow>
+                                    <Calendar size={14} />
+                                    <span>Age: {pet.birthdate ? `${dayjs().diff(dayjs(pet.birthdate), 'year')} years` : 'Unknown'}</span>
+                                </InfoRow>
+                                {appointmentCount > 0 && (
+                                    <InfoRow>
+                                        <CalendarDays size={14} />
+                                        <span>{appointmentCount} upcoming appointment{appointmentCount !== 1 ? 's' : ''}</span>
+                                    </InfoRow>
+                                )}
+                            </PetCardInfo>
+
+                            <QuickActionsRow>
+                                <QuickActionButton
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handlePetClick(pet.id, 'appointments');
+                                    }}
+                                    title="View and schedule appointments"
+                                >
+                                    <CalendarDays size={16} />
+                                    <span>Appointments</span>
+                                </QuickActionButton>
+                                <QuickActionButton
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handlePetClick(pet.id, 'invoices');
+                                    }}
+                                    title="View invoices"
+                                >
+                                    <DollarSign size={16} />
+                                    <span>Invoices</span>
+                                </QuickActionButton>
+                            </QuickActionsRow>
+
+                            <ViewDetailsButton onClick={() => handlePetClick(pet.id, 'info')}>
+                                View Full Details
+                                <ChevronRight size={16} />
+                            </ViewDetailsButton>
+                        </PetCard>
+                    );
+                })}
             </PetsGrid>
 
             {filteredPets.length === 0 && (
                 <EmptyState>
                     <EmptyIcon>{searchTerm ? <Search size={48} /> : <Heart size={48} />}</EmptyIcon>
                     <EmptyTitle>
-                        {searchTerm ? 'No pets found' : 'No pets yet'}
+                        {searchTerm ? 'No pets found' : 'Welcome to Your Pet Management Dashboard'}
                     </EmptyTitle>
                     <EmptyText>
-                        {searchTerm ? 'Try adjusting your search' : 'Add your first pet to get started'}
+                        {searchTerm ?
+                            'Try adjusting your search terms or filters to find the pet you\'re looking for.' :
+                            'Get started by adding your first pet. Once added, you can manage their appointments, track invoices, and keep all important information in one place.'
+                        }
                     </EmptyText>
+                    {!searchTerm && (
+                        <EmptyStateButton onClick={() => setShowCreateForm(true)}>
+                            <Plus size={20} />
+                            Add Your First Pet
+                        </EmptyStateButton>
+                    )}
                 </EmptyState>
             )}
 
             {selectedPet && (
-                <PetDetailsModal pet={selectedPet} onClose={() => setSelectedPetId(null)} />
+                <PetDetailsModal
+                    pet={selectedPet}
+                    initialTab={selectedTab}
+                    onClose={() => {
+                        setSelectedPetId(null);
+                        setSelectedTab('info');
+                    }}
+                />
             )}
 
             {showCreateForm && (
@@ -321,11 +400,11 @@ export default function PetsPage() {
                         </FormGroup>
 
                         <FormButtons>
-                            <SaveButton type="submit">
+                            <SaveButton type="submit" disabled={isCreatingPet}>
                                 <Save size={18} />
-                                Add Pet
+                                {isCreatingPet ? 'Adding...' : 'Add Pet'}
                             </SaveButton>
-                            <CancelButton type="button" onClick={() => setShowCreateForm(false)}>
+                            <CancelButton type="button" onClick={() => setShowCreateForm(false)} disabled={isCreatingPet}>
                                 Cancel
                             </CancelButton>
                         </FormButtons>
@@ -339,9 +418,10 @@ export default function PetsPage() {
 }
 
 // New Pet Details Modal Component with Tabs
-const PetDetailsModal = ({ pet, onClose }) => {
+const PetDetailsModal = ({ pet, initialTab = 'info', onClose }) => {
     const { user, updatePet, updateAppointment, removeAppointment } = useContext(UserContext);
-    const [activeTab, setActiveTab] = useState('info');
+    const { confirmState, confirm } = useConfirm();
+    const [activeTab, setActiveTab] = useState(initialTab);
     const [formData, setFormData] = useState(pet);
     // Profile pic removed - using icons instead
     const [appointments, setAppointments] = useState([]);
@@ -350,6 +430,10 @@ const PetDetailsModal = ({ pet, onClose }) => {
     const [editMode, setEditMode] = useState(false);
     const [isEditingAppointment, setIsEditingAppointment] = useState(false);
     const [editingAppointmentData, setEditingAppointmentData] = useState(null);
+    const [isUpdatingPet, setIsUpdatingPet] = useState(false);
+    const [isUpdatingAppointment, setIsUpdatingAppointment] = useState(false);
+    const [isDeletingAppointment, setIsDeletingAppointment] = useState(false);
+    const [isTogglingActive, setIsTogglingActive] = useState(false);
 
 
     useEffect(() => {
@@ -382,90 +466,149 @@ const PetDetailsModal = ({ pet, onClose }) => {
     // File upload removed - using icons instead
 
     const handleUpdate = async () => {
-        const formDataToSend = new FormData();
+        if (isUpdatingPet) return;
 
-        Object.keys(formData).forEach(key => {
-            formDataToSend.append(key, formData[key]);
-        });
+        setIsUpdatingPet(true);
+        try {
+            const formDataToSend = new FormData();
 
-        const response = await fetch(`/pets/${pet.id}`, {
-            method: "PATCH",
-            body: formDataToSend,
-            credentials: "include"
-        });
+            Object.keys(formData).forEach(key => {
+                formDataToSend.append(key, formData[key]);
+            });
 
-        if (response.ok) {
-            const updatedPet = await response.json();
-            // Use smart update - prevents full re-render
-            updatePet(updatedPet);
-            alert("Pet details updated!");
-            setEditMode(false);
+            const response = await fetch(`/pets/${pet.id}`, {
+                method: "PATCH",
+                body: formDataToSend,
+                credentials: "include"
+            });
+
+            if (response.ok) {
+                const updatedPet = await response.json();
+                // Use smart update - prevents full re-render
+                updatePet(updatedPet);
+                toast.success("Pet details updated!");
+                setEditMode(false);
+            } else {
+                toast.error("Failed to update pet details.");
+            }
+        } finally {
+            setIsUpdatingPet(false);
+        }
+    };
+
+    const handleToggleActive = async () => {
+        if (isTogglingActive) return;
+
+        setIsTogglingActive(true);
+        try {
+            const formDataToSend = new FormData();
+            formDataToSend.append('active', !pet.active);
+
+            const response = await fetch(`/pets/${pet.id}`, {
+                method: "PATCH",
+                body: formDataToSend,
+                credentials: "include"
+            });
+
+            if (response.ok) {
+                const updatedPet = await response.json();
+                updatePet(updatedPet);
+                toast.success(`${pet.name} marked as ${updatedPet.active ? 'active' : 'inactive'}!`);
+            } else {
+                toast.error("Failed to update pet status.");
+            }
+        } catch (error) {
+            console.error("Error toggling pet status:", error);
+            toast.error("An error occurred while updating pet status.");
+        } finally {
+            setIsTogglingActive(false);
         }
     };
 
     const handleDeleteAppointment = async (appointmentId) => {
-        if (!window.confirm("Are you sure you want to delete this appointment?")) return;
-
-        const response = await fetch(`/appointments/${appointmentId}`, {
-            method: "DELETE",
-            credentials: "include"
+        const confirmed = await confirm({
+            title: 'Delete Appointment?',
+            message: 'Are you sure you want to delete this appointment? This action cannot be undone.',
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            variant: 'danger'
         });
 
-        if (response.ok) {
-            // Use smart update - prevents full re-render
-            removeAppointment(appointmentId);
-            setSelectedAppointment(null);
-            alert("Appointment deleted successfully!");
+        if (!confirmed) return;
+
+        setIsDeletingAppointment(true);
+        try {
+            const response = await fetch(`/appointments/${appointmentId}`, {
+                method: "DELETE",
+                credentials: "include"
+            });
+
+            if (response.ok) {
+                // Use smart update - prevents full re-render
+                removeAppointment(appointmentId);
+                setSelectedAppointment(null);
+                toast.success("Appointment deleted successfully!");
+            } else {
+                toast.error("Failed to delete appointment.");
+            }
+        } finally {
+            setIsDeletingAppointment(false);
         }
     };
 
     const handleUpdateAppointment = async () => {
-        const response = await fetch(`/appointments/${editingAppointmentData.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                appointment: {
-                    start_time: editingAppointmentData.start_time,
-                    end_time: editingAppointmentData.end_time,
-                    duration: editingAppointmentData.duration,
-                    solo: editingAppointmentData.solo,
-                    appointment_date: editingAppointmentData.appointment_date,
-                    recurring: editingAppointmentData.recurring,
-                    monday: editingAppointmentData.monday,
-                    tuesday: editingAppointmentData.tuesday,
-                    wednesday: editingAppointmentData.wednesday,
-                    thursday: editingAppointmentData.thursday,
-                    friday: editingAppointmentData.friday,
-                    saturday: editingAppointmentData.saturday,
-                    sunday: editingAppointmentData.sunday
+        if (isUpdatingAppointment) return;
+
+        setIsUpdatingAppointment(true);
+        try {
+            const response = await fetch(`/appointments/${editingAppointmentData.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    appointment: {
+                        start_time: editingAppointmentData.start_time,
+                        end_time: editingAppointmentData.end_time,
+                        duration: editingAppointmentData.duration,
+                        solo: editingAppointmentData.solo,
+                        appointment_date: editingAppointmentData.appointment_date,
+                        recurring: editingAppointmentData.recurring,
+                        monday: editingAppointmentData.monday,
+                        tuesday: editingAppointmentData.tuesday,
+                        wednesday: editingAppointmentData.wednesday,
+                        thursday: editingAppointmentData.thursday,
+                        friday: editingAppointmentData.friday,
+                        saturday: editingAppointmentData.saturday,
+                        sunday: editingAppointmentData.sunday
+                    }
+                }),
+                credentials: "include"
+            });
+
+            if (response.ok) {
+                const updatedAppointment = await response.json();
+
+                // Ensure cancellations is always an array
+                if (!updatedAppointment.cancellations) {
+                    updatedAppointment.cancellations = [];
                 }
-            }),
-            credentials: "include"
-        });
 
-        if (response.ok) {
-            const updatedAppointment = await response.json();
+                // Use smart update - prevents full re-render
+                updateAppointment(updatedAppointment);
 
-            // Ensure cancellations is always an array
-            if (!updatedAppointment.cancellations) {
-                updatedAppointment.cancellations = [];
+                setAppointments(prev => prev.map(apt =>
+                    apt.id === updatedAppointment.id ? updatedAppointment : apt
+                ));
+
+                setSelectedAppointment(updatedAppointment);
+                setIsEditingAppointment(false);
+                setEditingAppointmentData(null);
+                toast.success("Appointment updated successfully!");
+            } else {
+                const error = await response.json();
+                toast.error(`Error updating appointment: ${error.errors?.join(", ") || "Unknown error"}`);
             }
-
-            // Use smart update - prevents full re-render
-            updateAppointment(updatedAppointment);
-
-            setAppointments(prev => prev.map(apt =>
-                apt.id === updatedAppointment.id ? updatedAppointment : apt
-            ));
-            
-            setSelectedAppointment(updatedAppointment);
-            setIsEditingAppointment(false);
-            setEditingAppointmentData(null);
-            // Use setTimeout to avoid blocking the React update cycle
-            setTimeout(() => alert("Appointment updated successfully!"), 0);
-        } else {
-            const error = await response.json();
-            alert(`Error updating appointment: ${error.errors?.join(", ") || "Unknown error"}`);
+        } finally {
+            setIsUpdatingAppointment(false);
         }
     };
 
@@ -507,6 +650,25 @@ const PetDetailsModal = ({ pet, onClose }) => {
                             </ModalSubtitle>
                         </div>
                     </ModalHeaderLeft>
+                    <ToggleActiveButton
+                        onClick={handleToggleActive}
+                        disabled={isTogglingActive}
+                        $active={pet.active}
+                    >
+                        {isTogglingActive ? (
+                            'Updating...'
+                        ) : pet.active ? (
+                            <>
+                                <Pause size={16} />
+                                Mark Inactive
+                            </>
+                        ) : (
+                            <>
+                                <CheckCircle size={16} />
+                                Mark Active
+                            </>
+                        )}
+                    </ToggleActiveButton>
                 </ModalHeader>
 
                 <TabContainer>
@@ -536,6 +698,9 @@ const PetDetailsModal = ({ pet, onClose }) => {
                 <TabContent>
                     {activeTab === 'info' && (
                         <InfoTab>
+                            <TabDescription>
+                                View and edit your pet's details, including contact information, medical notes, and care instructions.
+                            </TabDescription>
                             <InfoHeader>
                                 <InfoTitle>Pet Information</InfoTitle>
                                 {!editMode ? (
@@ -545,14 +710,14 @@ const PetDetailsModal = ({ pet, onClose }) => {
                                     </EditButton>
                                 ) : (
                                     <ButtonGroup>
-                                        <SaveButton onClick={handleUpdate}>
+                                        <SaveButton onClick={handleUpdate} disabled={isUpdatingPet}>
                                             <Save size={16} />
-                                            Save Changes
+                                            {isUpdatingPet ? 'Saving...' : 'Save Changes'}
                                         </SaveButton>
                                         <CancelButton onClick={() => {
                                             setEditMode(false);
                                             setFormData(pet);
-                                        }}>
+                                        }} disabled={isUpdatingPet}>
                                             Cancel
                                         </CancelButton>
                                     </ButtonGroup>
@@ -689,6 +854,9 @@ const PetDetailsModal = ({ pet, onClose }) => {
 
                     {activeTab === 'appointments' && (
                         <AppointmentsTab>
+                            <TabDescription>
+                                Manage all appointments for {pet.name}. Schedule new walks, view upcoming sessions, and handle cancellations for recurring appointments.
+                            </TabDescription>
                             <AppointmentsHeader>
                                 <InfoTitle>Appointments</InfoTitle>
                             </AppointmentsHeader>
@@ -810,13 +978,13 @@ const PetDetailsModal = ({ pet, onClose }) => {
                                                 
                                                 <ButtonGroup style={{ marginTop: '24px' }}>
                                                     {selectedAppointment.recurring && (
-                                                        <PrimaryButton onClick={() => setShowCancellationModal(true)}>
+                                                        <PrimaryButton onClick={() => setShowCancellationModal(true)} disabled={isDeletingAppointment}>
                                                             Add Cancellation Date
                                                         </PrimaryButton>
                                                     )}
-                                                    <DeleteButton onClick={() => handleDeleteAppointment(selectedAppointment.id)}>
+                                                    <DeleteButton onClick={() => handleDeleteAppointment(selectedAppointment.id)} disabled={isDeletingAppointment}>
                                                         <Trash2 size={16} />
-                                                        Delete Appointment
+                                                        {isDeletingAppointment ? 'Deleting...' : 'Delete Appointment'}
                                                     </DeleteButton>
                                                 </ButtonGroup>
                                             </>
@@ -910,14 +1078,14 @@ const PetDetailsModal = ({ pet, onClose }) => {
                                                 )}
 
                                                 <FormButtons>
-                                                    <SaveButton onClick={handleUpdateAppointment}>
+                                                    <SaveButton onClick={handleUpdateAppointment} disabled={isUpdatingAppointment}>
                                                         <Save size={16} />
-                                                        Save Changes
+                                                        {isUpdatingAppointment ? 'Saving...' : 'Save Changes'}
                                                     </SaveButton>
                                                     <CancelButton onClick={() => {
                                                         setIsEditingAppointment(false);
                                                         setEditingAppointmentData(null);
-                                                    }}>
+                                                    }} disabled={isUpdatingAppointment}>
                                                         Cancel
                                                     </CancelButton>
                                                 </FormButtons>
@@ -940,11 +1108,25 @@ const PetDetailsModal = ({ pet, onClose }) => {
 
                     {activeTab === 'invoices' && (
                         <InvoicesTab>
+                            <TabDescription>
+                                View billing history and invoices for {pet.name}. Track payments and generate new invoices as needed.
+                            </TabDescription>
                             <PetInvoices pet={pet} />
                         </InvoicesTab>
                     )}
                 </TabContent>
             </ModalContainer>
+            {confirmState.isOpen && (
+                <ConfirmModal
+                    title={confirmState.title}
+                    message={confirmState.message}
+                    onConfirm={confirmState.onConfirm}
+                    onCancel={confirmState.onCancel}
+                    confirmText={confirmState.confirmText}
+                    cancelText={confirmState.cancelText}
+                    variant={confirmState.variant}
+                />
+            )}
         </ModalOverlay>
     );
 
@@ -968,9 +1150,72 @@ const Header = styled.div`
     max-width: 1200px;
     margin: 0 auto 2.5rem;
     padding: 0;
-    
+
     @media (max-width: 768px) {
         margin-bottom: 2rem;
+    }
+`;
+
+const HeaderTopRow = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+
+    @media (max-width: 768px) {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+`;
+
+const HeaderTitle = styled.h1`
+    font-family: 'Poppins', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    letter-spacing: -0.025em;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+
+    @media (max-width: 768px) {
+        font-size: 2rem;
+        text-align: center;
+    }
+`;
+
+const AddPetButton = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+    white-space: nowrap;
+
+    @media (max-width: 768px) {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 24px;
+        font-size: 1rem;
+    }
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5);
+        background: linear-gradient(135deg, #16a34a, #15803d);
+    }
+
+    &:active {
+        transform: translateY(0);
     }
 `;
 
@@ -979,7 +1224,7 @@ const HeaderTop = styled.div`
     justify-content: center;
     align-items: center;
     margin-bottom: 2rem;
-    
+
     @media (max-width: 768px) {
         margin-bottom: 1.5rem;
     }
@@ -994,7 +1239,7 @@ const Title = styled.h1`
     text-align: center;
     letter-spacing: -0.025em;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    
+
     @media (max-width: 768px) {
         font-size: 2.25rem;
     }
@@ -1176,11 +1421,13 @@ const PetCard = styled.div`
     background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
     padding: 1.5rem;
-    cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     opacity: ${props => props.$active ? 1 : 0.8};
-    
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
     &:hover {
         transform: translateY(-4px);
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
@@ -1191,7 +1438,15 @@ const PetCardHeader = styled.div`
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 1rem;
+    cursor: pointer;
+    padding: 4px;
+    margin: -4px;
+    border-radius: 12px;
+    transition: background 0.2s ease;
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.03);
+    }
 `;
 
 const PetIcon = styled.div`
@@ -1203,7 +1458,7 @@ const PetIcon = styled.div`
     align-items: center;
     justify-content: center;
     color: white;
-    
+
     svg {
         width: 24px;
         height: 24px;
@@ -1237,7 +1492,61 @@ const PetCardInfo = styled.div`
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-bottom: 1rem;
+    cursor: pointer;
+    padding: 4px;
+    margin: -4px;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.03);
+    }
+`;
+
+const QuickActionsRow = styled.div`
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+`;
+
+const QuickActionButton = styled.button`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 12px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.2);
+
+    @media (max-width: 768px) {
+        font-size: 0.8rem;
+        padding: 8px 10px;
+
+        svg {
+            width: 14px;
+            height: 14px;
+        }
+    }
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
 `;
 
 const InfoRow = styled.div`
@@ -1276,7 +1585,7 @@ const ViewDetailsButton = styled.div`
 `;
 
 const EmptyState = styled.div`
-    max-width: 400px;
+    max-width: 500px;
     margin: 4rem auto;
     text-align: center;
     background: rgba(255, 255, 255, 0.95);
@@ -1288,7 +1597,7 @@ const EmptyState = styled.div`
 const EmptyIcon = styled.div`
     margin-bottom: 1rem;
     color: #9ca3af;
-    
+
     svg {
         width: 48px;
         height: 48px;
@@ -1299,7 +1608,7 @@ const EmptyTitle = styled.h3`
     font-family: 'Poppins', sans-serif;
     font-size: 1.5rem;
     font-weight: 600;
-    margin: 0 0 0.5rem;
+    margin: 0 0 0.75rem;
     color: #1f2937;
 `;
 
@@ -1307,7 +1616,35 @@ const EmptyText = styled.p`
     font-family: 'Poppins', sans-serif;
     font-size: 1rem;
     color: #6b7280;
-    margin: 0;
+    margin: 0 0 1.5rem;
+    line-height: 1.6;
+`;
+
+const EmptyStateButton = styled.button`
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
 `;
 
 // Modal Styles
@@ -1457,6 +1794,49 @@ const ModalStatusBadge = styled.span`
     border: 1px solid ${props => props.$active ? 'white' : 'rgba(255, 255, 255, 0.3)'};
 `;
 
+const ToggleActiveButton = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid;
+    background: ${props => props.$active
+        ? 'rgba(239, 68, 68, 0.1)'
+        : 'rgba(34, 197, 94, 0.1)'};
+    color: ${props => props.$active
+        ? '#ef4444'
+        : '#22c55e'};
+    border-color: ${props => props.$active
+        ? 'rgba(239, 68, 68, 0.3)'
+        : 'rgba(34, 197, 94, 0.3)'};
+
+    &:hover:not(:disabled) {
+        background: ${props => props.$active
+            ? 'rgba(239, 68, 68, 0.2)'
+            : 'rgba(34, 197, 94, 0.2)'};
+        border-color: ${props => props.$active
+            ? 'rgba(239, 68, 68, 0.5)'
+            : 'rgba(34, 197, 94, 0.5)'};
+        transform: translateY(-1px);
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 768px) {
+        padding: 8px 14px;
+        font-size: 0.85rem;
+    }
+`;
+
 const CloseButton = styled.button`
     background: none;
     border: none;
@@ -1573,9 +1953,26 @@ const TabContent = styled.div`
     flex: 1;
     overflow-y: auto;
     padding: 24px;
-    
+
     @media (max-width: 768px) {
         padding: 16px;
+    }
+`;
+
+const TabDescription = styled.p`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.85);
+    margin: 0 0 20px 0;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    border-left: 3px solid rgba(255, 255, 255, 0.4);
+    line-height: 1.5;
+
+    @media (max-width: 768px) {
+        font-size: 0.85rem;
+        padding: 10px 12px;
     }
 `;
 
@@ -1759,10 +2156,15 @@ const SaveButton = styled.button`
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    
-    &:hover {
+
+    &:hover:not(:disabled) {
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 `;
 
@@ -1777,9 +2179,14 @@ const CancelButton = styled.button`
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    
-    &:hover {
+
+    &:hover:not(:disabled) {
         background: #e5e7eb;
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 `;
 
@@ -1940,11 +2347,16 @@ const PrimaryButton = styled.button`
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    
-    &:hover {
+
+    &:hover:not(:disabled) {
         background: #4f46e5;
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 `;
 
@@ -1962,10 +2374,15 @@ const DeleteButton = styled.button`
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    
-    &:hover {
+
+    &:hover:not(:disabled) {
         background: rgba(239, 68, 68, 0.2);
         border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 `;
 

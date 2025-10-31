@@ -3,10 +3,12 @@ import styled from "styled-components";
 import dayjs from "dayjs";
 import { UserContext } from "../context/user";
 import { Calendar, Clock, Plus, X, Users, Repeat, CalendarDays } from "lucide-react";
+import toast from 'react-hot-toast';
 
 const NewAppointmentForm = ({ pet }) => {
     const { user, addAppointment } = useContext(UserContext);
     const [showForm, setShowForm] = useState(false);
+    const [isCreating, setIsCreating] = useState(false);
     const [formData, setFormData] = useState({
         user_id: user.id,
         pet_id: pet.id,
@@ -38,6 +40,8 @@ const NewAppointmentForm = ({ pet }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        if (isCreating) return;
+
         const newAppointment = {
             user_id: user.id,
             pet_id: pet.id,
@@ -55,6 +59,7 @@ const NewAppointmentForm = ({ pet }) => {
             sunday: formData.sunday,
         };
 
+        setIsCreating(true);
         try {
             const response = await fetch("/appointments", {
                 method: "POST",
@@ -65,7 +70,7 @@ const NewAppointmentForm = ({ pet }) => {
             if (!response.ok) {
                 const errorData = await response.json();
                 console.error("Error:", errorData);
-                alert(errorData.errors?.join(", ") || "Failed to create appointment");
+                toast.error(errorData.errors?.join(", ") || "Failed to create appointment");
                 return;
             }
 
@@ -74,10 +79,13 @@ const NewAppointmentForm = ({ pet }) => {
             // Use smart update - prevents full re-render
             addAppointment(createdAppointment);
 
-            alert("Appointment created successfully!");
+            toast.success("Appointment created successfully!");
             toggleForm();
         } catch (error) {
             console.error("Error submitting appointment:", error);
+            toast.error("An error occurred while creating the appointment.");
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -212,11 +220,11 @@ const NewAppointmentForm = ({ pet }) => {
                         </TwoColumnGroup>
 
                         <ButtonGroup>
-                            <SubmitButton type="submit">
+                            <SubmitButton type="submit" disabled={isCreating}>
                                 <Plus size={16} />
-                                Create Appointment
+                                {isCreating ? 'Creating...' : 'Create Appointment'}
                             </SubmitButton>
-                            <CancelButton type="button" onClick={toggleForm}>
+                            <CancelButton type="button" onClick={toggleForm} disabled={isCreating}>
                                 <X size={16} />
                                 Cancel
                             </CancelButton>
@@ -472,13 +480,18 @@ const SubmitButton = styled.button`
     gap: 8px;
     transition: all 0.3s ease;
     box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
-    
-    &:hover {
+
+    &:hover:not(:disabled) {
         background: linear-gradient(135deg, #16a34a, #15803d);
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
     }
-    
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
     @media (max-width: 768px) {
         padding: 16px;
         font-size: 1rem;
@@ -502,13 +515,18 @@ const CancelButton = styled.button`
     gap: 8px;
     transition: all 0.3s ease;
     backdrop-filter: blur(5px);
-    
-    &:hover {
+
+    &:hover:not(:disabled) {
         background: rgba(255, 255, 255, 0.2);
         border-color: rgba(255, 255, 255, 0.4);
         transform: translateY(-2px);
     }
-    
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
     @media (max-width: 768px) {
         padding: 16px;
         font-size: 1rem;

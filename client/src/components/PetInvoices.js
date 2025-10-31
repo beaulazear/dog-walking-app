@@ -5,13 +5,19 @@ import dayjs from "dayjs";
 import { UserContext } from "../context/user";
 import CopyableInvoicesModal from "./CopyableInvoiceModal";
 import { DollarSign, Calendar, Trash2, CreditCard, Receipt, Eye, Plus, X, Save } from "lucide-react";
+import toast from 'react-hot-toast';
+import { useConfirm } from '../hooks/useConfirm';
+import ConfirmModal from './ConfirmModal';
 
 const PetInvoices = ({ pet }) => {
     const { user, setUser } = useContext(UserContext);
+    const { confirmState, confirm } = useConfirm();
     const [activeTab, setActiveTab] = useState("unpaid");
     const [invoiceLimit, setInvoiceLimit] = useState(15);
     const [showModal, setShowModal] = useState(false);
     const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
+    const [isMarkingAsPaid, setIsMarkingAsPaid] = useState(false);
+    const [deletingInvoiceId, setDeletingInvoiceId] = useState(null);
 
     const petInvoices = user.invoices.filter(invoice => invoice.pet_id === pet.id);
 
@@ -27,40 +33,69 @@ const PetInvoices = ({ pet }) => {
         .slice(0, invoiceLimit === "all" ? undefined : invoiceLimit);
 
     const markAllAsPaid = async () => {
-        if (!window.confirm("Mark all unpaid invoices for this pet as paid?")) return;
-
-        const response = await fetch(`/invoices/paid`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id_array: unpaidInvoices.map(i => i.id) })
+        const confirmed = await confirm({
+            title: 'Mark All as Paid?',
+            message: `Mark all ${unpaidInvoices.length} unpaid invoice${unpaidInvoices.length > 1 ? 's' : ''} for this pet as paid?`,
+            confirmText: 'Mark Paid',
+            cancelText: 'Cancel',
+            variant: 'primary'
         });
 
-        if (response.ok) {
-            const updatedInvoices = await response.json();
-            setUser(prevUser => ({
-                ...prevUser,
-                invoices: prevUser.invoices.map(inv =>
-                    updatedInvoices.find(ui => ui.id === inv.id) || inv
-                )
-            }));
-            alert("All invoices marked as paid!");
+        if (!confirmed) return;
+
+        setIsMarkingAsPaid(true);
+        try {
+            const response = await fetch(`/invoices/paid`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id_array: unpaidInvoices.map(i => i.id) })
+            });
+
+            if (response.ok) {
+                const updatedInvoices = await response.json();
+                setUser(prevUser => ({
+                    ...prevUser,
+                    invoices: prevUser.invoices.map(inv =>
+                        updatedInvoices.find(ui => ui.id === inv.id) || inv
+                    )
+                }));
+                toast.success("All invoices marked as paid!");
+            } else {
+                toast.error("Failed to mark invoices as paid.");
+            }
+        } finally {
+            setIsMarkingAsPaid(false);
         }
     };
 
     const deleteInvoice = async (invoiceId) => {
-        if (!window.confirm("Are you sure you want to delete this invoice?")) return;
-
-        const response = await fetch(`/invoices/${invoiceId}`, {
-            method: "DELETE",
+        const confirmed = await confirm({
+            title: 'Delete Invoice?',
+            message: 'Are you sure you want to delete this invoice? This action cannot be undone.',
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            variant: 'danger'
         });
 
-        if (response.ok) {
-            setUser(prevUser => ({
-                ...prevUser,
-                invoices: prevUser.invoices.filter(inv => inv.id !== invoiceId)
-            }));
-        } else {
-            alert("Failed to delete invoice. Please try again.");
+        if (!confirmed) return;
+
+        setDeletingInvoiceId(invoiceId);
+        try {
+            const response = await fetch(`/invoices/${invoiceId}`, {
+                method: "DELETE",
+            });
+
+            if (response.ok) {
+                setUser(prevUser => ({
+                    ...prevUser,
+                    invoices: prevUser.invoices.filter(inv => inv.id !== invoiceId)
+                }));
+                toast.success("Invoice deleted successfully.");
+            } else {
+                toast.error("Failed to delete invoice. Please try again.");
+            }
+        } finally {
+            setDeletingInvoiceId(null);
         }
     };
 
@@ -108,7 +143,10 @@ const PetInvoices = ({ pet }) => {
                                                 <Calendar size={14} />
                                                 {dayjs(invoice.date_completed).format("MMM D, YYYY")}
                                             </InvoiceDate>
-                                            <DeleteButton onClick={() => deleteInvoice(invoice.id)}>
+                                            <DeleteButton
+                                                onClick={() => deleteInvoice(invoice.id)}
+                                                disabled={deletingInvoiceId === invoice.id}
+                                            >
                                                 <Trash2 size={16} />
                                             </DeleteButton>
                                         </InvoiceDetails>
@@ -123,15 +161,15 @@ const PetInvoices = ({ pet }) => {
                                 </TotalAmount>
                                 
                                 <ActionButtons>
-                                    <PrimaryButton onClick={markAllAsPaid}>
+                                    <PrimaryButton onClick={markAllAsPaid} disabled={isMarkingAsPaid}>
                                         <CreditCard size={16} />
-                                        Mark All Paid
+                                        {isMarkingAsPaid ? 'Marking...' : 'Mark All Paid'}
                                     </PrimaryButton>
-                                    <SecondaryButton onClick={() => setShowModal(true)}>
+                                    <SecondaryButton onClick={() => setShowModal(true)} disabled={isMarkingAsPaid}>
                                         <Eye size={16} />
                                         View Copyable
                                     </SecondaryButton>
-                                    <CreateInvoiceButton onClick={() => setShowCreateInvoiceModal(true)}>
+                                    <CreateInvoiceButton onClick={() => setShowCreateInvoiceModal(true)} disabled={isMarkingAsPaid}>
                                         <Plus size={16} />
                                         Create Invoice
                                     </CreateInvoiceButton>
@@ -203,6 +241,18 @@ const PetInvoices = ({ pet }) => {
                     }}
                 />
             )}
+
+            {confirmState.isOpen && (
+                <ConfirmModal
+                    title={confirmState.title}
+                    message={confirmState.message}
+                    onConfirm={confirmState.onConfirm}
+                    onCancel={confirmState.onCancel}
+                    confirmText={confirmState.confirmText}
+                    cancelText={confirmState.cancelText}
+                    variant={confirmState.variant}
+                />
+            )}
         </InvoicesContainer>
     );
 };
@@ -215,20 +265,22 @@ const CreateInvoiceModal = ({ pet, user, onClose, onInvoiceCreated }) => {
         compensation: '',
         date_completed: dayjs().format('YYYY-MM-DD')
     });
+    const [isCreating, setIsCreating] = useState(false);
 
     // Get appointments for this pet that could be associated with an invoice
-    const availableAppointments = user.appointments?.filter(apt => 
+    const availableAppointments = user.appointments?.filter(apt =>
         apt.pet_id === pet.id && !apt.canceled
     ) || [];
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!formData.appointment_id || !formData.title || !formData.compensation) {
-            alert('Please fill in all required fields');
+            toast.error('Please fill in all required fields');
             return;
         }
 
+        setIsCreating(true);
         try {
             const response = await fetch('/invoices', {
                 method: 'POST',
@@ -248,14 +300,16 @@ const CreateInvoiceModal = ({ pet, user, onClose, onInvoiceCreated }) => {
             if (response.ok) {
                 const newInvoice = await response.json();
                 onInvoiceCreated(newInvoice);
-                alert('Manual invoice created successfully!');
+                toast.success('Manual invoice created successfully!');
             } else {
                 const errorData = await response.json();
-                alert(errorData.errors?.join(', ') || 'Failed to create invoice');
+                toast.error(errorData.errors?.join(', ') || 'Failed to create invoice');
             }
         } catch (error) {
             console.error('Error creating invoice:', error);
-            alert('Failed to create invoice. Please try again.');
+            toast.error('Failed to create invoice. Please try again.');
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -356,11 +410,11 @@ const CreateInvoiceModal = ({ pet, user, onClose, onInvoiceCreated }) => {
                         </CreateFormGroup>
 
                         <CreateModalButtonGroup>
-                            <CreateSubmitButton type="submit">
+                            <CreateSubmitButton type="submit" disabled={isCreating}>
                                 <Save size={16} />
-                                Create Invoice
+                                {isCreating ? 'Creating...' : 'Create Invoice'}
                             </CreateSubmitButton>
-                            <CreateCancelButton type="button" onClick={onClose}>
+                            <CreateCancelButton type="button" onClick={onClose} disabled={isCreating}>
                                 <X size={16} />
                                 Cancel
                             </CreateCancelButton>
@@ -563,11 +617,16 @@ const DeleteButton = styled.button`
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
-    
-    &:hover {
+
+    &:hover:not(:disabled) {
         background: rgba(239, 68, 68, 0.3);
         border-color: rgba(239, 68, 68, 0.5);
         transform: scale(1.05);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 `;
 
@@ -637,13 +696,18 @@ const PrimaryButton = styled.button`
     align-items: center;
     gap: 8px;
     box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
-    
-    &:hover {
+
+    &:hover:not(:disabled) {
         background: linear-gradient(135deg, #16a34a, #15803d);
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
     }
-    
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
     @media (max-width: 768px) {
         justify-content: center;
         padding: 14px;
@@ -665,13 +729,18 @@ const SecondaryButton = styled.button`
     align-items: center;
     gap: 8px;
     backdrop-filter: blur(5px);
-    
-    &:hover {
+
+    &:hover:not(:disabled) {
         background: rgba(255, 255, 255, 0.2);
         border-color: rgba(255, 255, 255, 0.4);
         transform: translateY(-2px);
     }
-    
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
     @media (max-width: 768px) {
         justify-content: center;
         padding: 14px;
@@ -730,14 +799,19 @@ const CreateInvoiceButton = styled.button`
     align-items: center;
     gap: 8px;
     box-shadow: 0 4px 16px rgba(139, 90, 140, 0.3);
-    
-    &:hover {
+
+    &:hover:not(:disabled) {
         background: linear-gradient(135deg, #7d527e, #936394);
         border-color: rgba(165, 105, 167, 0.6);
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(139, 90, 140, 0.4);
     }
-    
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
     @media (max-width: 768px) {
         justify-content: center;
         padding: 14px;
@@ -943,11 +1017,16 @@ const CreateSubmitButton = styled.button`
     justify-content: center;
     gap: 8px;
     box-shadow: 0 6px 24px rgba(34, 197, 94, 0.3);
-    
-    &:hover {
+
+    &:hover:not(:disabled) {
         background: linear-gradient(135deg, #16a34a, #15803d);
         transform: translateY(-2px);
         box-shadow: 0 8px 32px rgba(34, 197, 94, 0.4);
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 `;
 
@@ -967,10 +1046,15 @@ const CreateCancelButton = styled.button`
     align-items: center;
     justify-content: center;
     gap: 8px;
-    
-    &:hover {
+
+    &:hover:not(:disabled) {
         background: rgba(255, 255, 255, 0.15);
         border-color: rgba(255, 255, 255, 0.3);
         transform: translateY(-1px);
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 `;

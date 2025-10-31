@@ -17,7 +17,8 @@ import {
     ChevronRight,
     CalendarDays,
     X,
-    Trash2
+    Trash2,
+    Sparkles
 } from "lucide-react";
 
 const getUpcomingBirthday = (pets) => {
@@ -259,25 +260,17 @@ export default function Dashboard() {
 
     return (
         <Container>
-            <HeaderSection>
-                <WelcomeTitle>
-                    Welcome back, {user?.name}!
-                </WelcomeTitle>
-            </HeaderSection>
-
             <ContentSections>
                 <WeekOverviewSection>
                     <WeekHeader>
-                        <WeekHeaderTop>
-                            <WeekTitle>
-                                <Calendar size={18} />
-                                This Week
-                            </WeekTitle>
-                            <MonthToggle onClick={() => setShowMonthView(true)}>
-                                <CalendarDays size={18} />
-                            </MonthToggle>
-                        </WeekHeaderTop>
-                        
+                        <ScheduleHeaderContainer>
+                            <ScheduleIcon>
+                                <Sparkles size={20} />
+                            </ScheduleIcon>
+                            <PersonalizedTitle>
+                                {user?.name}'s Schedule
+                            </PersonalizedTitle>
+                        </ScheduleHeaderContainer>
                         <WeekNavigation>
                             <WeekNavButton onClick={() => navigateWeek(-1)}>
                                 <ChevronLeft size={20} />
@@ -288,6 +281,9 @@ export default function Dashboard() {
                             <WeekNavButton onClick={() => navigateWeek(1)}>
                                 <ChevronRight size={20} />
                             </WeekNavButton>
+                            <MonthToggle onClick={() => setShowMonthView(true)}>
+                                <CalendarDays size={18} />
+                            </MonthToggle>
                         </WeekNavigation>
                     </WeekHeader>
                     
@@ -723,9 +719,51 @@ const WeekOverviewSection = styled.div`
 
 const WeekHeader = styled.div`
     margin-bottom: 24px;
-    
+
     @media (max-width: 768px) {
         margin-bottom: 20px;
+    }
+`;
+
+const ScheduleHeaderContainer = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+
+    @media (max-width: 768px) {
+        margin-bottom: 16px;
+    }
+`;
+
+const ScheduleIcon = styled.div`
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+    animation: sparkleRotate 3s ease-in-out infinite;
+
+    @keyframes sparkleRotate {
+        0%, 100% { transform: rotate(0deg); }
+        25% { transform: rotate(-5deg); }
+        75% { transform: rotate(5deg); }
+    }
+`;
+
+const PersonalizedTitle = styled.h3`
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+
+    @media (max-width: 768px) {
+        font-size: 1rem;
     }
 `;
 

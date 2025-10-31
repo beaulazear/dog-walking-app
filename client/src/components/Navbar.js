@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import styled from "styled-components";
 import { UserContext } from "../context/user";
 
@@ -13,13 +13,13 @@ const Navbar = () => {
                 <NavLinks>
                     {!user ? (
                         <>
-                            <StyledLink to="/login">Login</StyledLink>
-                            <StyledLink to="/signup">Signup</StyledLink>
+                            <StyledNavLink to="/login">Login</StyledNavLink>
+                            <StyledNavLink to="/signup">Signup</StyledNavLink>
                         </>
                     ) : (
                         <>
-                            <StyledLink to="/todays-walks">Today</StyledLink>
-                            <StyledLink to="/pets-page">Pets</StyledLink>
+                            <StyledNavLink to="/todays-walks">Today</StyledNavLink>
+                            <StyledNavLink to="/pets-page">Pets</StyledNavLink>
                         </>
                     )}
                 </NavLinks>
@@ -69,16 +69,21 @@ const NavLinks = styled.div`
     gap: 15px;
 `;
 
-const StyledLink = styled(Link)`
+const StyledNavLink = styled(NavLink)`
     text-decoration: none;
     font-size: 16px;
     font-weight: bold;
     color: white;
     padding: 8px 15px;
     border-radius: 6px;
-    transition: background 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
 
     &:hover {
         background: rgba(255, 255, 255, 0.2);
+    }
+
+    &.active {
+        background: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
 `;

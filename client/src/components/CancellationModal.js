@@ -5,17 +5,23 @@ import { UserContext } from "../context/user";
 import dayjs from "dayjs";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import { Calendar, X, Plus, Trash2, CalendarDays, CalendarRange, CheckSquare } from "lucide-react";
+import toast from 'react-hot-toast';
+import { useConfirm } from '../hooks/useConfirm';
+import ConfirmModal from './ConfirmModal';
 
 dayjs.extend(isSameOrBefore);
 
 export default function CancellationModal({ appointment, setSelectedAppointment, onClose }) {
     const { updateAppointment } = useContext(UserContext);
+    const { confirmState, confirm } = useConfirm();
     const [showModal, setShowModal] = useState(true); // Changed to true since it's controlled externally
     const [selectedDate, setSelectedDate] = useState("");
     const [dateMode, setDateMode] = useState('single'); // 'single', 'range', 'multi'
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [selectedDates, setSelectedDates] = useState([]);
+    const [isAdding, setIsAdding] = useState(false);
+    const [deletingIds, setDeletingIds] = useState(new Set());
 
     const handleCloseModal = useCallback(() => {
         setSelectedDate("");
@@ -30,7 +36,7 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
     async function handleNewCancellation(appointmentId, date) {
         const today = new Date().toISOString().split("T")[0];
         if (new Date(date) < new Date(today)) {
-            alert("Cancellation date must be today or in the future.");
+            toast.error("Cancellation date must be today or in the future.");
             return false;
         }
 
@@ -44,7 +50,7 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
 
             if (!response.ok) {
                 const errorData = await response.json();
-                alert(errorData.errors?.join(", ") || "Failed to create cancellation.");
+                toast.error(errorData.errors?.join(", ") || "Failed to create cancellation.");
                 return false;
             }
 
@@ -59,7 +65,7 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
             return true;
         } catch (error) {
             console.error("Error adding cancellation:", error);
-            alert("An error occurred while processing the cancellation.");
+            toast.error("An error occurred while processing the cancellation.");
             return false;
         }
     }
@@ -68,20 +74,20 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
         const today = new Date().toISOString().split("T")[0];
         const start = dayjs(startDate);
         const end = dayjs(endDate);
-        
+
         if (start.isAfter(end)) {
-            alert("Start date must be before or equal to end date.");
+            toast.error("Start date must be before or equal to end date.");
             return false;
         }
 
         if (start.isBefore(dayjs(today))) {
-            alert("Cancellation dates must be today or in the future.");
+            toast.error("Cancellation dates must be today or in the future.");
             return false;
         }
 
         const dates = [];
         let currentDate = start;
-        
+
         while (currentDate.isSameOrBefore(end)) {
             // Only add dates that match the recurring schedule
             if (appointment.recurring) {
@@ -99,7 +105,7 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
         }
 
         if (dates.length === 0) {
-            alert("No valid appointment dates found in the selected range.");
+            toast.error("No valid appointment dates found in the selected range.");
             return false;
         }
 
@@ -116,16 +122,17 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
         }
 
         if (successCount > 0) {
-            alert(`Successfully added ${successCount} cancellation${successCount > 1 ? 's' : ''}${failCount > 0 ? ` (${failCount} failed)` : ''}.`);
+            toast.success(`Successfully added ${successCount} cancellation${successCount > 1 ? 's' : ''}${failCount > 0 ? ` (${failCount} failed)` : ''}.`);
             setSelectedAppointment(null);
             return true;
         } else {
-            alert("Failed to add any cancellations.");
+            toast.error("Failed to add any cancellations.");
             return false;
         }
     }
 
     async function handleDeleteCancellation(cancellationId) {
+        setDeletingIds(prev => new Set(prev).add(cancellationId));
         try {
             const response = await fetch(`/cancellations/${cancellationId}`, {
                 method: "DELETE",
@@ -133,7 +140,7 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
             });
 
             if (!response.ok) {
-                alert("Failed to delete cancellation.");
+                toast.error("Failed to delete cancellation.");
                 return;
             }
 
@@ -144,11 +151,17 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
             };
             updateAppointment(updatedAppointment);
 
-            alert("Cancellation removed.");
+            toast.success("Cancellation removed.");
             setSelectedAppointment(null)
         } catch (error) {
             console.error("Error deleting cancellation:", error);
-            alert("An error occurred while deleting the cancellation.");
+            toast.error("An error occurred while deleting the cancellation.");
+        } finally {
+            setDeletingIds(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(cancellationId);
+                return newSet;
+            });
         }
     }
 
@@ -166,11 +179,11 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
         }
 
         if (successCount > 0) {
-            alert(`Successfully added ${successCount} cancellation${successCount > 1 ? 's' : ''}${failCount > 0 ? ` (${failCount} failed)` : ''}.`);
+            toast.success(`Successfully added ${successCount} cancellation${successCount > 1 ? 's' : ''}${failCount > 0 ? ` (${failCount} failed)` : ''}.`);
             setSelectedAppointment(null);
             return true;
         } else {
-            alert("Failed to add any cancellations.");
+            toast.error("Failed to add any cancellations.");
             return false;
         }
     }
@@ -239,35 +252,42 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (dateMode === 'range') {
-            if (!startDate || !endDate) {
-                alert("Please select both start and end dates for the range.");
-                return;
+        if (isAdding) return;
+
+        setIsAdding(true);
+        try {
+            if (dateMode === 'range') {
+                if (!startDate || !endDate) {
+                    toast.error("Please select both start and end dates for the range.");
+                    return;
+                }
+                const success = await handleBulkCancellation(appointment.id, startDate, endDate);
+                if (success) {
+                    handleCloseModal();
+                }
+            } else if (dateMode === 'multi') {
+                if (selectedDates.length === 0) {
+                    toast.error("Please select at least one date for cancellation.");
+                    return;
+                }
+                const success = await handleMultipleCancellations(appointment.id, selectedDates);
+                if (success) {
+                    handleCloseModal();
+                }
+            } else {
+                if (!selectedDate) {
+                    toast.error("Please select a date for cancellation.");
+                    return;
+                }
+                const success = await handleNewCancellation(appointment.id, selectedDate);
+                if (success) {
+                    toast.success("Cancellation added.");
+                    setSelectedAppointment(null);
+                    handleCloseModal();
+                }
             }
-            const success = await handleBulkCancellation(appointment.id, startDate, endDate);
-            if (success) {
-                handleCloseModal();
-            }
-        } else if (dateMode === 'multi') {
-            if (selectedDates.length === 0) {
-                alert("Please select at least one date for cancellation.");
-                return;
-            }
-            const success = await handleMultipleCancellations(appointment.id, selectedDates);
-            if (success) {
-                handleCloseModal();
-            }
-        } else {
-            if (!selectedDate) {
-                alert("Please select a date for cancellation.");
-                return;
-            }
-            const success = await handleNewCancellation(appointment.id, selectedDate);
-            if (success) {
-                alert("Cancellation added.");
-                setSelectedAppointment(null);
-                handleCloseModal();
-            }
+        } finally {
+            setIsAdding(false);
         }
     };
 
@@ -298,8 +318,9 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
     };
 
     const modalContent = showModal ? (
-        <CancelModalOverlay onClick={handleOverlayClick}>
-            <CancelModalContainer>
+        <>
+            <CancelModalOverlay onClick={handleOverlayClick}>
+                <CancelModalContainer>
                 <CancelModalHeader>
                     <CancelModalTitle>
                         <CalendarDays size={20} />
@@ -393,9 +414,9 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
                                     placeholder="Select cancellation date"
                                 />
                             )}
-                            <CancelSubmitButton type="submit">
+                            <CancelSubmitButton type="submit" disabled={isAdding}>
                                 <Plus size={16} />
-                                Add Cancellation{dateMode === 'single' ? '' : 's'}
+                                {isAdding ? 'Adding...' : `Add Cancellation${dateMode === 'single' ? '' : 's'}`}
                             </CancelSubmitButton>
                         </CancelForm>
                     </CancelInputGroup>
@@ -424,15 +445,26 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
                                                     </CancellationRangeText>
                                                 </CancellationRangeInfo>
                                                 <CancellationRangeActions>
-                                                    <CancelDeleteButton 
-                                                        onClick={() => {
-                                                            if (window.confirm(`Delete all ${group.length} cancellations from ${dayjs(group[0].date).format("MMM D")} to ${dayjs(group[group.length - 1].date).format("MMM D")}?`)) {
-                                                                group.forEach(cancellation => handleDeleteCancellation(cancellation.id));
+                                                    <CancelDeleteButton
+                                                        onClick={async () => {
+                                                            const confirmed = await confirm({
+                                                                title: 'Delete Multiple Cancellations?',
+                                                                message: `Delete all ${group.length} cancellations from ${dayjs(group[0].date).format("MMM D")} to ${dayjs(group[group.length - 1].date).format("MMM D")}?`,
+                                                                confirmText: 'Delete All',
+                                                                cancelText: 'Cancel',
+                                                                variant: 'danger'
+                                                            });
+
+                                                            if (confirmed) {
+                                                                for (const cancellation of group) {
+                                                                    await handleDeleteCancellation(cancellation.id);
+                                                                }
                                                             }
                                                         }}
+                                                        disabled={group.some(c => deletingIds.has(c.id))}
                                                     >
                                                         <Trash2 size={14} />
-                                                        Delete All
+                                                        {group.some(c => deletingIds.has(c.id)) ? 'Deleting...' : 'Delete All'}
                                                     </CancelDeleteButton>
                                                 </CancellationRangeActions>
                                             </CancellationRangeItem>
@@ -444,8 +476,12 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
                                                         <Calendar size={14} />
                                                         {dayjs(cancellation.date).format("MMMM D, YYYY")}
                                                     </CancellationDate>
-                                                    <CancelDeleteButton onClick={() => handleDeleteCancellation(cancellation.id)}>
+                                                    <CancelDeleteButton
+                                                        onClick={() => handleDeleteCancellation(cancellation.id)}
+                                                        disabled={deletingIds.has(cancellation.id)}
+                                                    >
                                                         <Trash2 size={14} />
+                                                        {deletingIds.has(cancellation.id) && 'Deleting...'}
                                                     </CancelDeleteButton>
                                                 </CancellationItem>
                                             ))
@@ -458,6 +494,18 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
                 </CancelModalForm>
             </CancelModalContainer>
         </CancelModalOverlay>
+        {confirmState.isOpen && (
+            <ConfirmModal
+                title={confirmState.title}
+                message={confirmState.message}
+                onConfirm={confirmState.onConfirm}
+                onCancel={confirmState.onCancel}
+                confirmText={confirmState.confirmText}
+                cancelText={confirmState.cancelText}
+                variant={confirmState.variant}
+            />
+        )}
+        </>
     ) : null;
 
     return modalContent && ReactDOM.createPortal(modalContent, document.body);
@@ -667,13 +715,19 @@ const CancelSubmitButton = styled.button`
     gap: 8px;
     transition: all 0.3s ease;
     box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
-    
-    &:hover {
+
+    &:hover:not(:disabled) {
         background: linear-gradient(135deg, #16a34a, #15803d);
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
     }
-    
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
     @media (max-width: 768px) {
         padding: 14px 20px;
         font-size: 1rem;
@@ -736,12 +790,17 @@ const CancelDeleteButton = styled.button`
     font-size: 0.8rem;
     font-weight: 500;
     white-space: nowrap;
-    
-    &:hover {
+
+    &:hover:not(:disabled) {
         background: rgba(239, 68, 68, 0.3);
         border-color: rgba(239, 68, 68, 0.5);
         transform: scale(1.05);
         color: #ffffff;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 `;
 

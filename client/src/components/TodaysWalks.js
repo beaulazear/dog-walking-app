@@ -5,21 +5,17 @@ import dayjs from "dayjs";
 import { UserContext } from "../context/user";
 import dogPlaceholder from "../assets/dog.png";
 import {
-    Calendar,
-    Clock,
     CheckCircle,
     X,
     Dog,
-    Users,
-    User,
-    CalendarDays,
-    Heart,
     DollarSign,
     Plus,
     Minus,
-    Info,
     MapPin,
-    Cake
+    Info,
+    Cake,
+    User,
+    Heart
 } from "lucide-react";
 
 export default function TodaysWalks() {
@@ -56,22 +52,27 @@ export default function TodaysWalks() {
             }) || []);
     }, [user?.appointments]);
 
+    // Calculate daily earnings from today's invoices
+    const dailyEarnings = useMemo(() => {
+        const todayString = dayjs().format("YYYY-MM-DD");
+        return user?.invoices
+            ?.filter(invoice => {
+                const invoiceDate = invoice.date_completed.slice(0, 10);
+                return invoiceDate === todayString && !invoice.cancelled;
+            })
+            ?.reduce((total, invoice) => total + (invoice.compensation || 0), 0) || 0;
+    }, [user?.invoices]);
+
+    const completedCount = useMemo(() => {
+        const todayString = dayjs().format("YYYY-MM-DD");
+        return user?.invoices?.filter(invoice => {
+            const invoiceDate = invoice.date_completed.slice(0, 10);
+            return invoiceDate === todayString && !invoice.cancelled;
+        })?.length || 0;
+    }, [user?.invoices]);
+
     return (
         <Container>
-            <HeaderSection>
-                <TitleSection>
-                    <Title>
-                        <CalendarDays size={32} />
-                        Today's Walks
-                    </Title>
-                    <Subtitle>{dayjs().format("MMMM D, YYYY")}</Subtitle>
-                    <SummaryText>
-                        <Heart size={16} />
-                        {todaysAppointments.length} {todaysAppointments.length === 1 ? 'walk' : 'walks'} scheduled
-                    </SummaryText>
-                </TitleSection>
-            </HeaderSection>
-
             {todaysAppointments.length === 0 ? (
                 <EmptyState>
                     <EmptyIcon>
@@ -81,11 +82,24 @@ export default function TodaysWalks() {
                     <EmptyText>Enjoy your free day! Your furry friends are taking a rest.</EmptyText>
                 </EmptyState>
             ) : (
-                <WalkList>
-                    {todaysAppointments.map(appointment => (
-                        <WalkCard key={appointment.id} appointment={appointment} />
-                    ))}
-                </WalkList>
+                <>
+                    <WalkList>
+                        {todaysAppointments.map(appointment => (
+                            <WalkCard key={appointment.id} appointment={appointment} />
+                        ))}
+                    </WalkList>
+
+                    <DailyTotalCard>
+                        <DailyTotalHeader>
+                            <DollarSign size={24} />
+                            Today's Earnings
+                        </DailyTotalHeader>
+                        <DailyTotalAmount>${dailyEarnings.toFixed(2)}</DailyTotalAmount>
+                        <DailyTotalSub>
+                            {completedCount} {completedCount === 1 ? 'walk' : 'walks'} completed
+                        </DailyTotalSub>
+                    </DailyTotalCard>
+                </>
             )}
         </Container>
     );
@@ -107,6 +121,15 @@ const hasCancelledInvoiceForToday = (appointment, invoices) => {
     });
 };
 
+const getInvoiceAmountForToday = (appointment, invoices) => {
+    const todayString = dayjs().format("YYYY-MM-DD");
+    const invoice = invoices?.find(invoice => {
+        const invoiceDate = invoice.date_completed.slice(0, 10);
+        return invoiceDate === todayString && invoice.appointment_id === appointment.id && !invoice.cancelled;
+    });
+    return invoice?.compensation || 0;
+};
+
 const WalkCard = React.memo(({ appointment }) => {
     const { user, addInvoice } = useContext(UserContext);
     const [isCompleted, setIsCompleted] = useState(
@@ -114,6 +137,9 @@ const WalkCard = React.memo(({ appointment }) => {
     );
     const [isCancelled, setIsCancelled] = useState(
         hasCancelledInvoiceForToday(appointment, user?.invoices)
+    );
+    const [invoiceAmount, setInvoiceAmount] = useState(
+        getInvoiceAmountForToday(appointment, user?.invoices)
     );
     const [showCompletionModal, setShowCompletionModal] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
@@ -145,6 +171,7 @@ const WalkCard = React.memo(({ appointment }) => {
             // Use smart update - prevents full re-render
             addInvoice(newInvoice);
             setIsCompleted(true);
+            setInvoiceAmount(newInvoice.compensation);
             setShowCompletionModal(false);
         }
     };
@@ -175,49 +202,61 @@ const WalkCard = React.memo(({ appointment }) => {
 
     return (
         <Card $completed={isCompleted} $cancelled={isCancelled}>
-            <PetImageContainer onClick={() => setShowPetModal(true)} title="Click to view pet details">
-                <PetImage
-                    src={dogPlaceholder}
-                    alt={appointment.pet?.name}
-                />
-                <ClickHint>
-                    <Info size={12} />
-                </ClickHint>
-            </PetImageContainer>
-            
-            <WalkDetails>
-                <PetName>{appointment.pet?.name}</PetName>
-                <WalkInfo>
-                    <InfoItem>
-                        <Clock size={14} />
-                        {appointment.duration} min
-                    </InfoItem>
-                    <InfoItem>
-                        {appointment.solo ? <User size={14} /> : <Users size={14} />}
-                        {appointment.solo ? 'Solo' : 'Group'} walk
-                    </InfoItem>
-                </WalkInfo>
-                <TimeRange>
-                    <Calendar size={14} />
-                    {dayjs(appointment.start_time).format("h:mm A")} - {dayjs(appointment.end_time).format("h:mm A")}
-                </TimeRange>
-            </WalkDetails>
+            <CardContent>
+                <WalkDetails>
+                    <TopRow>
+                        <PetName onClick={() => setShowPetModal(true)}>{appointment.pet?.name}</PetName>
+                        <WalkTime>
+                            {dayjs(appointment.start_time, "HH:mm").format("h:mm A")}
+                        </WalkTime>
+                    </TopRow>
+                    <Address>
+                        <MapPin size={11} />
+                        {appointment.pet?.address || 'No address'}
+                    </Address>
+                    <WalkInfo>
+                        <InfoItem>
+                            {appointment.duration}min
+                        </InfoItem>
+                        <InfoDivider>•</InfoDivider>
+                        <InfoItem>
+                            {appointment.solo ? 'Solo' : 'Group'}
+                        </InfoItem>
+                    </WalkInfo>
+                </WalkDetails>
 
-            {!isCompleted && !isCancelled && (
-                <ButtonContainer>
-                    <CompleteButton onClick={() => setShowCompletionModal(true)}>
-                        <CheckCircle size={16} />
-                        Complete
-                    </CompleteButton>
-                    <CancelButton onClick={() => setShowCancelModal(true)}>
-                        <X size={16} />
-                        Cancel
-                    </CancelButton>
-                </ButtonContainer>
-            )}
-            
+                {isCompleted && invoiceAmount > 0 && (
+                    <EarningsDisplay>
+                        <DollarSign size={16} />
+                        <EarningsAmount>${invoiceAmount.toFixed(2)}</EarningsAmount>
+                    </EarningsDisplay>
+                )}
+
+                {!isCompleted && !isCancelled && (
+                    <ActionButtons>
+                        <CompleteButton onClick={() => setShowCompletionModal(true)}>
+                            <CheckCircle size={18} />
+                        </CompleteButton>
+                        <CancelButton onClick={() => setShowCancelModal(true)}>
+                            <X size={18} />
+                        </CancelButton>
+                    </ActionButtons>
+                )}
+
+                {isCompleted && (
+                    <CompletedBadge>
+                        <CheckCircle size={14} />
+                    </CompletedBadge>
+                )}
+                {isCancelled && (
+                    <CancelledBadge>
+                        <X size={14} />
+                    </CancelledBadge>
+                )}
+            </CardContent>
+
             {showCompletionModal && (
-                <CompletionModal 
+                <CompletionModal
                     appointment={appointment}
                     user={user}
                     onComplete={handleCompleteWalk}
@@ -226,7 +265,7 @@ const WalkCard = React.memo(({ appointment }) => {
             )}
 
             {showCancelModal && (
-                <CancelModal 
+                <CancelModal
                     appointment={appointment}
                     onCancel={handleCancelWalk}
                     onClose={() => setShowCancelModal(false)}
@@ -234,23 +273,10 @@ const WalkCard = React.memo(({ appointment }) => {
             )}
 
             {showPetModal && (
-                <PetDetailsModal 
+                <PetDetailsModal
                     pet={appointment.pet}
                     onClose={() => setShowPetModal(false)}
                 />
-            )}
-            
-            {isCompleted && (
-                <StatusTag $completed>
-                    <CheckCircle size={16} />
-                    Completed
-                </StatusTag>
-            )}
-            {isCancelled && (
-                <StatusTag $cancelled>
-                    <X size={16} />
-                    Cancelled
-                </StatusTag>
             )}
         </Card>
     );
@@ -615,15 +641,15 @@ const PetDetailsModal = ({ pet, onClose }) => {
 const Container = styled.div`
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
-    padding: 40px 20px;
-    padding-top: 120px;
+    padding: 20px 16px;
+    padding-top: 100px;
+    padding-bottom: 40px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    text-align: center;
     position: relative;
     overflow: hidden;
-    
+
     &::before {
         content: '';
         position: absolute;
@@ -631,7 +657,7 @@ const Container = styled.div`
         left: 0;
         right: 0;
         bottom: 0;
-        background: 
+        background:
             radial-gradient(circle at 20% 20%, rgba(255,255,255,0.05) 2px, transparent 2px),
             radial-gradient(circle at 80% 40%, rgba(255,255,255,0.03) 1.5px, transparent 1.5px),
             radial-gradient(circle at 40% 60%, rgba(255,255,255,0.04) 1px, transparent 1px),
@@ -641,77 +667,11 @@ const Container = styled.div`
         background-size: 80px 80px, 60px 60px, 40px 40px, 100px 100px, 30px 30px, 70px 70px;
         pointer-events: none;
     }
-    
-    @media (max-width: 768px) {
-        padding: 20px 16px;
-        padding-top: 100px;
-    }
-`;
 
-// Header section styling
-const HeaderSection = styled.div`
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    max-width: 800px;
-    margin-bottom: 32px;
-    
     @media (max-width: 768px) {
-        margin-bottom: 24px;
-    }
-`;
-
-const TitleSection = styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-`;
-
-const Title = styled.h1`
-    font-family: 'Poppins', sans-serif;
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: #ffffff;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    
-    @media (max-width: 768px) {
-        font-size: 2rem;
-        gap: 8px;
-    }
-`;
-
-const Subtitle = styled.h2`
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.4rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
-    margin: 0 0 12px 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    
-    @media (max-width: 768px) {
-        font-size: 1.2rem;
-    }
-`;
-
-const SummaryText = styled.p`
-    font-family: 'Poppins', sans-serif;
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 1rem;
-    font-weight: 500;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    
-    @media (max-width: 768px) {
-        font-size: 0.9rem;
+        padding: 16px 12px;
+        padding-top: 90px;
+        padding-bottom: 30px;
     }
 `;
 
@@ -776,316 +736,350 @@ const EmptyText = styled.p`
 // Walk list styling
 const WalkList = styled.div`
     width: 100%;
-    max-width: 800px;
-    margin-top: 20px;
+    max-width: 600px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 10px;
+
+    @media (max-width: 768px) {
+        gap: 8px;
+    }
 `;
 
-// Walk card styling
+// Sleek modern walk card
 const Card = styled.div`
     background: ${({ $completed, $cancelled }) =>
-        $completed ? 'linear-gradient(145deg, rgba(34, 197, 94, 0.9), rgba(22, 163, 74, 0.8))' :
-        $cancelled ? 'linear-gradient(145deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.8))' :
-        'linear-gradient(145deg, rgba(74, 26, 74, 0.9), rgba(107, 43, 107, 0.8))'
+        $completed ? 'rgba(255, 255, 255, 0.12)' :
+        $cancelled ? 'rgba(255, 255, 255, 0.08)' :
+        'rgba(255, 255, 255, 0.1)'
     };
-    padding: 16px 20px;
+    backdrop-filter: blur(20px);
     border-radius: 16px;
-    border: 2px solid ${({ $completed, $cancelled }) =>
-        $completed ? 'rgba(34, 197, 94, 0.4)' :
-        $cancelled ? 'rgba(239, 68, 68, 0.4)' :
-        'rgba(139, 90, 140, 0.4)'
+    border: 1px solid ${({ $completed, $cancelled }) =>
+        $completed ? 'rgba(34, 197, 94, 0.3)' :
+        $cancelled ? 'rgba(239, 68, 68, 0.3)' :
+        'rgba(255, 255, 255, 0.15)'
     };
-    backdrop-filter: blur(15px);
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    transition: all 0.3s ease;
-    min-height: 80px;
+    box-shadow: ${({ $completed, $cancelled }) =>
+        $completed ? '0 4px 16px rgba(34, 197, 94, 0.15)' :
+        $cancelled ? '0 4px 16px rgba(239, 68, 68, 0.15)' :
+        '0 4px 16px rgba(0, 0, 0, 0.1)'
+    };
+    transition: all 0.2s ease;
+    opacity: ${({ $cancelled }) => $cancelled ? 0.6 : 1};
 
-    &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-        border-color: ${({ $completed, $cancelled }) =>
-            $completed ? 'rgba(34, 197, 94, 0.6)' :
-            $cancelled ? 'rgba(239, 68, 68, 0.6)' :
-            '#a569a7'
-        };
+    &:active {
+        transform: scale(0.98);
     }
-    
-    @media (max-width: 768px) {
-        padding: 14px 18px;
-        border-radius: 14px;
-        gap: 12px;
-        min-height: 70px;
-    }
-    
-    @media (max-width: 480px) {
-        padding: 12px 16px;
-        gap: 10px;
-        min-height: 60px;
+
+    @media (min-width: 769px) {
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: ${({ $completed, $cancelled }) =>
+                $completed ? '0 8px 24px rgba(34, 197, 94, 0.2)' :
+                $cancelled ? '0 8px 24px rgba(239, 68, 68, 0.2)' :
+                '0 8px 24px rgba(0, 0, 0, 0.15)'
+            };
+        }
     }
 `;
 
-const PetImageContainer = styled.div`
-    flex-shrink: 0;
+const CardContent = styled.div`
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 3px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    cursor: pointer;
-    transition: all 0.3s ease;
+    gap: 12px;
+    padding: 14px;
     position: relative;
-    
-    &:hover {
-        background: rgba(255, 255, 255, 0.3);
-        border-color: rgba(255, 255, 255, 0.5);
-        transform: scale(1.05);
-    }
-`;
 
-const ClickHint = styled.div`
-    position: absolute;
-    bottom: -2px;
-    right: -2px;
-    background: rgba(74, 26, 74, 0.9);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(255, 255, 255, 0.8);
-    opacity: 0.7;
-    transition: all 0.3s ease;
-    
-    ${PetImageContainer}:hover & {
-        opacity: 1;
-        color: #ffffff;
-        border-color: rgba(255, 255, 255, 0.5);
-        transform: scale(1.1);
-    }
-    
     @media (max-width: 768px) {
-        width: 18px;
-        height: 18px;
-        
-        svg {
-            width: 10px;
-            height: 10px;
-        }
-    }
-    
-    @media (max-width: 480px) {
-        width: 16px;
-        height: 16px;
-        
-        svg {
-            width: 8px;
-            height: 8px;
-        }
-    }
-`;
-
-const PetImage = styled.img`
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    object-fit: cover;
-    
-    @media (max-width: 768px) {
-        width: 40px;
-        height: 40px;
-    }
-    
-    @media (max-width: 480px) {
-        width: 36px;
-        height: 36px;
+        padding: 12px;
+        gap: 10px;
     }
 `;
 
 const WalkDetails = styled.div`
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     text-align: left;
-    min-width: 0; /* Allow text to wrap/truncate */
+`;
+
+const TopRow = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
 `;
 
 const PetName = styled.h3`
     font-family: 'Poppins', sans-serif;
     color: #ffffff;
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-size: 1.05rem;
+    font-weight: 600;
     margin: 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    
+    cursor: pointer;
+    transition: color 0.2s ease;
+
+    &:hover {
+        color: rgba(255, 255, 255, 0.8);
+    }
+
     @media (max-width: 768px) {
         font-size: 1rem;
     }
-    
-    @media (max-width: 480px) {
-        font-size: 0.95rem;
+`;
+
+const WalkTime = styled.div`
+    font-family: 'Poppins', sans-serif;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.85rem;
+    font-weight: 600;
+    flex-shrink: 0;
+
+    @media (max-width: 768px) {
+        font-size: 0.8rem;
+    }
+`;
+
+const Address = styled.div`
+    font-family: 'Poppins', sans-serif;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8rem;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    @media (max-width: 768px) {
+        font-size: 0.75rem;
     }
 `;
 
 const WalkInfo = styled.div`
     display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    
-    @media (max-width: 480px) {
-        gap: 8px;
-    }
+    gap: 6px;
+    align-items: center;
 `;
 
 const InfoItem = styled.span`
     font-family: 'Poppins', sans-serif;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.75rem;
     font-weight: 500;
+
+    @media (max-width: 768px) {
+        font-size: 0.7rem;
+    }
+`;
+
+const InfoDivider = styled.span`
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.75rem;
+`;
+
+
+// Earnings Display
+const EarningsDisplay = styled.div`
     display: flex;
     align-items: center;
     gap: 4px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    margin-left: auto;
+    padding: 6px 10px;
+    background: rgba(34, 197, 94, 0.15);
+    border-radius: 8px;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+
+    @media (max-width: 768px) {
+        padding: 5px 8px;
+    }
 `;
 
-const TimeRange = styled.div`
+const EarningsAmount = styled.span`
     font-family: 'Poppins', sans-serif;
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 0.85rem;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #22c55e;
+
+    @media (max-width: 768px) {
+        font-size: 0.85rem;
+    }
 `;
 
-const ButtonContainer = styled.div`
+// Action Buttons
+const ActionButtons = styled.div`
     display: flex;
-    flex-direction: column;
     gap: 6px;
+    margin-left: auto;
     flex-shrink: 0;
 `;
 
 const CompleteButton = styled.button`
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    color: #ffffff;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 600;
+    background: rgba(34, 197, 94, 0.2);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    color: #22c55e;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    transition: all 0.3s ease;
-    box-shadow: 0 3px 12px rgba(34, 197, 94, 0.3);
-    min-width: 90px;
-    
-    &:hover {
-        background: linear-gradient(135deg, #16a34a, #15803d);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 16px rgba(34, 197, 94, 0.4);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+
+    &:active {
+        transform: scale(0.95);
     }
-    
+
+    @media (min-width: 769px) {
+        &:hover {
+            background: rgba(34, 197, 94, 0.3);
+            border-color: rgba(34, 197, 94, 0.6);
+        }
+    }
+
     @media (max-width: 768px) {
-        padding: 6px 8px;
-        font-size: 0.75rem;
-        min-width: 70px;
-    }
-    
-    @media (max-width: 480px) {
-        padding: 5px 6px;
-        font-size: 0.7rem;
-        min-width: 60px;
+        width: 34px;
+        height: 34px;
     }
 `;
 
 const CancelButton = styled.button`
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    color: #ffffff;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 600;
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #ef4444;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    transition: all 0.3s ease;
-    box-shadow: 0 3px 12px rgba(239, 68, 68, 0.3);
-    min-width: 90px;
-    
-    &:hover {
-        background: linear-gradient(135deg, #dc2626, #b91c1c);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+
+    &:active {
+        transform: scale(0.95);
     }
-    
+
+    @media (min-width: 769px) {
+        &:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.6);
+        }
+    }
+
     @media (max-width: 768px) {
-        padding: 6px 8px;
-        font-size: 0.75rem;
-        min-width: 70px;
-    }
-    
-    @media (max-width: 480px) {
-        padding: 5px 6px;
-        font-size: 0.7rem;
-        min-width: 60px;
+        width: 34px;
+        height: 34px;
     }
 `;
 
-const StatusTag = styled.div`
+// Status Badges
+const CompletedBadge = styled.div`
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background: rgba(34, 197, 94, 0.2);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    border-radius: 50%;
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 8px 12px;
-    border-radius: 10px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-    flex-shrink: 0;
-    
-    background: ${({ $completed, $cancelled }) =>
-        $completed ? 'rgba(34, 197, 94, 0.3)' :
-        $cancelled ? 'rgba(239, 68, 68, 0.3)' :
-        'rgba(255, 255, 255, 0.2)'
-    };
-    border: 2px solid ${({ $completed, $cancelled }) =>
-        $completed ? 'rgba(34, 197, 94, 0.5)' :
-        $cancelled ? 'rgba(239, 68, 68, 0.5)' :
-        'rgba(255, 255, 255, 0.3)'
-    };
-    color: #ffffff;
-    
+    justify-content: center;
+    color: #22c55e;
+
     @media (max-width: 768px) {
-        padding: 6px 10px;
-        font-size: 0.75rem;
-        gap: 3px;
+        width: 22px;
+        height: 22px;
     }
-    
-    @media (max-width: 480px) {
-        padding: 5px 8px;
-        font-size: 0.7rem;
-        gap: 2px;
+`;
+
+const CancelledBadge = styled.div`
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ef4444;
+
+    @media (max-width: 768px) {
+        width: 22px;
+        height: 22px;
+    }
+`;
+
+// Daily Total Card
+const DailyTotalCard = styled.div`
+    width: 100%;
+    max-width: 600px;
+    margin-top: 20px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    text-align: center;
+
+    @media (max-width: 768px) {
+        padding: 16px;
+        margin-top: 16px;
+    }
+`;
+
+const DailyTotalHeader = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+
+    @media (max-width: 768px) {
+        font-size: 0.9rem;
+    }
+`;
+
+const DailyTotalAmount = styled.div`
+    font-family: 'Poppins', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #22c55e;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 12px rgba(34, 197, 94, 0.3);
+
+    @media (max-width: 768px) {
+        font-size: 2rem;
+    }
+`;
+
+const DailyTotalSub = styled.div`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+
+    @media (max-width: 768px) {
+        font-size: 0.85rem;
     }
 `;
 

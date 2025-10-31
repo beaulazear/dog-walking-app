@@ -2,10 +2,12 @@ import { useState, useContext } from "react";
 import { UserContext } from "../context/user.js";
 import styled from "styled-components";
 import { Plus, X } from "lucide-react";
+import toast from 'react-hot-toast';
 
 const CreatePetButton = () => {
     const { setUser } = useContext(UserContext);
     const [showForm, setShowForm] = useState(false);
+    const [isCreating, setIsCreating] = useState(false);
     const [formData, setFormData] = useState({
         name: "",
         birthdate: "",
@@ -26,22 +28,33 @@ const CreatePetButton = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const response = await fetch("/pets", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(formData),
-        });
+        if (isCreating) return;
 
-        if (response.ok) {
-            const newPet = await response.json();
-            setUser(prevUser => ({
-                ...prevUser,
-                pets: [...prevUser.pets, newPet],
-            }));
-            setShowForm(false);
-            alert("Pet successfully added!");
-        } else {
-            alert("Error adding pet. Please try again.");
+        setIsCreating(true);
+        try {
+            const response = await fetch("/pets", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
+
+            if (response.ok) {
+                const newPet = await response.json();
+                setUser(prevUser => ({
+                    ...prevUser,
+                    pets: [...prevUser.pets, newPet],
+                }));
+                setShowForm(false);
+                toast.success("Pet successfully added!");
+            } else {
+                const errorData = await response.json();
+                toast.error(errorData.errors?.join(", ") || "Error adding pet. Please try again.");
+            }
+        } catch (error) {
+            console.error("Error adding pet:", error);
+            toast.error("An error occurred while adding the pet.");
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -144,8 +157,12 @@ const CreatePetButton = () => {
                             </InputGroup>
 
                             <ButtonContainer>
-                                <SubmitButton type="submit">Add Pet</SubmitButton>
-                                <CancelButton type="button" onClick={() => setShowForm(false)}>Cancel</CancelButton>
+                                <SubmitButton type="submit" disabled={isCreating}>
+                                    {isCreating ? 'Adding...' : 'Add Pet'}
+                                </SubmitButton>
+                                <CancelButton type="button" onClick={() => setShowForm(false)} disabled={isCreating}>
+                                    Cancel
+                                </CancelButton>
                             </ButtonContainer>
                         </Form>
                     </ModalContainer>
@@ -427,17 +444,22 @@ const SubmitButton = styled.button`
     font-weight: 600;
     transition: all 0.3s ease;
     box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
-    
-    &:hover {
+
+    &:hover:not(:disabled) {
         background: linear-gradient(135deg, #16a34a, #15803d);
         transform: translateY(-1px);
         box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
     }
-    
-    &:active {
+
+    &:active:not(:disabled) {
         transform: translateY(0);
     }
-    
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
     @media (max-width: 768px) {
         padding: 16px;
         font-size: 1.1rem;
@@ -457,17 +479,22 @@ const CancelButton = styled.button`
     font-weight: 600;
     transition: all 0.3s ease;
     backdrop-filter: blur(5px);
-    
-    &:hover {
+
+    &:hover:not(:disabled) {
         background: rgba(255, 255, 255, 0.2);
         border-color: rgba(255, 255, 255, 0.4);
         transform: translateY(-1px);
     }
-    
-    &:active {
+
+    &:active:not(:disabled) {
         transform: translateY(0);
     }
-    
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
     @media (max-width: 768px) {
         padding: 16px;
         font-size: 1.1rem;

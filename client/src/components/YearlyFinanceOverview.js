@@ -2,13 +2,17 @@ import React, { useContext, useState } from "react";
 import styled from "styled-components";
 import { UserContext } from "../context/user";
 import dayjs from "dayjs";
-import { 
-    TrendingUp, 
-    DollarSign, 
-    Calendar, 
+import weekOfYear from "dayjs/plugin/weekOfYear";
+import {
+    TrendingUp,
+    DollarSign,
+    Calendar,
     PiggyBank,
-    Receipt
+    Receipt,
+    BarChart3
 } from "lucide-react";
+
+dayjs.extend(weekOfYear);
 
 const currentYear = dayjs().year();
 
@@ -26,9 +30,13 @@ export default function YearlyFinanceOverview() {
     const monthlyIncome = calculateMonthlyIncome(dailyAverage);
     const estimatedYearlyTotal = calculateEstimatedYearlyTotal(dailyAverage);
     const taxEstimate = Math.round((estimatedYearlyTotal * taxPercentage) / 100);
-    
+
     // Calculate recurring revenue
     const { weeklyRecurring, yearlyRecurring } = calculateRecurringRevenue(user);
+
+    // Calculate weekly income data for chart
+    const weeklyData = calculateWeeklyData(invoicesFromCurrentYear);
+    const maxWeeklyIncome = Math.max(...weeklyData.map(w => w.amount), 1);
 
     function handleTaxChange(e) {
         setTaxPercentage(parseInt(e.target.value));
@@ -72,6 +80,60 @@ export default function YearlyFinanceOverview() {
                 </RecurringGrid>
             </RecurringSection>
             
+            {/* Weekly Income Chart */}
+            <ChartSection>
+                <SectionTitle>
+                    <BarChart3 size={18} />
+                    Weekly Income Overview
+                </SectionTitle>
+                <ChartContainer>
+                    <ChartWithAxes>
+                        <YAxisLabels>
+                            <YAxisLabel>${Math.round(maxWeeklyIncome).toLocaleString()}</YAxisLabel>
+                            <YAxisLabel>${Math.round(maxWeeklyIncome * 0.75).toLocaleString()}</YAxisLabel>
+                            <YAxisLabel>${Math.round(maxWeeklyIncome * 0.5).toLocaleString()}</YAxisLabel>
+                            <YAxisLabel>${Math.round(maxWeeklyIncome * 0.25).toLocaleString()}</YAxisLabel>
+                            <YAxisLabel>$0</YAxisLabel>
+                        </YAxisLabels>
+                        <ChartContent>
+                            <GridLines>
+                                <GridLine />
+                                <GridLine />
+                                <GridLine />
+                                <GridLine />
+                                <GridLine />
+                            </GridLines>
+                            <ChartGrid>
+                                {weeklyData.map((week, index) => (
+                                    <BarWrapper key={index}>
+                                        <Bar
+                                            $height={(week.amount / maxWeeklyIncome) * 100}
+                                            $delay={index * 0.02}
+                                            $isCurrentWeek={week.isCurrent}
+                                        >
+                                            <BarTooltip>
+                                                <TooltipWeek>Week {week.week}</TooltipWeek>
+                                                <TooltipAmount>${week.amount.toLocaleString()}</TooltipAmount>
+                                            </BarTooltip>
+                                        </Bar>
+                                        {week.isCurrent && <CurrentWeekLabel>Now</CurrentWeekLabel>}
+                                    </BarWrapper>
+                                ))}
+                            </ChartGrid>
+                            <XAxisLabels>
+                                <XAxisLabel>1</XAxisLabel>
+                                <XAxisLabel>10</XAxisLabel>
+                                <XAxisLabel>20</XAxisLabel>
+                                <XAxisLabel>30</XAxisLabel>
+                                <XAxisLabel>40</XAxisLabel>
+                                <XAxisLabel>52</XAxisLabel>
+                            </XAxisLabels>
+                        </ChartContent>
+                    </ChartWithAxes>
+                    <ChartLabel>Week of the Year</ChartLabel>
+                </ChartContainer>
+            </ChartSection>
+
             {/* Historical Stats Section */}
             <StatsGrid>
                 <StatCard>
@@ -172,19 +234,19 @@ function calculateRecurringRevenue(user) {
     if (!user || !user.appointments) {
         return { weeklyRecurring: 0, yearlyRecurring: 0 };
     }
-    
+
     let weeklyTotal = 0;
-    
+
     // Filter for recurring appointments that are not cancelled
-    const recurringAppointments = user.appointments.filter(apt => 
+    const recurringAppointments = user.appointments.filter(apt =>
         apt.recurring && !apt.canceled
     );
-    
+
     recurringAppointments.forEach(appointment => {
         // Calculate the rate based on duration and whether it's solo
         let rate = 0;
         const duration = appointment.duration;
-        
+
         if (appointment.solo) {
             rate = user.solo_rate || 0;
         } else {
@@ -196,7 +258,7 @@ function calculateRecurringRevenue(user) {
                 rate = user.sixty || 0;
             }
         }
-        
+
         // Count how many days per week this appointment occurs
         let daysPerWeek = 0;
         if (appointment.monday) daysPerWeek++;
@@ -206,15 +268,43 @@ function calculateRecurringRevenue(user) {
         if (appointment.friday) daysPerWeek++;
         if (appointment.saturday) daysPerWeek++;
         if (appointment.sunday) daysPerWeek++;
-        
+
         // Add to weekly total
         weeklyTotal += rate * daysPerWeek;
     });
-    
+
     return {
         weeklyRecurring: Math.round(weeklyTotal),
         yearlyRecurring: Math.round(weeklyTotal * 52)
     };
+}
+
+function calculateWeeklyData(invoices) {
+    // Initialize array for 52 weeks
+    const weeks = Array.from({ length: 52 }, (_, i) => ({
+        week: i + 1,
+        amount: 0,
+        isCurrent: false
+    }));
+
+    const currentWeekNumber = dayjs().week();
+
+    // Aggregate invoices by week
+    invoices.forEach(invoice => {
+        const invoiceDate = dayjs(invoice.date_completed);
+        const weekNumber = invoiceDate.week();
+
+        if (weekNumber > 0 && weekNumber <= 52) {
+            weeks[weekNumber - 1].amount += invoice.compensation || 0;
+        }
+    });
+
+    // Mark current week
+    if (currentWeekNumber > 0 && currentWeekNumber <= 52) {
+        weeks[currentWeekNumber - 1].isCurrent = true;
+    }
+
+    return weeks;
 }
 
 const Container = styled.div`
@@ -228,8 +318,9 @@ const Container = styled.div`
     margin: 16px 0;
     padding: 24px;
     box-sizing: border-box;
+    overflow: hidden;
     animation: fadeInUp 0.8s ease;
-    
+
     @keyframes fadeInUp {
         from {
             opacity: 0;
@@ -240,10 +331,14 @@ const Container = styled.div`
             transform: translateY(0);
         }
     }
-    
+
     @media (max-width: 768px) {
         padding: 20px;
         border-radius: 20px;
+    }
+
+    @media (max-width: 480px) {
+        padding: 16px;
     }
 `;
 
@@ -365,6 +460,265 @@ const RecurringDetail = styled.div`
     font-size: 0.75rem;
     color: rgba(255, 255, 255, 0.5);
     font-style: italic;
+`;
+
+// Chart Styles
+const ChartSection = styled.div`
+    margin-bottom: 24px;
+    width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+`;
+
+const ChartContainer = styled.div`
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 24px 16px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+
+    @media (max-width: 768px) {
+        padding: 16px 12px 12px;
+    }
+`;
+
+const ChartWithAxes = styled.div`
+    display: flex;
+    gap: 12px;
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+
+    @media (max-width: 768px) {
+        gap: 8px;
+    }
+`;
+
+const YAxisLabels = styled.div`
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 200px;
+    padding-bottom: 8px;
+    flex-shrink: 0;
+
+    @media (max-width: 768px) {
+        height: 150px;
+    }
+`;
+
+const YAxisLabel = styled.div`
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: right;
+    min-width: 50px;
+    flex-shrink: 0;
+
+    @media (max-width: 768px) {
+        font-size: 0.6rem;
+        min-width: 35px;
+    }
+
+    @media (max-width: 480px) {
+        font-size: 0.55rem;
+        min-width: 30px;
+    }
+`;
+
+const ChartContent = styled.div`
+    flex: 1;
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+`;
+
+const GridLines = styled.div`
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-bottom: 8px;
+    pointer-events: none;
+
+    @media (max-width: 768px) {
+        height: 150px;
+    }
+`;
+
+const GridLine = styled.div`
+    width: 100%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+`;
+
+const XAxisLabels = styled.div`
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding: 0 4px;
+    width: 100%;
+
+    @media (max-width: 768px) {
+        margin-top: 6px;
+        padding: 0 2px;
+    }
+`;
+
+const XAxisLabel = styled.div`
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 600;
+
+    @media (max-width: 768px) {
+        font-size: 0.6rem;
+    }
+
+    @media (max-width: 480px) {
+        font-size: 0.55rem;
+    }
+`;
+
+const ChartGrid = styled.div`
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 200px;
+    padding-bottom: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    position: relative;
+    z-index: 1;
+
+    &::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+    }
+
+    @media (max-width: 768px) {
+        height: 150px;
+        gap: 2px;
+    }
+`;
+
+const BarWrapper = styled.div`
+    flex: 1;
+    min-width: 12px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    position: relative;
+`;
+
+const BarTooltip = styled.div`
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(0);
+    background: rgba(0, 0, 0, 0.9);
+    padding: 8px 12px;
+    border-radius: 8px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    z-index: 10;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+`;
+
+const Bar = styled.div`
+    width: 100%;
+    height: ${props => props.$height}%;
+    min-height: ${props => props.$height > 0 ? '3px' : '0'};
+    background: ${props => props.$isCurrentWeek
+        ? 'linear-gradient(to top, #fbbf24, #f59e0b)'
+        : 'linear-gradient(to top, #10b981, #06b6d4)'};
+    border-radius: 4px 4px 0 0;
+    position: relative;
+    transition: all 0.3s ease;
+    animation: growBar ${props => 0.5 + props.$delay}s ease-out;
+    cursor: pointer;
+    box-shadow: ${props => props.$isCurrentWeek
+        ? '0 -2px 12px rgba(251, 191, 36, 0.4)'
+        : '0 -2px 8px rgba(16, 185, 129, 0.3)'};
+
+    @keyframes growBar {
+        from {
+            height: 0%;
+            opacity: 0;
+        }
+        to {
+            height: ${props => props.$height}%;
+            opacity: 1;
+        }
+    }
+
+    &:hover {
+        transform: scaleY(1.05);
+        filter: brightness(1.2);
+        box-shadow: ${props => props.$isCurrentWeek
+            ? '0 -4px 20px rgba(251, 191, 36, 0.6)'
+            : '0 -4px 16px rgba(16, 185, 129, 0.5)'};
+
+        ${BarTooltip} {
+            opacity: 1;
+            transform: translateY(-8px);
+        }
+    }
+`;
+
+const TooltipWeek = styled.div`
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 2px;
+`;
+
+const TooltipAmount = styled.div`
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #ffffff;
+`;
+
+const CurrentWeekLabel = styled.div`
+    position: absolute;
+    bottom: -20px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #fbbf24;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+`;
+
+const ChartLabel = styled.div`
+    text-align: center;
+    margin-top: 16px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+
+    @media (max-width: 768px) {
+        font-size: 0.75rem;
+        margin-top: 12px;
+    }
 `;
 
 const StatsGrid = styled.div`
