@@ -247,16 +247,18 @@ function calculateRecurringRevenue(user) {
         let rate = 0;
         const duration = appointment.duration;
 
+        // First get the duration-based rate
+        if (duration === 30) {
+            rate = user.thirty || 0;
+        } else if (duration === 45) {
+            rate = user.fortyfive || 0;
+        } else if (duration === 60) {
+            rate = user.sixty || 0;
+        }
+
+        // Add solo upcharge if this is a solo walk
         if (appointment.solo) {
-            rate = user.solo_rate || 0;
-        } else {
-            if (duration === 30) {
-                rate = user.thirty || 0;
-            } else if (duration === 40) {
-                rate = user.fourty || 0;
-            } else if (duration === 60) {
-                rate = user.sixty || 0;
-            }
+            rate += user.solo_rate || 0;
         }
 
         // Count how many days per week this appointment occurs
@@ -466,7 +468,7 @@ const RecurringDetail = styled.div`
 const ChartSection = styled.div`
     margin-bottom: 24px;
     width: 100%;
-    overflow: hidden;
+    overflow: visible;
     box-sizing: border-box;
 `;
 
@@ -475,7 +477,7 @@ const ChartContainer = styled.div`
     border-radius: 16px;
     padding: 24px 16px 16px;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    overflow: hidden;
+    overflow: visible;
     width: 100%;
     box-sizing: border-box;
 
@@ -489,7 +491,7 @@ const ChartWithAxes = styled.div`
     gap: 12px;
     position: relative;
     width: 100%;
-    overflow: hidden;
+    overflow: visible;
 
     @media (max-width: 768px) {
         gap: 8px;
@@ -502,10 +504,12 @@ const YAxisLabels = styled.div`
     justify-content: space-between;
     height: 200px;
     padding-bottom: 8px;
+    padding-top: 60px;
     flex-shrink: 0;
 
     @media (max-width: 768px) {
         height: 150px;
+        padding-top: 50px;
     }
 `;
 
@@ -533,12 +537,12 @@ const ChartContent = styled.div`
     flex: 1;
     position: relative;
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;
 `;
 
 const GridLines = styled.div`
     position: absolute;
-    top: 0;
+    top: 60px;
     left: 0;
     right: 0;
     height: 200px;
@@ -550,6 +554,7 @@ const GridLines = styled.div`
 
     @media (max-width: 768px) {
         height: 150px;
+        top: 50px;
     }
 `;
 
@@ -592,8 +597,9 @@ const ChartGrid = styled.div`
     gap: 4px;
     height: 200px;
     padding-bottom: 8px;
+    padding-top: 60px;
     overflow-x: auto;
-    overflow-y: hidden;
+    overflow-y: visible;
     position: relative;
     z-index: 1;
 
@@ -614,6 +620,7 @@ const ChartGrid = styled.div`
     @media (max-width: 768px) {
         height: 150px;
         gap: 2px;
+        padding-top: 50px;
     }
 `;
 
@@ -640,7 +647,7 @@ const BarTooltip = styled.div`
     opacity: 0;
     pointer-events: none;
     transition: all 0.3s ease;
-    z-index: 10;
+    z-index: 9999;
     border: 1px solid rgba(255, 255, 255, 0.2);
 `;
 
@@ -680,7 +687,7 @@ const Bar = styled.div`
 
         ${BarTooltip} {
             opacity: 1;
-            transform: translateY(-8px);
+            transform: translateX(-50%) translateY(-8px);
         }
     }
 `;

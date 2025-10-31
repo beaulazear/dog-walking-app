@@ -9,5 +9,5 @@ class User < ApplicationRecord
   validates :name, presence: true
   validates :email_address, presence: true
 
-  validates :thirty, :fourty, :sixty, :solo_rate, numericality: { only_integer: true }
+  validates :thirty, :fortyfive, :sixty, :solo_rate, numericality: { only_integer: true }
 end

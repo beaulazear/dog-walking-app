@@ -10,7 +10,7 @@ RSpec.describe 'Users API', type: :request do
         name: 'New User',
         email_address: 'newuser@example.com',
         thirty: 30,
-        fourty: 40,
+        fortyfive: 40,
         sixty: 60,
         solo_rate: 35
       }
@@ -70,7 +70,7 @@ RSpec.describe 'Users API', type: :request do
       let!(:user) { create_and_login_user }
       let!(:other_user) do
         User.create!(username: 'other', password: 'pass', name: 'Other', email_address: 'other@test.com', thirty: 30,
-                     fourty: 40, sixty: 60, solo_rate: 35)
+                     fortyfive: 40, sixty: 60, solo_rate: 35)
       end
 
       it 'returns all users' do
@@ -128,7 +128,7 @@ RSpec.describe 'Users API', type: :request do
       it 'updates user rates' do
         patch '/change_rates', params: {
           thirty: 35,
-          fourty: 45,
+          fortyfive: 45,
           sixty: 65,
           solo_rate: 40
         }
@@ -136,7 +136,7 @@ RSpec.describe 'Users API', type: :request do
         expect(response).to have_http_status(:ok)
         expect(json_response).to include(
           'thirty' => 35,
-          'fourty' => 45,
+          'fortyfive' => 45,
           'sixty' => 65,
           'solo_rate' => 40
         )
@@ -145,7 +145,7 @@ RSpec.describe 'Users API', type: :request do
       it 'returns errors for invalid rates' do
         patch '/change_rates', params: {
           thirty: 'invalid',
-          fourty: 45
+          fortyfive: 45
         }
 
         expect(response).to have_http_status(:unprocessable_entity)

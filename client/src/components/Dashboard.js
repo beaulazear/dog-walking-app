@@ -8,7 +8,6 @@ import YearlyFinanceOverview from "./YearlyFinanceOverview";
 import ConfirmModal from "./ConfirmModal";
 import { useConfirm } from "../hooks/useConfirm";
 import {
-    Calendar,
     DollarSign,
     Settings,
     Cake,
@@ -61,7 +60,7 @@ export default function Dashboard() {
     const [isUpdatingRates, setIsUpdatingRates] = useState(false);
     const [rates, setRates] = useState({
         thirty: user?.thirty || "",
-        fourty: user?.fourty || "",
+        fortyfive: user?.fortyfive || "",
         sixty: user?.sixty || "",
         solo_rate: user?.solo_rate || "",
     });
@@ -97,7 +96,7 @@ export default function Dashboard() {
                 setUser(prevUser => ({
                     ...prevUser,
                     thirty: updatedUserData.thirty,
-                    fourty: updatedUserData.fourty,
+                    fortyfive: updatedUserData.fortyfive,
                     sixty: updatedUserData.sixty,
                     solo_rate: updatedUserData.solo_rate
                 }));
@@ -350,6 +349,7 @@ export default function Dashboard() {
                                 <ModernBirthdayImage
                                     src={dogPlaceholder}
                                     alt={upcomingBirthdayPet.name}
+                                    loading="lazy"
                                 />
                                 <BirthdayBadge>🎉</BirthdayBadge>
                             </BirthdayImageWrapper>
@@ -401,19 +401,19 @@ export default function Dashboard() {
 
                             <ModernRateCard>
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                                    <RateDuration>40</RateDuration>
+                                    <RateDuration>45</RateDuration>
                                     <RateMinutes>min</RateMinutes>
                                 </div>
                                 <ModernRateInput>
                                     <DollarSymbol>$</DollarSymbol>
                                     <RateField
-                                        type="number" 
-                                        name="fourty" 
-                                        value={rates.fourty} 
-                                        onChange={handleRateChange} 
+                                        type="number"
+                                        name="fortyfive"
+                                        value={rates.fortyfive}
+                                        onChange={handleRateChange}
                                         placeholder="0.00"
                                         step="0.01"
-                                        required 
+                                        required
                                     />
                                 </ModernRateInput>
                             </ModernRateCard>
@@ -623,60 +623,6 @@ const Container = styled.div`
     }
 `;
 
-// Header Section
-const HeaderSection = styled.div`
-    text-align: center;
-    margin-bottom: 40px;
-    
-    @media (max-width: 768px) {
-        margin-bottom: 32px;
-    }
-`;
-
-const WelcomeTitle = styled.h1`
-    font-family: 'Poppins', sans-serif;
-    font-size: 2.8rem;
-    font-weight: 800;
-    color: #ffffff;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    
-    svg:last-child {
-        color: #ff6b9d;
-        animation: heartbeat 1.5s ease-in-out infinite;
-    }
-    
-    @keyframes sparkle {
-        0% { transform: rotate(0deg) scale(1); opacity: 0.8; }
-        100% { transform: rotate(15deg) scale(1.1); opacity: 1; }
-    }
-    
-    @keyframes heartbeat {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.1); }
-    }
-    
-    @media (max-width: 768px) {
-        font-size: 2.2rem;
-        gap: 16px;
-    }
-    
-    @media (max-width: 480px) {
-        font-size: 1.8rem;
-        gap: 12px;
-        flex-wrap: wrap;
-        
-        svg {
-            width: 24px;
-            height: 24px;
-        }
-    }
-`;
-
 // Simple content sections layout
 const ContentSections = styled.div`
     display: flex;
@@ -762,27 +708,6 @@ const PersonalizedTitle = styled.h3`
     font-weight: 600;
     margin: 0;
 
-    @media (max-width: 768px) {
-        font-size: 1rem;
-    }
-`;
-
-const WeekHeaderTop = styled.div`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-`;
-
-const WeekTitle = styled.h2`
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #ffffff;
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin: 0;
-    
     @media (max-width: 768px) {
         font-size: 1rem;
     }

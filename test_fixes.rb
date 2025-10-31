@@ -46,7 +46,7 @@ rescue StandardError => e
   puts "✗ Database check failed: #{e.message}"
 end
 
-puts "\n" + '=' * 40
+puts "\n#{'=' * 40}"
 puts 'Key Fixes Applied:'
 puts '1. PetsPage.js line 817: Added !! to handle undefined day values'
 puts '2. CancellationModal: Fixed prop passing and modal control'

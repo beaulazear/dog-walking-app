@@ -32,7 +32,7 @@ def test_appointment_endpoints
   puts "7. Click 'Save Changes' and verify it persists after refresh"
   puts "8. Try clicking 'Cancel Appointment' and verify it works"
 
-  puts "\n" + '=' * 50
+  puts "\n#{'=' * 50}"
   puts 'Manual testing steps provided above.'
   puts 'The backend endpoints have been updated to return complete data structures.'
 end

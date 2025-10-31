@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useMemo } from "react";
+import React, { useContext, useState, useEffect, useMemo, memo, useCallback } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import dayjs from "dayjs";
@@ -55,6 +55,69 @@ const getAnimalIcon = (name) => {
     return <Dog />;
 };
 
+// Memoized PetCard component to prevent unnecessary re-renders
+const PetCard = memo(({ pet, appointmentCount, onPetClick }) => {
+    return (
+        <StyledPetCard $active={pet.active}>
+            <PetCardHeader onClick={() => onPetClick(pet.id, 'info')}>
+                <PetIcon>{getAnimalIcon(pet.name)}</PetIcon>
+                <PetName>{pet.name}</PetName>
+                <StatusBadge $active={pet.active}>
+                    {pet.active ? <CheckCircle size={14} /> : <Pause size={14} />}
+                    {pet.active ? 'Active' : 'Inactive'}
+                </StatusBadge>
+            </PetCardHeader>
+
+            <PetCardInfo onClick={() => onPetClick(pet.id, 'info')}>
+                <InfoRow>
+                    <MapPin size={14} />
+                    <span>{pet.address || 'No address'}</span>
+                </InfoRow>
+                <InfoRow>
+                    <Calendar size={14} />
+                    <span>Age: {pet.birthdate ? `${dayjs().diff(dayjs(pet.birthdate), 'year')} years` : 'Unknown'}</span>
+                </InfoRow>
+                {appointmentCount > 0 && (
+                    <InfoRow>
+                        <CalendarDays size={14} />
+                        <span>{appointmentCount} upcoming appointment{appointmentCount !== 1 ? 's' : ''}</span>
+                    </InfoRow>
+                )}
+            </PetCardInfo>
+
+            <QuickActionsRow>
+                <QuickActionButton
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onPetClick(pet.id, 'appointments');
+                    }}
+                    title="View and schedule appointments"
+                >
+                    <CalendarDays size={16} />
+                    <span>Appointments</span>
+                </QuickActionButton>
+                <QuickActionButton
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onPetClick(pet.id, 'invoices');
+                    }}
+                    title="View invoices"
+                >
+                    <DollarSign size={16} />
+                    <span>Invoices</span>
+                </QuickActionButton>
+            </QuickActionsRow>
+
+            <ViewDetailsButton onClick={() => onPetClick(pet.id, 'info')}>
+                View Full Details
+                <ChevronRight size={16} />
+            </ViewDetailsButton>
+        </StyledPetCard>
+    );
+});
+
+PetCard.displayName = 'PetCard';
+
 export default function PetsPage() {
     const { user, addPet } = useContext(UserContext);
     const [selectedPetId, setSelectedPetId] = useState(null);
@@ -80,6 +143,11 @@ export default function PetsPage() {
         if (!selectedPetId || !user?.pets) return null;
         return user.pets.find(p => p.id === selectedPetId);
     }, [selectedPetId, user?.pets]);
+
+    // Calculate pet counts
+    const totalPets = user?.pets?.length || 0;
+    const activePets = user?.pets?.filter(pet => pet.active).length || 0;
+    const inactivePets = user?.pets?.filter(pet => !pet.active).length || 0;
 
     // Filter pets based on search term and activity status
     const filteredPets = user?.pets
@@ -107,10 +175,10 @@ export default function PetsPage() {
         }).length;
     };
 
-    const handlePetClick = (petId, tab = 'info') => {
+    const handlePetClick = useCallback((petId, tab = 'info') => {
         setSelectedPetId(petId);
         setSelectedTab(tab);
-    };
+    }, []);
 
     const handleNewPetChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -162,13 +230,7 @@ export default function PetsPage() {
     return (
         <Container>
             <Header>
-                <HeaderTopRow>
-                    <HeaderTitle>My Pets</HeaderTitle>
-                    <AddPetButton onClick={() => setShowCreateForm(true)}>
-                        <Plus size={20} />
-                        Add New Pet
-                    </AddPetButton>
-                </HeaderTopRow>
+                <HeaderTitle>My Pets</HeaderTitle>
 
                 <SearchAndFilter>
                     <SearchBar>
@@ -186,90 +248,40 @@ export default function PetsPage() {
                             $active={activeFilter === 'all'}
                             onClick={() => setActiveFilter('all')}
                         >
-                            All ({user?.pets?.length || 0})
+                            All ({totalPets})
                         </FilterTab>
                         <FilterTab
                             $active={activeFilter === 'active'}
                             onClick={() => setActiveFilter('active')}
                         >
                             <CheckCircle size={16} />
-                            Active
+                            Active ({activePets})
                         </FilterTab>
                         <FilterTab
                             $active={activeFilter === 'inactive'}
                             onClick={() => setActiveFilter('inactive')}
                         >
                             <Pause size={16} />
-                            Inactive
+                            Inactive ({inactivePets})
                         </FilterTab>
                     </FilterTabs>
+
+                    <AddPetButton onClick={() => setShowCreateForm(true)}>
+                        <Plus size={16} />
+                        Add Pet
+                    </AddPetButton>
                 </SearchAndFilter>
             </Header>
 
             <PetsGrid>
-                {filteredPets.map(pet => {
-                    const appointmentCount = getUpcomingAppointmentsCount(pet.id);
-                    return (
-                        <PetCard
-                            key={pet.id}
-                            $active={pet.active}
-                        >
-                            <PetCardHeader onClick={() => handlePetClick(pet.id, 'info')}>
-                                <PetIcon>{getAnimalIcon(pet.name)}</PetIcon>
-                                <PetName>{pet.name}</PetName>
-                                <StatusBadge $active={pet.active}>
-                                    {pet.active ? <CheckCircle size={14} /> : <Pause size={14} />}
-                                    {pet.active ? 'Active' : 'Inactive'}
-                                </StatusBadge>
-                            </PetCardHeader>
-
-                            <PetCardInfo onClick={() => handlePetClick(pet.id, 'info')}>
-                                <InfoRow>
-                                    <MapPin size={14} />
-                                    <span>{pet.address || 'No address'}</span>
-                                </InfoRow>
-                                <InfoRow>
-                                    <Calendar size={14} />
-                                    <span>Age: {pet.birthdate ? `${dayjs().diff(dayjs(pet.birthdate), 'year')} years` : 'Unknown'}</span>
-                                </InfoRow>
-                                {appointmentCount > 0 && (
-                                    <InfoRow>
-                                        <CalendarDays size={14} />
-                                        <span>{appointmentCount} upcoming appointment{appointmentCount !== 1 ? 's' : ''}</span>
-                                    </InfoRow>
-                                )}
-                            </PetCardInfo>
-
-                            <QuickActionsRow>
-                                <QuickActionButton
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handlePetClick(pet.id, 'appointments');
-                                    }}
-                                    title="View and schedule appointments"
-                                >
-                                    <CalendarDays size={16} />
-                                    <span>Appointments</span>
-                                </QuickActionButton>
-                                <QuickActionButton
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handlePetClick(pet.id, 'invoices');
-                                    }}
-                                    title="View invoices"
-                                >
-                                    <DollarSign size={16} />
-                                    <span>Invoices</span>
-                                </QuickActionButton>
-                            </QuickActionsRow>
-
-                            <ViewDetailsButton onClick={() => handlePetClick(pet.id, 'info')}>
-                                View Full Details
-                                <ChevronRight size={16} />
-                            </ViewDetailsButton>
-                        </PetCard>
-                    );
-                })}
+                {filteredPets.map(pet => (
+                    <PetCard
+                        key={pet.id}
+                        pet={pet}
+                        appointmentCount={getUpcomingAppointmentsCount(pet.id)}
+                        onPetClick={handlePetClick}
+                    />
+                ))}
             </PetsGrid>
 
             {filteredPets.length === 0 && (
@@ -417,8 +429,8 @@ export default function PetsPage() {
     );
 }
 
-// New Pet Details Modal Component with Tabs
-const PetDetailsModal = ({ pet, initialTab = 'info', onClose }) => {
+// Memoized Pet Details Modal Component with Tabs
+const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
     const { user, updatePet, updateAppointment, removeAppointment } = useContext(UserContext);
     const { confirmState, confirm } = useConfirm();
     const [activeTab, setActiveTab] = useState(initialTab);
@@ -656,16 +668,16 @@ const PetDetailsModal = ({ pet, initialTab = 'info', onClose }) => {
                         $active={pet.active}
                     >
                         {isTogglingActive ? (
-                            'Updating...'
+                            <span>Updating...</span>
                         ) : pet.active ? (
                             <>
                                 <Pause size={16} />
-                                Mark Inactive
+                                <span>Mark Inactive</span>
                             </>
                         ) : (
                             <>
                                 <CheckCircle size={16} />
-                                Mark Active
+                                <span>Mark Active</span>
                             </>
                         )}
                     </ToggleActiveButton>
@@ -1131,7 +1143,9 @@ const PetDetailsModal = ({ pet, initialTab = 'info', onClose }) => {
     );
 
     return ReactDOM.createPortal(modalContent, document.body);
-};
+});
+
+PetDetailsModal.displayName = 'PetDetailsModal';
 
 // Styled Components
 const Container = styled.div`
@@ -1156,139 +1170,68 @@ const Header = styled.div`
     }
 `;
 
-const HeaderTopRow = styled.div`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-
-    @media (max-width: 768px) {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: stretch;
-    }
-`;
-
 const HeaderTitle = styled.h1`
     font-family: 'Poppins', sans-serif;
     font-size: 2.5rem;
     font-weight: 700;
     color: white;
-    margin: 0;
+    margin: 0 0 1.5rem 0;
     letter-spacing: -0.025em;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 
     @media (max-width: 768px) {
         font-size: 2rem;
         text-align: center;
+        margin-bottom: 1rem;
     }
 `;
 
 const AddPetButton = styled.button`
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 14px 28px;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    color: white;
+    gap: 5px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #22c55e;
     border: none;
-    border-radius: 12px;
+    border-radius: 10px;
     font-family: 'Poppins', sans-serif;
-    font-size: 1.05rem;
+    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
     white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
 
     @media (max-width: 768px) {
         width: 100%;
         justify-content: center;
-        padding: 12px 24px;
-        font-size: 1rem;
-    }
-
-    &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5);
-        background: linear-gradient(135deg, #16a34a, #15803d);
-    }
-
-    &:active {
-        transform: translateY(0);
-    }
-`;
-
-const HeaderTop = styled.div`
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 2rem;
-
-    @media (max-width: 768px) {
-        margin-bottom: 1.5rem;
-    }
-`;
-
-const Title = styled.h1`
-    font-family: 'Poppins', sans-serif;
-    font-size: 3rem;
-    font-weight: 800;
-    color: white;
-    margin: 0;
-    text-align: center;
-    letter-spacing: -0.025em;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-
-    @media (max-width: 768px) {
-        font-size: 2.25rem;
-    }
-`;
-
-const AddPetTab = styled.button`
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 10px 20px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
-    flex-shrink: 1;
-    min-width: 0;
-    
-    @media (max-width: 768px) {
         padding: 8px 14px;
         font-size: 0.85rem;
         gap: 5px;
-        box-shadow: 0 1px 4px rgba(34, 197, 94, 0.3);
-        
+
         svg {
             width: 15px;
             height: 15px;
         }
     }
-    
+
     @media (max-width: 480px) {
         padding: 7px 10px;
         font-size: 0.8rem;
         gap: 4px;
-        
+
         svg {
             width: 14px;
             height: 14px;
         }
     }
-    
+
     &:hover {
+        background: white;
+        color: #16a34a;
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+        box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
     }
 `;
 
@@ -1296,9 +1239,12 @@ const SearchAndFilter = styled.div`
     display: flex;
     gap: 1rem;
     align-items: center;
-    
+    justify-content: center;
+    flex-wrap: wrap;
+
     @media (max-width: 768px) {
         flex-direction: column;
+        align-items: stretch;
     }
 `;
 
@@ -1346,14 +1292,15 @@ const FilterTabs = styled.div`
     border-radius: 14px;
     backdrop-filter: blur(10px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    
+    width: fit-content;
+
     @media (max-width: 768px) {
         gap: 5px;
         padding: 4px;
-        flex: 1;
+        width: 100%;
         justify-content: space-between;
     }
-    
+
     @media (max-width: 480px) {
         gap: 3px;
         padding: 3px;
@@ -1417,7 +1364,7 @@ const PetsGrid = styled.div`
     }
 `;
 
-const PetCard = styled.div`
+const StyledPetCard = styled.div`
     background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
     padding: 1.5rem;
@@ -1797,8 +1744,8 @@ const ModalStatusBadge = styled.span`
 const ToggleActiveButton = styled.button`
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 18px;
+    gap: 6px;
+    padding: 8px 14px;
     border-radius: 10px;
     font-family: 'Poppins', sans-serif;
     font-size: 0.9rem;
@@ -1831,9 +1778,35 @@ const ToggleActiveButton = styled.button`
         cursor: not-allowed;
     }
 
+    svg {
+        flex-shrink: 0;
+    }
+
     @media (max-width: 768px) {
-        padding: 8px 14px;
-        font-size: 0.85rem;
+        padding: 6px 10px;
+        font-size: 0.75rem;
+        border: 1px solid;
+        gap: 5px;
+
+        svg {
+            width: 14px;
+            height: 14px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        padding: 8px;
+        gap: 0;
+        border-radius: 8px;
+
+        svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        span {
+            display: none;
+        }
     }
 `;
 
@@ -2405,15 +2378,14 @@ const FormButtons = styled.div`
 export {
     Container,
     Header,
-    HeaderTop,
-    Title,
-    AddPetTab,
+    HeaderTitle,
+    AddPetButton,
     SearchAndFilter,
     SearchBar,
     FilterTabs,
     FilterTab,
     PetsGrid,
-    PetCard,
+    StyledPetCard,
     PetCardHeader,
     PetIcon,
     PetName,

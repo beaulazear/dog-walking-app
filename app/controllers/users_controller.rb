@@ -49,11 +49,11 @@ class UsersController < ApplicationController
   private
 
   def user_params
-    params.permit(:username, :password, :password_confirmation, :name, :email_address, :pets, :thirty, :fourty,
+    params.permit(:username, :password, :password_confirmation, :name, :email_address, :pets, :thirty, :fortyfive,
                   :sixty, :solo_rate)
   end
 
   def rates_params
-    params.permit(:thirty, :fourty, :sixty, :solo_rate)
+    params.permit(:thirty, :fortyfive, :sixty, :solo_rate)
   end
 end

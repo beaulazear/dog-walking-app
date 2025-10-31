@@ -1,14 +1,16 @@
-import React, { useContext } from "react";
+import React, { useContext, lazy, Suspense } from "react";
 import { Route, Routes } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { UserContext } from "./context/user";
 import Navbar from "./components/Navbar";
-import Login from "./components/Login";
-import Signup from "./components/Signup";
-import Dashboard from "./components/Dashboard";
-import TodaysWalks from "./components/TodaysWalks";
-import PetsPage from "./components/PetsPage";
 import LoadingScreen from "./components/LoadingScreen";
+
+// Lazy load route components for better code splitting
+const Login = lazy(() => import("./components/Login"));
+const Signup = lazy(() => import("./components/Signup"));
+const Dashboard = lazy(() => import("./components/Dashboard"));
+const TodaysWalks = lazy(() => import("./components/TodaysWalks"));
+const PetsPage = lazy(() => import("./components/PetsPage"));
 
 function App() {
   const { user, loading } = useContext(UserContext);
@@ -48,17 +50,21 @@ function App() {
       {user ? (
         <>
           <Navbar />
-          <Routes>
-            <Route path="/todays-walks" element={<TodaysWalks />} />
-            <Route path="/pets-page" element={<PetsPage />} />
-            <Route path="*" element={<Dashboard />} />
-          </Routes>
+          <Suspense fallback={<LoadingScreen>Loading page...</LoadingScreen>}>
+            <Routes>
+              <Route path="/todays-walks" element={<TodaysWalks />} />
+              <Route path="/pets-page" element={<PetsPage />} />
+              <Route path="*" element={<Dashboard />} />
+            </Routes>
+          </Suspense>
         </>
       ) : (
-        <Routes>
-          <Route path="/signup" element={<Signup />} />
-          <Route path="*" element={<Login />} />
-        </Routes>
+        <Suspense fallback={<LoadingScreen>Loading...</LoadingScreen>}>
+          <Routes>
+            <Route path="/signup" element={<Signup />} />
+            <Route path="*" element={<Login />} />
+          </Routes>
+        </Suspense>
       )}
     </>
   );

@@ -9,7 +9,7 @@ RSpec.describe 'User Model' do
       name: 'Test User',
       email_address: 'test@example.com',
       thirty: 30,
-      fourty: 40,
+      fortyfive: 45,
       sixty: 60,
       solo_rate: 35
     )
@@ -25,7 +25,7 @@ RSpec.describe 'User Model' do
       name: 'Test User',
       email_address: 'test@example.com',
       thirty: 30,
-      fourty: 40,
+      fortyfive: 45,
       sixty: 60,
       solo_rate: 35
     )

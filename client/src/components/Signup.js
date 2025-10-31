@@ -52,7 +52,7 @@ const Signup = () => {
                 password,
                 password_confirmation: passwordConfirmation,
                 thirty: parseInt(22),
-                fourty: parseInt(28),
+                fortyfive: parseInt(28),
                 sixty: parseInt(33),
                 solo_rate: parseInt(5),
             }),
@@ -85,7 +85,7 @@ const Signup = () => {
             <ContentContainer $isKeyboardOpen={isKeyboardOpen}>
                 <HeaderContainer>
                     <DogImageWrapper>
-                        <DogImage src={dogImage} alt="Dog" />
+                        <DogImage src={dogImage} alt="Dog" loading="lazy" />
                     </DogImageWrapper>
                     <WelcomeText>
                         Create Account

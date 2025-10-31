@@ -73,6 +73,13 @@ export default function TodaysWalks() {
 
     return (
         <Container>
+            <Header>
+                <PageTitle>Today's Walks</PageTitle>
+                <PageSubtitle>
+                    {todaysAppointments.length} {todaysAppointments.length === 1 ? 'walk' : 'walks'} scheduled • {completedCount} completed
+                </PageSubtitle>
+            </Header>
+
             {todaysAppointments.length === 0 ? (
                 <EmptyState>
                     <EmptyIcon>
@@ -145,11 +152,16 @@ const WalkCard = React.memo(({ appointment }) => {
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showPetModal, setShowPetModal] = useState(false);
 
-    const handleCompleteWalk = async (offset = 0) => {
-        let compensation = appointment.duration === 30 ? user.thirty
-            : appointment.duration === 40 ? user.fourty
-            : appointment.duration === 60 ? user.sixty
+    const handleCompleteWalk = async (offset = 0, duration = appointment.duration) => {
+        let compensation = duration === 30 ? user.thirty
+            : duration === 45 ? user.fortyfive
+            : duration === 60 ? user.sixty
             : 0;
+
+        // Add solo upcharge if this is a solo walk
+        if (appointment.solo) {
+            compensation += user.solo_rate || 0;
+        }
 
         compensation += offset;
 
@@ -162,7 +174,7 @@ const WalkCard = React.memo(({ appointment }) => {
                 date_completed: dayjs().toISOString(),
                 paid: false,
                 compensation,
-                title: `${appointment.duration} min walk`
+                title: `${duration} min ${appointment.solo ? 'solo' : 'group'} walk`
             }),
         });
 
@@ -207,7 +219,7 @@ const WalkCard = React.memo(({ appointment }) => {
                     <TopRow>
                         <PetName onClick={() => setShowPetModal(true)}>{appointment.pet?.name}</PetName>
                         <WalkTime>
-                            {dayjs(appointment.start_time, "HH:mm").format("h:mm A")}
+                            {dayjs(appointment.start_time, "HH:mm").format("h:mm A")} - {dayjs(appointment.end_time, "HH:mm").format("h:mm A")}
                         </WalkTime>
                     </TopRow>
                     <Address>
@@ -286,17 +298,19 @@ const WalkCard = React.memo(({ appointment }) => {
 const CompletionModal = ({ appointment, user, onComplete, onClose }) => {
     const [offset, setOffset] = useState(0);
     const [offsetType, setOffsetType] = useState('upcharge');
-    
-    const baseCompensation = appointment.duration === 30 ? user.thirty 
-        : appointment.duration === 40 ? user.fourty 
-        : appointment.duration === 60 ? user.sixty 
+    const [duration, setDuration] = useState(appointment.duration);
+
+    const baseCompensation = duration === 30 ? user.thirty
+        : duration === 45 ? user.fortyfive
+        : duration === 60 ? user.sixty
         : 0;
-    
-    const finalAmount = baseCompensation + (offsetType === 'upcharge' ? offset : -offset);
+
+    const soloUpcharge = appointment.solo ? (user.solo_rate || 0) : 0;
+    const finalAmount = baseCompensation + soloUpcharge + (offsetType === 'upcharge' ? offset : -offset);
 
     const handleSubmit = () => {
         const finalOffset = offsetType === 'upcharge' ? offset : -offset;
-        onComplete(finalOffset);
+        onComplete(finalOffset, duration);
     };
 
     const handleOverlayClick = (e) => {
@@ -333,27 +347,55 @@ const CompletionModal = ({ appointment, user, onComplete, onClose }) => {
                 </CompletionModalHeader>
                 
                 <CompletionModalContent>
-                    <WalkSummary>
-                        <PetInfo>
-                            <PetAvatar
-                                src={dogPlaceholder}
-                                alt={appointment.pet?.name}
-                            />
-                            <div>
-                                <PetNameText>{appointment.pet?.name}</PetNameText>
-                                <WalkInfoText>
-                                    {appointment.duration} min • {appointment.solo ? 'Solo' : 'Group'} walk
-                                </WalkInfoText>
-                            </div>
-                        </PetInfo>
-                        
-                        <CompensationSummary>
-                            <BaseRate>
-                                <DollarSign size={16} />
-                                Base Rate: ${baseCompensation.toFixed(2)}
-                            </BaseRate>
-                        </CompensationSummary>
-                    </WalkSummary>
+                    <PetInfoHeader>
+                        <PetNameLarge>{appointment.pet?.name}</PetNameLarge>
+                        <WalkTypeLabel $solo={appointment.solo}>
+                            {appointment.solo ? '✨ Solo Walk' : '👥 Group Walk'}
+                        </WalkTypeLabel>
+                        <WalkDetailsText>
+                            {dayjs(appointment.start_time, "HH:mm").format("h:mm A")} - {dayjs(appointment.end_time, "HH:mm").format("h:mm A")}
+                        </WalkDetailsText>
+                    </PetInfoHeader>
+
+                    <CompensationSummary>
+                        <CompensationRow>
+                            <CompensationLabel>Base Rate ({appointment.duration} min)</CompensationLabel>
+                            <CompensationValue>${baseCompensation.toFixed(2)}</CompensationValue>
+                        </CompensationRow>
+                        {appointment.solo && (
+                            <CompensationRow>
+                                <CompensationLabel>Solo Upcharge</CompensationLabel>
+                                <CompensationValue $highlight>+${soloUpcharge.toFixed(2)}</CompensationValue>
+                            </CompensationRow>
+                        )}
+                    </CompensationSummary>
+
+                    <DurationSection>
+                        <SectionTitle>Walk Duration</SectionTitle>
+                        <DurationSelector>
+                            <DurationOption
+                                $active={duration === 30}
+                                onClick={() => setDuration(30)}
+                            >
+                                30 min
+                                <DurationRate>${user.thirty?.toFixed(2) || '0.00'}</DurationRate>
+                            </DurationOption>
+                            <DurationOption
+                                $active={duration === 45}
+                                onClick={() => setDuration(45)}
+                            >
+                                45 min
+                                <DurationRate>${user.fortyfive?.toFixed(2) || '0.00'}</DurationRate>
+                            </DurationOption>
+                            <DurationOption
+                                $active={duration === 60}
+                                onClick={() => setDuration(60)}
+                            >
+                                60 min
+                                <DurationRate>${user.sixty?.toFixed(2) || '0.00'}</DurationRate>
+                            </DurationOption>
+                        </DurationSelector>
+                    </DurationSection>
 
                     <AdjustmentSection>
                         <SectionTitle>Adjustments (Optional)</SectionTitle>
@@ -455,20 +497,15 @@ const CancelModal = ({ appointment, onCancel, onClose }) => {
                 </CancelModalHeader>
                 
                 <CancelModalContent>
-                    <WalkSummary>
-                        <PetInfo>
-                            <PetAvatar
-                                src={dogPlaceholder}
-                                alt={appointment.pet?.name}
-                            />
-                            <div>
-                                <PetNameText>{appointment.pet?.name}</PetNameText>
-                                <WalkInfoText>
-                                    {appointment.duration} min • {appointment.solo ? 'Solo' : 'Group'} walk
-                                </WalkInfoText>
-                            </div>
-                        </PetInfo>
-                    </WalkSummary>
+                    <PetInfoHeader>
+                        <PetNameLarge>{appointment.pet?.name}</PetNameLarge>
+                        <WalkTypeLabel $solo={appointment.solo}>
+                            {appointment.solo ? '✨ Solo Walk' : '👥 Group Walk'}
+                        </WalkTypeLabel>
+                        <WalkDetailsText>
+                            {appointment.duration} min walk • {dayjs(appointment.start_time, "HH:mm").format("h:mm A")} - {dayjs(appointment.end_time, "HH:mm").format("h:mm A")}
+                        </WalkDetailsText>
+                    </PetInfoHeader>
 
                     <CancellationSection>
                         <SectionTitle>Cancellation Fee (Optional)</SectionTitle>
@@ -561,6 +598,7 @@ const PetDetailsModal = ({ pet, onClose }) => {
                         <PetModalAvatar
                             src={dogPlaceholder}
                             alt={pet?.name}
+                            loading="lazy"
                         />
                         <PetNameContainer>
                             <PetModalName>{pet?.name || 'Unknown'}</PetModalName>
@@ -672,6 +710,45 @@ const Container = styled.div`
         padding: 16px 12px;
         padding-top: 90px;
         padding-bottom: 30px;
+    }
+`;
+
+const Header = styled.div`
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 24px;
+    text-align: center;
+    z-index: 1;
+
+    @media (max-width: 768px) {
+        margin-bottom: 20px;
+    }
+`;
+
+const PageTitle = styled.h1`
+    font-family: 'Poppins', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    margin: 0 0 8px 0;
+    letter-spacing: -0.025em;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+
+    @media (max-width: 768px) {
+        font-size: 2rem;
+    }
+`;
+
+const PageSubtitle = styled.p`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+
+    @media (max-width: 768px) {
+        font-size: 0.95rem;
     }
 `;
 
@@ -1156,60 +1233,87 @@ const CompletionModalContent = styled.div`
     padding: 0 24px 24px;
 `;
 
-const WalkSummary = styled.div`
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
+const PetInfoHeader = styled.div`
+    text-align: center;
     padding: 20px;
     margin-bottom: 24px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.15);
 `;
 
-const PetInfo = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 16px;
-`;
-
-const PetAvatar = styled.img`
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid rgba(255, 255, 255, 0.3);
-`;
-
-const PetNameText = styled.h3`
+const PetNameLarge = styled.h2`
     font-family: 'Poppins', sans-serif;
-    font-size: 1.3rem;
-    font-weight: 600;
+    font-size: 2rem;
+    font-weight: 700;
     color: #ffffff;
-    margin: 0 0 4px 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    margin: 0 0 12px 0;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 `;
 
-const WalkInfoText = styled.p`
+const WalkTypeLabel = styled.div`
+    display: inline-block;
+    background: ${({ $solo }) =>
+        $solo ? 'linear-gradient(135deg, #a569a7, #8b5a8c)' : 'linear-gradient(135deg, #667eea, #764ba2)'
+    };
+    color: #ffffff;
+    padding: 8px 20px;
+    border-radius: 20px;
     font-family: 'Poppins', sans-serif;
     font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+`;
+
+const WalkDetailsText = styled.p`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
     color: rgba(255, 255, 255, 0.8);
     margin: 0;
     font-weight: 500;
 `;
 
 const CompensationSummary = styled.div`
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
-    padding-top: 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
 `;
 
-const BaseRate = styled.div`
+const CompensationRow = styled.div`
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    padding: 12px 0;
+
+    &:not(:last-child) {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+`;
+
+const CompensationLabel = styled.span`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+`;
+
+const CompensationValue = styled.span`
     font-family: 'Poppins', sans-serif;
     font-size: 1.1rem;
-    font-weight: 600;
-    color: #ffffff;
+    font-weight: 700;
+    color: ${({ $highlight }) => $highlight ? '#a569a7' : '#ffffff'};
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+`;
+
+const DurationSection = styled.div`
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 const AdjustmentSection = styled.div`
@@ -1227,6 +1331,48 @@ const SectionTitle = styled.h4`
     color: #ffffff;
     margin: 0 0 16px 0;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+`;
+
+const DurationSelector = styled.div`
+    display: flex;
+    gap: 8px;
+`;
+
+const DurationOption = styled.button`
+    flex: 1;
+    background: ${({ $active }) =>
+        $active ? 'linear-gradient(135deg, #a569a7, #8b5a8c)' : 'rgba(255, 255, 255, 0.1)'
+    };
+    border: 2px solid ${({ $active }) =>
+        $active ? '#a569a7' : 'rgba(255, 255, 255, 0.2)'
+    };
+    border-radius: 12px;
+    padding: 14px 12px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    &:hover {
+        background: ${({ $active }) =>
+            $active ? 'linear-gradient(135deg, #8b5a8c, #76517a)' : 'rgba(255, 255, 255, 0.15)'
+        };
+        transform: translateY(-1px);
+    }
+`;
+
+const DurationRate = styled.span`
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+    font-family: 'Poppins', sans-serif;
 `;
 
 const AdjustmentControls = styled.div`

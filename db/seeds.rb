@@ -8,7 +8,7 @@ user = User.create!(
   name: 'Test Account',
   email_address: 'testing@gmail.com',
   thirty: 22,
-  fourty: 28,
+  fortyfive: 28,
   sixty: 33,
   solo_rate: 5
 )

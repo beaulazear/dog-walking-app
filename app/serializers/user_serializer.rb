@@ -12,7 +12,7 @@ class UserSerializer
       name: user.name,
       email_address: user.email_address,
       thirty: user.thirty,
-      fourty: user.fourty,
+      fortyfive: user.fortyfive,
       sixty: user.sixty,
       solo_rate: user.solo_rate,
       pets: PetSerializer.serialize_collection(pets),
@@ -29,7 +29,7 @@ class UserSerializer
       name: user.name,
       email_address: user.email_address,
       thirty: user.thirty,
-      fourty: user.fourty,
+      fortyfive: user.fortyfive,
       sixty: user.sixty,
       solo_rate: user.solo_rate
     }

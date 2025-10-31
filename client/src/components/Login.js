@@ -70,7 +70,7 @@ const Login = () => {
             <ContentContainer $isKeyboardOpen={isKeyboardOpen}>
                 <HeaderContainer>
                     <DogImageWrapper>
-                        <DogImage src={dogImage} alt="Dog" />
+                        <DogImage src={dogImage} alt="Dog" loading="lazy" />
                     </DogImageWrapper>
                     <WelcomeText>
                         Welcome Back

@@ -28,7 +28,7 @@ RSpec.describe User, type: :model do
         name: 'Test User',
         email_address: 'test@example.com',
         thirty: 30,
-        fourty: 40,
+        fortyfive: 45,
         sixty: 60,
         solo_rate: 35
       }
@@ -70,10 +70,10 @@ RSpec.describe User, type: :model do
       expect(user.errors[:thirty]).to include('is not a number')
     end
 
-    it 'validates fourty is an integer' do
-      user = User.new(valid_attributes.merge(fourty: 'not_a_number'))
+    it 'validates fortyfive is an integer' do
+      user = User.new(valid_attributes.merge(fortyfive: 'not_a_number'))
       expect(user).to_not be_valid
-      expect(user.errors[:fourty]).to include('is not a number')
+      expect(user.errors[:fortyfive]).to include('is not a number')
     end
 
     it 'validates sixty is an integer' do

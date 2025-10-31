@@ -70,6 +70,9 @@ group :development do
 
   # Debugging in Rails console
   gem 'web-console'
+
+  # N+1 query detection
+  gem 'bullet'
 end
 
 # Test Group
