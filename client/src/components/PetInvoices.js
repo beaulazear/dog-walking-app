@@ -414,7 +414,7 @@ const CreateInvoiceModal = ({ pet, user, onClose, onInvoiceCreated }) => {
                         </FormSection>
 
                         <FormActions>
-                            <CreateInvoiceButton type="submit" disabled={isCreating}>
+                            <FormSubmitButton type="submit" disabled={isCreating}>
                                 {isCreating ? (
                                     <>Creating...</>
                                 ) : (
@@ -423,7 +423,7 @@ const CreateInvoiceModal = ({ pet, user, onClose, onInvoiceCreated }) => {
                                         Create Invoice
                                     </>
                                 )}
-                            </CreateInvoiceButton>
+                            </FormSubmitButton>
                             <CancelFormButton type="button" onClick={onClose} disabled={isCreating}>
                                 Cancel
                             </CancelFormButton>
@@ -1112,7 +1112,7 @@ const FormActions = styled.div`
     margin-top: 8px;
 `;
 
-const CreateInvoiceButton = styled.button`
+const FormSubmitButton = styled.button`
     background: linear-gradient(135deg, #22c55e, #16a34a);
     border: none;
     border-radius: 16px;
