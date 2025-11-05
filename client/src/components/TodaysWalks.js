@@ -299,6 +299,7 @@ const CompletionModal = ({ appointment, user, onComplete, onClose }) => {
     const [offset, setOffset] = useState(0);
     const [offsetType, setOffsetType] = useState('upcharge');
     const [duration, setDuration] = useState(appointment.duration);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const baseCompensation = duration === 30 ? user.thirty
         : duration === 45 ? user.fortyfive
@@ -308,13 +309,15 @@ const CompletionModal = ({ appointment, user, onComplete, onClose }) => {
     const soloUpcharge = appointment.solo ? (user.solo_rate || 0) : 0;
     const finalAmount = baseCompensation + soloUpcharge + (offsetType === 'upcharge' ? offset : -offset);
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
+        setIsSubmitting(true);
         const finalOffset = offsetType === 'upcharge' ? offset : -offset;
-        onComplete(finalOffset, duration);
+        await onComplete(finalOffset, duration);
+        setIsSubmitting(false);
     };
 
     const handleOverlayClick = (e) => {
-        if (e.target === e.currentTarget) {
+        if (e.target === e.currentTarget && !isSubmitting) {
             onClose();
         }
     };
@@ -322,7 +325,7 @@ const CompletionModal = ({ appointment, user, onComplete, onClose }) => {
     React.useEffect(() => {
         document.body.style.overflow = 'hidden';
         const handleKeyDown = (e) => {
-            if (e.key === 'Escape') {
+            if (e.key === 'Escape' && !isSubmitting) {
                 onClose();
             }
         };
@@ -331,122 +334,136 @@ const CompletionModal = ({ appointment, user, onComplete, onClose }) => {
             document.body.style.overflow = 'unset';
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [onClose]);
+    }, [onClose, isSubmitting]);
 
     const modalContent = (
         <CompletionModalOverlay onClick={handleOverlayClick}>
             <CompletionModalContainer>
-                <CompletionModalHeader>
-                    <CompletionModalTitle>
-                        <CheckCircle size={24} />
-                        Complete Walk
-                    </CompletionModalTitle>
-                    <CompletionModalCloseButton onClick={onClose}>
-                        <X size={18} />
-                    </CompletionModalCloseButton>
-                </CompletionModalHeader>
-                
-                <CompletionModalContent>
-                    <PetInfoHeader>
-                        <PetNameLarge>{appointment.pet?.name}</PetNameLarge>
-                        <WalkTypeLabel $solo={appointment.solo}>
-                            {appointment.solo ? '✨ Solo Walk' : '👥 Group Walk'}
-                        </WalkTypeLabel>
-                        <WalkDetailsText>
-                            {dayjs(appointment.start_time, "HH:mm").format("h:mm A")} - {dayjs(appointment.end_time, "HH:mm").format("h:mm A")}
-                        </WalkDetailsText>
-                    </PetInfoHeader>
+                <CompletionModalDragHandle />
 
-                    <CompensationSummary>
-                        <CompensationRow>
-                            <CompensationLabel>Base Rate ({appointment.duration} min)</CompensationLabel>
-                            <CompensationValue>${baseCompensation.toFixed(2)}</CompensationValue>
-                        </CompensationRow>
-                        {appointment.solo && (
-                            <CompensationRow>
-                                <CompensationLabel>Solo Upcharge</CompensationLabel>
-                                <CompensationValue $highlight>+${soloUpcharge.toFixed(2)}</CompensationValue>
-                            </CompensationRow>
-                        )}
-                    </CompensationSummary>
+                <CompletionModalHeader>
+                    <CompletionModalHeaderTop>
+                        <CompletionModalTitle>Complete Walk</CompletionModalTitle>
+                        <CompletionModalCloseButton onClick={onClose} disabled={isSubmitting}>
+                            <X size={20} />
+                        </CompletionModalCloseButton>
+                    </CompletionModalHeaderTop>
+                    <PetInfoBanner>
+                        <PetNameLarge>{appointment.pet?.name}</PetNameLarge>
+                        <WalkMetadata>
+                            <WalkTypeChip $solo={appointment.solo}>
+                                {appointment.solo ? 'Solo' : 'Group'}
+                            </WalkTypeChip>
+                            <WalkTimeText>
+                                {dayjs(appointment.start_time, "HH:mm").format("h:mm A")}
+                            </WalkTimeText>
+                        </WalkMetadata>
+                    </PetInfoBanner>
+                </CompletionModalHeader>
+
+                <CompletionModalContent>
+                    <CompensationCard>
+                        <CompensationCardTitle>Compensation</CompensationCardTitle>
+                        <CompensationBreakdown>
+                            <CompensationItem>
+                                <CompensationItemLabel>Base Rate</CompensationItemLabel>
+                                <CompensationItemValue>${baseCompensation.toFixed(2)}</CompensationItemValue>
+                            </CompensationItem>
+                            {appointment.solo && (
+                                <CompensationItem>
+                                    <CompensationItemLabel>Solo Upcharge</CompensationItemLabel>
+                                    <CompensationItemValue $accent>+${soloUpcharge.toFixed(2)}</CompensationItemValue>
+                                </CompensationItem>
+                            )}
+                        </CompensationBreakdown>
+                    </CompensationCard>
 
                     <DurationSection>
-                        <SectionTitle>Walk Duration</SectionTitle>
+                        <SectionLabel>Duration</SectionLabel>
                         <DurationSelector>
                             <DurationOption
                                 $active={duration === 30}
                                 onClick={() => setDuration(30)}
+                                disabled={isSubmitting}
                             >
-                                30 min
-                                <DurationRate>${user.thirty?.toFixed(2) || '0.00'}</DurationRate>
+                                <DurationTime>30</DurationTime>
+                                <DurationUnit>min</DurationUnit>
                             </DurationOption>
                             <DurationOption
                                 $active={duration === 45}
                                 onClick={() => setDuration(45)}
+                                disabled={isSubmitting}
                             >
-                                45 min
-                                <DurationRate>${user.fortyfive?.toFixed(2) || '0.00'}</DurationRate>
+                                <DurationTime>45</DurationTime>
+                                <DurationUnit>min</DurationUnit>
                             </DurationOption>
                             <DurationOption
                                 $active={duration === 60}
                                 onClick={() => setDuration(60)}
+                                disabled={isSubmitting}
                             >
-                                60 min
-                                <DurationRate>${user.sixty?.toFixed(2) || '0.00'}</DurationRate>
+                                <DurationTime>60</DurationTime>
+                                <DurationUnit>min</DurationUnit>
                             </DurationOption>
                         </DurationSelector>
                     </DurationSection>
 
                     <AdjustmentSection>
-                        <SectionTitle>Adjustments (Optional)</SectionTitle>
-                        
-                        <AdjustmentControls>
-                            <TypeSelector>
-                                <TypeButton 
-                                    $active={offsetType === 'upcharge'} 
-                                    onClick={() => setOffsetType('upcharge')}
-                                >
-                                    <Plus size={14} />
-                                    Upcharge
-                                </TypeButton>
-                                <TypeButton 
-                                    $active={offsetType === 'discount'} 
-                                    onClick={() => setOffsetType('discount')}
-                                >
-                                    <Minus size={14} />
-                                    Discount
-                                </TypeButton>
-                            </TypeSelector>
-                            
-                            <AmountInput>
-                                <DollarSign size={16} />
-                                <input
-                                    type="number"
-                                    value={offset}
-                                    onChange={(e) => setOffset(parseFloat(e.target.value) || 0)}
-                                    placeholder="0.00"
-                                    step="0.01"
-                                    min="0"
-                                />
-                            </AmountInput>
-                        </AdjustmentControls>
+                        <SectionLabel>Adjustment (Optional)</SectionLabel>
+
+                        <AdjustmentTypeToggle>
+                            <AdjustmentTypeButton
+                                $active={offsetType === 'upcharge'}
+                                onClick={() => setOffsetType('upcharge')}
+                                disabled={isSubmitting}
+                            >
+                                <Plus size={16} />
+                                Add
+                            </AdjustmentTypeButton>
+                            <AdjustmentTypeButton
+                                $active={offsetType === 'discount'}
+                                onClick={() => setOffsetType('discount')}
+                                disabled={isSubmitting}
+                            >
+                                <Minus size={16} />
+                                Subtract
+                            </AdjustmentTypeButton>
+                        </AdjustmentTypeToggle>
+
+                        <AdjustmentInput>
+                            <DollarSign size={18} />
+                            <input
+                                type="number"
+                                value={offset}
+                                onChange={(e) => setOffset(parseFloat(e.target.value) || 0)}
+                                placeholder="0.00"
+                                step="0.01"
+                                min="0"
+                                disabled={isSubmitting}
+                            />
+                        </AdjustmentInput>
                     </AdjustmentSection>
 
-                    <FinalTotal $positive={finalAmount >= 0}>
-                        <DollarSign size={20} />
-                        Total: ${finalAmount.toFixed(2)}
-                    </FinalTotal>
+                    <TotalCard $positive={finalAmount >= 0}>
+                        <TotalLabel>Total Payment</TotalLabel>
+                        <TotalAmount>${finalAmount.toFixed(2)}</TotalAmount>
+                    </TotalCard>
 
-                    <ModalButtonGroup>
-                        <ConfirmButton onClick={handleSubmit}>
-                            <CheckCircle size={16} />
-                            Complete & Create Invoice
+                    <ModalActions>
+                        <ConfirmButton onClick={handleSubmit} disabled={isSubmitting}>
+                            {isSubmitting ? (
+                                <>Processing...</>
+                            ) : (
+                                <>
+                                    <CheckCircle size={18} />
+                                    Complete Walk
+                                </>
+                            )}
                         </ConfirmButton>
-                        <CancelModalButton onClick={onClose}>
-                            <X size={16} />
+                        <CancelActionButton onClick={onClose} disabled={isSubmitting}>
                             Cancel
-                        </CancelModalButton>
-                    </ModalButtonGroup>
+                        </CancelActionButton>
+                    </ModalActions>
                 </CompletionModalContent>
             </CompletionModalContainer>
         </CompletionModalOverlay>
@@ -458,13 +475,16 @@ const CompletionModal = ({ appointment, user, onComplete, onClose }) => {
 // Cancel Modal Component
 const CancelModal = ({ appointment, onCancel, onClose }) => {
     const [cancellationFee, setCancellationFee] = useState(0);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleSubmit = () => {
-        onCancel(cancellationFee);
+    const handleSubmit = async () => {
+        setIsSubmitting(true);
+        await onCancel(cancellationFee);
+        setIsSubmitting(false);
     };
 
     const handleOverlayClick = (e) => {
-        if (e.target === e.currentTarget) {
+        if (e.target === e.currentTarget && !isSubmitting) {
             onClose();
         }
     };
@@ -472,7 +492,7 @@ const CancelModal = ({ appointment, onCancel, onClose }) => {
     React.useEffect(() => {
         document.body.style.overflow = 'hidden';
         const handleKeyDown = (e) => {
-            if (e.key === 'Escape') {
+            if (e.key === 'Escape' && !isSubmitting) {
                 onClose();
             }
         };
@@ -481,37 +501,48 @@ const CancelModal = ({ appointment, onCancel, onClose }) => {
             document.body.style.overflow = 'unset';
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [onClose]);
+    }, [onClose, isSubmitting]);
 
     const modalContent = (
         <CancelModalOverlay onClick={handleOverlayClick}>
             <CancelModalContainer>
-                <CancelModalHeader>
-                    <CancelModalTitle>
-                        <X size={24} />
-                        Cancel Walk
-                    </CancelModalTitle>
-                    <CancelModalCloseButton onClick={onClose}>
-                        <X size={18} />
-                    </CancelModalCloseButton>
-                </CancelModalHeader>
-                
-                <CancelModalContent>
-                    <PetInfoHeader>
-                        <PetNameLarge>{appointment.pet?.name}</PetNameLarge>
-                        <WalkTypeLabel $solo={appointment.solo}>
-                            {appointment.solo ? '✨ Solo Walk' : '👥 Group Walk'}
-                        </WalkTypeLabel>
-                        <WalkDetailsText>
-                            {appointment.duration} min walk • {dayjs(appointment.start_time, "HH:mm").format("h:mm A")} - {dayjs(appointment.end_time, "HH:mm").format("h:mm A")}
-                        </WalkDetailsText>
-                    </PetInfoHeader>
+                <CancelModalDragHandle />
 
-                    <CancellationSection>
-                        <SectionTitle>Cancellation Fee (Optional)</SectionTitle>
-                        
-                        <FeeInput>
-                            <DollarSign size={16} />
+                <CancelModalHeader>
+                    <CancelModalHeaderTop>
+                        <CancelModalTitle>Cancel Walk</CancelModalTitle>
+                        <CancelModalCloseButton onClick={onClose} disabled={isSubmitting}>
+                            <X size={20} />
+                        </CancelModalCloseButton>
+                    </CancelModalHeaderTop>
+                    <PetInfoBanner>
+                        <PetNameLarge>{appointment.pet?.name}</PetNameLarge>
+                        <WalkMetadata>
+                            <WalkTypeChip $solo={appointment.solo}>
+                                {appointment.solo ? 'Solo' : 'Group'}
+                            </WalkTypeChip>
+                            <WalkTimeText>
+                                {dayjs(appointment.start_time, "HH:mm").format("h:mm A")}
+                            </WalkTimeText>
+                        </WalkMetadata>
+                    </PetInfoBanner>
+                </CancelModalHeader>
+
+                <CancelModalContent>
+                    <CancellationInfoCard>
+                        <CancellationWarning>
+                            <X size={24} />
+                        </CancellationWarning>
+                        <CancellationMessage>
+                            This walk will be marked as cancelled. You can optionally add a cancellation fee below.
+                        </CancellationMessage>
+                    </CancellationInfoCard>
+
+                    <CancellationFeeSection>
+                        <SectionLabel>Cancellation Fee (Optional)</SectionLabel>
+
+                        <FeeInputWrapper>
+                            <DollarSign size={20} />
                             <input
                                 type="number"
                                 value={cancellationFee}
@@ -519,23 +550,30 @@ const CancelModal = ({ appointment, onCancel, onClose }) => {
                                 placeholder="0.00"
                                 step="0.01"
                                 min="0"
+                                disabled={isSubmitting}
                             />
-                        </FeeInput>
+                        </FeeInputWrapper>
 
-                        <FeeNote>
-                            Enter any cancellation fee to charge for this cancelled walk. Leave as $0 for no charge.
-                        </FeeNote>
-                    </CancellationSection>
+                        <FeeHint>
+                            Leave at $0 for no charge or enter an amount to bill for the cancellation.
+                        </FeeHint>
+                    </CancellationFeeSection>
 
-                    <ModalButtonGroup>
-                        <CancelWalkButton onClick={handleSubmit}>
-                            <X size={16} />
-                            Cancel Walk
+                    <CancelModalActions>
+                        <CancelWalkButton onClick={handleSubmit} disabled={isSubmitting}>
+                            {isSubmitting ? (
+                                <>Processing...</>
+                            ) : (
+                                <>
+                                    <X size={18} />
+                                    Confirm Cancellation
+                                </>
+                            )}
                         </CancelWalkButton>
-                        <CancelModalButton onClick={onClose}>
+                        <KeepWalkButton onClick={onClose} disabled={isSubmitting}>
                             Keep Walk
-                        </CancelModalButton>
-                    </ModalButtonGroup>
+                        </KeepWalkButton>
+                    </CancelModalActions>
                 </CancelModalContent>
             </CancelModalContainer>
         </CancelModalOverlay>
@@ -1167,369 +1205,542 @@ const CompletionModalOverlay = styled.div`
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(12px);
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
     z-index: 10002;
-    padding: 20px;
+    animation: fadeIn 0.2s ease-out;
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @media (min-width: 768px) {
+        align-items: center;
+        padding: 20px;
+    }
 `;
 
 const CompletionModalContainer = styled.div`
-    background: linear-gradient(145deg, rgba(74, 26, 74, 0.95), rgba(107, 43, 107, 0.9));
-    border-radius: 24px;
-    border: 2px solid rgba(139, 90, 140, 0.5);
-    backdrop-filter: blur(20px);
-    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(145deg, #2D1B2E 0%, #4A2C4B 100%);
     width: 100%;
-    max-width: 480px;
-    max-height: 90vh;
+    max-width: 500px;
+    max-height: 95vh;
     overflow-y: auto;
     position: relative;
+    box-shadow: 0 -4px 40px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    @media (max-width: 767px) {
+        border-radius: 24px 24px 0 0;
+    }
+
+    @media (min-width: 768px) {
+        border-radius: 24px;
+        animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    }
+
+    /* Custom scrollbar */
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    }
+`;
+
+const CompletionModalDragHandle = styled.div`
+    width: 36px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    margin: 12px auto 0;
+
+    @media (min-width: 768px) {
+        display: none;
+    }
 `;
 
 const CompletionModalHeader = styled.div`
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+const CompletionModalHeaderTop = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 24px 24px 0;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 `;
 
 const CompletionModalTitle = styled.h2`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+    letter-spacing: -0.01em;
+
+    @media (max-width: 767px) {
+        font-size: 1.1rem;
+    }
+`;
+
+const CompletionModalCloseButton = styled.button`
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.8);
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.95);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+`;
+
+const PetInfoBanner = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+`;
+
+const PetNameLarge = styled.h3`
     font-family: 'Poppins', sans-serif;
     font-size: 1.5rem;
     font-weight: 700;
     color: #ffffff;
     margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    letter-spacing: -0.02em;
+
+    @media (max-width: 767px) {
+        font-size: 1.3rem;
+    }
 `;
 
-const CompletionModalCloseButton = styled.button`
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
+const WalkMetadata = styled.div`
     display: flex;
     align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: rgba(255, 255, 255, 0.8);
-    transition: all 0.3s ease;
-    
-    &:hover {
-        background: rgba(255, 255, 255, 0.2);
-        color: #ffffff;
-        transform: scale(1.1);
+    gap: 8px;
+`;
+
+const WalkTypeChip = styled.div`
+    background: ${({ $solo }) =>
+        $solo ? 'rgba(165, 105, 167, 0.25)' : 'rgba(102, 126, 234, 0.25)'
+    };
+    border: 1px solid ${({ $solo }) =>
+        $solo ? 'rgba(165, 105, 167, 0.4)' : 'rgba(102, 126, 234, 0.4)'
+    };
+    color: ${({ $solo }) => $solo ? '#d8b4d8' : '#b0c4ff'};
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+`;
+
+const WalkTimeText = styled.span`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+
+    @media (max-width: 767px) {
+        font-size: 0.8rem;
     }
 `;
 
 const CompletionModalContent = styled.div`
-    padding: 0 24px 24px;
-`;
-
-const PetInfoHeader = styled.div`
-    text-align: center;
-    padding: 20px;
-    margin-bottom: 24px;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-`;
-
-const PetNameLarge = styled.h2`
-    font-family: 'Poppins', sans-serif;
-    font-size: 2rem;
-    font-weight: 700;
-    color: #ffffff;
-    margin: 0 0 12px 0;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-`;
-
-const WalkTypeLabel = styled.div`
-    display: inline-block;
-    background: ${({ $solo }) =>
-        $solo ? 'linear-gradient(135deg, #a569a7, #8b5a8c)' : 'linear-gradient(135deg, #667eea, #764ba2)'
-    };
-    color: #ffffff;
-    padding: 8px 20px;
-    border-radius: 20px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 600;
-    margin-bottom: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-`;
-
-const WalkDetailsText = styled.p`
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    color: rgba(255, 255, 255, 0.8);
-    margin: 0;
-    font-weight: 500;
-`;
-
-const CompensationSummary = styled.div`
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-`;
-
-const CompensationRow = styled.div`
+    padding: 24px 20px 28px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
+    flex-direction: column;
+    gap: 20px;
 
-    &:not(:last-child) {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    @media (max-width: 767px) {
+        padding: 20px 16px 24px;
+        gap: 16px;
     }
 `;
 
-const CompensationLabel = styled.span`
+const CompensationCard = styled.div`
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 16px;
+`;
+
+const CompensationCardTitle = styled.div`
     font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+`;
+
+const CompensationBreakdown = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+`;
+
+const CompensationItem = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+`;
+
+const CompensationItemLabel = styled.span`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
     color: rgba(255, 255, 255, 0.8);
     font-weight: 500;
 `;
 
-const CompensationValue = styled.span`
+const CompensationItemValue = styled.span`
     font-family: 'Poppins', sans-serif;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 700;
-    color: ${({ $highlight }) => $highlight ? '#a569a7' : '#ffffff'};
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    color: ${({ $accent }) => $accent ? '#d8b4d8' : '#ffffff'};
 `;
 
-const DurationSection = styled.div`
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-`;
+const DurationSection = styled.div``;
 
-const AdjustmentSection = styled.div`
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-`;
-
-const SectionTitle = styled.h4`
+const SectionLabel = styled.div`
     font-family: 'Poppins', sans-serif;
-    font-size: 1.1rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    color: #ffffff;
-    margin: 0 0 16px 0;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
 `;
 
 const DurationSelector = styled.div`
-    display: flex;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
 `;
 
 const DurationOption = styled.button`
-    flex: 1;
     background: ${({ $active }) =>
-        $active ? 'linear-gradient(135deg, #a569a7, #8b5a8c)' : 'rgba(255, 255, 255, 0.1)'
+        $active ? 'linear-gradient(135deg, #8b5a8c, #a569a7)' : 'rgba(255, 255, 255, 0.08)'
     };
     border: 2px solid ${({ $active }) =>
-        $active ? '#a569a7' : 'rgba(255, 255, 255, 0.2)'
+        $active ? '#a569a7' : 'rgba(255, 255, 255, 0.12)'
     };
-    border-radius: 12px;
-    padding: 14px 12px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #ffffff;
+    border-radius: 14px;
+    padding: 16px 12px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 4px;
+    min-height: 68px;
 
-    &:hover {
+    &:hover:not(:disabled) {
         background: ${({ $active }) =>
-            $active ? 'linear-gradient(135deg, #8b5a8c, #76517a)' : 'rgba(255, 255, 255, 0.15)'
+            $active ? 'linear-gradient(135deg, #7d527e, #936394)' : 'rgba(255, 255, 255, 0.12)'
         };
-        transform: translateY(-1px);
+        border-color: ${({ $active }) => $active ? '#936394' : 'rgba(255, 255, 255, 0.2)'};
+        transform: scale(1.02);
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.98);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 767px) {
+        padding: 14px 10px;
+        min-height: 64px;
     }
 `;
 
-const DurationRate = styled.span`
+const DurationTime = styled.div`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1;
+
+    @media (max-width: 767px) {
+        font-size: 1.3rem;
+    }
+`;
+
+const DurationUnit = styled.div`
+    font-family: 'Poppins', sans-serif;
     font-size: 0.8rem;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.8);
-    font-family: 'Poppins', sans-serif;
+    color: rgba(255, 255, 255, 0.7);
 `;
 
-const AdjustmentControls = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+const AdjustmentSection = styled.div``;
+
+const AdjustmentTypeToggle = styled.div`
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
 `;
 
-const TypeSelector = styled.div`
-    display: flex;
-    gap: 8px;
-`;
-
-const TypeButton = styled.button`
-    flex: 1;
-    background: ${({ $active }) => 
-        $active ? 'linear-gradient(135deg, #a569a7, #8b5a8c)' : 'rgba(255, 255, 255, 0.1)'
+const AdjustmentTypeButton = styled.button`
+    background: ${({ $active }) =>
+        $active ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)'
     };
-    border: 2px solid ${({ $active }) => 
-        $active ? '#a569a7' : 'rgba(255, 255, 255, 0.2)'
+    border: 2px solid ${({ $active }) =>
+        $active ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.1)'
     };
     border-radius: 12px;
     padding: 12px 16px;
     font-family: 'Poppins', sans-serif;
     font-size: 0.9rem;
     font-weight: 600;
-    color: #ffffff;
+    color: ${({ $active }) => $active ? '#ffffff' : 'rgba(255, 255, 255, 0.7)'};
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    
-    &:hover {
-        background: ${({ $active }) => 
-            $active ? 'linear-gradient(135deg, #8b5a8c, #76517a)' : 'rgba(255, 255, 255, 0.15)'
-        };
-        transform: translateY(-1px);
+
+    &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.98);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 767px) {
+        padding: 10px 14px;
+        font-size: 0.85rem;
     }
 `;
 
-const AmountInput = styled.div`
+const AdjustmentInput = styled.div`
     position: relative;
     display: flex;
     align-items: center;
-    
+
     svg {
         position: absolute;
-        left: 12px;
-        color: rgba(255, 255, 255, 0.7);
+        left: 16px;
+        color: rgba(255, 255, 255, 0.6);
         z-index: 1;
     }
-    
+
     input {
         width: 100%;
-        background: rgba(255, 255, 255, 0.1);
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
-        padding: 12px 16px 12px 44px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 2px solid rgba(255, 255, 255, 0.12);
+        border-radius: 14px;
+        padding: 14px 16px 14px 48px;
         font-family: 'Poppins', sans-serif;
-        font-size: 1rem;
-        font-weight: 500;
+        font-size: 1.1rem;
+        font-weight: 600;
         color: #ffffff;
-        
+        transition: all 0.2s ease;
+
         &::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.4);
         }
-        
+
         &:focus {
             outline: none;
-            border-color: #a569a7;
-            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(165, 105, 167, 0.5);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
     }
 `;
 
-const FinalTotal = styled.div`
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid ${({ $positive }) => 
-        $positive ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)'
+const TotalCard = styled.div`
+    background: ${({ $positive }) =>
+        $positive ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)'
+    };
+    border: 2px solid ${({ $positive }) =>
+        $positive ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'
     };
     border-radius: 16px;
     padding: 20px;
-    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+
+    @media (max-width: 767px) {
+        padding: 16px;
+    }
+`;
+
+const TotalLabel = styled.div`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+`;
+
+const TotalAmount = styled.div`
+    font-family: 'Poppins', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1;
+
+    @media (max-width: 767px) {
+        font-size: 2rem;
+    }
+`;
+
+const ModalActions = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 8px;
+`;
+
+const ConfirmButton = styled.button`
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border: none;
+    border-radius: 16px;
+    padding: 18px 24px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: ${({ $positive }) => 
-        $positive ? '#22c55e' : '#ef4444'
-    };
-    text-shadow: none;
-    box-shadow: none;
-    cursor: default;
-    
-    svg {
-        color: ${({ $positive }) => 
-            $positive ? '#22c55e' : '#ef4444'
-        };
-    }
-`;
+    box-shadow: 0 8px 24px rgba(34, 197, 94, 0.3);
+    letter-spacing: -0.01em;
 
-const ModalButtonGroup = styled.div`
-    display: flex;
-    gap: 12px;
-`;
-
-const ConfirmButton = styled.button`
-    flex: 1;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    border: none;
-    border-radius: 14px;
-    padding: 16px 24px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #ffffff;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    box-shadow: 0 6px 24px rgba(34, 197, 94, 0.3);
-    
-    &:hover {
+    &:hover:not(:disabled) {
         background: linear-gradient(135deg, #16a34a, #15803d);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 32px rgba(34, 197, 94, 0.4);
+        transform: translateY(-1px);
+        box-shadow: 0 10px 28px rgba(34, 197, 94, 0.4);
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(0);
+    }
+
+    &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 767px) {
+        padding: 16px 20px;
+        font-size: 1rem;
     }
 `;
 
-const CancelModalButton = styled.button`
-    flex: 1;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 14px;
-    padding: 16px 24px;
+const CancelActionButton = styled.button`
+    background: transparent;
+    border: none;
+    border-radius: 16px;
+    padding: 14px 24px;
     font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
-    color: #ffffff;
+    color: rgba(255, 255, 255, 0.7);
     cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    
-    &:hover {
-        background: rgba(255, 255, 255, 0.15);
-        border-color: rgba(255, 255, 255, 0.3);
-        transform: translateY(-1px);
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+        color: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.98);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 767px) {
+        padding: 12px 20px;
+        font-size: 0.9rem;
     }
 `;
 
@@ -1540,159 +1751,348 @@ const CancelModalOverlay = styled.div`
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(12px);
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
     z-index: 10002;
-    padding: 20px;
+    animation: fadeIn 0.2s ease-out;
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @media (min-width: 768px) {
+        align-items: center;
+        padding: 20px;
+    }
 `;
 
 const CancelModalContainer = styled.div`
-    background: linear-gradient(145deg, rgba(74, 26, 74, 0.95), rgba(107, 43, 107, 0.9));
-    border-radius: 24px;
-    border: 2px solid rgba(139, 90, 140, 0.5);
-    backdrop-filter: blur(20px);
-    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(145deg, #2D1B2E 0%, #4A2C4B 100%);
     width: 100%;
-    max-width: 450px;
-    max-height: 90vh;
+    max-width: 480px;
+    max-height: 95vh;
     overflow-y: auto;
     position: relative;
+    box-shadow: 0 -4px 40px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    @media (max-width: 767px) {
+        border-radius: 24px 24px 0 0;
+    }
+
+    @media (min-width: 768px) {
+        border-radius: 24px;
+        animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    }
+
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    }
+`;
+
+const CancelModalDragHandle = styled.div`
+    width: 36px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    margin: 12px auto 0;
+
+    @media (min-width: 768px) {
+        display: none;
+    }
 `;
 
 const CancelModalHeader = styled.div`
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+const CancelModalHeaderTop = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 24px 24px 0;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 `;
 
 const CancelModalTitle = styled.h2`
     font-family: 'Poppins', sans-serif;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 700;
-    color: #ff6b6b;
+    color: #ff8a80;
     margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    letter-spacing: -0.01em;
+
+    @media (max-width: 767px) {
+        font-size: 1.1rem;
+    }
 `;
 
 const CancelModalCloseButton = styled.button`
     background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: none;
     border-radius: 50%;
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     color: rgba(255, 255, 255, 0.8);
-    transition: all 0.3s ease;
-    
-    &:hover {
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
         background: rgba(255, 255, 255, 0.2);
         color: #ffffff;
-        transform: scale(1.1);
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.95);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 `;
 
 const CancelModalContent = styled.div`
-    padding: 0 24px 24px;
+    padding: 24px 20px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    @media (max-width: 767px) {
+        padding: 20px 16px 24px;
+        gap: 16px;
+    }
 `;
 
-const CancellationSection = styled.div`
-    background: rgba(255, 255, 255, 0.1);
+const CancellationInfoCard = styled.div`
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
     border-radius: 16px;
     padding: 20px;
-    margin-bottom: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+
+    @media (max-width: 767px) {
+        padding: 16px;
+        gap: 12px;
+    }
 `;
 
-const FeeInput = styled.div`
+const CancellationWarning = styled.div`
+    width: 44px;
+    height: 44px;
+    background: rgba(239, 68, 68, 0.2);
+    border-radius: 50%;
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    padding: 12px 16px;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #ff8a80;
+
+    @media (max-width: 767px) {
+        width: 40px;
+        height: 40px;
+    }
+`;
+
+const CancellationMessage = styled.p`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 8px 0 0;
+    line-height: 1.5;
+    font-weight: 500;
+
+    @media (max-width: 767px) {
+        font-size: 0.9rem;
+    }
+`;
+
+const CancellationFeeSection = styled.div``;
+
+const FeeInputWrapper = styled.div`
+    position: relative;
+    display: flex;
+    align-items: center;
     margin-bottom: 12px;
-    transition: all 0.3s ease;
-    
-    &:focus-within {
-        border-color: #ff6b6b;
-        background: rgba(255, 255, 255, 0.15);
-    }
-    
+
     svg {
-        color: rgba(255, 255, 255, 0.7);
-        flex-shrink: 0;
+        position: absolute;
+        left: 16px;
+        color: rgba(255, 255, 255, 0.6);
+        z-index: 1;
     }
-    
+
     input {
-        background: none;
-        border: none;
-        outline: none;
-        color: #ffffff;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.08);
+        border: 2px solid rgba(255, 255, 255, 0.12);
+        border-radius: 14px;
+        padding: 14px 16px 14px 50px;
         font-family: 'Poppins', sans-serif;
         font-size: 1.1rem;
         font-weight: 600;
-        flex: 1;
-        text-align: right;
-        
+        color: #ffffff;
+        transition: all 0.2s ease;
+
         &::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.4);
         }
-        
+
+        &:focus {
+            outline: none;
+            border-color: rgba(239, 68, 68, 0.5);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         &::-webkit-outer-spin-button,
         &::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
-        
+
         &[type=number] {
             -moz-appearance: textfield;
         }
     }
 `;
 
-const FeeNote = styled.p`
+const FeeHint = styled.p`
     font-family: 'Poppins', sans-serif;
-    font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
     margin: 0;
     line-height: 1.4;
-    font-style: italic;
+
+    @media (max-width: 767px) {
+        font-size: 0.8rem;
+    }
+`;
+
+const CancelModalActions = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 8px;
 `;
 
 const CancelWalkButton = styled.button`
-    flex: 1;
-    background: linear-gradient(135deg, #ff6b6b, #e55555);
+    background: linear-gradient(135deg, #ef4444, #dc2626);
     border: none;
-    border-radius: 14px;
-    padding: 16px 24px;
+    border-radius: 16px;
+    padding: 18px 24px;
     font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 1.05rem;
+    font-weight: 700;
     color: #ffffff;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    box-shadow: 0 6px 24px rgba(255, 107, 107, 0.3);
-    
-    &:hover {
-        background: linear-gradient(135deg, #e55555, #d94444);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 32px rgba(255, 107, 107, 0.4);
+    gap: 10px;
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3);
+    letter-spacing: -0.01em;
+
+    &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        transform: translateY(-1px);
+        box-shadow: 0 10px 28px rgba(239, 68, 68, 0.4);
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(0);
+    }
+
+    &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 767px) {
+        padding: 16px 20px;
+        font-size: 1rem;
+    }
+`;
+
+const KeepWalkButton = styled.button`
+    background: transparent;
+    border: none;
+    border-radius: 16px;
+    padding: 14px 24px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+        color: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.98);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 767px) {
+        padding: 12px 20px;
+        font-size: 0.9rem;
     }
 `;
 

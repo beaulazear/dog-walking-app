@@ -314,7 +314,7 @@ const CreateInvoiceModal = ({ pet, user, onClose, onInvoiceCreated }) => {
     };
 
     const handleOverlayClick = (e) => {
-        if (e.target === e.currentTarget) {
+        if (e.target === e.currentTarget && !isCreating) {
             onClose();
         }
     };
@@ -322,7 +322,7 @@ const CreateInvoiceModal = ({ pet, user, onClose, onInvoiceCreated }) => {
     React.useEffect(() => {
         document.body.style.overflow = 'hidden';
         const handleKeyDown = (e) => {
-            if (e.key === 'Escape') {
+            if (e.key === 'Escape' && !isCreating) {
                 onClose();
             }
         };
@@ -331,63 +331,65 @@ const CreateInvoiceModal = ({ pet, user, onClose, onInvoiceCreated }) => {
             document.body.style.overflow = 'unset';
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [onClose]);
+    }, [onClose, isCreating]);
 
     const modalContent = (
         <CreateModalOverlay onClick={handleOverlayClick}>
             <CreateModalContainer>
+                <CreateModalDragHandle />
+
                 <CreateModalHeader>
-                    <CreateModalTitle>
-                        <Plus size={24} />
-                        Create Manual Invoice
-                    </CreateModalTitle>
-                    <CreateModalCloseButton onClick={onClose}>
-                        <X size={18} />
-                    </CreateModalCloseButton>
-                </CreateModalHeader>
-                
-                <CreateModalContent>
+                    <CreateModalHeaderTop>
+                        <CreateModalTitle>Create Invoice</CreateModalTitle>
+                        <CreateModalCloseButton onClick={onClose} disabled={isCreating}>
+                            <X size={20} />
+                        </CreateModalCloseButton>
+                    </CreateModalHeaderTop>
                     <CreateModalSubtitle>
                         Creating invoice for {pet.name}
                     </CreateModalSubtitle>
-                    
+                </CreateModalHeader>
+
+                <CreateModalContent>
                     <CreateForm onSubmit={handleSubmit}>
-                        <CreateFormGroup>
-                            <CreateFormLabel>Associated Appointment *</CreateFormLabel>
-                            <CreateFormSelect
+                        <FormSection>
+                            <FormLabel>Appointment *</FormLabel>
+                            <FormSelect
                                 value={formData.appointment_id}
                                 onChange={(e) => setFormData({...formData, appointment_id: e.target.value})}
                                 required
+                                disabled={isCreating}
                             >
-                                <option value="">Select an appointment...</option>
+                                <option value="">Select appointment...</option>
                                 {availableAppointments.map(apt => (
                                     <option key={apt.id} value={apt.id}>
-                                        {apt.recurring ? 'Recurring' : dayjs(apt.appointment_date).format('MMM D, YYYY')} - 
+                                        {apt.recurring ? 'Recurring' : dayjs(apt.appointment_date).format('MMM D, YYYY')} -
                                         {apt.duration} min walk
                                     </option>
                                 ))}
-                            </CreateFormSelect>
-                            <CreateFormHint>
-                                Required: Invoices must be associated with an existing appointment
-                            </CreateFormHint>
-                        </CreateFormGroup>
+                            </FormSelect>
+                            <FormHint>
+                                Invoices must be linked to an existing appointment
+                            </FormHint>
+                        </FormSection>
 
-                        <CreateFormGroup>
-                            <CreateFormLabel>Service Description *</CreateFormLabel>
-                            <CreateFormInput
+                        <FormSection>
+                            <FormLabel>Description *</FormLabel>
+                            <FormInput
                                 type="text"
                                 value={formData.title}
                                 onChange={(e) => setFormData({...formData, title: e.target.value})}
-                                placeholder="e.g., 30 min walk, Pet sitting, etc."
+                                placeholder="e.g., 30 min walk, Pet sitting"
                                 required
+                                disabled={isCreating}
                             />
-                        </CreateFormGroup>
+                        </FormSection>
 
-                        <CreateFormGroup>
-                            <CreateFormLabel>Amount *</CreateFormLabel>
-                            <AmountInputWrapper>
-                                <DollarSign size={16} />
-                                <CreateFormInput
+                        <FormSection>
+                            <FormLabel>Amount *</FormLabel>
+                            <AmountInputContainer>
+                                <DollarSign size={18} />
+                                <FormInput
                                     type="number"
                                     value={formData.compensation}
                                     onChange={(e) => setFormData({...formData, compensation: e.target.value})}
@@ -395,30 +397,37 @@ const CreateInvoiceModal = ({ pet, user, onClose, onInvoiceCreated }) => {
                                     step="0.01"
                                     min="0"
                                     required
+                                    disabled={isCreating}
                                 />
-                            </AmountInputWrapper>
-                        </CreateFormGroup>
+                            </AmountInputContainer>
+                        </FormSection>
 
-                        <CreateFormGroup>
-                            <CreateFormLabel>Service Date *</CreateFormLabel>
-                            <CreateFormInput
+                        <FormSection>
+                            <FormLabel>Service Date *</FormLabel>
+                            <FormInput
                                 type="date"
                                 value={formData.date_completed}
                                 onChange={(e) => setFormData({...formData, date_completed: e.target.value})}
                                 required
+                                disabled={isCreating}
                             />
-                        </CreateFormGroup>
+                        </FormSection>
 
-                        <CreateModalButtonGroup>
-                            <CreateSubmitButton type="submit" disabled={isCreating}>
-                                <Save size={16} />
-                                {isCreating ? 'Creating...' : 'Create Invoice'}
-                            </CreateSubmitButton>
-                            <CreateCancelButton type="button" onClick={onClose} disabled={isCreating}>
-                                <X size={16} />
+                        <FormActions>
+                            <CreateInvoiceButton type="submit" disabled={isCreating}>
+                                {isCreating ? (
+                                    <>Creating...</>
+                                ) : (
+                                    <>
+                                        <Save size={18} />
+                                        Create Invoice
+                                    </>
+                                )}
+                            </CreateInvoiceButton>
+                            <CancelFormButton type="button" onClick={onClose} disabled={isCreating}>
                                 Cancel
-                            </CreateCancelButton>
-                        </CreateModalButtonGroup>
+                            </CancelFormButton>
+                        </FormActions>
                     </CreateForm>
                 </CreateModalContent>
             </CreateModalContainer>
@@ -826,235 +835,350 @@ const CreateModalOverlay = styled.div`
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
     z-index: 10003;
-    padding: 20px;
+    animation: fadeIn 0.2s ease-out;
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @media (min-width: 768px) {
+        align-items: center;
+        padding: 20px;
+    }
 `;
 
 const CreateModalContainer = styled.div`
-    background: linear-gradient(145deg, rgba(74, 26, 74, 0.95), rgba(107, 43, 107, 0.9));
-    border-radius: 24px;
-    border: 2px solid rgba(139, 90, 140, 0.5);
-    backdrop-filter: blur(20px);
-    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(145deg, #2D1B2E 0%, #4A2C4B 100%);
     width: 100%;
     max-width: 500px;
-    max-height: 90vh;
+    max-height: 95vh;
     overflow-y: auto;
     position: relative;
+    box-shadow: 0 -4px 40px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    @media (max-width: 767px) {
+        border-radius: 24px 24px 0 0;
+    }
+
+    @media (min-width: 768px) {
+        border-radius: 24px;
+        animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    }
+
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    }
+`;
+
+const CreateModalDragHandle = styled.div`
+    width: 36px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    margin: 12px auto 0;
+
+    @media (min-width: 768px) {
+        display: none;
+    }
 `;
 
 const CreateModalHeader = styled.div`
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+const CreateModalHeaderTop = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 24px 24px 0;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 `;
 
 const CreateModalTitle = styled.h2`
     font-family: 'Poppins', sans-serif;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: #ffffff;
     margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    letter-spacing: -0.01em;
+
+    @media (max-width: 767px) {
+        font-size: 1.1rem;
+    }
 `;
 
 const CreateModalCloseButton = styled.button`
     background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: none;
     border-radius: 50%;
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     color: rgba(255, 255, 255, 0.8);
-    transition: all 0.3s ease;
-    
-    &:hover {
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
         background: rgba(255, 255, 255, 0.2);
         color: #ffffff;
-        transform: scale(1.1);
     }
-`;
 
-const CreateModalContent = styled.div`
-    padding: 0 24px 24px;
+    &:active:not(:disabled) {
+        transform: scale(0.95);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 `;
 
 const CreateModalSubtitle = styled.p`
     font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    color: rgba(255, 255, 255, 0.8);
-    margin: 0 0 24px 0;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
     font-weight: 500;
+
+    @media (max-width: 767px) {
+        font-size: 0.85rem;
+    }
+`;
+
+const CreateModalContent = styled.div`
+    padding: 24px 20px 28px;
+
+    @media (max-width: 767px) {
+        padding: 20px 16px 24px;
+    }
 `;
 
 const CreateForm = styled.form`
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 18px;
 `;
 
-const CreateFormGroup = styled.div`
+const FormSection = styled.div`
     display: flex;
     flex-direction: column;
     gap: 8px;
 `;
 
-const CreateFormLabel = styled.label`
+const FormLabel = styled.label`
     font-family: 'Poppins', sans-serif;
-    color: #ffffff;
-    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.85rem;
     font-weight: 600;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 `;
 
-const CreateFormInput = styled.input`
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    padding: 12px 16px;
+const FormInput = styled.input`
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 14px 16px;
     font-family: 'Poppins', sans-serif;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-weight: 500;
     color: #ffffff;
-    transition: all 0.3s ease;
-    
+    transition: all 0.2s ease;
+
     &::placeholder {
-        color: rgba(255, 255, 255, 0.5);
+        color: rgba(255, 255, 255, 0.4);
     }
-    
+
     &:focus {
         outline: none;
-        border-color: #a569a7;
-        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(165, 105, 167, 0.5);
+        background: rgba(255, 255, 255, 0.12);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 `;
 
-const CreateFormSelect = styled.select`
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    padding: 12px 16px;
+const FormSelect = styled.select`
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 14px 16px;
     font-family: 'Poppins', sans-serif;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-weight: 500;
     color: #ffffff;
-    transition: all 0.3s ease;
-    
+    transition: all 0.2s ease;
+    cursor: pointer;
+
     &:focus {
         outline: none;
-        border-color: #a569a7;
-        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(165, 105, 167, 0.5);
+        background: rgba(255, 255, 255, 0.12);
     }
-    
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
     option {
-        background: #4a1a4a;
+        background: #2D1B2E;
         color: #ffffff;
-        padding: 8px;
+        padding: 10px;
     }
 `;
 
-const CreateFormHint = styled.p`
+const FormHint = styled.p`
     font-family: 'Poppins', sans-serif;
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.5);
     margin: 0;
-    font-style: italic;
+    line-height: 1.3;
+
+    @media (max-width: 767px) {
+        font-size: 0.75rem;
+    }
 `;
 
-const AmountInputWrapper = styled.div`
+const AmountInputContainer = styled.div`
     position: relative;
     display: flex;
     align-items: center;
-    
+
     svg {
         position: absolute;
         left: 16px;
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(255, 255, 255, 0.6);
         z-index: 1;
     }
-    
+
     input {
-        padding-left: 44px;
+        padding-left: 46px;
     }
 `;
 
-const CreateModalButtonGroup = styled.div`
+const FormActions = styled.div`
     display: flex;
-    gap: 12px;
+    flex-direction: column;
+    gap: 10px;
     margin-top: 8px;
-    
-    @media (max-width: 768px) {
-        flex-direction: column;
-    }
 `;
 
-const CreateSubmitButton = styled.button`
-    flex: 1;
+const CreateInvoiceButton = styled.button`
     background: linear-gradient(135deg, #22c55e, #16a34a);
     border: none;
-    border-radius: 14px;
-    padding: 16px 24px;
+    border-radius: 16px;
+    padding: 18px 24px;
     font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 1.05rem;
+    font-weight: 700;
     color: #ffffff;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    box-shadow: 0 6px 24px rgba(34, 197, 94, 0.3);
+    gap: 10px;
+    box-shadow: 0 8px 24px rgba(34, 197, 94, 0.3);
+    letter-spacing: -0.01em;
 
     &:hover:not(:disabled) {
         background: linear-gradient(135deg, #16a34a, #15803d);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 32px rgba(34, 197, 94, 0.4);
+        transform: translateY(-1px);
+        box-shadow: 0 10px 28px rgba(34, 197, 94, 0.4);
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(0);
     }
 
     &:disabled {
-        opacity: 0.6;
+        opacity: 0.7;
         cursor: not-allowed;
+    }
+
+    @media (max-width: 767px) {
+        padding: 16px 20px;
+        font-size: 1rem;
     }
 `;
 
-const CreateCancelButton = styled.button`
-    flex: 1;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 14px;
-    padding: 16px 24px;
+const CancelFormButton = styled.button`
+    background: transparent;
+    border: none;
+    border-radius: 16px;
+    padding: 14px 24px;
     font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
-    color: #ffffff;
+    color: rgba(255, 255, 255, 0.7);
     cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+    transition: all 0.2s ease;
 
     &:hover:not(:disabled) {
-        background: rgba(255, 255, 255, 0.15);
-        border-color: rgba(255, 255, 255, 0.3);
-        transform: translateY(-1px);
+        color: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.98);
     }
 
     &:disabled {
-        opacity: 0.6;
+        opacity: 0.5;
         cursor: not-allowed;
+    }
+
+    @media (max-width: 767px) {
+        padding: 12px 20px;
+        font-size: 0.9rem;
     }
 `;
