@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 20_251_031_115_643) do
+ActiveRecord::Schema[7.2].define(version: 20_251_106_223_619) do
   # These are extensions that must be enabled in order to support this database
   enable_extension 'plpgsql'
 
@@ -89,6 +89,17 @@ ActiveRecord::Schema[7.2].define(version: 20_251_031_115_643) do
     t.index ['appointment_id'], name: 'index_cancellations_on_appointment_id'
   end
 
+  create_table 'certification_goals', force: :cascade do |t|
+    t.bigint 'user_id', null: false
+    t.string 'certification_type', default: 'CPDT-KA'
+    t.integer 'target_hours', default: 300
+    t.integer 'weekly_goal_hours', default: 12
+    t.date 'target_completion_date'
+    t.datetime 'created_at', null: false
+    t.datetime 'updated_at', null: false
+    t.index ['user_id'], name: 'index_certification_goals_on_user_id', unique: true
+  end
+
   create_table 'invoices', force: :cascade do |t|
     t.bigint 'appointment_id', null: false
     t.bigint 'pet_id', null: false
@@ -100,9 +111,22 @@ ActiveRecord::Schema[7.2].define(version: 20_251_031_115_643) do
     t.boolean 'pending'
     t.string 'title'
     t.boolean 'cancelled'
+    t.bigint 'training_session_id'
     t.index ['appointment_id'], name: 'index_invoices_on_appointment_id'
     t.index %w[pet_id paid pending], name: 'index_invoices_on_pet_and_payment_status'
     t.index ['pet_id'], name: 'index_invoices_on_pet_id'
+    t.index ['training_session_id'], name: 'index_invoices_on_training_session_id'
+  end
+
+  create_table 'milestones', force: :cascade do |t|
+    t.bigint 'user_id', null: false
+    t.integer 'hours_reached'
+    t.datetime 'achieved_at', null: false
+    t.boolean 'celebrated', default: false
+    t.datetime 'created_at', null: false
+    t.datetime 'updated_at', null: false
+    t.index %w[user_id hours_reached], name: 'index_milestones_on_user_id_and_hours_reached', unique: true
+    t.index ['user_id'], name: 'index_milestones_on_user_id'
   end
 
   create_table 'pets', force: :cascade do |t|
@@ -118,7 +142,23 @@ ActiveRecord::Schema[7.2].define(version: 20_251_031_115_643) do
     t.datetime 'created_at', null: false
     t.datetime 'updated_at', null: false
     t.boolean 'active', default: true, null: false
+    t.boolean 'origin_trainer', default: false, null: false
     t.index ['user_id'], name: 'index_pets_on_user_id'
+  end
+
+  create_table 'training_sessions', force: :cascade do |t|
+    t.bigint 'user_id', null: false
+    t.bigint 'pet_id'
+    t.datetime 'session_date', null: false
+    t.integer 'duration_minutes', null: false
+    t.string 'session_type'
+    t.text 'notes'
+    t.string 'training_focus', default: [], array: true
+    t.datetime 'created_at', null: false
+    t.datetime 'updated_at', null: false
+    t.index ['pet_id'], name: 'index_training_sessions_on_pet_id'
+    t.index %w[user_id session_date], name: 'index_training_sessions_on_user_id_and_session_date'
+    t.index ['user_id'], name: 'index_training_sessions_on_user_id'
   end
 
   create_table 'users', force: :cascade do |t|
@@ -140,7 +180,12 @@ ActiveRecord::Schema[7.2].define(version: 20_251_031_115_643) do
   add_foreign_key 'appointments', 'pets'
   add_foreign_key 'appointments', 'users'
   add_foreign_key 'cancellations', 'appointments'
+  add_foreign_key 'certification_goals', 'users'
   add_foreign_key 'invoices', 'appointments'
   add_foreign_key 'invoices', 'pets'
+  add_foreign_key 'invoices', 'training_sessions'
+  add_foreign_key 'milestones', 'users'
   add_foreign_key 'pets', 'users'
+  add_foreign_key 'training_sessions', 'pets'
+  add_foreign_key 'training_sessions', 'users'
 end

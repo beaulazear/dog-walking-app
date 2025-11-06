@@ -57,6 +57,7 @@ export default function TodaysWalks() {
         const todayString = dayjs().format("YYYY-MM-DD");
         return user?.invoices
             ?.filter(invoice => {
+                if (!invoice.date_completed) return false;
                 const invoiceDate = invoice.date_completed.slice(0, 10);
                 return invoiceDate === todayString && !invoice.cancelled;
             })
@@ -66,6 +67,7 @@ export default function TodaysWalks() {
     const completedCount = useMemo(() => {
         const todayString = dayjs().format("YYYY-MM-DD");
         return user?.invoices?.filter(invoice => {
+            if (!invoice.date_completed) return false;
             const invoiceDate = invoice.date_completed.slice(0, 10);
             return invoiceDate === todayString && !invoice.cancelled;
         })?.length || 0;
@@ -115,6 +117,7 @@ export default function TodaysWalks() {
 const hasInvoiceForToday = (appointment, invoices) => {
     const todayString = dayjs().format("YYYY-MM-DD");
     return invoices?.some(invoice => {
+        if (!invoice.date_completed) return false;
         const invoiceDate = invoice.date_completed.slice(0, 10);
         return invoiceDate === todayString && invoice.appointment_id === appointment.id && !invoice.cancelled;
     });
@@ -123,6 +126,7 @@ const hasInvoiceForToday = (appointment, invoices) => {
 const hasCancelledInvoiceForToday = (appointment, invoices) => {
     const todayString = dayjs().format("YYYY-MM-DD");
     return invoices?.some(invoice => {
+        if (!invoice.date_completed) return false;
         const invoiceDate = invoice.date_completed.slice(0, 10);
         return invoiceDate === todayString && invoice.appointment_id === appointment.id && invoice.cancelled;
     });
@@ -131,6 +135,7 @@ const hasCancelledInvoiceForToday = (appointment, invoices) => {
 const getInvoiceAmountForToday = (appointment, invoices) => {
     const todayString = dayjs().format("YYYY-MM-DD");
     const invoice = invoices?.find(invoice => {
+        if (!invoice.date_completed) return false;
         const invoiceDate = invoice.date_completed.slice(0, 10);
         return invoiceDate === todayString && invoice.appointment_id === appointment.id && !invoice.cancelled;
     });
@@ -151,6 +156,13 @@ const WalkCard = React.memo(({ appointment }) => {
     const [showCompletionModal, setShowCompletionModal] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showPetModal, setShowPetModal] = useState(false);
+
+    // Update state when invoices change in context
+    React.useEffect(() => {
+        setIsCompleted(hasInvoiceForToday(appointment, user?.invoices));
+        setIsCancelled(hasCancelledInvoiceForToday(appointment, user?.invoices));
+        setInvoiceAmount(getInvoiceAmountForToday(appointment, user?.invoices));
+    }, [user?.invoices, appointment]);
 
     const handleCompleteWalk = async (offset = 0, duration = appointment.duration) => {
         let compensation = duration === 30 ? user.thirty
@@ -179,11 +191,10 @@ const WalkCard = React.memo(({ appointment }) => {
         });
 
         if (response.ok) {
-            const newInvoice = await response.json();
+            const responseData = await response.json();
             // Use smart update - prevents full re-render
-            addInvoice(newInvoice);
-            setIsCompleted(true);
-            setInvoiceAmount(newInvoice.compensation);
+            // Backend returns {invoice, training_session, new_milestone}
+            addInvoice(responseData.invoice);
             setShowCompletionModal(false);
         }
     };
@@ -204,10 +215,10 @@ const WalkCard = React.memo(({ appointment }) => {
         });
 
         if (response.ok) {
-            const newInvoice = await response.json();
+            const responseData = await response.json();
             // Use smart update - prevents full re-render
-            addInvoice(newInvoice);
-            setIsCancelled(true);
+            // Backend returns {invoice, training_session, new_milestone}
+            addInvoice(responseData.invoice);
             setShowCancelModal(false);
         }
     };

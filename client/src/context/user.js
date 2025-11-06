@@ -67,7 +67,7 @@ function UserProvider({ children }) {
 
             return {
                 ...prevUser,
-                invoices: [...prevUser.invoices, newInvoice]
+                invoices: [...(prevUser.invoices || []), newInvoice]
             };
         });
     }, []);

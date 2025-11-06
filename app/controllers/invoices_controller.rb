@@ -12,8 +12,23 @@ class InvoicesController < ApplicationController
     invoice = pet.invoices.build(invoice_params)
 
     if invoice.save
-      render json: invoice.as_json(only: %i[id appointment_id pet_id date_completed compensation paid pending title cancelled]),
-             status: :created
+      # Auto-create training session if this is a training invoice
+      training_session = nil
+      if invoice.training_walk?
+        begin
+          training_session = invoice.create_training_session!
+          @current_user.check_and_create_milestones!
+        rescue StandardError => e
+          Rails.logger.error "Failed to create training session: #{e.message}"
+        end
+      end
+
+      render json: {
+        invoice: invoice.as_json(only: %i[id appointment_id pet_id date_completed compensation paid pending title
+                                          cancelled training_session_id]),
+        training_session: training_session&.as_json(include: { pet: { only: %i[id name] } }),
+        new_milestone: training_session ? @current_user.milestones.uncelebrated.last : nil
+      }, status: :created
     else
       render json: { errors: invoice.errors.full_messages }, status: :unprocessable_entity
     end
