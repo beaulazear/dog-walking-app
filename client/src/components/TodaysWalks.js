@@ -174,7 +174,7 @@ const WalkCard = React.memo(({ appointment }) => {
                 date_completed: dayjs().toISOString(),
                 paid: false,
                 compensation,
-                title: `${duration} min ${appointment.solo ? 'solo' : 'group'} walk`
+                title: `${duration} min ${appointment.solo ? 'training' : 'group'} walk`
             }),
         });
 
@@ -198,7 +198,7 @@ const WalkCard = React.memo(({ appointment }) => {
                 date_completed: dayjs().toISOString(),
                 paid: false,
                 compensation: parseFloat(cancellationFee) || 0,
-                title: `Canceled ${appointment.duration} min walk`,
+                title: `Canceled ${appointment.duration} min ${appointment.solo ? 'training' : 'group'} walk`,
                 cancelled: true
             }),
         });

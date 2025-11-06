@@ -17,7 +17,10 @@ import {
     CalendarDays,
     X,
     Trash2,
-    Sparkles
+    Sparkles,
+    Award,
+    Trophy,
+    Zap
 } from "lucide-react";
 
 const getUpcomingBirthday = (pets) => {
@@ -47,6 +50,28 @@ const getUpcomingBirthday = (pets) => {
     return closestPet;
 };
 
+const calculateTrainingHours = (invoices) => {
+    if (!invoices) return { totalMinutes: 0, totalHours: 0 };
+
+    // Filter for training walks and sum up their durations
+    const trainingInvoices = invoices.filter(invoice =>
+        invoice.title && invoice.title.toLowerCase().includes('training')
+    );
+
+    // Extract minutes from title (e.g., "30 min training walk" -> 30)
+    const totalMinutes = trainingInvoices.reduce((sum, invoice) => {
+        const match = invoice.title.match(/(\d+)\s*min/);
+        if (match) {
+            return sum + parseInt(match[1], 10);
+        }
+        return sum;
+    }, 0);
+
+    const totalHours = totalMinutes / 60;
+
+    return { totalMinutes, totalHours };
+};
+
 export default function Dashboard() {
     const { user, setUser, removeAppointment } = useContext(UserContext);
     const { confirmState, confirm } = useConfirm();
@@ -70,6 +95,12 @@ export default function Dashboard() {
             setUpcomingBirthdayPet(getUpcomingBirthday(user.pets));
         }
     }, [user]);
+
+    // Calculate training hours for certification
+    const { totalHours } = calculateTrainingHours(user?.invoices);
+    const goalHours = 300;
+    const progressPercent = Math.min((totalHours / goalHours) * 100, 100);
+    const hoursRemaining = Math.max(goalHours - totalHours, 0);
 
     const handleRateChange = (e) => {
         setRates({
@@ -370,6 +401,85 @@ export default function Dashboard() {
                         </ModernBirthdayContent>
                     </ModernBirthdayCard>
                 )}
+
+                <TrainingTrackerCard>
+                    <TrainingHeader>
+                        <TrainingIconWrapper>
+                            <Trophy size={22} />
+                        </TrainingIconWrapper>
+                        <TrainingTitleSection>
+                            <TrainingTitle>Certification Progress</TrainingTitle>
+                            <TrainingSubtitle>Dog Walking Trainer Certification</TrainingSubtitle>
+                        </TrainingTitleSection>
+                    </TrainingHeader>
+
+                    <TrainingContent>
+                        <StatsRow>
+                            <StatBox>
+                                <StatValue>{totalHours.toFixed(1)}</StatValue>
+                                <StatLabel>Hours Completed</StatLabel>
+                            </StatBox>
+                            <StatDivider />
+                            <StatBox>
+                                <StatValue>{hoursRemaining.toFixed(1)}</StatValue>
+                                <StatLabel>Hours Remaining</StatLabel>
+                            </StatBox>
+                            <StatDivider />
+                            <StatBox>
+                                <StatValue>{progressPercent.toFixed(0)}%</StatValue>
+                                <StatLabel>Progress</StatLabel>
+                            </StatBox>
+                        </StatsRow>
+
+                        <ProgressBarContainer>
+                            <ProgressBarBackground>
+                                <ProgressBarFill $percent={progressPercent}>
+                                    <ProgressGlow />
+                                </ProgressBarFill>
+                            </ProgressBarBackground>
+                            <ProgressLabels>
+                                <ProgressLabel>0h</ProgressLabel>
+                                <ProgressLabel>300h</ProgressLabel>
+                            </ProgressLabels>
+                        </ProgressBarContainer>
+
+                        <MilestonesContainer>
+                            {[
+                                { hours: 75, icon: '🌱', label: 'Beginner', color: '#10b981' },
+                                { hours: 150, icon: '🌿', label: 'Intermediate', color: '#3b82f6' },
+                                { hours: 225, icon: '🌳', label: 'Advanced', color: '#8b5cf6' },
+                                { hours: 300, icon: '🏆', label: 'Certified', color: '#f59e0b' }
+                            ].map((milestone, index) => {
+                                const achieved = totalHours >= milestone.hours;
+                                const isNext = totalHours < milestone.hours && (index === 0 || totalHours >= [75, 150, 225][index - 1]);
+                                return (
+                                    <MilestoneItem key={milestone.hours} $achieved={achieved} $isNext={isNext}>
+                                        <MilestoneIcon $achieved={achieved} $color={milestone.color}>
+                                            {milestone.icon}
+                                        </MilestoneIcon>
+                                        <MilestoneLabel $achieved={achieved}>{milestone.label}</MilestoneLabel>
+                                        <MilestoneHours $achieved={achieved}>{milestone.hours}h</MilestoneHours>
+                                        {achieved && <CheckBadge><Zap size={10} /></CheckBadge>}
+                                    </MilestoneItem>
+                                );
+                            })}
+                        </MilestonesContainer>
+
+                        <MotivationalMessage>
+                            {progressPercent === 100 ? (
+                                <>🎉 Congratulations! You've completed your certification requirements!</>
+                            ) : progressPercent >= 75 ? (
+                                <>🔥 Almost there! Keep up the amazing work!</>
+                            ) : progressPercent >= 50 ? (
+                                <>💪 Halfway there! You're doing great!</>
+                            ) : progressPercent >= 25 ? (
+                                <>⭐ Great start! Keep building those hours!</>
+                            ) : (
+                                <>🚀 Start your certification journey with training walks!</>
+                            )}
+                        </MotivationalMessage>
+                    </TrainingContent>
+                </TrainingTrackerCard>
 
                 <ModernRatesCard>
                     <RatesHeader>
@@ -1571,6 +1681,299 @@ const MonthWalkIndicator = styled.div`
     box-shadow: 0 2px 6px rgba(34, 197, 94, 0.4);
 `;
 
+// Training Tracker Components
+const TrainingTrackerCard = styled.div`
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: fadeInUp 0.65s ease;
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 215, 0, 0.05) 0%, transparent 70%);
+        animation: shimmer 8s linear infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+        padding: 20px;
+        border-radius: 20px;
+    }
+`;
+
+const TrainingHeader = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 1;
+`;
+
+const TrainingIconWrapper = styled.div`
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+    animation: trophyPulse 3s ease-in-out infinite;
+
+    @keyframes trophyPulse {
+        0%, 100% { transform: scale(1); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4); }
+        50% { transform: scale(1.05); box-shadow: 0 8px 28px rgba(245, 158, 11, 0.6); }
+    }
+`;
+
+const TrainingTitleSection = styled.div`
+    flex: 1;
+`;
+
+const TrainingTitle = styled.h3`
+    color: #ffffff;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    background: linear-gradient(135deg, #ffffff, #fbbf24);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+`;
+
+const TrainingSubtitle = styled.p`
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+    margin: 0;
+`;
+
+const TrainingContent = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+    z-index: 1;
+`;
+
+const StatsRow = styled.div`
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    gap: 16px;
+    align-items: center;
+
+    @media (max-width: 480px) {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+`;
+
+const StatBox = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+`;
+
+const StatValue = styled.div`
+    font-size: 2rem;
+    font-weight: 800;
+    color: #fbbf24;
+    line-height: 1;
+    text-shadow: 0 2px 10px rgba(251, 191, 36, 0.4);
+
+    @media (max-width: 480px) {
+        font-size: 1.6rem;
+    }
+`;
+
+const StatLabel = styled.div`
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+`;
+
+const StatDivider = styled.div`
+    width: 1px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+
+    @media (max-width: 480px) {
+        display: none;
+    }
+`;
+
+const ProgressBarContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+`;
+
+const ProgressBarBackground = styled.div`
+    width: 100%;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+`;
+
+const ProgressBarFill = styled.div`
+    width: ${props => props.$percent}%;
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #22c55e, #fbbf24);
+    border-radius: 12px;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+`;
+
+const ProgressGlow = styled.div`
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: progressShine 2s infinite;
+
+    @keyframes progressShine {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+`;
+
+const ProgressLabels = styled.div`
+    display: flex;
+    justify-content: space-between;
+    padding: 0 4px;
+`;
+
+const ProgressLabel = styled.span`
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 600;
+`;
+
+const MilestonesContainer = styled.div`
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+
+    @media (max-width: 480px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+`;
+
+const MilestoneItem = styled.div`
+    background: ${props =>
+        props.$achieved ? 'rgba(16, 185, 129, 0.15)' :
+        props.$isNext ? 'rgba(59, 130, 246, 0.1)' :
+        'rgba(255, 255, 255, 0.05)'};
+    border: 2px solid ${props =>
+        props.$achieved ? 'rgba(16, 185, 129, 0.4)' :
+        props.$isNext ? 'rgba(59, 130, 246, 0.3)' :
+        'rgba(255, 255, 255, 0.1)'};
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    transition: all 0.3s ease;
+
+    ${props => props.$achieved && `
+        animation: milestoneAchieved 0.5s ease;
+    `}
+
+    @keyframes milestoneAchieved {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+`;
+
+const MilestoneIcon = styled.div`
+    font-size: 1.8rem;
+    opacity: ${props => props.$achieved ? 1 : 0.4};
+    filter: ${props => props.$achieved ? 'none' : 'grayscale(100%)'};
+    transition: all 0.3s ease;
+`;
+
+const MilestoneLabel = styled.div`
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: ${props => props.$achieved ? '#ffffff' : 'rgba(255, 255, 255, 0.5)'};
+    text-align: center;
+`;
+
+const MilestoneHours = styled.div`
+    font-size: 0.7rem;
+    color: ${props => props.$achieved ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.4)'};
+    font-weight: 500;
+`;
+
+const CheckBadge = styled.div`
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.5);
+    animation: checkBounce 0.5s ease;
+
+    @keyframes checkBounce {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+    }
+`;
+
+const MotivationalMessage = styled.div`
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    animation: fadeIn 0.5s ease;
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+`;
+
 const LogoutButton = styled.button`
     background: linear-gradient(135deg, #ef4444, #dc2626);
     border: none;
@@ -1587,13 +1990,13 @@ const LogoutButton = styled.button`
     gap: 8px;
     margin-top: 20px;
     box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
-    
+
     &:hover {
         background: linear-gradient(135deg, #dc2626, #b91c1c);
         transform: translateY(-2px);
         box-shadow: 0 8px 28px rgba(239, 68, 68, 0.4);
     }
-    
+
     &:active {
         transform: translateY(0);
     }
