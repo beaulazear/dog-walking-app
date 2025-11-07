@@ -21,13 +21,18 @@ Bundler.require(*Rails.groups)
 
 module ReactRailsApiProjectTemplate
   class Application < Rails::Application
-    # Adding cookies and session middleware
+    # Adding cookies and session middleware with proper cross-origin configuration
     config.middleware.use ActionDispatch::Cookies
-    config.middleware.use ActionDispatch::Session::CookieStore
+    config.middleware.use ActionDispatch::Session::CookieStore, {
+      key: '_dog_walking_app_session',
+      expire_after: 1.week,
+      secure: true,
+      httponly: true,
+      same_site: :none
+    }
 
     # Use SameSite=None for cross-origin cookies (GitHub Pages frontend)
     # Required for session cookies to work with frontend hosted on different domain
-    # Note: Session cookie expiration is configured in config/initializers/session_store.rb
     config.action_dispatch.cookies_same_site_protection = :none
 
     # Initialize configuration defaults for originally generated Rails version.
