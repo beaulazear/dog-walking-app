@@ -2,6 +2,7 @@ class Invoice < ApplicationRecord
   belongs_to :appointment
   belongs_to :pet
   belongs_to :training_session, optional: true
+  belongs_to :completed_by_user, class_name: 'User', optional: true
 
   validates :date_completed, presence: true
   validates :compensation, presence: true, numericality: { greater_than_or_equal_to: 0 }
@@ -50,5 +51,36 @@ class Invoice < ApplicationRecord
 
     update!(training_session: session)
     session
+  end
+
+  # Calculate and set split amounts based on split_percentage
+  # split_percentage: 0-100, represents percentage that goes to the walker
+  def calculate_split!(split_pct)
+    return unless compensation.present?
+
+    self.is_shared = true
+    self.split_percentage = split_pct
+    self.walker_amount = (compensation * (split_pct / 100.0)).round(2)
+    self.owner_amount = (compensation - walker_amount).round(2)
+
+    save!
+  end
+
+  # Get the amount for a specific user
+  def amount_for_user(user_id)
+    return compensation unless is_shared
+
+    if completed_by_user_id == user_id
+      walker_amount || 0
+    elsif pet.user_id == user_id
+      owner_amount || 0
+    else
+      0
+    end
+  end
+
+  # Check if this invoice involves a specific user (either as owner or completing walker)
+  def involves_user?(user_id)
+    pet.user_id == user_id || completed_by_user_id == user_id
   end
 end

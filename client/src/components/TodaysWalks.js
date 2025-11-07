@@ -15,8 +15,10 @@ import {
     Info,
     Cake,
     User,
-    Heart
+    Heart,
+    Share2
 } from "lucide-react";
+import ShareAppointmentModal from "./ShareAppointmentModal";
 
 export default function TodaysWalks() {
     const { user } = useContext(UserContext);
@@ -156,6 +158,7 @@ const WalkCard = React.memo(({ appointment }) => {
     const [showCompletionModal, setShowCompletionModal] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showPetModal, setShowPetModal] = useState(false);
+    const [showShareModal, setShowShareModal] = useState(false);
 
     // Update state when invoices change in context
     React.useEffect(() => {
@@ -164,7 +167,7 @@ const WalkCard = React.memo(({ appointment }) => {
         setInvoiceAmount(getInvoiceAmountForToday(appointment, user?.invoices));
     }, [user?.invoices, appointment]);
 
-    const handleCompleteWalk = async (offset = 0, duration = appointment.duration) => {
+    const handleCompleteWalk = async (offset = 0, duration = appointment.duration, splitData = null) => {
         let compensation = duration === 30 ? user.thirty
             : duration === 45 ? user.fortyfive
             : duration === 60 ? user.sixty
@@ -177,17 +180,31 @@ const WalkCard = React.memo(({ appointment }) => {
 
         compensation += offset;
 
+        const invoiceData = {
+            pet_id: appointment.pet.id,
+            appointment_id: appointment.id,
+            date_completed: dayjs().toISOString(),
+            paid: false,
+            compensation,
+            title: `${duration} min ${appointment.solo ? 'training' : 'group'} walk`
+        };
+
+        // Add split data if provided
+        if (splitData) {
+            invoiceData.split_percentage = splitData.splitPercentage;
+            if (splitData.completedByUserId) {
+                invoiceData.completed_by_user_id = splitData.completedByUserId;
+            }
+        }
+
+        const token = localStorage.getItem("token");
         const response = await fetch("/invoices", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                pet_id: appointment.pet.id,
-                appointment_id: appointment.id,
-                date_completed: dayjs().toISOString(),
-                paid: false,
-                compensation,
-                title: `${duration} min ${appointment.solo ? 'training' : 'group'} walk`
-            }),
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ invoice: invoiceData }),
         });
 
         if (response.ok) {
@@ -257,6 +274,9 @@ const WalkCard = React.memo(({ appointment }) => {
 
                 {!isCompleted && !isCancelled && (
                     <ActionButtons>
+                        <ShareButton onClick={() => setShowShareModal(true)} title="Share with team">
+                            <Share2 size={18} />
+                        </ShareButton>
                         <CompleteButton onClick={() => setShowCompletionModal(true)}>
                             <CheckCircle size={18} />
                         </CompleteButton>
@@ -264,6 +284,13 @@ const WalkCard = React.memo(({ appointment }) => {
                             <X size={18} />
                         </CancelButton>
                     </ActionButtons>
+                )}
+
+                {appointment.delegation_status === 'delegated' && !isCompleted && !isCancelled && (
+                    <DelegatedBadge>
+                        <Share2 size={12} />
+                        Shared
+                    </DelegatedBadge>
                 )}
 
                 {isCompleted && (
@@ -301,6 +328,14 @@ const WalkCard = React.memo(({ appointment }) => {
                     onClose={() => setShowPetModal(false)}
                 />
             )}
+
+            {showShareModal && (
+                <ShareAppointmentModal
+                    isOpen={showShareModal}
+                    onClose={() => setShowShareModal(false)}
+                    appointment={appointment}
+                />
+            )}
         </Card>
     );
 });
@@ -311,6 +346,8 @@ const CompletionModal = ({ appointment, user, onComplete, onClose }) => {
     const [offsetType, setOffsetType] = useState('upcharge');
     const [duration, setDuration] = useState(appointment.duration);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [splitPercentage, setSplitPercentage] = useState(100); // % going to walker
+    const [showSplitUI, setShowSplitUI] = useState(appointment.delegation_status === 'delegated');
 
     const baseCompensation = duration === 30 ? user.thirty
         : duration === 45 ? user.fortyfive
@@ -323,7 +360,13 @@ const CompletionModal = ({ appointment, user, onComplete, onClose }) => {
     const handleSubmit = async () => {
         setIsSubmitting(true);
         const finalOffset = offsetType === 'upcharge' ? offset : -offset;
-        await onComplete(finalOffset, duration);
+
+        const splitData = showSplitUI ? {
+            splitPercentage: splitPercentage,
+            completedByUserId: null // Will be set when we know who completed it
+        } : null;
+
+        await onComplete(finalOffset, duration, splitData);
         setIsSubmitting(false);
     };
 
@@ -454,6 +497,39 @@ const CompletionModal = ({ appointment, user, onComplete, onClose }) => {
                             />
                         </AdjustmentInput>
                     </AdjustmentSection>
+
+                    {showSplitUI && (
+                        <SplitSection>
+                            <SectionLabel>Payment Split</SectionLabel>
+                            <SplitInfo>This appointment was shared. Set payment split:</SplitInfo>
+
+                            <SplitSliderContainer>
+                                <SplitSlider
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    value={splitPercentage}
+                                    onChange={(e) => setSplitPercentage(parseFloat(e.target.value))}
+                                    disabled={isSubmitting}
+                                />
+                                <SplitLabels>
+                                    <SplitLabel>You: {(100 - splitPercentage).toFixed(0)}%</SplitLabel>
+                                    <SplitLabel>Walker: {splitPercentage.toFixed(0)}%</SplitLabel>
+                                </SplitLabels>
+                            </SplitSliderContainer>
+
+                            <SplitBreakdown>
+                                <SplitItem>
+                                    <SplitItemLabel>Your share:</SplitItemLabel>
+                                    <SplitItemValue>${(finalAmount * ((100 - splitPercentage) / 100)).toFixed(2)}</SplitItemValue>
+                                </SplitItem>
+                                <SplitItem>
+                                    <SplitItemLabel>Walker's share:</SplitItemLabel>
+                                    <SplitItemValue>${(finalAmount * (splitPercentage / 100)).toFixed(2)}</SplitItemValue>
+                                </SplitItem>
+                            </SplitBreakdown>
+                        </SplitSection>
+                    )}
 
                     <TotalCard $positive={finalAmount >= 0}>
                         <TotalLabel>Total Payment</TotalLabel>
@@ -1047,6 +1123,37 @@ const ActionButtons = styled.div`
     flex-shrink: 0;
 `;
 
+const ShareButton = styled.button`
+    background: rgba(102, 126, 234, 0.2);
+    border: 1px solid rgba(102, 126, 234, 0.4);
+    color: #667eea;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+
+    &:active {
+        transform: scale(0.95);
+    }
+
+    @media (min-width: 769px) {
+        &:hover {
+            background: rgba(102, 126, 234, 0.3);
+            border-color: rgba(102, 126, 234, 0.6);
+        }
+    }
+
+    @media (max-width: 768px) {
+        width: 34px;
+        height: 34px;
+    }
+`;
+
 const CompleteButton = styled.button`
     background: rgba(34, 197, 94, 0.2);
     border: 1px solid rgba(34, 197, 94, 0.4);
@@ -1110,6 +1217,27 @@ const CancelButton = styled.button`
 `;
 
 // Status Badges
+const DelegatedBadge = styled.div`
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 4px 8px;
+    background: rgba(102, 126, 234, 0.2);
+    border: 1px solid rgba(102, 126, 234, 0.4);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #667eea;
+    font-size: 11px;
+    font-weight: 600;
+
+    @media (max-width: 768px) {
+        font-size: 10px;
+        padding: 3px 6px;
+    }
+`;
+
 const CompletedBadge = styled.div`
     position: absolute;
     top: 8px;
@@ -1548,6 +1676,91 @@ const DurationUnit = styled.div`
 `;
 
 const AdjustmentSection = styled.div``;
+
+const SplitSection = styled.div`
+    margin: 16px 0;
+`;
+
+const SplitInfo = styled.p`
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+`;
+
+const SplitSliderContainer = styled.div`
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    margin-bottom: 12px;
+`;
+
+const SplitSlider = styled.input`
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    outline: none;
+    margin-bottom: 12px;
+    cursor: pointer;
+
+    &::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        background: #667eea;
+        cursor: pointer;
+        border-radius: 50%;
+        border: 3px solid white;
+    }
+
+    &::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        background: #667eea;
+        cursor: pointer;
+        border-radius: 50%;
+        border: 3px solid white;
+    }
+`;
+
+const SplitLabels = styled.div`
+    display: flex;
+    justify-content: space-between;
+`;
+
+const SplitLabel = styled.div`
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.85rem;
+    font-weight: 600;
+`;
+
+const SplitBreakdown = styled.div`
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px;
+`;
+
+const SplitItem = styled.div`
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+
+    &:not(:last-child) {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+`;
+
+const SplitItemLabel = styled.div`
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+`;
+
+const SplitItemValue = styled.div`
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.95rem;
+`;
 
 const AdjustmentTypeToggle = styled.div`
     display: grid;

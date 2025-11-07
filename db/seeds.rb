@@ -80,4 +80,7 @@ appointments.each do |appointment|
   end
 end
 
+puts 'Seeding default books...'
+load Rails.root.join('db', 'seeds', 'books_seed.rb')
+
 puts 'Seeding completed!'

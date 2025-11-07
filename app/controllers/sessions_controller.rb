@@ -1,7 +1,7 @@
 class SessionsController < ApplicationController
   include JsonWebToken
 
-  skip_before_action :authorized, only: [:create, :destroy]
+  skip_before_action :authorized, only: %i[create destroy]
 
   # Creates a JWT token for authenticated user (and sets session for web app compatibility)
   def create

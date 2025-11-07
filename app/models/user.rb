@@ -7,6 +7,28 @@ class User < ApplicationRecord
   has_many :training_sessions, dependent: :destroy
   has_one :certification_goal, dependent: :destroy
   has_many :milestones, dependent: :destroy
+  has_many :books, dependent: :destroy
+
+  # Walker connections (team management)
+  has_many :initiated_connections, class_name: 'WalkerConnection', foreign_key: 'user_id', dependent: :destroy
+  has_many :received_connections, class_name: 'WalkerConnection', foreign_key: 'connected_user_id', dependent: :destroy
+
+  # Appointment shares
+  has_many :shared_appointments, class_name: 'AppointmentShare', foreign_key: 'shared_by_user_id', dependent: :destroy
+  has_many :received_appointment_shares, class_name: 'AppointmentShare', foreign_key: 'shared_with_user_id',
+                                         dependent: :destroy
+  has_many :completed_appointments, class_name: 'Appointment', foreign_key: 'completed_by_user_id'
+
+  # Helper method to get all connections (both initiated and received)
+  def all_connections
+    WalkerConnection.where(user_id: id).or(WalkerConnection.where(connected_user_id: id))
+  end
+
+  def connected_walkers
+    accepted_initiated = initiated_connections.accepted.includes(:connected_user).map(&:connected_user)
+    accepted_received = received_connections.accepted.includes(:user).map(&:user)
+    (accepted_initiated + accepted_received).uniq
+  end
 
   validates :username, uniqueness: true, presence: true
   validates :name, presence: true
@@ -30,7 +52,7 @@ class User < ApplicationRecord
     streak = 0
     current_date = Date.current
 
-    sessions.group_by { |s| s.session_date.to_date }.each do |date, _|
+    sessions.group_by { |s| s.session_date.to_date }.each_key do |date|
       break if date < current_date - streak.days
 
       streak += 1 if date == current_date - streak.days

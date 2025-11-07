@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 20_251_106_223_619) do
+ActiveRecord::Schema[7.2].define(version: 20_251_107_221_510) do
   # These are extensions that must be enabled in order to support this database
   enable_extension 'plpgsql'
 
@@ -53,6 +53,21 @@ ActiveRecord::Schema[7.2].define(version: 20_251_106_223_619) do
     t.index ['pet_id'], name: 'index_additional_incomes_on_pet_id'
   end
 
+  create_table 'appointment_shares', force: :cascade do |t|
+    t.bigint 'appointment_id', null: false
+    t.bigint 'shared_by_user_id', null: false
+    t.bigint 'shared_with_user_id', null: false
+    t.string 'status', default: 'pending', null: false
+    t.boolean 'recurring_share', default: false
+    t.datetime 'created_at', null: false
+    t.datetime 'updated_at', null: false
+    t.index %w[appointment_id shared_with_user_id], name: 'index_appointment_shares_unique', unique: true
+    t.index ['appointment_id'], name: 'index_appointment_shares_on_appointment_id'
+    t.index ['shared_by_user_id'], name: 'index_appointment_shares_on_shared_by_user_id'
+    t.index ['shared_with_user_id'], name: 'index_appointment_shares_on_shared_with_user_id'
+    t.index ['status'], name: 'index_appointment_shares_on_status'
+  end
+
   create_table 'appointments', force: :cascade do |t|
     t.bigint 'user_id', null: false
     t.bigint 'pet_id', null: false
@@ -74,10 +89,41 @@ ActiveRecord::Schema[7.2].define(version: 20_251_106_223_619) do
     t.datetime 'created_at', null: false
     t.datetime 'updated_at', null: false
     t.boolean 'solo'
+    t.bigint 'completed_by_user_id'
+    t.string 'delegation_status', default: 'none', null: false
+    t.index ['completed_by_user_id'], name: 'index_appointments_on_completed_by_user_id'
+    t.index ['delegation_status'], name: 'index_appointments_on_delegation_status'
     t.index ['pet_id'], name: 'index_appointments_on_pet_id'
     t.index %w[user_id appointment_date], name: 'index_appointments_on_user_and_date'
     t.index %w[user_id recurring canceled completed], name: 'index_appointments_on_user_and_status'
     t.index ['user_id'], name: 'index_appointments_on_user_id'
+  end
+
+  create_table 'books', force: :cascade do |t|
+    t.bigint 'user_id'
+    t.string 'title', null: false
+    t.string 'author', null: false
+    t.string 'category', null: false
+    t.boolean 'is_default', default: false, null: false
+    t.string 'status', default: 'not_started'
+    t.integer 'progress_percentage', default: 0
+    t.text 'notes'
+    t.integer 'rating'
+    t.text 'description'
+    t.integer 'pages'
+    t.string 'publisher'
+    t.integer 'year'
+    t.string 'isbn'
+    t.string 'price_range'
+    t.string 'format'
+    t.text 'why_you_need_it'
+    t.text 'best_for'
+    t.date 'completed_date'
+    t.datetime 'created_at', null: false
+    t.datetime 'updated_at', null: false
+    t.index ['status'], name: 'index_books_on_status'
+    t.index %w[user_id is_default], name: 'index_books_on_user_id_and_is_default'
+    t.index ['user_id'], name: 'index_books_on_user_id'
   end
 
   create_table 'cancellations', force: :cascade do |t|
@@ -112,7 +158,14 @@ ActiveRecord::Schema[7.2].define(version: 20_251_106_223_619) do
     t.string 'title'
     t.boolean 'cancelled'
     t.bigint 'training_session_id'
+    t.boolean 'is_shared', default: false, null: false
+    t.decimal 'split_percentage', precision: 5, scale: 2, default: '0.0'
+    t.decimal 'owner_amount', precision: 10, scale: 2
+    t.decimal 'walker_amount', precision: 10, scale: 2
+    t.bigint 'completed_by_user_id'
     t.index ['appointment_id'], name: 'index_invoices_on_appointment_id'
+    t.index ['completed_by_user_id'], name: 'index_invoices_on_completed_by_user_id'
+    t.index ['is_shared'], name: 'index_invoices_on_is_shared'
     t.index %w[pet_id paid pending], name: 'index_invoices_on_pet_and_payment_status'
     t.index ['pet_id'], name: 'index_invoices_on_pet_id'
     t.index ['training_session_id'], name: 'index_invoices_on_training_session_id'
@@ -174,18 +227,39 @@ ActiveRecord::Schema[7.2].define(version: 20_251_106_223_619) do
     t.integer 'solo_rate'
   end
 
+  create_table 'walker_connections', force: :cascade do |t|
+    t.bigint 'user_id', null: false
+    t.bigint 'connected_user_id', null: false
+    t.string 'status', default: 'pending', null: false
+    t.datetime 'created_at', null: false
+    t.datetime 'updated_at', null: false
+    t.index ['connected_user_id'], name: 'index_walker_connections_on_connected_user_id'
+    t.index ['status'], name: 'index_walker_connections_on_status'
+    t.index %w[user_id connected_user_id], name: 'index_walker_connections_on_user_id_and_connected_user_id',
+                                           unique: true
+    t.index ['user_id'], name: 'index_walker_connections_on_user_id'
+  end
+
   add_foreign_key 'active_storage_attachments', 'active_storage_blobs', column: 'blob_id'
   add_foreign_key 'active_storage_variant_records', 'active_storage_blobs', column: 'blob_id'
   add_foreign_key 'additional_incomes', 'pets'
+  add_foreign_key 'appointment_shares', 'appointments'
+  add_foreign_key 'appointment_shares', 'users', column: 'shared_by_user_id'
+  add_foreign_key 'appointment_shares', 'users', column: 'shared_with_user_id'
   add_foreign_key 'appointments', 'pets'
   add_foreign_key 'appointments', 'users'
+  add_foreign_key 'appointments', 'users', column: 'completed_by_user_id'
+  add_foreign_key 'books', 'users'
   add_foreign_key 'cancellations', 'appointments'
   add_foreign_key 'certification_goals', 'users'
   add_foreign_key 'invoices', 'appointments'
   add_foreign_key 'invoices', 'pets'
   add_foreign_key 'invoices', 'training_sessions'
+  add_foreign_key 'invoices', 'users', column: 'completed_by_user_id'
   add_foreign_key 'milestones', 'users'
   add_foreign_key 'pets', 'users'
   add_foreign_key 'training_sessions', 'pets'
   add_foreign_key 'training_sessions', 'users'
+  add_foreign_key 'walker_connections', 'users'
+  add_foreign_key 'walker_connections', 'users', column: 'connected_user_id'
 end

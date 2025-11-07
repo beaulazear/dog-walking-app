@@ -4,10 +4,33 @@ Rails.application.routes.draw do
   resources :invoices, except: :update
   resources :appointments
   resources :pets
+
+  # User routes - search must be before resources to avoid matching as :id
+  get '/users/search', to: 'users#search'
   resources :users
 
   get '/me', to: 'users#show'
   patch '/change_rates', to: 'users#change_rates'
+
+  # Walker Connections (Team Management)
+  resources :walker_connections, only: %i[index create destroy] do
+    member do
+      patch :accept
+      patch :decline
+      patch :block
+    end
+  end
+
+  # Appointment Sharing
+  resources :appointment_shares, only: %i[index create destroy] do
+    collection do
+      get :my_shared_appointments
+    end
+    member do
+      patch :accept
+      patch :decline
+    end
+  end
 
   post '/login', to: 'sessions#create'
   delete '/logout', to: 'sessions#destroy'
@@ -43,6 +66,19 @@ Rails.application.routes.draw do
       patch :mark_celebrated
     end
   end
+
+  # Books
+  resources :books, only: [:index] do
+    collection do
+      get :my_list
+      post :custom, to: 'books#create_custom'
+    end
+    member do
+      post :add_to_list
+    end
+  end
+  patch '/books/:id', to: 'books#update'
+  delete '/books/:id', to: 'books#destroy'
 
   # Routing logic: fallback requests for React Router.
   # Leave this here to help deploy your app later!

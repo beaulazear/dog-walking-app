@@ -11,7 +11,18 @@ class InvoicesController < ApplicationController
 
     invoice = pet.invoices.build(invoice_params)
 
+    # Handle split invoices
+    if params[:invoice][:split_percentage].present? && params[:invoice][:completed_by_user_id].present?
+      invoice.completed_by_user_id = params[:invoice][:completed_by_user_id]
+      invoice.is_shared = true
+    end
+
     if invoice.save
+      # Calculate split amounts if this is a shared invoice
+      if invoice.is_shared && params[:invoice][:split_percentage].present?
+        invoice.calculate_split!(params[:invoice][:split_percentage].to_f)
+      end
+
       # Auto-create training session if this is a training invoice
       training_session = nil
       if invoice.training_walk?
@@ -25,7 +36,8 @@ class InvoicesController < ApplicationController
 
       render json: {
         invoice: invoice.as_json(only: %i[id appointment_id pet_id date_completed compensation paid pending title
-                                          cancelled training_session_id]),
+                                          cancelled training_session_id is_shared split_percentage owner_amount
+                                          walker_amount completed_by_user_id]),
         training_session: training_session&.as_json(include: { pet: { only: %i[id name] } }),
         new_milestone: training_session ? @current_user.milestones.uncelebrated.last : nil
       }, status: :created

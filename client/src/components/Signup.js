@@ -62,7 +62,11 @@ const Signup = () => {
         setLoading(false);
 
         if (response.ok) {
-            setUser(data);
+            // Store JWT token in localStorage
+            if (data.token) {
+                localStorage.setItem("token", data.token);
+            }
+            setUser(data.user || data);
         } else {
             setError(data.errors ? data.errors.join(", ") : "Signup failed.");
         }

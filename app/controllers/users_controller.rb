@@ -43,6 +43,26 @@ class UsersController < ApplicationController
     end
   end
 
+  def search
+    email = params[:email]&.downcase&.strip
+
+    return render json: { error: 'Email parameter is required' }, status: :bad_request if email.blank?
+
+    user = User.find_by('LOWER(email_address) = ?', email)
+
+    return render json: { error: 'User not found' }, status: :not_found if user.nil?
+
+    # Don't allow searching for yourself
+    return render json: { error: 'Cannot search for yourself' }, status: :bad_request if user.id == @current_user.id
+
+    render json: {
+      id: user.id,
+      name: user.name,
+      username: user.username,
+      email_address: user.email_address
+    }
+  end
+
   def change_rates
     user = @current_user
 
