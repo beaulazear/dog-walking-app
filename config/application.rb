@@ -25,10 +25,10 @@ module ReactRailsApiProjectTemplate
     config.middleware.use ActionDispatch::Cookies
     config.middleware.use ActionDispatch::Session::CookieStore
 
-    # Use SameSite=Strict for all cookies to help protect against CSRF
-    # https://owasp.org/www-community/SameSite
+    # Use SameSite=None for cross-origin cookies (GitHub Pages frontend)
+    # Required for session cookies to work with frontend hosted on different domain
     # Note: Session cookie expiration is configured in config/initializers/session_store.rb
-    config.action_dispatch.cookies_same_site_protection = :strict
+    config.action_dispatch.cookies_same_site_protection = :none
 
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 6.1
