@@ -1,15 +1,25 @@
 class ApplicationController < ActionController::API
   include ActionController::Cookies
+  include JsonWebToken
 
   before_action :authorized
   before_action :block_direct_requests
 
   def authorized
-    render json: { error: 'Not authorized' }, status: :unauthorized unless session.include?(:user_id)
+    render json: { error: 'Not authorized' }, status: :unauthorized unless current_user
   end
 
   def current_user
-    @current_user = User.find_by(id: session[:user_id])
+    return @current_user if @current_user
+
+    header = request.headers['Authorization']
+    return nil unless header
+
+    token = header.split(' ').last
+    decoded = jwt_decode(token)
+    return nil unless decoded
+
+    @current_user = User.find_by(id: decoded[:user_id])
   end
 
   private

@@ -1,19 +1,24 @@
 class SessionsController < ApplicationController
+  include JsonWebToken
+
   skip_before_action :authorized, only: :create
 
-  # Creates a user session that persists for 1 week (configured in config/initializers/session_store.rb)
+  # Creates a JWT token for authenticated user
   def create
     user = User.find_by(username: params[:username])
     if user&.authenticate(params[:password])
-      session[:user_id] = user.id
-      render json: UserSerializer.serialize(user), status: :ok
+      token = jwt_encode(user_id: user.id)
+      render json: {
+        token: token,
+        user: UserSerializer.serialize(user)
+      }, status: :ok
     else
       render json: { error: 'Invalid username or password' }, status: :unauthorized
     end
   end
 
   def destroy
-    session.delete :user_id
+    # With JWT, logout is handled client-side by removing the token
     head :no_content
   end
 end

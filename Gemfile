@@ -12,6 +12,9 @@ gem 'puma', '>= 5.0'
 # Use Active Model has_secure_password
 gem 'bcrypt', '~> 3.1.7'
 
+# JWT for token-based authentication
+gem 'jwt'
+
 # The original asset pipeline for Rails
 gem 'sprockets-rails'
 

@@ -23,7 +23,9 @@ class TrainingController < ApplicationController
         percentage: ((this_week_hours(user) / goal.weekly_goal_hours.to_f) * 100).round(1)
       },
       projected_completion: goal.projected_completion_date,
-      recent_sessions: user.training_sessions.includes(:pet).order(session_date: :desc).limit(5).as_json(include: { pet: { only: %i[id name] } }),
+      recent_sessions: user.training_sessions.includes(:pet).order(session_date: :desc).limit(5).as_json(include: { pet: { only: %i[
+                                                                                                           id name
+                                                                                                         ] } }),
       uncelebrated_milestones: user.milestones.uncelebrated
     }
   end
