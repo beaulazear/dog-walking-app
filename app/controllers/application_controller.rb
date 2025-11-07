@@ -12,29 +12,40 @@ class ApplicationController < ActionController::API
   def current_user
     return @current_user if @current_user
 
+    # Try JWT authentication first (for mobile app and future web app)
     header = request.headers['Authorization']
-    unless header
-      Rails.logger.debug '❌ JWT Auth: No Authorization header present'
-      return nil
+    if header
+      token = header.split(' ').last
+      Rails.logger.debug "🔑 JWT Auth: Token received (length: #{token&.length || 0})"
+
+      decoded = jwt_decode(token)
+      if decoded
+        Rails.logger.debug "✅ JWT Auth: Token decoded successfully, user_id: #{decoded[:user_id]}"
+        @current_user = User.find_by(id: decoded[:user_id])
+
+        if @current_user
+          Rails.logger.debug "✅ JWT Auth: User found - #{@current_user.username}"
+          return @current_user
+        else
+          Rails.logger.debug "❌ JWT Auth: User not found for id: #{decoded[:user_id]}"
+        end
+      else
+        Rails.logger.debug '❌ JWT Auth: Token decode failed'
+      end
     end
 
-    token = header.split(' ').last
-    Rails.logger.debug "🔑 JWT Auth: Token received (length: #{token&.length || 0})"
+    # Fall back to session authentication (for web app compatibility)
+    if session[:user_id]
+      Rails.logger.debug "🔄 Session Auth: Checking session user_id: #{session[:user_id]}"
+      @current_user = User.find_by(id: session[:user_id])
 
-    decoded = jwt_decode(token)
-    unless decoded
-      Rails.logger.debug '❌ JWT Auth: Token decode failed'
-      return nil
-    end
-
-    Rails.logger.debug "✅ JWT Auth: Token decoded successfully, user_id: #{decoded[:user_id]}"
-
-    @current_user = User.find_by(id: decoded[:user_id])
-
-    if @current_user
-      Rails.logger.debug "✅ JWT Auth: User found - #{@current_user.username}"
+      if @current_user
+        Rails.logger.debug "✅ Session Auth: User found - #{@current_user.username}"
+      else
+        Rails.logger.debug "❌ Session Auth: User not found for id: #{session[:user_id]}"
+      end
     else
-      Rails.logger.debug "❌ JWT Auth: User not found for id: #{decoded[:user_id]}"
+      Rails.logger.debug '❌ No JWT token or session found'
     end
 
     @current_user

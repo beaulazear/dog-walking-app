@@ -9,7 +9,12 @@ class UsersController < ApplicationController
   def create
     user = User.create(user_params)
     if user.valid?
+      # Set session for web app compatibility
+      session[:user_id] = user.id
+
+      # Generate JWT token for mobile app
       token = jwt_encode(user_id: user.id)
+
       render json: {
         token: token,
         user: UserSerializer.serialize(user)
