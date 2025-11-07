@@ -1,5 +1,6 @@
 class UsersController < ApplicationController
   include Rails.application.routes.url_helpers
+  include JsonWebToken
 
   before_action :current_user
 
@@ -8,8 +9,11 @@ class UsersController < ApplicationController
   def create
     user = User.create(user_params)
     if user.valid?
-      session[:user_id] = user.id
-      render json: UserSerializer.serialize(user), status: :created
+      token = jwt_encode(user_id: user.id)
+      render json: {
+        token: token,
+        user: UserSerializer.serialize(user)
+      }, status: :created
     else
       render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
     end
@@ -35,7 +39,7 @@ class UsersController < ApplicationController
   end
 
   def change_rates
-    user = User.find(session[:user_id])
+    user = @current_user
 
     user.update(rates_params)
 

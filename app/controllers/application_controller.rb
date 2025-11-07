@@ -13,13 +13,31 @@ class ApplicationController < ActionController::API
     return @current_user if @current_user
 
     header = request.headers['Authorization']
-    return nil unless header
+    unless header
+      Rails.logger.debug '❌ JWT Auth: No Authorization header present'
+      return nil
+    end
 
     token = header.split(' ').last
+    Rails.logger.debug "🔑 JWT Auth: Token received (length: #{token&.length || 0})"
+
     decoded = jwt_decode(token)
-    return nil unless decoded
+    unless decoded
+      Rails.logger.debug '❌ JWT Auth: Token decode failed'
+      return nil
+    end
+
+    Rails.logger.debug "✅ JWT Auth: Token decoded successfully, user_id: #{decoded[:user_id]}"
 
     @current_user = User.find_by(id: decoded[:user_id])
+
+    if @current_user
+      Rails.logger.debug "✅ JWT Auth: User found - #{@current_user.username}"
+    else
+      Rails.logger.debug "❌ JWT Auth: User not found for id: #{decoded[:user_id]}"
+    end
+
+    @current_user
   end
 
   private
