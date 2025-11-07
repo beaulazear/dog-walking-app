@@ -8,6 +8,7 @@
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
     origins 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175',
+            'http://192.168.1.77:5173', 'http://192.168.1.77:5174', 'http://192.168.1.77:5175',
             'https://beaulazear.github.io'
 
     resource '*',
