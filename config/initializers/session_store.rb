@@ -8,3 +8,4 @@ Rails.application.config.session_store :cookie_store,
                                        secure: true, # Required for same_site: :none
                                        httponly: true, # Prevent JavaScript access to cookies for security
                                        same_site: :none # Allow cross-origin cookies for GitHub Pages frontend
+# Force Render redeploy Thu Nov  6 20:24:06 EST 2025
