@@ -5,6 +5,6 @@
 Rails.application.config.session_store :cookie_store,
                                        key: '_dog_walking_app_session',
                                        expire_after: 1.week,
-                                       secure: Rails.env.production?, # Use secure cookies in production (HTTPS only)
+                                       secure: true, # Required for same_site: :none
                                        httponly: true, # Prevent JavaScript access to cookies for security
-                                       same_site: :strict # CSRF protection - already set in application.rb but reinforced here
+                                       same_site: :none # Allow cross-origin cookies for GitHub Pages frontend
