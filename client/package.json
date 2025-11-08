@@ -11,6 +11,7 @@
     "chart.js": "^4.4.4",
     "dayjs": "^1.11.10",
     "lucide-react": "^0.537.0",
+    "motion": "^12.23.24",
     "react": "^18.3.1",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.1",

@@ -18,6 +18,7 @@ export default function TeamAndShares() {
     const [activeTab, setActiveTab] = useState("team"); // "team", "requests", "appointments", "history"
 
     useEffect(() => {
+        window.scrollTo(0, 0);
         fetchData();
     }, []);
 
@@ -566,16 +567,16 @@ export default function TeamAndShares() {
 // Styled Components
 const Container = styled.div`
     min-height: 100vh;
-    padding: 90px 16px 40px;
+    padding: 20px 16px 100px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 
     @media (min-width: 768px) {
-        padding: 100px 20px 60px;
+        padding: 24px 20px 100px;
     }
 `;
 
 const Content = styled.div`
-    max-width: 680px;
+    max-width: 448px;
     margin: 0 auto;
 `;
 

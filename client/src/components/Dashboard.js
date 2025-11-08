@@ -91,6 +91,10 @@ export default function Dashboard() {
     });
 
     useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
+    useEffect(() => {
         if (user?.pets) {
             setUpcomingBirthdayPet(getUpcomingBirthday(user.pets));
         }
@@ -701,14 +705,13 @@ export default function Dashboard() {
 const Container = styled.div`
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
-    padding: 40px 20px;
-    padding-top: 120px;
+    padding: 20px 16px 100px;
     display: flex;
     flex-direction: column;
     align-items: center;
     position: relative;
     overflow: hidden;
-    
+
     &::before {
         content: '';
         position: absolute;
@@ -716,7 +719,7 @@ const Container = styled.div`
         left: 0;
         right: 0;
         bottom: 0;
-        background: 
+        background:
             radial-gradient(circle at 20% 20%, rgba(255,255,255,0.05) 2px, transparent 2px),
             radial-gradient(circle at 80% 40%, rgba(255,255,255,0.03) 1.5px, transparent 1.5px),
             radial-gradient(circle at 40% 60%, rgba(255,255,255,0.04) 1px, transparent 1px),
@@ -726,10 +729,9 @@ const Container = styled.div`
         background-size: 80px 80px, 60px 60px, 40px 40px, 100px 100px, 30px 30px, 70px 70px;
         pointer-events: none;
     }
-    
-    @media (max-width: 768px) {
-        padding: 20px 16px;
-        padding-top: 100px;
+
+    @media (min-width: 768px) {
+        padding: 24px 20px 100px;
     }
 `;
 
@@ -737,13 +739,13 @@ const Container = styled.div`
 const ContentSections = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
     width: 100%;
-    max-width: 800px;
+    max-width: 448px;
     margin-bottom: 16px;
-    
-    @media (max-width: 768px) {
-        gap: 16px;
+
+    @media (min-width: 768px) {
+        gap: 20px;
     }
 `;
 

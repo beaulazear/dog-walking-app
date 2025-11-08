@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 20_251_107_221_510) do
+ActiveRecord::Schema[7.2].define(version: 20_251_108_140_011) do
   # These are extensions that must be enabled in order to support this database
   enable_extension 'plpgsql'
 
@@ -121,6 +121,8 @@ ActiveRecord::Schema[7.2].define(version: 20_251_107_221_510) do
     t.date 'completed_date'
     t.datetime 'created_at', null: false
     t.datetime 'updated_at', null: false
+    t.string 'purchase_url'
+    t.string 'audible_url'
     t.index ['status'], name: 'index_books_on_status'
     t.index %w[user_id is_default], name: 'index_books_on_user_id_and_is_default'
     t.index ['user_id'], name: 'index_books_on_user_id'

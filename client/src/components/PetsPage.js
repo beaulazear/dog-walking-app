@@ -138,6 +138,10 @@ export default function PetsPage() {
         active: true,
     });
 
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
     // Get the selected pet from user.pets using the ID
     const selectedPet = useMemo(() => {
         if (!selectedPetId || !user?.pets) return null;
@@ -230,8 +234,14 @@ export default function PetsPage() {
     return (
         <Container>
             <Header>
-                <HeaderTitle>My Pets</HeaderTitle>
+                <HeaderTitle>
+                    <Dog size={24} />
+                    My Pets
+                </HeaderTitle>
+                <Subtitle>Manage your furry friends</Subtitle>
+            </Header>
 
+            <SearchAndFilterSection>
                 <SearchAndFilter>
                     <SearchBar>
                         <Search size={20} />
@@ -271,7 +281,7 @@ export default function PetsPage() {
                         Add Pet
                     </AddPetButton>
                 </SearchAndFilter>
-            </Header>
+            </SearchAndFilterSection>
 
             <PetsGrid>
                 {filteredPets.map(pet => (
@@ -1151,39 +1161,51 @@ PetDetailsModal.displayName = 'PetDetailsModal';
 const Container = styled.div`
     min-height: 100vh;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 2rem;
-    padding-top: 7rem; /* Increased top padding for more space */
-    
-    @media (max-width: 768px) {
-        padding: 1rem;
-        padding-top: 5.5rem; /* More space on mobile too */
+    padding: 20px 16px 100px;
+
+    @media (min-width: 768px) {
+        padding: 24px 20px 100px;
     }
 `;
 
 const Header = styled.div`
-    max-width: 1200px;
-    margin: 0 auto 2.5rem;
-    padding: 0;
+    max-width: 448px;
+    margin: 0 auto 20px;
+    text-align: center;
 
-    @media (max-width: 768px) {
-        margin-bottom: 2rem;
+    @media (min-width: 768px) {
+        margin: 0 auto 30px;
     }
 `;
 
 const HeaderTitle = styled.h1`
-    font-family: 'Poppins', sans-serif;
-    font-size: 2.5rem;
-    font-weight: 700;
     color: white;
-    margin: 0 0 1.5rem 0;
-    letter-spacing: -0.025em;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 
-    @media (max-width: 768px) {
-        font-size: 2rem;
-        text-align: center;
-        margin-bottom: 1rem;
+    @media (min-width: 768px) {
+        font-size: 32px;
     }
+`;
+
+const Subtitle = styled.p`
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    margin: 0;
+
+    @media (min-width: 768px) {
+        font-size: 16px;
+    }
+`;
+
+const SearchAndFilterSection = styled.div`
+    max-width: 448px;
+    margin: 0 auto 20px;
 `;
 
 const AddPetButton = styled.button`
@@ -1353,14 +1375,14 @@ const FilterTab = styled.button`
 `;
 
 const PetsGrid = styled.div`
-    max-width: 1200px;
+    max-width: 448px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-    
-    @media (max-width: 768px) {
-        grid-template-columns: 1fr;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+
+    @media (min-width: 768px) {
+        gap: 1.5rem;
     }
 `;
 

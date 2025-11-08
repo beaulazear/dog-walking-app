@@ -1,4 +1,4 @@
-import React, { useContext, useState, useMemo } from "react";
+import React, { useContext, useState, useMemo, useEffect } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import dayjs from "dayjs";
@@ -16,12 +16,17 @@ import {
     Cake,
     User,
     Heart,
-    Share2
+    Share2,
+    Calendar
 } from "lucide-react";
 import ShareAppointmentModal from "./ShareAppointmentModal";
 
 export default function TodaysWalks() {
     const { user } = useContext(UserContext);
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     // Memoize expensive filtering and sorting operation
     const todaysAppointments = useMemo(() => {
@@ -78,7 +83,10 @@ export default function TodaysWalks() {
     return (
         <Container>
             <Header>
-                <PageTitle>Today's Walks</PageTitle>
+                <PageTitle>
+                    <Calendar size={24} />
+                    Today's Walks
+                </PageTitle>
                 <PageSubtitle>
                     {todaysAppointments.length} {todaysAppointments.length === 1 ? 'walk' : 'walks'} scheduled • {completedCount} completed
                 </PageSubtitle>
@@ -805,8 +813,8 @@ const Container = styled.div`
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     padding: 20px 16px;
-    padding-top: 100px;
-    padding-bottom: 40px;
+    padding-top: 20px;
+    padding-bottom: 100px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -840,40 +848,38 @@ const Container = styled.div`
 
 const Header = styled.div`
     width: 100%;
-    max-width: 600px;
-    margin-bottom: 24px;
+    max-width: 448px;
+    margin-bottom: 20px;
     text-align: center;
     z-index: 1;
 
-    @media (max-width: 768px) {
-        margin-bottom: 20px;
+    @media (min-width: 768px) {
+        margin-bottom: 24px;
     }
 `;
 
 const PageTitle = styled.h1`
-    font-family: 'Poppins', sans-serif;
-    font-size: 2.5rem;
-    font-weight: 700;
     color: white;
-    margin: 0 0 8px 0;
-    letter-spacing: -0.025em;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 
-    @media (max-width: 768px) {
-        font-size: 2rem;
+    @media (min-width: 768px) {
+        font-size: 32px;
     }
 `;
 
 const PageSubtitle = styled.p`
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.05rem;
-    font-weight: 500;
     color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
     margin: 0;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 
-    @media (max-width: 768px) {
-        font-size: 0.95rem;
+    @media (min-width: 768px) {
+        font-size: 16px;
     }
 `;
 
@@ -883,20 +889,20 @@ const EmptyState = styled.div`
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 60px 40px;
+    padding: 50px 32px;
     text-align: center;
     background: linear-gradient(145deg, rgba(74, 26, 74, 0.8), rgba(107, 43, 107, 0.6));
-    border-radius: 24px;
+    border-radius: 20px;
     border: 2px solid rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(15px);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     width: 100%;
     max-width: 500px;
     margin-top: 20px;
-    
-    @media (max-width: 768px) {
-        padding: 40px 24px;
-        border-radius: 20px;
+
+    @media (min-width: 768px) {
+        padding: 60px 40px;
+        border-radius: 24px;
     }
 `;
 
@@ -938,13 +944,13 @@ const EmptyText = styled.p`
 // Walk list styling
 const WalkList = styled.div`
     width: 100%;
-    max-width: 600px;
+    max-width: 448px;
     display: flex;
     flex-direction: column;
     gap: 10px;
 
-    @media (max-width: 768px) {
-        gap: 8px;
+    @media (min-width: 768px) {
+        gap: 12px;
     }
 `;
 
@@ -1281,9 +1287,9 @@ const CancelledBadge = styled.div`
 // Daily Total Card
 const DailyTotalCard = styled.div`
     width: 100%;
-    max-width: 600px;
-    margin-top: 20px;
-    padding: 20px;
+    max-width: 448px;
+    margin-top: 16px;
+    padding: 16px;
     background: rgba(255, 255, 255, 0.12);
     backdrop-filter: blur(20px);
     border-radius: 16px;
@@ -1291,9 +1297,9 @@ const DailyTotalCard = styled.div`
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     text-align: center;
 
-    @media (max-width: 768px) {
-        padding: 16px;
-        margin-top: 16px;
+    @media (min-width: 768px) {
+        padding: 20px;
+        margin-top: 20px;
     }
 `;
 

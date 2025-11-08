@@ -2,7 +2,7 @@ import React, { useContext, lazy, Suspense } from "react";
 import { Route, Routes } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { UserContext } from "./context/user";
-import Navbar from "./components/Navbar";
+import BottomNav from "./components/BottomNav";
 import LoadingScreen from "./components/LoadingScreen";
 
 // Lazy load route components for better code splitting
@@ -50,7 +50,6 @@ function App() {
       />
       {user ? (
         <>
-          <Navbar />
           <Suspense fallback={<LoadingScreen>Loading page...</LoadingScreen>}>
             <Routes>
               <Route path="/todays-walks" element={<TodaysWalks />} />
@@ -59,6 +58,7 @@ function App() {
               <Route path="*" element={<Dashboard />} />
             </Routes>
           </Suspense>
+          <BottomNav />
         </>
       ) : (
         <Suspense fallback={<LoadingScreen>Loading...</LoadingScreen>}>
