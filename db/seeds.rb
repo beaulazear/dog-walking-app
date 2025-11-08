@@ -10,7 +10,9 @@ user = User.create!(
   thirty: 22,
   fortyfive: 28,
   sixty: 33,
-  solo_rate: 5
+  solo_rate: 5,
+  training_rate: 10,
+  sibling_rate: 8
 )
 
 puts 'Seeding pets...'
