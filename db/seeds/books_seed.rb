@@ -894,7 +894,7 @@ books_data = [
     format: 'Paperback, Kindle',
     category: 'Puppies & Development',
     description: "Classic puppy raising guide combining two of Dunbar's earlier books. Covers: choosing the right puppy, critical first days, socialization, bite inhibition, house training, basic manners, and common problems. Dunbar, veterinarian and founder of the Association of Professional Dog Trainers, pioneered puppy socialization classes and positive training methods. Readable, practical, and proven effective. Essential recommendation for puppy owners.",
-    why_you_need_it: 'Bite inhibition teaching is critical and often missed. Dunbar's protocol prevents adult dog bites.',
+    why_you_need_it: "Bite inhibition teaching is critical and often missed. Dunbar's protocol prevents adult dog bites.",
     best_for: 'Puppy selection, bite inhibition, socialization essentials',
     purchase_url: 'https://www.amazon.com/Before-After-Getting-Your-Puppy/dp/1577314557',
     audible_url: nil
@@ -944,7 +944,7 @@ books_data = [
     format: 'Paperback',
     category: 'Relationship & Communication',
     description: "Yin's first major book emphasizing how handler behavior shapes dog behavior. Covers: learning theory, timing of rewards and corrections, body language, training exercises, and common behavior problems. Heavy emphasis on clear communication and consistency. Includes detailed photos demonstrating techniques. Yin's background as both veterinarian and animal behaviorist gives unique perspective on medical and behavioral issues.",
-    why_you_need_it: 'Many training 'failures' are handler errors. This book fixes the human side of the equation.',
+    why_you_need_it: "Many training 'failures' are handler errors. This book fixes the human side of the equation.",
     best_for: 'Handler skill development, timing improvement, training mechanics',
     purchase_url: 'https://www.amazon.com/Behave-Your-Dog-Behaves/dp/0793806429',
     audible_url: nil
