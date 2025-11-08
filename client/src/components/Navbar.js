@@ -20,8 +20,7 @@ const Navbar = () => {
                         <>
                             <StyledNavLink to="/todays-walks">Today</StyledNavLink>
                             <StyledNavLink to="/pets-page">Pets</StyledNavLink>
-                            <StyledNavLink to="/my-team">Team</StyledNavLink>
-                            <StyledNavLink to="/shared">Shared</StyledNavLink>
+                            <StyledNavLink to="/team">Team</StyledNavLink>
                         </>
                     )}
                 </NavLinks>
