@@ -9,7 +9,7 @@ class AppointmentSerializer
       duration: appointment.duration,
       price: appointment.price,
       recurring: appointment.recurring,
-      solo: appointment.solo,
+      walk_type: appointment.walk_type,
       completed: appointment.completed,
       canceled: appointment.canceled,
       delegation_status: appointment.delegation_status,

@@ -79,10 +79,10 @@ class UsersController < ApplicationController
 
   def user_params
     params.permit(:username, :password, :password_confirmation, :name, :email_address, :pets, :thirty, :fortyfive,
-                  :sixty, :solo_rate)
+                  :sixty, :solo_rate, :training_rate, :sibling_rate)
   end
 
   def rates_params
-    params.permit(:thirty, :fortyfive, :sixty, :solo_rate)
+    params.permit(:thirty, :fortyfive, :sixty, :solo_rate, :training_rate, :sibling_rate)
   end
 end

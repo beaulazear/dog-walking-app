@@ -55,6 +55,8 @@ const Signup = () => {
                 fortyfive: parseInt(28),
                 sixty: parseInt(33),
                 solo_rate: parseInt(5),
+                training_rate: parseInt(10),
+                sibling_rate: parseInt(8),
             }),
         });
 

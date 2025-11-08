@@ -34,7 +34,7 @@ class User < ApplicationRecord
   validates :name, presence: true
   validates :email_address, presence: true
 
-  validates :thirty, :fortyfive, :sixty, :solo_rate, numericality: { only_integer: true }
+  validates :thirty, :fortyfive, :sixty, :solo_rate, :training_rate, :sibling_rate, numericality: { only_integer: true }
 
   # Training-related methods
   def total_training_hours

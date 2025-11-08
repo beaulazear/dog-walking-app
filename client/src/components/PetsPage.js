@@ -583,15 +583,19 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
 
         setIsUpdatingAppointment(true);
         try {
+            const token = localStorage.getItem("token");
             const response = await fetch(`/appointments/${editingAppointmentData.id}`, {
                 method: "PATCH",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     appointment: {
                         start_time: editingAppointmentData.start_time,
                         end_time: editingAppointmentData.end_time,
                         duration: editingAppointmentData.duration,
-                        solo: editingAppointmentData.solo,
+                        walk_type: editingAppointmentData.walk_type,
                         appointment_date: editingAppointmentData.appointment_date,
                         recurring: editingAppointmentData.recurring,
                         monday: editingAppointmentData.monday,
@@ -645,7 +649,7 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
             friday: selectedAppointment.friday || false,
             saturday: selectedAppointment.saturday || false,
             sunday: selectedAppointment.sunday || false,
-            solo: selectedAppointment.solo || false
+            walk_type: selectedAppointment.walk_type || 'group'
         });
     };
 
@@ -901,7 +905,7 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
                                                     {apt.recurring ? 'Recurring' : 'One-time'}
                                                 </AppointmentType>
                                                 <AppointmentDuration>
-                                                    {apt.duration} min {apt.solo ? 'solo' : 'group'} walk
+                                                    {apt.duration} min {apt.walk_type || 'group'} walk
                                                 </AppointmentDuration>
                                             </AppointmentHeader>
                                             
@@ -977,7 +981,7 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
                                                     </InfoItem>
                                                     <InfoItem>
                                                         <InfoLabel>Walk Type</InfoLabel>
-                                                        <InfoValue>{selectedAppointment.solo ? 'Solo' : 'Group'}</InfoValue>
+                                                        <InfoValue>{selectedAppointment.walk_type ? selectedAppointment.walk_type.charAt(0).toUpperCase() + selectedAppointment.walk_type.slice(1) : 'Group'}</InfoValue>
                                                     </InfoItem>
                                                     <InfoItem>
                                                         <InfoLabel>Time</InfoLabel>
@@ -1053,11 +1057,13 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
                                                     <FormGroup>
                                                         <Label>Walk Type</Label>
                                                         <Select
-                                                            value={editingAppointmentData.solo}
-                                                            onChange={(e) => handleAppointmentFieldChange('solo', e.target.value === 'true')}
+                                                            value={editingAppointmentData.walk_type}
+                                                            onChange={(e) => handleAppointmentFieldChange('walk_type', e.target.value)}
                                                         >
-                                                            <option value={false}>Group Walk</option>
-                                                            <option value={true}>Solo Walk</option>
+                                                            <option value="group">Group Walk</option>
+                                                            <option value="solo">Solo Walk</option>
+                                                            <option value="training">Training Walk</option>
+                                                            <option value="sibling">Sibling Walk</option>
                                                         </Select>
                                                     </FormGroup>
                                                 </FormGrid>

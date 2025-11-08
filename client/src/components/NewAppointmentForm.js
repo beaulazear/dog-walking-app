@@ -17,7 +17,7 @@ const NewAppointmentForm = ({ pet }) => {
         end_time: "",
         duration: 30,
         recurring: false,
-        solo: false,
+        walk_type: "group",
         monday: false,
         tuesday: false,
         wednesday: false,
@@ -50,6 +50,7 @@ const NewAppointmentForm = ({ pet }) => {
             end_time: formData.end_time,
             duration: formData.duration,
             recurring: formData.recurring,
+            walk_type: formData.walk_type,
             monday: formData.monday,
             tuesday: formData.tuesday,
             wednesday: formData.wednesday,
@@ -212,9 +213,11 @@ const NewAppointmentForm = ({ pet }) => {
                                     <Users size={16} />
                                     Walk Type
                                 </Label>
-                                <Select name="solo" value={formData.solo} onChange={handleChange}>
-                                    <option value={false}>Group walk</option>
-                                    <option value={true}>Solo walk</option>
+                                <Select name="walk_type" value={formData.walk_type} onChange={handleChange}>
+                                    <option value="group">Group walk</option>
+                                    <option value="solo">Solo walk</option>
+                                    <option value="training">Training walk</option>
+                                    <option value="sibling">Sibling walk</option>
                                 </Select>
                             </InputGroup>
                         </TwoColumnGroup>

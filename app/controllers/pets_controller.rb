@@ -4,7 +4,7 @@ class PetsController < ApplicationController
   def create
     pet = @current_user.pets.create(pet_params)
     if pet.valid?
-      render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active behavioral_notes address]),
+      render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active address behavioral_notes supplies_location allergies origin_trainer]),
              status: :created
     else
       render json: { errors: pet.errors.full_messages }, status: :unprocessable_entity
@@ -14,7 +14,7 @@ class PetsController < ApplicationController
   def index
     pets = @current_user.pets
     if pets
-      render json: pets.as_json(only: %i[id name birthdate sex spayed_neutered active]), status: :ok
+      render json: pets.as_json(only: %i[id name birthdate sex spayed_neutered active address behavioral_notes supplies_location allergies origin_trainer]), status: :ok
     else
       render json: { error: 'Not found' }, status: :not_found
     end
@@ -39,7 +39,8 @@ class PetsController < ApplicationController
           behavioral_notes: pet.behavioral_notes,
           supplies_location: pet.supplies_location,
           allergies: pet.allergies,
-          active: pet.active
+          active: pet.active,
+          origin_trainer: pet.origin_trainer
           # profile_pic removed - using frontend icons instead
         }, status: :ok
       else
@@ -64,7 +65,7 @@ class PetsController < ApplicationController
     pet = @current_user.pets.find_by(id: params[:id])
     if pet
       pet.update(active: params[:active])
-      render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active]), status: :ok
+      render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active address behavioral_notes supplies_location allergies origin_trainer]), status: :ok
     else
       render json: { error: 'Pet not found' }, status: :not_found
     end
@@ -74,11 +75,11 @@ class PetsController < ApplicationController
 
   def pet_params
     params.require(:pet).permit(:user_id, :name, :spayed_neutered, :supplies_location, :behavioral_notes,
-                                :birthdate, :sex, :allergies, :address, :id, :active)
+                                :birthdate, :sex, :allergies, :address, :id, :active, :origin_trainer)
   end
 
   def pet_params_update
     params.permit(:name, :spayed_neutered, :supplies_location, :behavioral_notes,
-                  :birthdate, :sex, :allergies, :address, :active)
+                  :birthdate, :sex, :allergies, :address, :active, :origin_trainer)
   end
 end

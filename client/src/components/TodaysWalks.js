@@ -181,9 +181,14 @@ const WalkCard = React.memo(({ appointment }) => {
             : duration === 60 ? user.sixty
             : 0;
 
-        // Add solo upcharge if this is a solo walk
-        if (appointment.solo) {
+        // Add upcharge based on walk type
+        const walkType = appointment.walk_type || (appointment.solo ? 'solo' : 'group');
+        if (walkType === 'solo') {
             compensation += user.solo_rate || 0;
+        } else if (walkType === 'training') {
+            compensation += user.training_rate || 0;
+        } else if (walkType === 'sibling') {
+            compensation += user.sibling_rate || 0;
         }
 
         compensation += offset;
@@ -194,7 +199,7 @@ const WalkCard = React.memo(({ appointment }) => {
             date_completed: dayjs().toISOString(),
             paid: false,
             compensation,
-            title: `${duration} min ${appointment.solo ? 'training' : 'group'} walk`
+            title: `${duration} min ${walkType} walk`
         };
 
         // Add split data if provided
@@ -362,8 +367,12 @@ const CompletionModal = ({ appointment, user, onComplete, onClose }) => {
         : duration === 60 ? user.sixty
         : 0;
 
-    const soloUpcharge = appointment.solo ? (user.solo_rate || 0) : 0;
-    const finalAmount = baseCompensation + soloUpcharge + (offsetType === 'upcharge' ? offset : -offset);
+    const walkType = appointment.walk_type || (appointment.solo ? 'solo' : 'group');
+    const walkUpcharge = walkType === 'solo' ? (user.solo_rate || 0)
+        : walkType === 'training' ? (user.training_rate || 0)
+        : walkType === 'sibling' ? (user.sibling_rate || 0)
+        : 0;
+    const finalAmount = baseCompensation + walkUpcharge + (offsetType === 'upcharge' ? offset : -offset);
 
     const handleSubmit = async () => {
         setIsSubmitting(true);
@@ -431,10 +440,10 @@ const CompletionModal = ({ appointment, user, onComplete, onClose }) => {
                                 <CompensationItemLabel>Base Rate</CompensationItemLabel>
                                 <CompensationItemValue>${baseCompensation.toFixed(2)}</CompensationItemValue>
                             </CompensationItem>
-                            {appointment.solo && (
+                            {walkUpcharge > 0 && (
                                 <CompensationItem>
-                                    <CompensationItemLabel>Solo Upcharge</CompensationItemLabel>
-                                    <CompensationItemValue $accent>+${soloUpcharge.toFixed(2)}</CompensationItemValue>
+                                    <CompensationItemLabel>{walkType.charAt(0).toUpperCase() + walkType.slice(1)} Upcharge</CompensationItemLabel>
+                                    <CompensationItemValue $accent>+${walkUpcharge.toFixed(2)}</CompensationItemValue>
                                 </CompensationItem>
                             )}
                         </CompensationBreakdown>

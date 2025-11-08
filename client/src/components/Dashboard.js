@@ -88,6 +88,8 @@ export default function Dashboard() {
         fortyfive: user?.fortyfive || "",
         sixty: user?.sixty || "",
         solo_rate: user?.solo_rate || "",
+        training_rate: user?.training_rate || "",
+        sibling_rate: user?.sibling_rate || "",
     });
 
     useEffect(() => {
@@ -118,9 +120,13 @@ export default function Dashboard() {
         setIsUpdatingRates(true);
 
         try {
+            const token = localStorage.getItem("token");
             const response = await fetch("/change_rates", {
                 method: "PATCH",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify(rates),
                 credentials: "include"
             });
@@ -133,7 +139,9 @@ export default function Dashboard() {
                     thirty: updatedUserData.thirty,
                     fortyfive: updatedUserData.fortyfive,
                     sixty: updatedUserData.sixty,
-                    solo_rate: updatedUserData.solo_rate
+                    solo_rate: updatedUserData.solo_rate,
+                    training_rate: updatedUserData.training_rate,
+                    sibling_rate: updatedUserData.sibling_rate
                 }));
                 toast.success("Rates updated successfully!");
             } else {
@@ -559,13 +567,51 @@ export default function Dashboard() {
                                 <ModernRateInput>
                                     <DollarSymbol>$</DollarSymbol>
                                     <RateField
-                                        type="number" 
-                                        name="solo_rate" 
-                                        value={rates.solo_rate} 
-                                        onChange={handleRateChange} 
+                                        type="number"
+                                        name="solo_rate"
+                                        value={rates.solo_rate}
+                                        onChange={handleRateChange}
                                         placeholder="0.00"
                                         step="0.01"
-                                        required 
+                                        required
+                                    />
+                                </ModernRateInput>
+                            </ModernRateCard>
+
+                            <ModernRateCard $training>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                    <RateDuration>Training</RateDuration>
+                                    <RateMinutes>walk</RateMinutes>
+                                </div>
+                                <ModernRateInput>
+                                    <DollarSymbol>$</DollarSymbol>
+                                    <RateField
+                                        type="number"
+                                        name="training_rate"
+                                        value={rates.training_rate}
+                                        onChange={handleRateChange}
+                                        placeholder="0.00"
+                                        step="0.01"
+                                        required
+                                    />
+                                </ModernRateInput>
+                            </ModernRateCard>
+
+                            <ModernRateCard $sibling>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                    <RateDuration>Sibling</RateDuration>
+                                    <RateMinutes>walk</RateMinutes>
+                                </div>
+                                <ModernRateInput>
+                                    <DollarSymbol>$</DollarSymbol>
+                                    <RateField
+                                        type="number"
+                                        name="sibling_rate"
+                                        value={rates.sibling_rate}
+                                        onChange={handleRateChange}
+                                        placeholder="0.00"
+                                        step="0.01"
+                                        required
                                     />
                                 </ModernRateInput>
                             </ModernRateCard>

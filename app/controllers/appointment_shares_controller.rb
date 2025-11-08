@@ -126,7 +126,7 @@ class AppointmentSharesController < ApplicationController
         end_time: appointment.end_time,
         duration: appointment.duration,
         price: appointment.price,
-        solo: appointment.solo,
+        walk_type: appointment.walk_type,
         completed: appointment.completed,
         canceled: appointment.canceled,
         delegation_status: appointment.delegation_status,
