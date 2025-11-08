@@ -1388,29 +1388,34 @@ const PetsGrid = styled.div`
 
 const StyledPetCard = styled.div`
     background: rgba(255, 255, 255, 0.95);
-    border-radius: 20px;
-    padding: 1.5rem;
+    border-radius: 14px;
+    padding: 1rem;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    opacity: ${props => props.$active ? 1 : 0.8};
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    opacity: ${props => props.$active ? 1 : 0.75};
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
 
     &:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    @media (min-width: 768px) {
+        padding: 1.125rem;
+        gap: 0.875rem;
     }
 `;
 
 const PetCardHeader = styled.div`
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     cursor: pointer;
-    padding: 4px;
-    margin: -4px;
-    border-radius: 12px;
+    padding: 2px;
+    margin: -2px;
+    border-radius: 10px;
     transition: background 0.2s ease;
 
     &:hover {
@@ -1419,52 +1424,73 @@ const PetCardHeader = styled.div`
 `;
 
 const PetIcon = styled.div`
-    width: 48px;
-    height: 48px;
+    width: 38px;
+    height: 38px;
     background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border-radius: 12px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
+    flex-shrink: 0;
 
     svg {
-        width: 24px;
-        height: 24px;
+        width: 20px;
+        height: 20px;
+    }
+
+    @media (min-width: 768px) {
+        width: 42px;
+        height: 42px;
+
+        svg {
+            width: 22px;
+            height: 22px;
+        }
     }
 `;
 
 const PetName = styled.h3`
     flex: 1;
     font-family: 'Poppins', sans-serif;
-    font-size: 1.25rem;
+    font-size: 1.05rem;
     font-weight: 600;
     color: #333;
     margin: 0;
+
+    @media (min-width: 768px) {
+        font-size: 1.15rem;
+    }
 `;
 
 const StatusBadge = styled.span`
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 12px;
-    border-radius: 20px;
+    gap: 3px;
+    padding: 3px 8px;
+    border-radius: 12px;
     font-family: 'Poppins', sans-serif;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     background: ${props => props.$active ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'};
     color: ${props => props.$active ? '#16a34a' : '#dc2626'};
     border: 1px solid ${props => props.$active ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'};
+    flex-shrink: 0;
+
+    svg {
+        width: 12px;
+        height: 12px;
+    }
 `;
 
 const PetCardInfo = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     cursor: pointer;
-    padding: 4px;
-    margin: -4px;
-    border-radius: 8px;
+    padding: 2px;
+    margin: -2px;
+    border-radius: 6px;
     transition: background 0.2s ease;
 
     &:hover {
@@ -1475,41 +1501,46 @@ const PetCardInfo = styled.div`
 const QuickActionsRow = styled.div`
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    padding-top: 8px;
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    gap: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
 `;
 
 const QuickActionButton = styled.button`
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 10px 12px;
+    gap: 5px;
+    padding: 8px 10px;
     background: linear-gradient(135deg, #6366f1, #8b5cf6);
     color: white;
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     font-family: 'Poppins', sans-serif;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.2);
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 4px rgba(99, 102, 241, 0.15);
 
-    @media (max-width: 768px) {
+    svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    @media (min-width: 768px) {
+        padding: 9px 12px;
         font-size: 0.8rem;
-        padding: 8px 10px;
 
         svg {
-            width: 14px;
-            height: 14px;
+            width: 15px;
+            height: 15px;
         }
     }
 
     &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(99, 102, 241, 0.25);
         background: linear-gradient(135deg, #4f46e5, #7c3aed);
     }
 
@@ -1521,15 +1552,25 @@ const QuickActionButton = styled.button`
 const InfoRow = styled.div`
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     color: #666;
     font-family: 'Poppins', sans-serif;
-    font-size: 0.9rem;
-    
+    font-size: 0.8rem;
+
     svg {
-        width: 14px;
-        height: 14px;
+        width: 13px;
+        height: 13px;
         color: #999;
+        flex-shrink: 0;
+    }
+
+    @media (min-width: 768px) {
+        font-size: 0.85rem;
+
+        svg {
+            width: 14px;
+            height: 14px;
+        }
     }
 `;
 
@@ -1537,18 +1578,31 @@ const ViewDetailsButton = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    padding: 10px;
-    background: #6366f1;
-    color: white;
-    border-radius: 10px;
+    gap: 3px;
+    padding: 8px;
+    background: rgba(99, 102, 241, 0.08);
+    color: #6366f1;
+    border-radius: 8px;
+    border: 1px solid rgba(99, 102, 241, 0.2);
     font-family: 'Poppins', sans-serif;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 600;
-    transition: all 0.3s ease;
-    
+    transition: all 0.2s ease;
+    cursor: pointer;
+
+    svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    @media (min-width: 768px) {
+        font-size: 0.85rem;
+        padding: 9px;
+    }
+
     &:hover {
-        background: #4f46e5;
+        background: rgba(99, 102, 241, 0.12);
+        border-color: rgba(99, 102, 241, 0.3);
         transform: translateY(-1px);
     }
 `;

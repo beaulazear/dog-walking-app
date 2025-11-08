@@ -849,12 +849,12 @@ const Container = styled.div`
 const Header = styled.div`
     width: 100%;
     max-width: 448px;
-    margin-bottom: 20px;
+    margin: 0 auto 20px;
     text-align: center;
     z-index: 1;
 
     @media (min-width: 768px) {
-        margin-bottom: 24px;
+        margin: 0 auto 24px;
     }
 `;
 
@@ -862,7 +862,7 @@ const PageTitle = styled.h1`
     color: white;
     font-size: 26px;
     font-weight: 700;
-    margin-bottom: 8px;
+    margin: 0 0 8px 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -896,9 +896,7 @@ const EmptyState = styled.div`
     border: 2px solid rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(15px);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    width: 100%;
     max-width: 500px;
-    margin-top: 20px;
 
     @media (min-width: 768px) {
         padding: 60px 40px;

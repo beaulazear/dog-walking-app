@@ -629,7 +629,6 @@ const EmptyState = styled.div`
     align-items: center;
     justify-content: center;
     padding: 60px 20px;
-    text-align: center;
 `;
 
 const EmptyText = styled.div`
