@@ -952,13 +952,13 @@ books_data = [
 ]
 
 books_data.each do |book_attrs|
-  Book.find_or_create_by(
+  book = Book.find_or_initialize_by(
     title: book_attrs[:title],
     is_default: true,
     user_id: nil
-  ) do |book|
-    book.assign_attributes(book_attrs)
-  end
+  )
+  book.assign_attributes(book_attrs)
+  book.save!
 end
 
 puts "✓ Seeded #{books_data.length} default books"

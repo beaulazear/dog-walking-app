@@ -14,7 +14,8 @@ class PetsController < ApplicationController
   def index
     pets = @current_user.pets
     if pets
-      render json: pets.as_json(only: %i[id name birthdate sex spayed_neutered active address behavioral_notes supplies_location allergies origin_trainer]), status: :ok
+      render json: pets.as_json(only: %i[id name birthdate sex spayed_neutered active address behavioral_notes supplies_location allergies origin_trainer]),
+             status: :ok
     else
       render json: { error: 'Not found' }, status: :not_found
     end
@@ -65,7 +66,8 @@ class PetsController < ApplicationController
     pet = @current_user.pets.find_by(id: params[:id])
     if pet
       pet.update(active: params[:active])
-      render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active address behavioral_notes supplies_location allergies origin_trainer]), status: :ok
+      render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active address behavioral_notes supplies_location allergies origin_trainer]),
+             status: :ok
     else
       render json: { error: 'Pet not found' }, status: :not_found
     end
