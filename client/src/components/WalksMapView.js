@@ -180,12 +180,13 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
             center={mapCenter}
             zoom={13}
             ref={mapRef}
-            zoomControl={false}
+            zoomControl={true}
             attributionControl={false}
           >
             <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+              maxZoom={20}
             />
 
             <AutoFitBounds walks={geocodedWalks} />
@@ -252,7 +253,7 @@ const MapViewContainer = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background: #1a1a2e;
+  background: #14141e;
   z-index: 9999;
   display: flex;
   flex-direction: column;
@@ -266,6 +267,36 @@ const MapHeader = styled.div`
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   z-index: 1000;
+  position: relative;
+  overflow: hidden;
+
+  /* Holographic shimmer effect */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      45deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.08) 50%,
+      transparent 70%
+    );
+    transform: rotate(45deg);
+    animation: shimmer 3s infinite;
+    pointer-events: none;
+  }
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+      transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+  }
 
   @media (min-width: 768px) {
     padding: 20px 24px;
@@ -281,6 +312,8 @@ const MapTitle = styled.h2`
   display: flex;
   align-items: center;
   gap: 8px;
+  position: relative;
+  z-index: 1;
 
   @media (min-width: 768px) {
     font-size: 1.3rem;
@@ -299,6 +332,8 @@ const CloseButton = styled.button`
   cursor: pointer;
   color: white;
   transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
 
   &:active {
     transform: scale(0.95);
@@ -336,16 +371,20 @@ const StyledMapContainer = styled(MapContainer)`
   width: 100%;
   height: 100%;
 
-  /* Style the Leaflet popup */
+  /* Style the Leaflet popup - Modern Dark Glass */
   .leaflet-popup-content-wrapper {
-    background: linear-gradient(145deg, #2D1B2E 0%, #4A2C4B 100%);
-    border-radius: 12px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(20, 20, 30, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(255, 255, 255, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(102, 126, 234, 0.3);
   }
 
   .leaflet-popup-tip {
-    background: #2D1B2E;
+    background: rgba(20, 20, 30, 0.95);
   }
 
   .leaflet-popup-content {
@@ -353,24 +392,59 @@ const StyledMapContainer = styled(MapContainer)`
     padding: 0;
   }
 
-  /* Style Leaflet controls for mobile */
+  .leaflet-popup-close-button {
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-size: 24px !important;
+    padding: 4px 8px !important;
+
+    &:hover {
+      color: rgba(255, 255, 255, 0.9) !important;
+    }
+  }
+
+  /* Modern Dark Zoom Controls */
   .leaflet-control-zoom {
     border: none !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
   }
 
   .leaflet-control-zoom a {
-    background: rgba(255, 255, 255, 0.9) !important;
-    color: #333 !important;
-    width: 36px !important;
-    height: 36px !important;
-    line-height: 36px !important;
-    font-size: 20px !important;
-    border-radius: 8px !important;
-    margin-bottom: 4px;
+    background: rgba(20, 20, 30, 0.9) !important;
+    backdrop-filter: blur(10px);
+    color: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(102, 126, 234, 0.3) !important;
+    width: 40px !important;
+    height: 40px !important;
+    line-height: 40px !important;
+    font-size: 22px !important;
+    font-weight: bold !important;
+    border-radius: 12px !important;
+    margin-bottom: 6px;
+    transition: all 0.3s ease !important;
 
     &:hover {
-      background: white !important;
+      background: rgba(102, 126, 234, 0.3) !important;
+      border-color: rgba(102, 126, 234, 0.6) !important;
+      color: white !important;
+      transform: scale(1.05);
+    }
+
+    &:first-child {
+      margin-bottom: 6px;
+    }
+  }
+
+  /* Modern attribution control */
+  .leaflet-control-attribution {
+    background: rgba(20, 20, 30, 0.8) !important;
+    backdrop-filter: blur(10px);
+    color: rgba(255, 255, 255, 0.6) !important;
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 11px;
+
+    a {
+      color: rgba(102, 126, 234, 0.9) !important;
     }
   }
 `;
@@ -383,7 +457,7 @@ const EmptyMapState = styled.div`
   justify-content: center;
   padding: 40px 20px;
   text-align: center;
-  background: #1a1a2e;
+  background: #14141e;
 `;
 
 const EmptyMapIcon = styled.div`
@@ -474,20 +548,23 @@ const MapLegend = styled.div`
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(26, 26, 46, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  padding: 12px 16px;
+  background: rgba(20, 20, 30, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 14px 20px;
   display: flex;
-  gap: 16px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 18px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(102, 126, 234, 0.3);
   z-index: 1000;
 
   @media (max-width: 400px) {
     flex-wrap: wrap;
-    gap: 10px;
-    padding: 10px 12px;
+    gap: 12px;
+    padding: 12px 14px;
   }
 `;
 

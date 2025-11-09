@@ -94,6 +94,12 @@ export default function TodaysWalks() {
                     <PageSubtitle>
                         {todaysAppointments.length} {todaysAppointments.length === 1 ? 'walk' : 'walks'} scheduled • {completedCount} completed
                     </PageSubtitle>
+                    {todaysAppointments.length > 0 && (
+                        <HeaderMapButton onClick={() => setShowMap(true)}>
+                            <Map size={20} />
+                            <span>Map View</span>
+                        </HeaderMapButton>
+                    )}
                 </Header>
 
                 {todaysAppointments.length === 0 ? (
@@ -122,11 +128,6 @@ export default function TodaysWalks() {
                                 {completedCount} {completedCount === 1 ? 'walk' : 'walks'} completed
                             </DailyTotalSub>
                         </DailyTotalCard>
-
-                        <MapToggleButton onClick={() => setShowMap(true)} title="View map">
-                            <Map size={24} />
-                            <MapToggleText>Map View</MapToggleText>
-                        </MapToggleButton>
                     </>
                 )}
             </Container>
@@ -839,8 +840,8 @@ const PetDetailsModal = ({ pet, onClose }) => {
 const Container = styled.div`
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
-    padding: 20px 16px;
-    padding-top: 20px;
+    padding: 8px 16px;
+    padding-top: 8px;
     padding-bottom: 100px;
     display: flex;
     flex-direction: column;
@@ -2554,53 +2555,85 @@ const NotesText = styled.p`
     font-weight: 400;
 `;
 
-// Map Toggle Button (Floating Action Button)
-const MapToggleButton = styled.button`
-    position: fixed;
-    bottom: 90px;
-    right: 20px;
-    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+// Header Map Button - Holographic Style
+const HeaderMapButton = styled.button`
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.15),
+        rgba(255, 255, 255, 0.05)
+    );
+    backdrop-filter: blur(12px);
     color: white;
-    border: none;
-    border-radius: 50px;
-    padding: 16px 24px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 20px;
+    padding: 8px 16px;
+    margin: 12px auto 0;
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: center;
+    gap: 6px;
     font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
     transition: all 0.3s ease;
-    z-index: 100;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
 
-    &:active {
-        transform: scale(0.95);
+    /* Holographic shimmer effect */
+    &::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+            45deg,
+            transparent 30%,
+            rgba(255, 255, 255, 0.1) 50%,
+            transparent 70%
+        );
+        transform: rotate(45deg);
+        animation: shimmer 3s infinite;
     }
 
-    @media (min-width: 768px) {
-        bottom: 30px;
-        right: 30px;
-        padding: 18px 28px;
-        font-size: 1.05rem;
-
-        &:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 32px rgba(59, 130, 246, 0.5);
+    @keyframes shimmer {
+        0% {
+            transform: translateX(-100%) translateY(-100%) rotate(45deg);
+        }
+        100% {
+            transform: translateX(100%) translateY(100%) rotate(45deg);
         }
     }
 
-    @media (max-width: 480px) {
-        bottom: 80px;
-        right: 16px;
-        padding: 14px 20px;
-        font-size: 0.95rem;
+    &:active {
+        transform: scale(0.95);
+        background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.2),
+            rgba(255, 255, 255, 0.1)
+        );
     }
-`;
 
-const MapToggleText = styled.span`
-    @media (max-width: 360px) {
-        display: none;
+    @media (min-width: 768px) {
+        padding: 9px 18px;
+        font-size: 0.9rem;
+
+        &:hover {
+            background: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.25),
+                rgba(255, 255, 255, 0.1)
+            );
+            border-color: rgba(255, 255, 255, 0.6);
+            transform: translateY(-2px);
+            box-shadow:
+                0 6px 16px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
     }
 `;
