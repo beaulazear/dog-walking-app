@@ -17,12 +17,15 @@ import {
     User,
     Heart,
     Share2,
-    Calendar
+    Calendar,
+    Map
 } from "lucide-react";
 import ShareAppointmentModal from "./ShareAppointmentModal";
+import WalksMapView from "./WalksMapView";
 
 export default function TodaysWalks() {
     const { user } = useContext(UserContext);
+    const [showMap, setShowMap] = useState(false);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -81,46 +84,61 @@ export default function TodaysWalks() {
     }, [user?.invoices]);
 
     return (
-        <Container>
-            <Header>
-                <PageTitle>
-                    <Calendar size={24} />
-                    Today's Walks
-                </PageTitle>
-                <PageSubtitle>
-                    {todaysAppointments.length} {todaysAppointments.length === 1 ? 'walk' : 'walks'} scheduled • {completedCount} completed
-                </PageSubtitle>
-            </Header>
+        <>
+            <Container>
+                <Header>
+                    <PageTitle>
+                        <Calendar size={24} />
+                        Today's Walks
+                    </PageTitle>
+                    <PageSubtitle>
+                        {todaysAppointments.length} {todaysAppointments.length === 1 ? 'walk' : 'walks'} scheduled • {completedCount} completed
+                    </PageSubtitle>
+                </Header>
 
-            {todaysAppointments.length === 0 ? (
-                <EmptyState>
-                    <EmptyIcon>
-                        <Dog size={48} />
-                    </EmptyIcon>
-                    <EmptyTitle>No walks scheduled</EmptyTitle>
-                    <EmptyText>Enjoy your free day! Your furry friends are taking a rest.</EmptyText>
-                </EmptyState>
-            ) : (
-                <>
-                    <WalkList>
-                        {todaysAppointments.map(appointment => (
-                            <WalkCard key={appointment.id} appointment={appointment} />
-                        ))}
-                    </WalkList>
+                {todaysAppointments.length === 0 ? (
+                    <EmptyState>
+                        <EmptyIcon>
+                            <Dog size={48} />
+                        </EmptyIcon>
+                        <EmptyTitle>No walks scheduled</EmptyTitle>
+                        <EmptyText>Enjoy your free day! Your furry friends are taking a rest.</EmptyText>
+                    </EmptyState>
+                ) : (
+                    <>
+                        <WalkList>
+                            {todaysAppointments.map(appointment => (
+                                <WalkCard key={appointment.id} appointment={appointment} />
+                            ))}
+                        </WalkList>
 
-                    <DailyTotalCard>
-                        <DailyTotalHeader>
-                            <DollarSign size={24} />
-                            Today's Earnings
-                        </DailyTotalHeader>
-                        <DailyTotalAmount>${dailyEarnings.toFixed(2)}</DailyTotalAmount>
-                        <DailyTotalSub>
-                            {completedCount} {completedCount === 1 ? 'walk' : 'walks'} completed
-                        </DailyTotalSub>
-                    </DailyTotalCard>
-                </>
+                        <DailyTotalCard>
+                            <DailyTotalHeader>
+                                <DollarSign size={24} />
+                                Today's Earnings
+                            </DailyTotalHeader>
+                            <DailyTotalAmount>${dailyEarnings.toFixed(2)}</DailyTotalAmount>
+                            <DailyTotalSub>
+                                {completedCount} {completedCount === 1 ? 'walk' : 'walks'} completed
+                            </DailyTotalSub>
+                        </DailyTotalCard>
+
+                        <MapToggleButton onClick={() => setShowMap(true)} title="View map">
+                            <Map size={24} />
+                            <MapToggleText>Map View</MapToggleText>
+                        </MapToggleButton>
+                    </>
+                )}
+            </Container>
+
+            {showMap && (
+                <WalksMapView
+                    walks={todaysAppointments}
+                    isCompleted={(walk) => hasInvoiceForToday(walk, user?.invoices)}
+                    onClose={() => setShowMap(false)}
+                />
             )}
-        </Container>
+        </>
     );
 }
 
@@ -2534,4 +2552,55 @@ const NotesText = styled.p`
     margin: 0;
     line-height: 1.6;
     font-weight: 400;
+`;
+
+// Map Toggle Button (Floating Action Button)
+const MapToggleButton = styled.button`
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+    transition: all 0.3s ease;
+    z-index: 100;
+
+    &:active {
+        transform: scale(0.95);
+    }
+
+    @media (min-width: 768px) {
+        bottom: 30px;
+        right: 30px;
+        padding: 18px 28px;
+        font-size: 1.05rem;
+
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(59, 130, 246, 0.5);
+        }
+    }
+
+    @media (max-width: 480px) {
+        bottom: 80px;
+        right: 16px;
+        padding: 14px 20px;
+        font-size: 0.95rem;
+    }
+`;
+
+const MapToggleText = styled.span`
+    @media (max-width: 360px) {
+        display: none;
+    }
 `;

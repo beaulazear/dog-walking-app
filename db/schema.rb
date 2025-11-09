@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 20_251_108_154_217) do
+ActiveRecord::Schema[7.2].define(version: 20_251_109_212_117) do
   # These are extensions that must be enabled in order to support this database
   enable_extension 'plpgsql'
 
@@ -198,6 +198,12 @@ ActiveRecord::Schema[7.2].define(version: 20_251_108_154_217) do
     t.datetime 'updated_at', null: false
     t.boolean 'active', default: true, null: false
     t.boolean 'origin_trainer', default: false, null: false
+    t.decimal 'latitude', precision: 10, scale: 6
+    t.decimal 'longitude', precision: 10, scale: 6
+    t.datetime 'geocoded_at'
+    t.boolean 'geocoding_failed', default: false
+    t.string 'geocoding_error'
+    t.index %w[latitude longitude], name: 'index_pets_on_latitude_and_longitude'
     t.index ['user_id'], name: 'index_pets_on_user_id'
   end
 

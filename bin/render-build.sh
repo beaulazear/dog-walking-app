@@ -14,3 +14,7 @@ bundle exec rake db:migrate
 
 # Seed default books only if they don't exist (prevents duplicates on redeployment)
 bundle exec rails runner "Book.defaults.any? || load(Rails.root.join('db', 'seeds', 'books_seed.rb'))"
+
+# Geocode pets that don't have coordinates yet (idempotent - safe to run on every deploy)
+echo "Checking for pets that need geocoding..."
+bundle exec rake geocode:pets || echo "Geocoding completed with some warnings (this is normal if API rate limits are hit)"

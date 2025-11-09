@@ -80,6 +80,13 @@ Rails.application.routes.draw do
   patch '/books/:id', to: 'books#update'
   delete '/books/:id', to: 'books#destroy'
 
+  # Distance & Geocoding Routes
+  post '/distance/calculate', to: 'distance#calculate'
+  post '/distance/matrix', to: 'distance#matrix'
+  post '/distance/route', to: 'distance#route'
+  post '/distance/nearby', to: 'distance#nearby'
+  get '/distance/appointments/:date', to: 'distance#appointments'
+
   # Routing logic: fallback requests for React Router.
   # Leave this here to help deploy your app later!
 

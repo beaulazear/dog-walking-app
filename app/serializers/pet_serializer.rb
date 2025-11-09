@@ -10,7 +10,13 @@ class PetSerializer
       behavioral_notes: pet.behavioral_notes,
       supplies_location: pet.supplies_location,
       allergies: pet.allergies,
-      active: pet.active
+      active: pet.active,
+      latitude: pet.latitude,
+      longitude: pet.longitude,
+      geocoded: pet.geocoded?,
+      geocoded_at: pet.geocoded_at,
+      geocoding_failed: pet.geocoding_failed,
+      geocoding_error: pet.geocoding_error
     }
   end
 

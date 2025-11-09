@@ -13,6 +13,7 @@ class Pet < ApplicationRecord
   validates :birthdate, presence: true
 
   before_validation :ensure_birthdate_is_valid
+  after_save :geocode_address, if: :should_geocode?
 
   def ensure_birthdate_is_valid
     return unless birthdate > Date.current
@@ -22,5 +23,52 @@ class Pet < ApplicationRecord
 
   def profile_pic_url
     profile_pic.attached? ? Rails.application.routes.url_helpers.rails_blob_url(profile_pic, only_path: true) : nil
+  end
+
+  # Geocoding methods
+  def should_geocode?
+    # Geocode if address changed or if we don't have coordinates yet
+    saved_change_to_address? || (address.present? && latitude.nil?)
+  end
+
+  def geocode_address
+    return if address.blank?
+
+    result = GeocodingService.geocode(address)
+
+    if result[:success]
+      update_columns(
+        latitude: result[:latitude],
+        longitude: result[:longitude],
+        geocoded_at: Time.current,
+        geocoding_failed: false,
+        geocoding_error: nil
+      )
+    else
+      update_columns(
+        geocoding_failed: true,
+        geocoding_error: result[:error]
+      )
+    end
+  rescue StandardError => e
+    update_columns(
+      geocoding_failed: true,
+      geocoding_error: "Exception: #{e.message}"
+    )
+  end
+
+  def coordinates
+    return nil unless latitude && longitude
+
+    [latitude, longitude]
+  end
+
+  def geocoded?
+    latitude.present? && longitude.present?
+  end
+
+  # Manual geocode trigger (useful for retrying failed geocoding)
+  def geocode!
+    geocode_address
   end
 end
