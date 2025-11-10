@@ -112,6 +112,19 @@ function UserProvider({ children }) {
         });
     }, []);
 
+    // Refresh user data from the server
+    const refreshUser = useCallback(async () => {
+        try {
+            const response = await fetch("/me");
+            if (response.ok) {
+                const data = await response.json();
+                setUser(data);
+            }
+        } catch (error) {
+            console.error('Error refreshing user data:', error);
+        }
+    }, []);
+
     // Memoize the context value to prevent unnecessary re-renders
     const contextValue = useMemo(() => ({
         user,
@@ -123,8 +136,9 @@ function UserProvider({ children }) {
         addInvoice,
         addPet,
         updatePet,
-        removePet
-    }), [user, loading, updateAppointment, addAppointment, removeAppointment, addInvoice, addPet, updatePet, removePet]);
+        removePet,
+        refreshUser
+    }), [user, loading, updateAppointment, addAppointment, removeAppointment, addInvoice, addPet, updatePet, removePet, refreshUser]);
 
     return (
         <UserContext.Provider value={contextValue}>

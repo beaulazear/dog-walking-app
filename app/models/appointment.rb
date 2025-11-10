@@ -2,6 +2,7 @@ class Appointment < ApplicationRecord
   belongs_to :user
   belongs_to :pet
   belongs_to :completed_by_user, class_name: 'User', optional: true
+  belongs_to :walk_group, optional: true
   has_many :invoices, dependent: :nullify
   has_many :cancellations, dependent: :destroy
   has_many :appointment_shares, dependent: :destroy

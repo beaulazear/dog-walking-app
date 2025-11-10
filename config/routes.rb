@@ -87,6 +87,10 @@ Rails.application.routes.draw do
   post '/distance/nearby', to: 'distance#nearby'
   get '/distance/appointments/:date', to: 'distance#appointments'
 
+  # Walk Grouping Routes
+  get '/walk_groups/suggestions', to: 'walk_groups#suggestions'
+  resources :walk_groups, only: [:index, :create, :destroy]
+
   # Routing logic: fallback requests for React Router.
   # Leave this here to help deploy your app later!
 

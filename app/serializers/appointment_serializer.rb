@@ -14,6 +14,7 @@ class AppointmentSerializer
       canceled: appointment.canceled,
       delegation_status: appointment.delegation_status,
       completed_by_user_id: appointment.completed_by_user_id,
+      walk_group_id: appointment.walk_group_id,
       monday: appointment.monday,
       tuesday: appointment.tuesday,
       wednesday: appointment.wednesday,

@@ -1,4 +1,4 @@
-import React, { useContext, useState, useMemo, useEffect } from "react";
+import React, { useContext, useState, useMemo, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import dayjs from "dayjs";
@@ -22,14 +22,22 @@ import {
 } from "lucide-react";
 import ShareAppointmentModal from "./ShareAppointmentModal";
 import WalksMapView from "./WalksMapView";
+import GroupSuggestionsPanel from "./GroupSuggestionsPanel";
 
 export default function TodaysWalks() {
-    const { user } = useContext(UserContext);
+    const { user, refreshUser } = useContext(UserContext);
     const [showMap, setShowMap] = useState(false);
 
     useEffect(() => {
         window.scrollTo(0, 0);
     }, []);
+
+    const handleGroupChange = useCallback(() => {
+        // Refresh user data to get updated appointment groups
+        if (refreshUser) {
+            refreshUser();
+        }
+    }, [refreshUser]);
 
     // Memoize expensive filtering and sorting operation
     const todaysAppointments = useMemo(() => {
@@ -101,6 +109,14 @@ export default function TodaysWalks() {
                         </HeaderMapButton>
                     )}
                 </Header>
+
+                {todaysAppointments.length > 0 && (
+                    <GroupSuggestionsPanel
+                        date={dayjs().format("YYYY-MM-DD")}
+                        appointments={todaysAppointments}
+                        onGroupChange={handleGroupChange}
+                    />
+                )}
 
                 {todaysAppointments.length === 0 ? (
                     <EmptyState>
@@ -869,7 +885,7 @@ const Container = styled.div`
 
     @media (max-width: 768px) {
         padding: 16px 12px;
-        padding-top: 90px;
+        padding-top: 16px;
         padding-bottom: 30px;
     }
 `;

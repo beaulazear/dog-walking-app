@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import styled from 'styled-components';
-import { X, MapPin, Clock, DollarSign } from 'lucide-react';
+import { X, MapPin, Clock, DollarSign, Moon, Sun, Mountain } from 'lucide-react';
 import dayjs from 'dayjs';
 
 // Fix Leaflet default icon issue with webpack
@@ -67,6 +67,7 @@ const AutoFitBounds = ({ walks }) => {
 
 export default function WalksMapView({ walks, isCompleted, onClose }) {
   const mapRef = useRef();
+  const [mapStyle, setMapStyle] = useState('dark'); // 'dark', 'light', 'natural'
 
   // Filter and categorize walks
   const { geocodedWalks, nonGeocodedCount } = useMemo(() => {
@@ -115,6 +116,11 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
       return createCustomIcon('#22c55e', true); // Green for completed
     }
 
+    // Check if walk is part of an active group
+    if (walk.walk_group_id) {
+      return createCustomIcon('#f97316', false); // Orange for grouped walks
+    }
+
     const walkType = walk.walk_type || (walk.solo ? 'solo' : 'group');
     if (walkType === 'solo') {
       return createCustomIcon('#9333EA', false); // Purple for solo
@@ -124,40 +130,100 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
     return createCustomIcon('#3B82F6', false); // Blue for group
   };
 
+  // Group walks by walk_group_id for visual connections
+  const walkGroups = useMemo(() => {
+    const groups = {};
+    geocodedWalks.forEach(walk => {
+      if (walk.walk_group_id && !isCompleted(walk)) {
+        if (!groups[walk.walk_group_id]) {
+          groups[walk.walk_group_id] = [];
+        }
+        groups[walk.walk_group_id].push(walk);
+      }
+    });
+    return Object.values(groups).filter(group => group.length > 1);
+  }, [geocodedWalks, isCompleted]);
+
   // Don't render anything if walks is null/undefined
   if (!walks || walks.length === 0) {
     return (
-      <MapViewContainer>
+      <MapViewContainer $mapStyle={mapStyle}>
         <MapHeader>
           <MapTitle>
             <MapPin size={20} />
             Today's Walks Map
           </MapTitle>
-          <CloseButton onClick={onClose} title="Close map">
-            <X size={24} />
-          </CloseButton>
+          <HeaderButtons>
+            <MapStyleButton
+              $active={mapStyle === 'dark'}
+              onClick={() => setMapStyle('dark')}
+              title="Dark mode"
+            >
+              <Moon size={18} />
+            </MapStyleButton>
+            <MapStyleButton
+              $active={mapStyle === 'light'}
+              onClick={() => setMapStyle('light')}
+              title="Light mode"
+            >
+              <Sun size={18} />
+            </MapStyleButton>
+            <MapStyleButton
+              $active={mapStyle === 'natural'}
+              onClick={() => setMapStyle('natural')}
+              title="Natural/Terrain mode"
+            >
+              <Mountain size={18} />
+            </MapStyleButton>
+            <CloseButton onClick={onClose} title="Close map">
+              <X size={24} />
+            </CloseButton>
+          </HeaderButtons>
         </MapHeader>
-        <EmptyMapState>
-          <EmptyMapIcon>
+        <EmptyMapState $mapStyle={mapStyle}>
+          <EmptyMapIcon $mapStyle={mapStyle}>
             <MapPin size={48} />
           </EmptyMapIcon>
-          <EmptyMapText>No walks scheduled today</EmptyMapText>
-          <EmptyMapSubtext>Schedule some walks to see them on the map</EmptyMapSubtext>
+          <EmptyMapText $mapStyle={mapStyle}>No walks scheduled today</EmptyMapText>
+          <EmptyMapSubtext $mapStyle={mapStyle}>Schedule some walks to see them on the map</EmptyMapSubtext>
         </EmptyMapState>
       </MapViewContainer>
     );
   }
 
   return (
-    <MapViewContainer>
+    <MapViewContainer $mapStyle={mapStyle}>
       <MapHeader>
         <MapTitle>
           <MapPin size={20} />
           Today's Walks Map
         </MapTitle>
-        <CloseButton onClick={onClose} title="Close map">
-          <X size={24} />
-        </CloseButton>
+        <HeaderButtons>
+          <MapStyleButton
+            $active={mapStyle === 'dark'}
+            onClick={() => setMapStyle('dark')}
+            title="Dark mode"
+          >
+            <Moon size={18} />
+          </MapStyleButton>
+          <MapStyleButton
+            $active={mapStyle === 'light'}
+            onClick={() => setMapStyle('light')}
+            title="Light mode"
+          >
+            <Sun size={18} />
+          </MapStyleButton>
+          <MapStyleButton
+            $active={mapStyle === 'natural'}
+            onClick={() => setMapStyle('natural')}
+            title="Natural/Terrain mode"
+          >
+            <Mountain size={18} />
+          </MapStyleButton>
+          <CloseButton onClick={onClose} title="Close map">
+            <X size={24} />
+          </CloseButton>
+        </HeaderButtons>
       </MapHeader>
 
       {nonGeocodedCount > 0 && (
@@ -167,12 +233,12 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
       )}
 
       {geocodedWalks.length === 0 ? (
-        <EmptyMapState>
-          <EmptyMapIcon>
+        <EmptyMapState $mapStyle={mapStyle}>
+          <EmptyMapIcon $mapStyle={mapStyle}>
             <MapPin size={48} />
           </EmptyMapIcon>
-          <EmptyMapText>No walks with location data yet</EmptyMapText>
-          <EmptyMapSubtext>Add addresses to your pets to see them on the map</EmptyMapSubtext>
+          <EmptyMapText $mapStyle={mapStyle}>No walks with location data yet</EmptyMapText>
+          <EmptyMapSubtext $mapStyle={mapStyle}>Add addresses to your pets to see them on the map</EmptyMapSubtext>
         </EmptyMapState>
       ) : (
         <>
@@ -182,14 +248,42 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
             ref={mapRef}
             zoomControl={true}
             attributionControl={false}
+            $mapStyle={mapStyle}
           >
             <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+              url={
+                mapStyle === 'dark'
+                  ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                  : mapStyle === 'light'
+                  ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                  : "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              }
+              attribution={
+                mapStyle === 'natural'
+                  ? '&copy; <a href="https://www.esri.com/">Esri</a>'
+                  : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+              }
               maxZoom={20}
             />
 
             <AutoFitBounds walks={geocodedWalks} />
+
+            {/* Draw lines between grouped walks */}
+            {walkGroups.map((group, idx) => {
+              const positions = group.map(walk => [walk.pet.latitude, walk.pet.longitude]);
+              return (
+                <Polyline
+                  key={`group-${idx}`}
+                  positions={positions}
+                  pathOptions={{
+                    color: '#f97316',
+                    weight: 3,
+                    opacity: 0.6,
+                    dashArray: '10, 10'
+                  }}
+                />
+              );
+            })}
 
             {geocodedWalks.map(walk => (
               <Marker
@@ -198,31 +292,34 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
                 icon={getIconForWalk(walk)}
               >
                 <Popup maxWidth={250} className="custom-popup">
-                  <PopupContent>
-                    <PopupPetName>{walk.pet.name}</PopupPetName>
-                    <PopupDetail>
+                  <PopupContent data-theme={mapStyle}>
+                    <PopupPetName $mapStyle={mapStyle}>{walk.pet.name}</PopupPetName>
+                    <PopupDetail $mapStyle={mapStyle}>
                       <MapPin size={14} />
                       <span>{walk.pet.address}</span>
                     </PopupDetail>
-                    <PopupDetail>
+                    <PopupDetail $mapStyle={mapStyle}>
                       <Clock size={14} />
                       <span>
                         {dayjs(walk.start_time, "HH:mm").format("h:mm A")} - {dayjs(walk.end_time, "HH:mm").format("h:mm A")}
                       </span>
                     </PopupDetail>
-                    <PopupMeta>
+                    <PopupMeta $mapStyle={mapStyle}>
                       <MetaChip $solo={walk.solo}>
                         {walk.walk_type || (walk.solo ? 'Solo' : 'Group')}
                       </MetaChip>
-                      <MetaDuration>{walk.duration} min</MetaDuration>
+                      <MetaDuration $mapStyle={mapStyle}>{walk.duration} min</MetaDuration>
                     </PopupMeta>
+                    {walk.walk_group_id && (
+                      <PopupGroupBadge>Grouped Walk</PopupGroupBadge>
+                    )}
                   </PopupContent>
                 </Popup>
               </Marker>
             ))}
           </StyledMapContainer>
 
-          <MapLegend>
+          <MapLegend $mapStyle={mapStyle}>
             <LegendItem>
               <LegendDot color="#3B82F6" />
               <LegendLabel>Group</LegendLabel>
@@ -234,6 +331,10 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
             <LegendItem>
               <LegendDot color="#f59e0b" />
               <LegendLabel>Training</LegendLabel>
+            </LegendItem>
+            <LegendItem>
+              <LegendDot color="#f97316" />
+              <LegendLabel>Grouped</LegendLabel>
             </LegendItem>
             <LegendItem>
               <LegendDot color="#22c55e" />
@@ -253,10 +354,12 @@ const MapViewContainer = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background: #14141e;
+  background: ${({ $mapStyle }) =>
+    $mapStyle === 'light' ? '#f8f9fa' : '#14141e'};
   z-index: 9999;
   display: flex;
   flex-direction: column;
+  transition: background-color 0.3s ease;
 `;
 
 const MapHeader = styled.div`
@@ -300,6 +403,47 @@ const MapHeader = styled.div`
 
   @media (min-width: 768px) {
     padding: 20px 24px;
+  }
+`;
+
+const HeaderButtons = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  z-index: 1;
+`;
+
+const MapStyleButton = styled.button`
+  background: ${({ $active }) =>
+    $active ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.15)'};
+  border: 1px solid ${({ $active }) =>
+    $active ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.25)'};
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  @media (min-width: 768px) {
+    width: 38px;
+    height: 38px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-1px);
+    }
   }
 `;
 
@@ -371,20 +515,24 @@ const StyledMapContainer = styled(MapContainer)`
   width: 100%;
   height: 100%;
 
-  /* Style the Leaflet popup - Modern Dark Glass */
+  /* Style the Leaflet popup - Theme-aware Glass */
   .leaflet-popup-content-wrapper {
-    background: rgba(20, 20, 30, 0.95);
+    background: ${({ $mapStyle }) =>
+      $mapStyle === 'light' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(20, 20, 30, 0.95)'};
     backdrop-filter: blur(20px);
     border-radius: 16px;
     box-shadow:
       0 8px 32px rgba(0, 0, 0, 0.5),
-      0 0 0 1px rgba(255, 255, 255, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      0 0 0 1px ${({ $mapStyle }) =>
+        $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'},
+      inset 0 1px 0 ${({ $mapStyle }) =>
+        $mapStyle === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.1)'};
     border: 1px solid rgba(102, 126, 234, 0.3);
   }
 
   .leaflet-popup-tip {
-    background: rgba(20, 20, 30, 0.95);
+    background: ${({ $mapStyle }) =>
+      $mapStyle === 'light' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(20, 20, 30, 0.95)'};
   }
 
   .leaflet-popup-content {
@@ -393,25 +541,29 @@ const StyledMapContainer = styled(MapContainer)`
   }
 
   .leaflet-popup-close-button {
-    color: rgba(255, 255, 255, 0.6) !important;
+    color: ${({ $mapStyle }) =>
+      $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.6)'} !important;
     font-size: 24px !important;
     padding: 4px 8px !important;
 
     &:hover {
-      color: rgba(255, 255, 255, 0.9) !important;
+      color: ${({ $mapStyle }) =>
+        $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)'} !important;
     }
   }
 
-  /* Modern Dark Zoom Controls */
+  /* Theme-aware Zoom Controls */
   .leaflet-control-zoom {
     border: none !important;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
   }
 
   .leaflet-control-zoom a {
-    background: rgba(20, 20, 30, 0.9) !important;
+    background: ${({ $mapStyle }) =>
+      $mapStyle === 'light' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(20, 20, 30, 0.9)'} !important;
     backdrop-filter: blur(10px);
-    color: rgba(255, 255, 255, 0.9) !important;
+    color: ${({ $mapStyle }) =>
+      $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)'} !important;
     border: 1px solid rgba(102, 126, 234, 0.3) !important;
     width: 40px !important;
     height: 40px !important;
@@ -425,7 +577,8 @@ const StyledMapContainer = styled(MapContainer)`
     &:hover {
       background: rgba(102, 126, 234, 0.3) !important;
       border-color: rgba(102, 126, 234, 0.6) !important;
-      color: white !important;
+      color: ${({ $mapStyle }) =>
+        $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.9)' : 'white'} !important;
       transform: scale(1.05);
     }
 
@@ -434,11 +587,13 @@ const StyledMapContainer = styled(MapContainer)`
     }
   }
 
-  /* Modern attribution control */
+  /* Theme-aware attribution control */
   .leaflet-control-attribution {
-    background: rgba(20, 20, 30, 0.8) !important;
+    background: ${({ $mapStyle }) =>
+      $mapStyle === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(20, 20, 30, 0.8)'} !important;
     backdrop-filter: blur(10px);
-    color: rgba(255, 255, 255, 0.6) !important;
+    color: ${({ $mapStyle }) =>
+      $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.6)'} !important;
     border-radius: 8px;
     padding: 4px 8px;
     font-size: 11px;
@@ -457,11 +612,14 @@ const EmptyMapState = styled.div`
   justify-content: center;
   padding: 40px 20px;
   text-align: center;
-  background: #14141e;
+  background: ${({ $mapStyle }) =>
+    $mapStyle === 'light' ? '#f8f9fa' : '#14141e'};
+  transition: background-color 0.3s ease;
 `;
 
 const EmptyMapIcon = styled.div`
-  color: rgba(255, 255, 255, 0.3);
+  color: ${({ $mapStyle }) =>
+    $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)'};
   margin-bottom: 16px;
 `;
 
@@ -469,14 +627,16 @@ const EmptyMapText = styled.h3`
   font-family: 'Poppins', sans-serif;
   font-size: 1.2rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
+  color: ${({ $mapStyle }) =>
+    $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)'};
   margin: 0 0 8px 0;
 `;
 
 const EmptyMapSubtext = styled.p`
   font-family: 'Poppins', sans-serif;
   font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: ${({ $mapStyle }) =>
+    $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.5)'};
   margin: 0;
   max-width: 300px;
 `;
@@ -490,7 +650,8 @@ const PopupPetName = styled.h3`
   font-family: 'Poppins', sans-serif;
   font-size: 1.1rem;
   font-weight: 700;
-  color: #ffffff;
+  color: ${({ $mapStyle }) =>
+    $mapStyle === 'light' ? '#1a1a1a' : '#ffffff'};
   margin: 0 0 10px 0;
 `;
 
@@ -500,11 +661,13 @@ const PopupDetail = styled.div`
   gap: 6px;
   margin-bottom: 8px;
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: ${({ $mapStyle }) =>
+    $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)'};
 
   svg {
     flex-shrink: 0;
-    color: rgba(255, 255, 255, 0.6);
+    color: ${({ $mapStyle }) =>
+      $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.6)'};
   }
 
   span {
@@ -518,7 +681,8 @@ const PopupMeta = styled.div`
   gap: 8px;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid ${({ $mapStyle }) =>
+    $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'};
 `;
 
 const MetaChip = styled.span`
@@ -538,9 +702,31 @@ const MetaChip = styled.span`
 `;
 
 const MetaDuration = styled.span`
-  color: rgba(255, 255, 255, 0.7);
+  color: ${({ $mapStyle }) =>
+    $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.7)'};
   font-size: 0.8rem;
   font-weight: 500;
+`;
+
+const PopupGroupBadge = styled.div`
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: rgba(249, 115, 22, 0.2);
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  border-radius: 8px;
+  color: #f97316;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+const LegendLabel = styled.span`
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
 `;
 
 const MapLegend = styled.div`
@@ -548,7 +734,8 @@ const MapLegend = styled.div`
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(20, 20, 30, 0.95);
+  background: ${({ $mapStyle }) =>
+    $mapStyle === 'light' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(20, 20, 30, 0.95)'};
   backdrop-filter: blur(20px);
   border-radius: 16px;
   padding: 14px 20px;
@@ -556,10 +743,18 @@ const MapLegend = styled.div`
   gap: 18px;
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 0 0 1px ${({ $mapStyle }) =>
+      $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'},
+    inset 0 1px 0 ${({ $mapStyle }) =>
+      $mapStyle === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.1)'};
   border: 1px solid rgba(102, 126, 234, 0.3);
   z-index: 1000;
+  transition: all 0.3s ease;
+
+  ${LegendLabel} {
+    color: ${({ $mapStyle }) =>
+      $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)'};
+  }
 
   @media (max-width: 400px) {
     flex-wrap: wrap;
@@ -582,12 +777,4 @@ const LegendDot = styled.div`
   border: 2px solid white;
   box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   flex-shrink: 0;
-`;
-
-const LegendLabel = styled.span`
-  font-family: 'Poppins', sans-serif;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
-  white-space: nowrap;
 `;

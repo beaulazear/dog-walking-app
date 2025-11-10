@@ -8,6 +8,7 @@ class User < ApplicationRecord
   has_one :certification_goal, dependent: :destroy
   has_many :milestones, dependent: :destroy
   has_many :books, dependent: :destroy
+  has_many :walk_groups, dependent: :destroy
 
   # Walker connections (team management)
   has_many :initiated_connections, class_name: 'WalkerConnection', foreign_key: 'user_id', dependent: :destroy
