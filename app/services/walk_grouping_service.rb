@@ -43,9 +43,7 @@ class WalkGroupingService
       end
 
       # Only suggest groups with 2+ walks
-      if group.length > 1
-        suggestions << format_group_suggestion(group, max_distance)
-      end
+      suggestions << format_group_suggestion(group, max_distance) if group.length > 1
     end
 
     suggestions.sort_by { |s| -s[:estimated_savings] }
@@ -78,8 +76,8 @@ class WalkGroupingService
     type2 = appt2.walk_type&.downcase
 
     # Solo and training walks cannot be grouped
-    return false if ['solo', 'training'].include?(type1)
-    return false if ['solo', 'training'].include?(type2)
+    return false if %w[solo training].include?(type1)
+    return false if %w[solo training].include?(type2)
 
     # Group walks can be grouped together
     true
@@ -88,10 +86,8 @@ class WalkGroupingService
   # Check if a walk type is groupable at all
   def self.groupable_walk_type?(appointment)
     type = appointment.walk_type&.downcase
-    !['solo', 'training'].include?(type)
+    !%w[solo training].include?(type)
   end
-
-  private
 
   def self.parse_time(time_value)
     return nil unless time_value
@@ -100,9 +96,11 @@ class WalkGroupingService
     when Time, DateTime, ActiveSupport::TimeWithZone
       time_value
     when String
-      Time.parse(time_value) rescue nil
-    else
-      nil
+      begin
+        Time.parse(time_value)
+      rescue StandardError
+        nil
+      end
     end
   end
 
@@ -113,7 +111,7 @@ class WalkGroupingService
     (start1 <= end2 + buffer) && (end1 + buffer >= start2)
   end
 
-  def self.format_group_suggestion(appointments, max_distance)
+  def self.format_group_suggestion(appointments, _max_distance)
     # Calculate total distance between all points
     total_distance = calculate_group_distance(appointments)
 

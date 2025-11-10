@@ -90,7 +90,7 @@ Rails.application.routes.draw do
 
   # Walk Grouping Routes
   get '/walk_groups/suggestions', to: 'walk_groups#suggestions'
-  resources :walk_groups, only: [:index, :create, :destroy]
+  resources :walk_groups, only: %i[index create destroy]
 
   # Route Optimization Routes (Phase 4)
   post '/routes/optimize', to: 'routes#optimize'

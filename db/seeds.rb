@@ -159,7 +159,11 @@ appointments.first(5).each do |appointment|
       date_completed: Faker::Date.between(from: 7.days.ago, to: 1.day.ago),
       paid: [true, false].sample,
       pending: false,
-      compensation: appointment.duration === 30 ? 22 : (appointment.duration === 45 ? 28 : 33),
+      compensation: if appointment.duration === 30
+                      22
+                    else
+                      (appointment.duration === 45 ? 28 : 33)
+                    end,
       title: "#{appointment.duration} min #{appointment.walk_type} walk",
       cancelled: false
     )
@@ -171,11 +175,11 @@ load Rails.root.join('db', 'seeds', 'books_seed.rb')
 
 puts ''
 puts '🎉 Seeding completed!'
-puts "=" * 50
-puts "📊 Summary:"
-puts "  👤 User: testing / flatiron"
+puts '=' * 50
+puts '📊 Summary:'
+puts '  👤 User: testing / flatiron'
 puts "  🐕 Pets: #{pets.length} (real Brooklyn addresses)"
 puts "  📅 Appointments: #{appointments.length} (1 per dog, recurring every day)"
-puts "  📍 All addresses are in Carroll Gardens/Park Slope area"
-puts "  🗺️  Perfect for testing route optimization!"
-puts "=" * 50
+puts '  📍 All addresses are in Carroll Gardens/Park Slope area'
+puts '  🗺️  Perfect for testing route optimization!'
+puts '=' * 50

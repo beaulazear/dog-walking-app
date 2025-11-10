@@ -50,6 +50,9 @@ const Nav = styled.nav`
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
     z-index: 1000;
     padding-bottom: env(safe-area-inset-bottom);
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
 `;
 
 const NavContainer = styled.div`

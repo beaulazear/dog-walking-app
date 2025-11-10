@@ -30,7 +30,7 @@ import GroupSuggestionsPanel from "./GroupSuggestionsPanel";
 export default function TodaysWalks() {
     const { user, refreshUser } = useContext(UserContext);
     const [showMap, setShowMap] = useState(false);
-    const [showGroups, setShowGroups] = useState(true);
+    const [showGroups, setShowGroups] = useState(false);
 
     useEffect(() => {
         window.scrollTo(0, 0);

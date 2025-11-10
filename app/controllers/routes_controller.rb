@@ -27,11 +27,15 @@ class RoutesController < ApplicationController
                                                            .includes(:pet)
                                                            .where(recurring: true)
                                                            .where(day_of_week => true)
+                                                           .where(canceled: [false, nil])
+                                                           .where(completed: [false, nil])
 
                      non_recurring_appointments = @current_user.appointments
-                                                              .includes(:pet)
-                                                              .where(recurring: false)
-                                                              .where('DATE(appointment_date) = ?', date)
+                                                               .includes(:pet)
+                                                               .where(recurring: false)
+                                                               .where('DATE(appointment_date) = ?', date)
+                                                               .where(canceled: [false, nil])
+                                                               .where(completed: [false, nil])
 
                      # Combine and sort by start time
                      (recurring_appointments + non_recurring_appointments).sort_by(&:start_time)
@@ -54,20 +58,20 @@ class RoutesController < ApplicationController
                      end
 
     # Optimize the route
-    result = if params[:compare] == true || params[:compare] == 'true'
+    result = if [true, 'true'].include?(params[:compare])
                RouteOptimizerService.optimize_and_compare(appointments, start_location: start_location)
              else
                RouteOptimizerService.optimize_route(appointments, start_location: start_location)
              end
 
     render json: result.merge({
-      date: date,
-      total_appointments: appointments.length,
-      geocoded_appointments: appointments.count { |a| a.pet&.geocoded? }
-    })
+                                date: date,
+                                total_appointments: appointments.length,
+                                geocoded_appointments: appointments.count { |a| a.pet&.geocoded? }
+                              })
   rescue ArgumentError => e
     render json: { error: "Invalid date format: #{e.message}" }, status: :bad_request
-  rescue => e
+  rescue StandardError => e
     render json: { error: "Route optimization failed: #{e.message}" }, status: :internal_server_error
   end
 
@@ -85,11 +89,15 @@ class RoutesController < ApplicationController
                                           .includes(:pet)
                                           .where(recurring: true)
                                           .where(day_of_week => true)
+                                          .where(canceled: [false, nil])
+                                          .where(completed: [false, nil])
 
     non_recurring_appointments = @current_user.appointments
-                                             .includes(:pet)
-                                             .where(recurring: false)
-                                             .where('DATE(appointment_date) = ?', date)
+                                              .includes(:pet)
+                                              .where(recurring: false)
+                                              .where('DATE(appointment_date) = ?', date)
+                                              .where(canceled: [false, nil])
+                                              .where(completed: [false, nil])
 
     # Combine and sort by start time
     appointments = (recurring_appointments + non_recurring_appointments).sort_by(&:start_time)
@@ -117,9 +125,7 @@ class RoutesController < ApplicationController
   def reorder
     appointment_ids = params[:appointment_ids]
 
-    if appointment_ids.blank?
-      return render json: { error: 'appointment_ids required' }, status: :bad_request
-    end
+    return render json: { error: 'appointment_ids required' }, status: :bad_request if appointment_ids.blank?
 
     # Validate appointments exist and belong to user
     appointments = @current_user.appointments

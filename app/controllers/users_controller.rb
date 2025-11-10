@@ -87,16 +87,15 @@ class UsersController < ApplicationController
     end
 
     # Handle profile pic upload
-    if params[:profile_pic].present?
-      user.profile_pic.attach(params[:profile_pic])
-    end
+    user.profile_pic.attach(params[:profile_pic]) if params[:profile_pic].present?
 
     user.update(profile_params)
 
     if user.valid?
       render json: UserSerializer.serialize(user), status: :ok
     else
-      render json: { error: user.errors.full_messages.first || 'Failed to update profile' }, status: :unprocessable_entity
+      render json: { error: user.errors.full_messages.first || 'Failed to update profile' },
+             status: :unprocessable_entity
     end
   end
 

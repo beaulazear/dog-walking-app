@@ -58,20 +58,18 @@ class RouteOptimizerService
     # Calculate improvement
     distance_saved = original_distance - optimized[:total_distance]
     time_saved = original_time - optimized[:total_travel_time]
-    improvement_percent = original_distance > 0 ? ((distance_saved / original_distance) * 100).round(1) : 0
+    improvement_percent = original_distance.positive? ? ((distance_saved / original_distance) * 100).round(1) : 0
 
     optimized.merge({
-      comparison: {
-        original_distance: original_distance.round(2),
-        original_time: original_time.round,
-        distance_saved: distance_saved.round(2),
-        time_saved: time_saved.round,
-        improvement_percent: improvement_percent
-      }
-    })
+                      comparison: {
+                        original_distance: original_distance.round(2),
+                        original_time: original_time.round,
+                        distance_saved: distance_saved.round(2),
+                        time_saved: time_saved.round,
+                        improvement_percent: improvement_percent
+                      }
+                    })
   end
-
-  private
 
   # Categorize appointments into groups and solo walks
   # Also auto-groups nearby appointments without walk_group_id
@@ -95,17 +93,17 @@ class RouteOptimizerService
       end
     end
 
-    Rails.logger.info "=== Appointment Categorization ==="
+    Rails.logger.info '=== Appointment Categorization ==='
     Rails.logger.info "Manual groups: #{manual_groups.keys.length} groups, #{manual_groups.values.flatten.length} appointments"
     Rails.logger.info "True solo walks: #{true_solo_walks.length}"
     Rails.logger.info "Ungrouped group walks: #{ungrouped_group_walks.length}"
 
     # Auto-group the ungrouped group walks by proximity and time
     begin
-      Rails.logger.info "Starting auto-grouping..."
+      Rails.logger.info 'Starting auto-grouping...'
       auto_groups = auto_group_appointments(ungrouped_group_walks)
       Rails.logger.info "Created #{auto_groups.length} auto-groups from ungrouped appointments"
-    rescue => e
+    rescue StandardError => e
       Rails.logger.error "FATAL ERROR in categorize_appointments auto-grouping: #{e.message}"
       Rails.logger.error e.backtrace.join("\n")
       # Fallback: treat each ungrouped walk as its own group
@@ -124,8 +122,9 @@ class RouteOptimizerService
     # Check walk_type field or solo boolean (if it exists)
     return true if appointment.walk_type == 'solo'
     return true if appointment.respond_to?(:solo) && appointment.solo == true
+
     false
-  rescue => e
+  rescue StandardError => e
     Rails.logger.error "Error checking if appointment #{appointment.id} is solo: #{e.message}"
     false
   end
@@ -145,40 +144,40 @@ class RouteOptimizerService
       # Find all appointments that can be grouped with the seed
       candidates = remaining.dup
       candidates.each do |candidate|
-        begin
-          # Check if candidate is close enough to any appointment in current group
-          can_group = current_group.any? do |grouped_appt|
-            # Skip if either pet doesn't have coordinates
-            next false unless grouped_appt.pet&.latitude && grouped_appt.pet&.longitude
-            next false unless candidate.pet&.latitude && candidate.pet&.longitude
+        # Check if candidate is close enough to any appointment in current group
+        can_group = current_group.any? do |grouped_appt|
+          # Skip if either pet doesn't have coordinates
+          next false unless grouped_appt.pet&.latitude && grouped_appt.pet.longitude
+          next false unless candidate.pet&.latitude && candidate.pet.longitude
 
-            distance = DistanceCalculator.distance_between(
-              grouped_appt.pet.latitude,
-              grouped_appt.pet.longitude,
-              candidate.pet.latitude,
-              candidate.pet.longitude
-            )
+          distance = DistanceCalculator.distance_between(
+            grouped_appt.pet.latitude,
+            grouped_appt.pet.longitude,
+            candidate.pet.latitude,
+            candidate.pet.longitude
+          )
 
-            # Check distance and time window overlap
-            distance_ok = distance && distance <= max_distance_miles
-            time_ok = time_windows_overlap?(grouped_appt, candidate)
+          # Check distance and time window overlap
+          distance_ok = distance && distance <= max_distance_miles
+          time_ok = time_windows_overlap?(grouped_appt, candidate)
 
-            distance_ok && time_ok
-          end
-
-          if can_group
-            current_group << candidate
-            remaining.delete(candidate)
-          end
-        rescue => e
-          Rails.logger.error "Error grouping appointment #{candidate.id}: #{e.message}"
+          distance_ok && time_ok
         end
+
+        if can_group
+          current_group << candidate
+          remaining.delete(candidate)
+        end
+      rescue StandardError => e
+        Rails.logger.error "Error grouping appointment #{candidate.id}: #{e.message}"
       end
 
       # Add the group if it has at least 2 appointments, otherwise treat as individual group
       if current_group.length >= 2
         groups << current_group
-        Rails.logger.info "Auto-grouped #{current_group.length} appointments: #{current_group.map { |a| a.pet.name }.join(', ')}"
+        Rails.logger.info "Auto-grouped #{current_group.length} appointments: #{current_group.map do |a|
+          a.pet.name
+        end.join(', ')}"
       else
         # Single appointment that couldn't be grouped - add as individual group
         groups << [seed]
@@ -187,7 +186,7 @@ class RouteOptimizerService
     end
 
     groups
-  rescue => e
+  rescue StandardError => e
     Rails.logger.error "Error in auto_group_appointments: #{e.message}"
     Rails.logger.error e.backtrace.join("\n")
     # Return ungrouped appointments as individual groups
@@ -205,7 +204,7 @@ class RouteOptimizerService
 
     # Windows overlap if start1 < end2 AND start2 < end1
     start1 < end2 && start2 < end1
-  rescue => e
+  rescue StandardError => e
     Rails.logger.error "Error checking time overlap for appointments #{appt1.id} and #{appt2.id}: #{e.message}"
     false
   end
@@ -292,27 +291,27 @@ class RouteOptimizerService
 
       # Calculate travel time to this unit
       travel_time_minutes = if current_location
-        distance = DistanceCalculator.distance_between(
-          current_location[:lat],
-          current_location[:lng],
-          unit_location[:lat],
-          unit_location[:lng]
-        )
-        calculate_travel_time(distance || 0)
-      else
-        0
-      end
+                              distance = DistanceCalculator.distance_between(
+                                current_location[:lat],
+                                current_location[:lng],
+                                unit_location[:lat],
+                                unit_location[:lng]
+                              )
+                              calculate_travel_time(distance || 0)
+                            else
+                              0
+                            end
 
       # Arrival time at this unit
       arrival_time = current_time + travel_time_minutes.minutes
 
       # Check if we arrive before the pickup window opens
-      if unit[:earliest_pickup] && arrival_time < unit[:earliest_pickup]
-        # We're early - wait until window opens
-        current_time = unit[:earliest_pickup]
-      else
-        current_time = arrival_time
-      end
+      current_time = if unit[:earliest_pickup] && arrival_time < unit[:earliest_pickup]
+                       # We're early - wait until window opens
+                       unit[:earliest_pickup]
+                     else
+                       arrival_time
+                     end
 
       # Check if we can still make the pickup within the window
       if unit[:latest_pickup] && current_time > unit[:latest_pickup]
@@ -518,7 +517,7 @@ class RouteOptimizerService
       optimized: false,
       groups_count: 0,
       solo_count: 0,
-      message: "No geocoded appointments to optimize"
+      message: 'No geocoded appointments to optimize'
     }
   end
 
@@ -538,7 +537,7 @@ class RouteOptimizerService
       Rails.logger.warn "Unknown time value type: #{time_value.class} for value: #{time_value}"
       nil
     end
-  rescue => e
+  rescue StandardError => e
     Rails.logger.error "Error parsing time value #{time_value}: #{e.message}"
     nil
   end

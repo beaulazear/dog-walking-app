@@ -18,9 +18,9 @@ class WalkGroupsController < ApplicationController
                                           .where(day_of_week => true)
 
     non_recurring_appointments = @current_user.appointments
-                                             .includes(:pet)
-                                             .where(recurring: false)
-                                             .where('DATE(appointment_date) = ?', date)
+                                              .includes(:pet)
+                                              .where(recurring: false)
+                                              .where('DATE(appointment_date) = ?', date)
 
     # Combine and sort by start time
     appointments = (recurring_appointments + non_recurring_appointments).sort_by(&:start_time)
@@ -65,19 +65,19 @@ class WalkGroupsController < ApplicationController
                                           .where.not(walk_group_id: nil)
 
     non_recurring_appointments = @current_user.appointments
-                                             .where(recurring: false)
-                                             .where('DATE(appointment_date) = ?', date)
-                                             .where.not(walk_group_id: nil)
+                                              .where(recurring: false)
+                                              .where('DATE(appointment_date) = ?', date)
+                                              .where.not(walk_group_id: nil)
 
     # Get all appointment IDs that are scheduled for today and have a walk_group_id
     todays_appointment_ids = (recurring_appointments + non_recurring_appointments).map(&:id)
 
     # Find walk groups that contain these appointments
     walk_groups = @current_user.walk_groups
-                                .joins(:appointments)
-                                .where(appointments: { id: todays_appointment_ids })
-                                .distinct
-                                .includes(appointments: :pet)
+                               .joins(:appointments)
+                               .where(appointments: { id: todays_appointment_ids })
+                               .distinct
+                               .includes(appointments: :pet)
 
     render json: walk_groups, include: { appointments: { include: :pet } }
   rescue ArgumentError => e
@@ -95,12 +95,11 @@ class WalkGroupsController < ApplicationController
     # Validate appointments exist and belong to current user
     appointments = @current_user.appointments.where(id: appointment_ids)
 
-    if appointments.empty?
-      return render json: { error: 'No valid appointments found' }, status: :unprocessable_entity
-    end
+    return render json: { error: 'No valid appointments found' }, status: :unprocessable_entity if appointments.empty?
 
     if appointments.length != appointment_ids.length
-      return render json: { error: 'Some appointments not found or do not belong to you' }, status: :unprocessable_entity
+      return render json: { error: 'Some appointments not found or do not belong to you' },
+                    status: :unprocessable_entity
     end
 
     # Create the walk group
