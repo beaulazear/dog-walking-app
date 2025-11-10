@@ -40,7 +40,7 @@ class User < ApplicationRecord
   validates :thirty, :fortyfive, :sixty, :solo_rate, :training_rate, :sibling_rate, numericality: { only_integer: true }
 
   def profile_pic_url
-    profile_pic.attached? ? Rails.application.routes.url_helpers.url_for(profile_pic) : nil
+    profile_pic.attached? ? Rails.application.routes.url_helpers.rails_blob_url(profile_pic, only_path: true) : nil
   end
 
   # Training-related methods

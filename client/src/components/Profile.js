@@ -631,10 +631,7 @@ export default function Profile() {
 const Container = styled.div`
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
-    padding: 20px 16px 100px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    padding-bottom: 100px;
     position: relative;
     overflow: hidden;
 
@@ -655,39 +652,21 @@ const Container = styled.div`
         background-size: 80px 80px, 60px 60px, 40px 40px, 100px 100px, 30px 30px, 70px 70px;
         pointer-events: none;
     }
-
-    @media (min-width: 768px) {
-        padding: 24px 20px 100px;
-    }
 `;
 
 const ProfileHeader = styled.div`
     display: flex;
     align-items: center;
     gap: 16px;
-    margin-bottom: 16px;
-    width: 100%;
-    max-width: 448px;
+    padding: 24px 20px;
     background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(20px);
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    animation: fadeInDown 0.5s ease;
-
-    @keyframes fadeInDown {
-        from {
-            opacity: 0;
-            transform: translateY(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 1;
 
     @media (max-width: 768px) {
-        padding: 16px;
+        padding: 20px 16px;
     }
 `;
 
@@ -791,37 +770,29 @@ const ProfileSubtitle = styled.p`
 `;
 
 const ProfileInfoCard = styled.div`
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(20px);
-    border-radius: 20px;
-    padding: 20px;
-    width: 100%;
-    max-width: 448px;
-    margin-bottom: 16px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    animation: fadeInUp 0.6s ease;
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
+    padding: 24px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 1;
 
     @media (max-width: 768px) {
-        padding: 16px;
+        padding: 20px 16px;
     }
 `;
 
 const InfoSection = styled.div`
-    margin-bottom: 20px;
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+    &:first-child {
+        padding-top: 0;
+    }
 
     &:last-child {
-        margin-bottom: 0;
+        border-bottom: none;
+        padding-bottom: 0;
     }
 `;
 
@@ -960,40 +931,24 @@ const ErrorText = styled.div`
 const ContentSections = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    width: 100%;
-    max-width: 448px;
-    margin-bottom: 16px;
 `;
 
 const FinanceOverviewWrapper = styled.div`
     width: 100%;
-    max-width: 448px;
-    animation: fadeInUp 0.9s ease;
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
+    position: relative;
+    z-index: 1;
 `;
 
 // Training Tracker Components
 const TrainingTrackerCard = styled.div`
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(20px);
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    animation: fadeInUp 0.7s ease;
-    border: 1px solid rgba(255, 215, 0, 0.2);
+    padding: 24px 20px;
+    border-top: 2px solid rgba(255, 215, 0, 0.3);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
     overflow: hidden;
+    z-index: 1;
 
     &::before {
         content: '';
@@ -1002,8 +957,9 @@ const TrainingTrackerCard = styled.div`
         right: -50%;
         width: 200%;
         height: 200%;
-        background: radial-gradient(circle, rgba(255, 215, 0, 0.05) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(255, 215, 0, 0.03) 0%, transparent 70%);
         animation: shimmer 8s linear infinite;
+        z-index: 0;
     }
 
     @keyframes shimmer {
@@ -1011,19 +967,8 @@ const TrainingTrackerCard = styled.div`
         100% { transform: rotate(360deg); }
     }
 
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
     @media (max-width: 768px) {
-        padding: 16px;
+        padding: 20px 16px;
     }
 `;
 
@@ -1288,26 +1233,15 @@ const MotivationalMessage = styled.div`
 
 // Rates Card Components
 const ModernRatesCard = styled.div`
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(20px);
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    animation: fadeInUp 0.8s ease;
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
+    padding: 24px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 1;
 
     @media (max-width: 768px) {
-        padding: 16px;
+        padding: 20px 16px;
     }
 `;
 

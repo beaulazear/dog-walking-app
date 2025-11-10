@@ -15,7 +15,7 @@ class WalkGroupsController < ApplicationController
     recurring_appointments = @current_user.appointments
                                           .includes(:pet)
                                           .where(recurring: true)
-                                          .where("#{day_of_week} = ?", true)
+                                          .where(day_of_week => true)
 
     non_recurring_appointments = @current_user.appointments
                                              .includes(:pet)
@@ -61,7 +61,7 @@ class WalkGroupsController < ApplicationController
     # Get all appointments (recurring and non-recurring) for the date
     recurring_appointments = @current_user.appointments
                                           .where(recurring: true)
-                                          .where("#{day_of_week} = ?", true)
+                                          .where(day_of_week => true)
                                           .where.not(walk_group_id: nil)
 
     non_recurring_appointments = @current_user.appointments

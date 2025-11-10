@@ -22,10 +22,11 @@ class RoutesController < ApplicationController
                      day_of_week = date.strftime('%A').downcase # 'monday', 'tuesday', etc.
 
                      # Get all appointments (recurring and non-recurring) for the date
+                     # Use Arel or safe column reference instead of string interpolation
                      recurring_appointments = @current_user.appointments
                                                            .includes(:pet)
                                                            .where(recurring: true)
-                                                           .where("#{day_of_week} = ?", true)
+                                                           .where(day_of_week => true)
 
                      non_recurring_appointments = @current_user.appointments
                                                               .includes(:pet)
@@ -83,7 +84,7 @@ class RoutesController < ApplicationController
     recurring_appointments = @current_user.appointments
                                           .includes(:pet)
                                           .where(recurring: true)
-                                          .where("#{day_of_week} = ?", true)
+                                          .where(day_of_week => true)
 
     non_recurring_appointments = @current_user.appointments
                                              .includes(:pet)

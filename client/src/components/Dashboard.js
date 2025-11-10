@@ -14,7 +14,7 @@ import {
     CalendarDays,
     X,
     Trash2,
-    Sparkles
+    User
 } from "lucide-react";
 
 const getUpcomingBirthday = (pets) => {
@@ -214,29 +214,59 @@ export default function Dashboard() {
     return (
         <Container>
             <ContentSections>
+                <ProfileHeader>
+                    <ProfilePicWrapper>
+                        {user?.profile_pic_url ? (
+                            <ProfilePic src={user.profile_pic_url} alt={user.name} />
+                        ) : (
+                            <DefaultProfileIcon>
+                                <User size={28} strokeWidth={2} />
+                            </DefaultProfileIcon>
+                        )}
+                    </ProfilePicWrapper>
+                    <ProfileInfo>
+                        <WelcomeText>
+                            Welcome back, <UserName>{user?.name}</UserName>!
+                        </WelcomeText>
+                        <ProfileMetaRow>
+                            <ProfileUsername>@{user?.username}</ProfileUsername>
+                            <ProfileDivider>•</ProfileDivider>
+                            <ProfileMemberSince>
+                                On Pocket Walk since {dayjs(user?.created_at || new Date()).format('MMM YYYY')}
+                            </ProfileMemberSince>
+                        </ProfileMetaRow>
+                        {(() => {
+                            const todayWalks = getAppointmentsForDate(dayjs().format("YYYY-MM-DD"));
+                            return todayWalks.length > 0 ? (
+                                <TodayWalksCount>
+                                    {todayWalks.length} walk{todayWalks.length !== 1 ? 's' : ''} today
+                                </TodayWalksCount>
+                            ) : null;
+                        })()}
+                    </ProfileInfo>
+                </ProfileHeader>
+
                 <WeekOverviewSection>
                     <WeekHeader>
-                        <ScheduleHeaderContainer>
-                            <ScheduleIcon>
-                                <Sparkles size={20} />
-                            </ScheduleIcon>
-                            <PersonalizedTitle>
-                                {user?.name}'s Schedule
-                            </PersonalizedTitle>
-                        </ScheduleHeaderContainer>
+                        <ScheduleTitleRow>
+                            <ScheduleTitle>
+                                <CalendarDays size={20} />
+                                Your Week
+                            </ScheduleTitle>
+                            <TodayButton onClick={() => setCurrentDate(dayjs())}>
+                                Today
+                            </TodayButton>
+                        </ScheduleTitleRow>
                         <WeekNavigation>
                             <WeekNavButton onClick={() => navigateWeek(-1)}>
-                                <ChevronLeft size={20} />
+                                <ChevronLeft size={18} />
                             </WeekNavButton>
                             <WeekDateRange>
                                 {weekDays[0].format('MMM D')} - {weekDays[6].format('MMM D')}
                             </WeekDateRange>
                             <WeekNavButton onClick={() => navigateWeek(1)}>
-                                <ChevronRight size={20} />
+                                <ChevronRight size={18} />
                             </WeekNavButton>
-                            <MonthToggle onClick={() => setShowMonthView(true)}>
-                                <CalendarDays size={18} />
-                            </MonthToggle>
                         </WeekNavigation>
                     </WeekHeader>
                     
@@ -282,8 +312,6 @@ export default function Dashboard() {
                                             </EmptyDay>
                                         )}
                                     </DayCardContent>
-                                    
-                                    {isToday && <TodayIndicator />}
                                 </DayCard>
                             );
                         })}
@@ -495,6 +523,129 @@ const ContentSections = styled.div`
     }
 `;
 
+// Profile Header Section
+const ProfileHeader = styled.div`
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    animation: fadeInDown 0.5s ease;
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+`;
+
+const ProfilePicWrapper = styled.div`
+    flex-shrink: 0;
+`;
+
+const ProfilePic = styled.img`
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+`;
+
+const DefaultProfileIcon = styled.div`
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.9);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+`;
+
+const ProfileInfo = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+`;
+
+const WelcomeText = styled.h2`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+    line-height: 1.3;
+
+    @media (max-width: 768px) {
+        font-size: 1rem;
+    }
+`;
+
+const UserName = styled.span`
+    font-weight: 700;
+    color: #fff;
+`;
+
+const ProfileMetaRow = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-family: 'Poppins', sans-serif;
+
+    @media (max-width: 768px) {
+        font-size: 0.75rem;
+    }
+`;
+
+const ProfileUsername = styled.span`
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.85);
+`;
+
+const ProfileDivider = styled.span`
+    color: rgba(255, 255, 255, 0.4);
+`;
+
+const ProfileMemberSince = styled.span`
+    font-weight: 400;
+`;
+
+const TodayWalksCount = styled.div`
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2));
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+    font-family: 'Poppins', sans-serif;
+    width: fit-content;
+    margin-top: 2px;
+
+    @media (max-width: 768px) {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+    }
+`;
+
 // New Week Overview Section
 const WeekOverviewSection = styled.div`
     background: rgba(255, 255, 255, 0.08);
@@ -522,67 +673,64 @@ const WeekOverviewSection = styled.div`
 `;
 
 const WeekHeader = styled.div`
-    margin-bottom: 24px;
-
-    @media (max-width: 768px) {
-        margin-bottom: 20px;
-    }
-`;
-
-const ScheduleHeaderContainer = styled.div`
     display: flex;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
+    gap: 14px;
     margin-bottom: 20px;
 
     @media (max-width: 768px) {
+        gap: 12px;
         margin-bottom: 16px;
     }
 `;
 
-const ScheduleIcon = styled.div`
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, #a78bfa, #8b5cf6);
-    border-radius: 12px;
+const ScheduleTitleRow = styled.div`
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    color: white;
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
-    animation: sparkleRotate 3s ease-in-out infinite;
-
-    @keyframes sparkleRotate {
-        0%, 100% { transform: rotate(0deg); }
-        25% { transform: rotate(-5deg); }
-        75% { transform: rotate(5deg); }
-    }
+    width: 100%;
 `;
 
-const PersonalizedTitle = styled.h3`
+const ScheduleTitle = styled.h3`
     color: #ffffff;
     font-family: 'Poppins', sans-serif;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 600;
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 
     @media (max-width: 768px) {
-        font-size: 1rem;
+        font-size: 0.95rem;
     }
 `;
 
-const MonthToggle = styled.button`
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-    padding: 8px;
+const TodayButton = styled.button`
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    padding: 6px 14px;
     color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    
+    transition: all 0.2s ease;
+    font-family: 'Poppins', sans-serif;
+    white-space: nowrap;
+
     &:hover {
-        background: rgba(255, 255, 255, 0.2);
-        transform: scale(1.05);
+        background: rgba(255, 255, 255, 0.25);
+        border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    &:active {
+        transform: scale(0.98);
+    }
+
+    @media (max-width: 768px) {
+        padding: 5px 12px;
+        font-size: 0.75rem;
     }
 `;
 
@@ -590,27 +738,28 @@ const WeekNavigation = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 16px;
+    gap: 12px;
+    width: 100%;
 `;
 
 const WeekNavButton = styled.button`
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #ffffff;
     cursor: pointer;
-    transition: all 0.3s ease;
-    
+    transition: all 0.2s ease;
+
     &:hover {
         background: rgba(255, 255, 255, 0.2);
-        transform: scale(1.1);
+        border-color: rgba(255, 255, 255, 0.3);
     }
-    
+
     &:active {
         transform: scale(0.95);
     }
@@ -618,117 +767,141 @@ const WeekNavButton = styled.button`
 
 const WeekDateRange = styled.div`
     color: #ffffff;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 500;
     min-width: 140px;
     text-align: center;
-    
+    font-family: 'Poppins', sans-serif;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 6px 16px;
+    border-radius: 8px;
+
     @media (max-width: 768px) {
-        font-size: 0.9rem;
-        min-width: 120px;
+        font-size: 0.85rem;
+        min-width: 130px;
+        padding: 5px 12px;
     }
 `;
 
 const WeekCardsContainer = styled.div`
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 10px;
-    
+    gap: 12px;
+
     @media (max-width: 768px) {
-        gap: 8px;
+        gap: 10px;
         overflow-x: auto;
         display: flex;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
-        padding-bottom: 8px;
-        
+        padding-bottom: 10px;
+        margin: 0 -4px;
+        padding-left: 4px;
+        padding-right: 4px;
+
         &::-webkit-scrollbar {
-            height: 4px;
+            height: 6px;
         }
-        
+
         &::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
         }
-        
+
         &::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 3px;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.35);
+            }
         }
     }
 `;
 
 const DayCard = styled.div`
-    background: ${props => props.$hasAppointments 
-        ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.1))' 
-        : 'rgba(255, 255, 255, 0.05)'};
-    border: 1px solid ${props => props.$isToday 
-        ? 'rgba(255, 255, 255, 0.4)' 
-        : 'rgba(255, 255, 255, 0.1)'};
-    border-radius: 16px;
-    padding: 12px;
-    min-height: 100px;
+    background: ${props => {
+        if (props.$isToday) return 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.15))';
+        if (props.$hasAppointments) return 'rgba(255, 255, 255, 0.12)';
+        return 'rgba(255, 255, 255, 0.06)';
+    }};
+    border: 2px solid ${props => {
+        if (props.$isToday) return 'rgba(59, 130, 246, 0.4)';
+        if (props.$hasAppointments) return 'rgba(255, 255, 255, 0.2)';
+        return 'rgba(255, 255, 255, 0.1)';
+    }};
+    border-radius: 14px;
+    padding: 14px 10px;
+    min-height: 110px;
     display: flex;
     flex-direction: column;
     align-items: center;
     cursor: ${props => props.$hasAppointments ? 'pointer' : 'default'};
-    transition: all 0.3s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
-    opacity: ${props => props.$isPast ? 0.6 : 1};
-    animation: slideIn ${props => 0.5 + props.$delay}s ease;
-    
+    opacity: ${props => props.$isPast ? 0.5 : 1};
+    animation: slideIn ${props => 0.3 + props.$delay}s ease-out;
+
     @keyframes slideIn {
         from {
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(8px);
         }
         to {
-            opacity: 1;
+            opacity: ${props => props.$isPast ? 0.5 : 1};
             transform: translateY(0);
         }
     }
-    
+
     &:hover {
-        transform: ${props => props.$hasAppointments ? 'translateY(-4px) scale(1.02)' : 'none'};
-        background: ${props => props.$hasAppointments 
-            ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.15))' 
-            : 'rgba(255, 255, 255, 0.08)'};
-        box-shadow: ${props => props.$hasAppointments 
-            ? '0 8px 20px rgba(0, 0, 0, 0.2)' 
-            : 'none'};
+        transform: ${props => props.$hasAppointments ? 'translateY(-2px)' : 'none'};
+        background: ${props => {
+            if (props.$isToday) return 'linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(139, 92, 246, 0.2))';
+            if (props.$hasAppointments) return 'rgba(255, 255, 255, 0.15)';
+            return 'rgba(255, 255, 255, 0.08)';
+        }};
+        border-color: ${props => {
+            if (props.$isToday) return 'rgba(59, 130, 246, 0.5)';
+            if (props.$hasAppointments) return 'rgba(255, 255, 255, 0.3)';
+            return 'rgba(255, 255, 255, 0.15)';
+        }};
+        box-shadow: ${props => props.$hasAppointments ? '0 6px 16px rgba(0, 0, 0, 0.15)' : 'none'};
     }
-    
+
     @media (max-width: 768px) {
-        min-width: 90px;
+        min-width: 100px;
         flex: 0 0 auto;
         scroll-snap-align: center;
-        padding: 10px 8px;
-        min-height: 90px;
+        padding: 12px 8px;
+        min-height: 105px;
     }
 `;
 
 const DayCardHeader = styled.div`
     text-align: center;
-    margin-bottom: 8px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
     width: 100%;
 `;
 
 const DayName = styled.div`
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.7rem;
-    font-weight: 500;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.75rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+    font-family: 'Poppins', sans-serif;
 `;
 
 const DayDate = styled.div`
-    color: ${props => props.$isToday ? '#ffffff' : 'rgba(255, 255, 255, 0.9)'};
-    font-size: 1.2rem;
+    color: ${props => props.$isToday ? '#ffffff' : 'rgba(255, 255, 255, 0.95)'};
+    font-size: 1.4rem;
     font-weight: ${props => props.$isToday ? '700' : '600'};
+    font-family: 'Poppins', sans-serif;
+    line-height: 1;
 `;
 
 const DayCardContent = styled.div`
@@ -741,7 +914,7 @@ const DayCardContent = styled.div`
 `;
 
 const WalkCount = styled.div`
-    font-size: 2rem;
+    font-size: 2.2rem;
     font-weight: 700;
     color: #ffffff;
     background: ${props => {
@@ -753,17 +926,20 @@ const WalkCount = styled.div`
     -webkit-text-fill-color: transparent;
     background-clip: text;
     line-height: 1;
-    
+    font-family: 'Poppins', sans-serif;
+    margin-bottom: 4px;
+
     @media (max-width: 768px) {
-        font-size: 1.6rem;
+        font-size: 1.8rem;
     }
 `;
 
 const WalkLabel = styled.div`
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.8rem;
     font-weight: 500;
     margin-top: 2px;
+    font-family: 'Poppins', sans-serif;
 `;
 
 const PreviewDots = styled.div`
@@ -789,41 +965,20 @@ const EmptyDay = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
 `;
 
 const EmptyIcon = styled.div`
-    color: rgba(255, 255, 255, 0.3);
-    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 1.4rem;
+    font-weight: 300;
 `;
 
 const EmptyText = styled.div`
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
     font-weight: 500;
-`;
-
-const TodayIndicator = styled.div`
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #10b981;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
-    animation: todayPulse 2s infinite;
-    
-    @keyframes todayPulse {
-        0%, 100% { 
-            transform: scale(1);
-            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
-        }
-        50% { 
-            transform: scale(1.2);
-            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
-        }
-    }
+    font-family: 'Poppins', sans-serif;
 `;
 
 // Modern Birthday Card

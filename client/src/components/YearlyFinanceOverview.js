@@ -310,18 +310,17 @@ function calculateWeeklyData(invoices) {
 }
 
 const Container = styled.div`
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(20px);
-    border-radius: 24px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.3s ease;
     width: 100%;
-    max-width: 800px;
-    margin: 16px 0;
-    padding: 24px;
+    padding: 24px 20px;
     box-sizing: border-box;
     overflow: hidden;
     animation: fadeInUp 0.8s ease;
+    position: relative;
+    z-index: 1;
 
     @keyframes fadeInUp {
         from {
@@ -332,15 +331,6 @@ const Container = styled.div`
             opacity: 1;
             transform: translateY(0);
         }
-    }
-
-    @media (max-width: 768px) {
-        padding: 20px;
-        border-radius: 20px;
-    }
-
-    @media (max-width: 480px) {
-        padding: 16px;
     }
 `;
 

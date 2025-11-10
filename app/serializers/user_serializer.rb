@@ -19,6 +19,7 @@ class UserSerializer
       training_rate: user.training_rate,
       sibling_rate: user.sibling_rate,
       profile_pic_url: user.profile_pic_url,
+      created_at: user.created_at,
       pets: PetSerializer.serialize_collection(pets),
       appointments: AppointmentSerializer.serialize_collection(appointments),
       invoices: invoices.as_json(only: %i[id appointment_id pet_id date_completed
@@ -39,7 +40,8 @@ class UserSerializer
       solo_rate: user.solo_rate,
       training_rate: user.training_rate,
       sibling_rate: user.sibling_rate,
-      profile_pic_url: user.profile_pic_url
+      profile_pic_url: user.profile_pic_url,
+      created_at: user.created_at
     }
   end
 end
