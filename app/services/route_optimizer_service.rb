@@ -401,14 +401,19 @@ class RouteOptimizerService
 
     Rails.logger.info "=== Building group route for #{group_appointments.length} appointments ==="
 
+    # Generate a temporary group ID for this group (use first appointment's ID or existing walk_group_id)
+    temp_group_id = group_appointments.first.walk_group_id || "temp_group_#{group_appointments.first.id}"
+
     # Optimize pickup order using TSP
     pickup_order = optimize_appointment_order(group_appointments, start_location)
 
     Rails.logger.info "Pickup order has #{pickup_order.length} appointments"
 
-    # Add pickup stops
+    # Add pickup stops with group ID
     pickup_order.each do |appt|
-      stops << format_route_stop(appt, :pickup)
+      stop = format_route_stop(appt, :pickup)
+      stop[:walk_group_id] ||= temp_group_id # Ensure group ID is set for timing calculations
+      stops << stop
     end
 
     Rails.logger.info "Created #{stops.count { |s| s[:stop_type] == 'pickup' }} pickup stops"
@@ -416,9 +421,11 @@ class RouteOptimizerService
     # Drop-offs in reverse order (or could optimize this too)
     dropoff_order = pickup_order.reverse
 
-    # Add drop-off stops
+    # Add drop-off stops with group ID
     dropoff_order.each do |appt|
-      stops << format_route_stop(appt, :dropoff)
+      stop = format_route_stop(appt, :dropoff)
+      stop[:walk_group_id] ||= temp_group_id # Ensure group ID is set for timing calculations
+      stops << stop
     end
 
     Rails.logger.info "Created #{stops.count { |s| s[:stop_type] == 'dropoff' }} dropoff stops"
