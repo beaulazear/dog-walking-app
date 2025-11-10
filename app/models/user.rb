@@ -1,6 +1,8 @@
 class User < ApplicationRecord
   has_secure_password
 
+  has_one_attached :profile_pic
+
   has_many :pets
   has_many :appointments, through: :pets
   has_many :invoices, through: :pets
@@ -36,6 +38,10 @@ class User < ApplicationRecord
   validates :email_address, presence: true
 
   validates :thirty, :fortyfive, :sixty, :solo_rate, :training_rate, :sibling_rate, numericality: { only_integer: true }
+
+  def profile_pic_url
+    profile_pic.attached? ? Rails.application.routes.url_helpers.url_for(profile_pic) : nil
+  end
 
   # Training-related methods
   def total_training_hours

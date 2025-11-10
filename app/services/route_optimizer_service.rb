@@ -263,7 +263,8 @@ class RouteOptimizerService
       pet_id: appointment.pet.id,
       pet_name: appointment.pet.name,
       address: appointment.pet.address,
-      start_time: appointment.start_time,
+      start_time: appointment.start_time, # Earliest pickup time (window start)
+      end_time: appointment.end_time,     # Latest pickup time (window end)
       duration: appointment.duration || 30,
       walk_type: appointment.walk_type,
       walk_group_id: appointment.walk_group_id,

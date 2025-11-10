@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
-import { Home, Calendar, Dog, Users } from "lucide-react";
+import { Home, Calendar, Dog, Users, User } from "lucide-react";
 
 export default function BottomNav() {
     const navigate = useNavigate();
@@ -12,6 +12,7 @@ export default function BottomNav() {
         { path: "/todays-walks", icon: Calendar, label: "Today" },
         { path: "/pets-page", icon: Dog, label: "Pets" },
         { path: "/team", icon: Users, label: "Team" },
+        { path: "/profile", icon: User, label: "Profile" },
     ];
 
     const isActive = (path) => {

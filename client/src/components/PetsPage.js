@@ -745,9 +745,6 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
                 <TabContent>
                     {activeTab === 'info' && (
                         <InfoTab>
-                            <TabDescription>
-                                View and edit your pet's details, including contact information, medical notes, and care instructions.
-                            </TabDescription>
                             <InfoHeader>
                                 <InfoTitle>Pet Information</InfoTitle>
                                 {!editMode ? (
@@ -901,9 +898,6 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
 
                     {activeTab === 'appointments' && (
                         <AppointmentsTab>
-                            <TabDescription>
-                                Manage all appointments for {pet.name}. Schedule new walks, view upcoming sessions, and handle cancellations for recurring appointments.
-                            </TabDescription>
                             <AppointmentsHeader>
                                 <InfoTitle>Appointments</InfoTitle>
                             </AppointmentsHeader>
@@ -1157,9 +1151,6 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
 
                     {activeTab === 'invoices' && (
                         <InvoicesTab>
-                            <TabDescription>
-                                View billing history and invoices for {pet.name}. Track payments and generate new invoices as needed.
-                            </TabDescription>
                             <PetInvoices pet={pet} />
                         </InvoicesTab>
                     )}

@@ -18,11 +18,22 @@ class RoutesController < ApplicationController
                                   .includes(:pet)
                                   .where(id: params[:appointment_ids])
                    else
-                     # Optimize all appointments for the date
-                     @current_user.appointments
-                                  .includes(:pet)
-                                  .where('DATE(appointment_date) = ?', date)
-                                  .order(:start_time)
+                     # Get day of week for the date
+                     day_of_week = date.strftime('%A').downcase # 'monday', 'tuesday', etc.
+
+                     # Get all appointments (recurring and non-recurring) for the date
+                     recurring_appointments = @current_user.appointments
+                                                           .includes(:pet)
+                                                           .where(recurring: true)
+                                                           .where("#{day_of_week} = ?", true)
+
+                     non_recurring_appointments = @current_user.appointments
+                                                              .includes(:pet)
+                                                              .where(recurring: false)
+                                                              .where('DATE(appointment_date) = ?', date)
+
+                     # Combine and sort by start time
+                     (recurring_appointments + non_recurring_appointments).sort_by(&:start_time)
                    end
 
     if appointments.empty?
@@ -65,10 +76,22 @@ class RoutesController < ApplicationController
   def show
     date = Date.parse(params[:date])
 
-    appointments = @current_user.appointments
-                                .includes(:pet)
-                                .where('DATE(appointment_date) = ?', date)
-                                .order(:start_time)
+    # Get day of week for the date
+    day_of_week = date.strftime('%A').downcase # 'monday', 'tuesday', etc.
+
+    # Get all appointments (recurring and non-recurring) for the date
+    recurring_appointments = @current_user.appointments
+                                          .includes(:pet)
+                                          .where(recurring: true)
+                                          .where("#{day_of_week} = ?", true)
+
+    non_recurring_appointments = @current_user.appointments
+                                             .includes(:pet)
+                                             .where(recurring: false)
+                                             .where('DATE(appointment_date) = ?', date)
+
+    # Combine and sort by start time
+    appointments = (recurring_appointments + non_recurring_appointments).sort_by(&:start_time)
 
     if appointments.empty?
       return render json: {

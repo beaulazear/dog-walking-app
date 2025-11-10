@@ -8,11 +8,22 @@ class WalkGroupsController < ApplicationController
     date = params[:date] ? Date.parse(params[:date]) : Date.today
     max_distance = params[:max_distance]&.to_f || 0.5
 
-    # Get all appointments for the user on the specified date
-    appointments = @current_user.appointments
-                                .includes(:pet)
-                                .where('DATE(appointment_date) = ?', date)
-                                .order(:start_time)
+    # Get day of week for the date
+    day_of_week = date.strftime('%A').downcase # 'monday', 'tuesday', etc.
+
+    # Get all appointments (recurring and non-recurring) for the date
+    recurring_appointments = @current_user.appointments
+                                          .includes(:pet)
+                                          .where(recurring: true)
+                                          .where("#{day_of_week} = ?", true)
+
+    non_recurring_appointments = @current_user.appointments
+                                             .includes(:pet)
+                                             .where(recurring: false)
+                                             .where('DATE(appointment_date) = ?', date)
+
+    # Combine and sort by start time
+    appointments = (recurring_appointments + non_recurring_appointments).sort_by(&:start_time)
 
     if appointments.empty?
       return render json: {
@@ -44,8 +55,28 @@ class WalkGroupsController < ApplicationController
   def index
     date = params[:date] ? Date.parse(params[:date]) : Date.today
 
+    # Get day of week for the date
+    day_of_week = date.strftime('%A').downcase # 'monday', 'tuesday', etc.
+
+    # Get all appointments (recurring and non-recurring) for the date
+    recurring_appointments = @current_user.appointments
+                                          .where(recurring: true)
+                                          .where("#{day_of_week} = ?", true)
+                                          .where.not(walk_group_id: nil)
+
+    non_recurring_appointments = @current_user.appointments
+                                             .where(recurring: false)
+                                             .where('DATE(appointment_date) = ?', date)
+                                             .where.not(walk_group_id: nil)
+
+    # Get all appointment IDs that are scheduled for today and have a walk_group_id
+    todays_appointment_ids = (recurring_appointments + non_recurring_appointments).map(&:id)
+
+    # Find walk groups that contain these appointments
     walk_groups = @current_user.walk_groups
-                                .where(date: date)
+                                .joins(:appointments)
+                                .where(appointments: { id: todays_appointment_ids })
+                                .distinct
                                 .includes(appointments: :pet)
 
     render json: walk_groups, include: { appointments: { include: :pet } }

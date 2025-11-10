@@ -15,7 +15,7 @@ L.Icon.Default.mergeOptions({
 });
 
 // Custom icons for different walk types
-const createCustomIcon = (color, completed = false) => {
+const createCustomIcon = (color, completed = false, count = null) => {
   return L.divIcon({
     html: `<div style="
       background-color: ${color};
@@ -28,8 +28,28 @@ const createCustomIcon = (color, completed = false) => {
       display: flex;
       align-items: center;
       justify-content: center;
+      position: relative;
     ">
       ${completed ? '<div style="color: white; font-size: 18px;">✓</div>' : ''}
+      ${count && count > 1 ? `
+        <div style="
+          position: absolute;
+          top: -6px;
+          right: -6px;
+          background: #ef4444;
+          color: white;
+          border-radius: 50%;
+          width: 20px;
+          height: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 11px;
+          font-weight: 700;
+          border: 2px solid white;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        ">${count}</div>
+      ` : ''}
     </div>`,
     className: '',
     iconSize: [32, 32],
@@ -114,12 +134,13 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
   const [showTimeline, setShowTimeline] = useState(false);
 
   // Filter and categorize walks
-  const { geocodedWalks, nonGeocodedCount } = useMemo(() => {
+  const { geocodedWalks, nonGeocodedWalks, nonGeocodedCount } = useMemo(() => {
     const geocoded = walks.filter(w => w.pet?.latitude && w.pet?.longitude);
-    const nonGeocoded = walks.length - geocoded.length;
+    const nonGeocoded = walks.filter(w => !w.pet?.latitude || !w.pet?.longitude);
     return {
       geocodedWalks: geocoded,
-      nonGeocodedCount: nonGeocoded
+      nonGeocodedWalks: nonGeocoded,
+      nonGeocodedCount: nonGeocoded.length
     };
   }, [walks]);
 
@@ -153,26 +174,50 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
   }, [geocodedWalks]);
 
   // Get icon for walk based on type and completion status
-  const getIconForWalk = (walk) => {
+  const getIconForWalk = (walk, count = null) => {
     const completed = isCompleted(walk);
 
     if (completed) {
-      return createCustomIcon('#22c55e', true); // Green for completed
+      return createCustomIcon('#22c55e', true, count); // Green for completed
     }
 
     // Check if walk is part of an active group
     if (walk.walk_group_id) {
-      return createCustomIcon('#f97316', false); // Orange for grouped walks
+      return createCustomIcon('#f97316', false, count); // Orange for grouped walks
     }
 
     const walkType = walk.walk_type || (walk.solo ? 'solo' : 'group');
     if (walkType === 'solo') {
-      return createCustomIcon('#9333EA', false); // Purple for solo
+      return createCustomIcon('#9333EA', false, count); // Purple for solo
     } else if (walkType === 'training') {
-      return createCustomIcon('#f59e0b', false); // Amber for training
+      return createCustomIcon('#f59e0b', false, count); // Amber for training
     }
-    return createCustomIcon('#3B82F6', false); // Blue for group
+    return createCustomIcon('#3B82F6', false, count); // Blue for group
   };
+
+  // Group walks by coordinates to handle multiple appointments at same location
+  const groupedWalksByLocation = useMemo(() => {
+    const locationGroups = {};
+
+    geocodedWalks.forEach(walk => {
+      // Create a key based on coordinates (rounded to 6 decimal places to handle slight differences)
+      // Convert to number first in case they're stored as strings
+      const lat = parseFloat(walk.pet.latitude).toFixed(6);
+      const lng = parseFloat(walk.pet.longitude).toFixed(6);
+      const key = `${lat},${lng}`;
+
+      if (!locationGroups[key]) {
+        locationGroups[key] = {
+          walks: [],
+          latitude: parseFloat(walk.pet.latitude),
+          longitude: parseFloat(walk.pet.longitude)
+        };
+      }
+      locationGroups[key].walks.push(walk);
+    });
+
+    return Object.values(locationGroups);
+  }, [geocodedWalks]);
 
   // Group walks by walk_group_id for visual connections
   const walkGroups = useMemo(() => {
@@ -239,23 +284,35 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
     const stops = optimizedRoute.route;
     const stopsWithTimes = [];
 
-    // Start time - use first appointment's start time or current time
-    let currentTime = dayjs().hour(8).minute(0); // Default 8 AM
-    if (stops.length > 0 && stops[0].start_time) {
-      currentTime = dayjs(stops[0].start_time, "HH:mm");
-    }
+    // Find earliest appointment start time from all stops
+    let earliestTime = null;
+    stops.forEach(stop => {
+      if (stop.start_time) {
+        const stopTime = dayjs(stop.start_time, "HH:mm");
+        if (!earliestTime || stopTime.isBefore(earliestTime)) {
+          earliestTime = stopTime;
+        }
+      }
+    });
+
+    // Start time - use earliest appointment time or current time
+    let currentTime = earliestTime || dayjs();
+
+    // Track groups to add walk duration after pickups
+    const groupPickupComplete = {}; // { walk_group_id: boolean }
+    const groupPickupAppointmentIds = {}; // Track which appointments were picked up in each group
 
     for (let i = 0; i < stops.length; i++) {
       const stop = stops[i];
+      const prevStop = i > 0 ? stops[i - 1] : null;
 
       // Calculate distance from previous stop
       let distanceFromPrevious = 0;
-      if (i > 0) {
-        const prev = stops[i - 1];
-        const lat1 = prev.coordinates.lat;
-        const lng1 = prev.coordinates.lng;
-        const lat2 = stop.coordinates.lat;
-        const lng2 = stop.coordinates.lng;
+      if (prevStop) {
+        const lat1 = parseFloat(prevStop.coordinates.lat);
+        const lng1 = parseFloat(prevStop.coordinates.lng);
+        const lat2 = parseFloat(stop.coordinates.lat);
+        const lng2 = parseFloat(stop.coordinates.lng);
 
         // Haversine formula for distance
         const R = 3959; // Earth radius in miles
@@ -272,8 +329,32 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
       const travelTime = (distanceFromPrevious / WALKING_SPEED_MPH) * 60;
 
       // Add travel time to current time
-      if (i > 0) {
+      if (prevStop) {
         currentTime = currentTime.add(travelTime, 'minute');
+      }
+
+      // For pickups and solo walks, respect pickup window (start_time to end_time)
+      // Can only pick up AFTER start_time (earliest pickup) and BEFORE end_time (latest pickup)
+      if ((stop.stop_type === 'pickup' || stop.stop_type === 'solo') && stop.start_time) {
+        const pickupWindowStart = dayjs(stop.start_time, "HH:mm");
+
+        if (currentTime.isBefore(pickupWindowStart)) {
+          // We arrived before the pickup window opens - wait until window opens
+          currentTime = pickupWindowStart;
+        }
+
+        // Note: Optimizer should ensure we don't arrive after end_time,
+        // but that would require knowing end_time here
+      }
+
+      // Check if we're transitioning from pickup to dropoff for a group
+      if (stop.stop_type === 'dropoff' && stop.walk_group_id) {
+        // If this is the first dropoff for this group, add walk duration
+        if (!groupPickupComplete[stop.walk_group_id]) {
+          groupPickupComplete[stop.walk_group_id] = true;
+          const walkDuration = stop.duration || 30;
+          currentTime = currentTime.add(walkDuration, 'minute');
+        }
       }
 
       stopsWithTimes.push({
@@ -284,9 +365,24 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
         stopNumber: i + 1
       });
 
-      // Add stop duration (only for pickup stops and solo walks)
-      if (stop.stop_type === 'pickup' || stop.stop_type === 'solo') {
-        currentTime = currentTime.add(5, 'minute'); // 5 min per pickup/stop
+      // Add stop duration
+      if (stop.stop_type === 'pickup') {
+        // 5 min per pickup
+        currentTime = currentTime.add(5, 'minute');
+        // Track that this appointment was picked up for its group
+        if (stop.walk_group_id) {
+          if (!groupPickupAppointmentIds[stop.walk_group_id]) {
+            groupPickupAppointmentIds[stop.walk_group_id] = [];
+          }
+          groupPickupAppointmentIds[stop.walk_group_id].push(stop.appointment_id);
+        }
+      } else if (stop.stop_type === 'solo') {
+        // For solo walks, add full duration
+        const walkDuration = stop.duration || 30;
+        currentTime = currentTime.add(walkDuration, 'minute');
+      } else if (stop.stop_type === 'dropoff') {
+        // 2 min per dropoff
+        currentTime = currentTime.add(2, 'minute');
       }
     }
 
@@ -388,6 +484,9 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
       {nonGeocodedCount > 0 && (
         <MapWarning>
           ⚠️ {nonGeocodedCount} walk{nonGeocodedCount !== 1 ? 's' : ''} without location data
+          {nonGeocodedWalks.length > 0 && (
+            <span> ({nonGeocodedWalks.map(w => w.pet?.name).filter(Boolean).join(', ')})</span>
+          )}
         </MapWarning>
       )}
 
@@ -497,39 +596,57 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
                 </Marker>
               ))
             ) : (
-              // Regular walk markers
-              geocodedWalks.map(walk => (
-                <Marker
-                  key={walk.id}
-                  position={[walk.pet.latitude, walk.pet.longitude]}
-                  icon={getIconForWalk(walk)}
-                >
-                  <Popup maxWidth={250} className="custom-popup">
-                    <PopupContent data-theme={mapStyle}>
-                      <PopupPetName $mapStyle={mapStyle}>{walk.pet.name}</PopupPetName>
-                      <PopupDetail $mapStyle={mapStyle}>
-                        <MapPin size={14} />
-                        <span>{walk.pet.address}</span>
-                      </PopupDetail>
-                      <PopupDetail $mapStyle={mapStyle}>
-                        <Clock size={14} />
-                        <span>
-                          {dayjs(walk.start_time, "HH:mm").format("h:mm A")} - {dayjs(walk.end_time, "HH:mm").format("h:mm A")}
-                        </span>
-                      </PopupDetail>
-                      <PopupMeta $mapStyle={mapStyle}>
-                        <MetaChip $solo={walk.solo}>
-                          {walk.walk_type || (walk.solo ? 'Solo' : 'Group')}
-                        </MetaChip>
-                        <MetaDuration $mapStyle={mapStyle}>{walk.duration} min</MetaDuration>
-                      </PopupMeta>
-                      {walk.walk_group_id && (
-                        <PopupGroupBadge>Grouped Walk</PopupGroupBadge>
-                      )}
-                    </PopupContent>
-                  </Popup>
-                </Marker>
-              ))
+              // Regular walk markers - grouped by location
+              groupedWalksByLocation.map((locationGroup, idx) => {
+                const { walks, latitude, longitude } = locationGroup;
+                const count = walks.length;
+                // Use first walk for icon color determination
+                const primaryWalk = walks[0];
+
+                return (
+                  <Marker
+                    key={`location-${idx}`}
+                    position={[latitude, longitude]}
+                    icon={getIconForWalk(primaryWalk, count)}
+                  >
+                    <Popup maxWidth={280} className="custom-popup">
+                      <PopupContent data-theme={mapStyle}>
+                        {count > 1 && (
+                          <PopupLocationHeader $mapStyle={mapStyle}>
+                            📍 {count} appointments at this location
+                          </PopupLocationHeader>
+                        )}
+                        {walks.map((walk, walkIdx) => (
+                          <PopupWalkItem key={walk.id} $isFirst={walkIdx === 0} $mapStyle={mapStyle}>
+                            <PopupPetName $mapStyle={mapStyle}>{walk.pet.name}</PopupPetName>
+                            {walkIdx === 0 && (
+                              <PopupDetail $mapStyle={mapStyle}>
+                                <MapPin size={14} />
+                                <span>{walk.pet.address}</span>
+                              </PopupDetail>
+                            )}
+                            <PopupDetail $mapStyle={mapStyle}>
+                              <Clock size={14} />
+                              <span>
+                                {dayjs(walk.start_time, "HH:mm").format("h:mm A")} - {dayjs(walk.end_time, "HH:mm").format("h:mm A")}
+                              </span>
+                            </PopupDetail>
+                            <PopupMeta $mapStyle={mapStyle}>
+                              <MetaChip $solo={walk.solo}>
+                                {walk.walk_type || (walk.solo ? 'Solo' : 'Group')}
+                              </MetaChip>
+                              <MetaDuration $mapStyle={mapStyle}>{walk.duration} min</MetaDuration>
+                            </PopupMeta>
+                            {walk.walk_group_id && (
+                              <PopupGroupBadge>Grouped Walk</PopupGroupBadge>
+                            )}
+                          </PopupWalkItem>
+                        ))}
+                      </PopupContent>
+                    </Popup>
+                  </Marker>
+                );
+              })
             )}
           </StyledMapContainer>
 
@@ -960,6 +1077,29 @@ const PopupContent = styled.div`
   min-width: 200px;
 `;
 
+const PopupLocationHeader = styled.div`
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: ${({ $mapStyle }) =>
+    $mapStyle === 'light' ? '#3b82f6' : '#60a5fa'};
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid ${({ $mapStyle }) =>
+    $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'};
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const PopupWalkItem = styled.div`
+  ${({ $isFirst, $mapStyle }) => !$isFirst && `
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid ${$mapStyle === 'light' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)'};
+  `}
+`;
+
 const PopupPetName = styled.h3`
   font-family: 'Poppins', sans-serif;
   font-size: 1.1rem;
@@ -1129,7 +1269,7 @@ const RouteStatsPanel = styled.div`
 
   @media (max-width: 768px) {
     padding: 12px 16px;
-    top: 16px;
+    top: 76px; /* Position below the map header (~68px + 8px margin) */
     width: calc(100vw - 32px);
     max-width: none;
   }
@@ -1272,8 +1412,8 @@ const RouteTimelinePanel = styled.div`
     left: 10px;
     width: auto;
     max-width: none;
-    top: 180px;
-    max-height: calc(100vh - 200px);
+    top: 220px; /* Position below route stats panel (76px + ~130px panel + 14px gap) */
+    max-height: calc(100vh - 240px);
   }
 `;
 

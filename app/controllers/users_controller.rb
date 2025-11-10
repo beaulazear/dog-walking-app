@@ -75,6 +75,31 @@ class UsersController < ApplicationController
     end
   end
 
+  def update_profile
+    user = @current_user
+
+    # Check if username is being updated and if it's already taken
+    if params[:username].present? && params[:username] != user.username
+      existing_user = User.find_by(username: params[:username])
+      if existing_user && existing_user.id != user.id
+        return render json: { error: 'Username is already taken' }, status: :unprocessable_entity
+      end
+    end
+
+    # Handle profile pic upload
+    if params[:profile_pic].present?
+      user.profile_pic.attach(params[:profile_pic])
+    end
+
+    user.update(profile_params)
+
+    if user.valid?
+      render json: UserSerializer.serialize(user), status: :ok
+    else
+      render json: { error: user.errors.full_messages.first || 'Failed to update profile' }, status: :unprocessable_entity
+    end
+  end
+
   private
 
   def user_params
@@ -84,5 +109,9 @@ class UsersController < ApplicationController
 
   def rates_params
     params.permit(:thirty, :fortyfive, :sixty, :solo_rate, :training_rate, :sibling_rate)
+  end
+
+  def profile_params
+    params.permit(:name, :username, :profile_pic)
   end
 end
