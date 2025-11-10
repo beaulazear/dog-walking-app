@@ -394,7 +394,8 @@ class RouteOptimizerService
     end
   end
 
-  # Build route stops for a group walk (pickups, then drop-offs)
+  # Build route stops for a group walk
+  # Dogs are dropped off as their individual walk durations complete
   def self.build_group_route_stops(group_appointments, start_location)
     stops = []
 
@@ -408,26 +409,45 @@ class RouteOptimizerService
 
     Rails.logger.info "Pickup order has #{pickup_order.length} appointments"
 
-    # Add pickup stops with group ID
-    pickup_order.each do |appt|
-      stop = format_route_stop(appt, :pickup)
-      stop[:walk_group_id] ||= temp_group_id # Ensure group ID is set for timing calculations
-      stops << stop
+    # Track when each dog should be dropped off (pickup_index + walk_duration)
+    # We'll schedule dropoffs to happen after their walk time completes
+    pickup_schedule = []
+
+    pickup_order.each_with_index do |appt, index|
+      pickup_stop = format_route_stop(appt, :pickup)
+      pickup_stop[:walk_group_id] ||= temp_group_id
+      pickup_stop[:pickup_index] = index # Track order for timing
+
+      pickup_schedule << {
+        appointment: appt,
+        pickup_stop: pickup_stop,
+        pickup_index: index,
+        duration: appt.duration || 30
+      }
     end
 
-    Rails.logger.info "Created #{stops.count { |s| s[:stop_type] == 'pickup' }} pickup stops"
+    # Sort by duration (shortest walks first for dropoffs)
+    # This ensures dogs with shorter walks get dropped off sooner
+    dropoff_order = pickup_schedule.sort_by { |p| p[:duration] }
 
-    # Drop-offs in reverse order (or could optimize this too)
-    dropoff_order = pickup_order.reverse
-
-    # Add drop-off stops with group ID
-    dropoff_order.each do |appt|
-      stop = format_route_stop(appt, :dropoff)
-      stop[:walk_group_id] ||= temp_group_id # Ensure group ID is set for timing calculations
-      stops << stop
+    # Build interleaved schedule:
+    # - All pickups first (to minimize travel)
+    # - Then dropoffs ordered by walk duration (shortest first)
+    pickup_schedule.each do |item|
+      stops << item[:pickup_stop]
     end
 
-    Rails.logger.info "Created #{stops.count { |s| s[:stop_type] == 'dropoff' }} dropoff stops"
+    Rails.logger.info "Created #{pickup_schedule.length} pickup stops"
+
+    # Add dropoffs in order of walk duration (shortest first)
+    dropoff_order.each do |item|
+      dropoff_stop = format_route_stop(item[:appointment], :dropoff)
+      dropoff_stop[:walk_group_id] ||= temp_group_id
+      dropoff_stop[:pickup_index] = item[:pickup_index] # Keep track of which pickup this corresponds to
+      stops << dropoff_stop
+    end
+
+    Rails.logger.info "Created #{dropoff_order.length} dropoff stops"
     Rails.logger.info "Total stops: #{stops.length}"
 
     stops
