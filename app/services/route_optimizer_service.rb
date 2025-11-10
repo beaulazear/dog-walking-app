@@ -101,9 +101,17 @@ class RouteOptimizerService
     Rails.logger.info "Ungrouped group walks: #{ungrouped_group_walks.length}"
 
     # Auto-group the ungrouped group walks by proximity and time
-    auto_groups = auto_group_appointments(ungrouped_group_walks)
-
-    Rails.logger.info "Created #{auto_groups.length} auto-groups from ungrouped appointments"
+    begin
+      Rails.logger.info "Starting auto-grouping..."
+      auto_groups = auto_group_appointments(ungrouped_group_walks)
+      Rails.logger.info "Created #{auto_groups.length} auto-groups from ungrouped appointments"
+    rescue => e
+      Rails.logger.error "FATAL ERROR in categorize_appointments auto-grouping: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      # Fallback: treat each ungrouped walk as its own group
+      auto_groups = ungrouped_group_walks.map { |a| [a] }
+      Rails.logger.info "Fallback: created #{auto_groups.length} individual groups"
+    end
 
     # Combine manual groups and auto-groups
     all_groups = manual_groups.values + auto_groups
@@ -113,8 +121,13 @@ class RouteOptimizerService
 
   # Check if an appointment is a true solo walk
   def self.is_solo_walk?(appointment)
-    # Check walk_type field or solo boolean
-    appointment.walk_type == 'solo' || appointment.solo == true
+    # Check walk_type field or solo boolean (if it exists)
+    return true if appointment.walk_type == 'solo'
+    return true if appointment.respond_to?(:solo) && appointment.solo == true
+    false
+  rescue => e
+    Rails.logger.error "Error checking if appointment #{appointment.id} is solo: #{e.message}"
+    false
   end
 
   # Auto-group appointments by proximity and overlapping time windows
@@ -132,46 +145,53 @@ class RouteOptimizerService
       # Find all appointments that can be grouped with the seed
       candidates = remaining.dup
       candidates.each do |candidate|
-        # Check if candidate is close enough to any appointment in current group
-        can_group = current_group.any? do |grouped_appt|
-          distance = DistanceCalculator.distance_between(
-            grouped_appt.pet.latitude,
-            grouped_appt.pet.longitude,
-            candidate.pet.latitude,
-            candidate.pet.longitude
-          )
+        begin
+          # Check if candidate is close enough to any appointment in current group
+          can_group = current_group.any? do |grouped_appt|
+            # Skip if either pet doesn't have coordinates
+            next false unless grouped_appt.pet&.latitude && grouped_appt.pet&.longitude
+            next false unless candidate.pet&.latitude && candidate.pet&.longitude
 
-          # Check distance and time window overlap
-          distance_ok = distance && distance <= max_distance_miles
-          time_ok = time_windows_overlap?(grouped_appt, candidate)
+            distance = DistanceCalculator.distance_between(
+              grouped_appt.pet.latitude,
+              grouped_appt.pet.longitude,
+              candidate.pet.latitude,
+              candidate.pet.longitude
+            )
 
-          distance_ok && time_ok
-        end
+            # Check distance and time window overlap
+            distance_ok = distance && distance <= max_distance_miles
+            time_ok = time_windows_overlap?(grouped_appt, candidate)
 
-        if can_group
-          current_group << candidate
-          remaining.delete(candidate)
+            distance_ok && time_ok
+          end
+
+          if can_group
+            current_group << candidate
+            remaining.delete(candidate)
+          end
+        rescue => e
+          Rails.logger.error "Error grouping appointment #{candidate.id}: #{e.message}"
         end
       end
 
-      # Add the group if it has at least 2 appointments, otherwise treat as solo
+      # Add the group if it has at least 2 appointments, otherwise treat as individual group
       if current_group.length >= 2
         groups << current_group
         Rails.logger.info "Auto-grouped #{current_group.length} appointments: #{current_group.map { |a| a.pet.name }.join(', ')}"
       else
-        # Single appointment that couldn't be grouped - treat as solo
-        # Put it back but mark it differently
-        remaining.unshift(seed)
-        break if remaining == [seed] # Prevent infinite loop
+        # Single appointment that couldn't be grouped - add as individual group
+        groups << [seed]
+        Rails.logger.info "Couldn't group #{seed.pet.name} - adding as individual group"
       end
     end
 
-    # Handle any leftover single appointments as individual groups with pickup/dropoff
-    remaining.each do |appt|
-      groups << [appt] # Single-appointment "group" - will have pickup and dropoff
-    end
-
     groups
+  rescue => e
+    Rails.logger.error "Error in auto_group_appointments: #{e.message}"
+    Rails.logger.error e.backtrace.join("\n")
+    # Return ungrouped appointments as individual groups
+    appointments.map { |a| [a] }
   end
 
   # Check if two appointments have overlapping time windows
@@ -185,6 +205,9 @@ class RouteOptimizerService
 
     # Windows overlap if start1 < end2 AND start2 < end1
     start1 < end2 && start2 < end1
+  rescue => e
+    Rails.logger.error "Error checking time overlap for appointments #{appt1.id} and #{appt2.id}: #{e.message}"
+    false
   end
 
   # Build optimized route considering pickup/dropoff for groups and time windows
@@ -498,15 +521,18 @@ class RouteOptimizerService
     return nil unless time_value
 
     # If it's already a Time object, extract the time component and apply to today
-    if time_value.is_a?(Time)
+    if time_value.is_a?(Time) || time_value.is_a?(ActiveSupport::TimeWithZone)
       Time.current.beginning_of_day + time_value.seconds_since_midnight.seconds
     elsif time_value.is_a?(String)
       # Parse HH:MM format
-      Time.current.beginning_of_day + Time.parse(time_value).seconds_since_midnight.seconds
+      parsed = Time.parse(time_value)
+      Time.current.beginning_of_day + parsed.seconds_since_midnight.seconds
     else
+      Rails.logger.warn "Unknown time value type: #{time_value.class} for value: #{time_value}"
       nil
     end
-  rescue
+  rescue => e
+    Rails.logger.error "Error parsing time value #{time_value}: #{e.message}"
     nil
   end
 end

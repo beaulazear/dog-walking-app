@@ -307,10 +307,10 @@ const Panel = styled.div`
     border-top: 2px solid rgba(255, 255, 255, 0.35);
     border-bottom: 2px solid rgba(255, 255, 255, 0.35);
     box-shadow: none;
-    padding: 16px;
+    padding: 18px 24px;
 
     @media (min-width: 768px) {
-        padding: 16px;
+        padding: 18px 20px;
         margin-bottom: 14px;
         border-radius: 12px;
         border: 2px solid rgba(255, 255, 255, 0.4);
@@ -322,31 +322,31 @@ const PanelHeader = styled.div`
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 10px;
+    gap: 12px;
+    margin-bottom: 12px;
 `;
 
 const HeaderLeft = styled.div`
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 `;
 
 const HeaderIcon = styled.div`
     color: #fbbf24;
     display: flex;
     align-items: center;
+    flex-shrink: 0;
 `;
 
 const HeaderTitle = styled.h2`
     font-family: 'Poppins', sans-serif;
     color: #ffffff;
-    font-size: 0.95rem;
-    font-weight: 700;
+    font-size: 0.9rem;
+    font-weight: 600;
     margin: 0;
     display: flex;
     align-items: center;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 
     @media (min-width: 768px) {
         font-size: 1rem;
@@ -355,12 +355,12 @@ const HeaderTitle = styled.h2`
 
 const HeaderSubtitle = styled.p`
     font-family: 'Poppins', sans-serif;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.75rem;
     margin: 0;
-    font-weight: 700;
+    font-weight: 600;
     white-space: nowrap;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
 `;
 
 const LoadingText = styled.p`
@@ -591,17 +591,17 @@ const IconButton = styled.button`
     top: 10px;
     right: 10px;
     background: ${({ $accept, $delete }) =>
-        $accept ? 'rgba(6, 182, 212, 0.35)' :
+        $accept ? 'rgba(16, 185, 129, 0.5)' :
         $delete ? 'rgba(251, 146, 60, 0.35)' :
         'rgba(102, 126, 234, 0.35)'
     };
     border: 2px solid ${({ $accept, $delete }) =>
-        $accept ? 'rgba(6, 182, 212, 0.7)' :
+        $accept ? 'rgba(16, 185, 129, 0.8)' :
         $delete ? 'rgba(251, 146, 60, 0.7)' :
         'rgba(102, 126, 234, 0.7)'
     };
     color: ${({ $accept, $delete }) =>
-        $accept ? '#22d3ee' :
+        $accept ? '#ffffff' :
         $delete ? '#fbbf24' :
         '#8b9eff'
     };
@@ -615,7 +615,7 @@ const IconButton = styled.button`
     transition: all 0.2s ease;
     flex-shrink: 0;
     box-shadow: 0 2px 8px ${({ $accept, $delete }) =>
-        $accept ? 'rgba(6, 182, 212, 0.3)' :
+        $accept ? 'rgba(16, 185, 129, 0.4)' :
         $delete ? 'rgba(251, 146, 60, 0.3)' :
         'rgba(102, 126, 234, 0.3)'
     };
@@ -631,17 +631,17 @@ const IconButton = styled.button`
 
         &:hover:not(:disabled) {
             background: ${({ $accept, $delete }) =>
-                $accept ? 'rgba(6, 182, 212, 0.5)' :
+                $accept ? 'rgba(16, 185, 129, 0.65)' :
                 $delete ? 'rgba(251, 146, 60, 0.5)' :
                 'rgba(102, 126, 234, 0.5)'
             };
             border-color: ${({ $accept, $delete }) =>
-                $accept ? 'rgba(6, 182, 212, 0.9)' :
+                $accept ? 'rgba(16, 185, 129, 0.95)' :
                 $delete ? 'rgba(251, 146, 60, 0.9)' :
                 'rgba(102, 126, 234, 0.9)'
             };
             box-shadow: 0 4px 12px ${({ $accept, $delete }) =>
-                $accept ? 'rgba(6, 182, 212, 0.4)' :
+                $accept ? 'rgba(16, 185, 129, 0.5)' :
                 $delete ? 'rgba(251, 146, 60, 0.4)' :
                 'rgba(102, 126, 234, 0.4)'
             };

@@ -267,10 +267,13 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
 
   // Toggle route optimization
   const handleToggleRoute = () => {
+    console.log('handleToggleRoute called, showRoute =', showRoute);
     if (!showRoute) {
+      console.log('Fetching optimized route...');
       fetchOptimizedRoute();
       setShowTimeline(true); // Auto-show timeline when enabling route
     } else {
+      console.log('Hiding route and timeline');
       setShowTimeline(false);
     }
     setShowRoute(!showRoute);
