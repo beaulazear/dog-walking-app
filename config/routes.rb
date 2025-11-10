@@ -91,6 +91,11 @@ Rails.application.routes.draw do
   get '/walk_groups/suggestions', to: 'walk_groups#suggestions'
   resources :walk_groups, only: [:index, :create, :destroy]
 
+  # Route Optimization Routes (Phase 4)
+  post '/routes/optimize', to: 'routes#optimize'
+  post '/routes/reorder', to: 'routes#reorder'
+  get '/routes/:date', to: 'routes#show'
+
   # Routing logic: fallback requests for React Router.
   # Leave this here to help deploy your app later!
 

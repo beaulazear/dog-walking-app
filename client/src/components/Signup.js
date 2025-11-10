@@ -1,12 +1,13 @@
 import React, { useState, useContext } from "react";
 import styled, { keyframes } from "styled-components";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/user.js";
-import { UserPlus, User, Mail, Lock, UserCircle, Eye, EyeOff } from "lucide-react";
+import { UserPlus, User, Mail, Lock, UserCircle, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import dogImage from "../assets/dog.png";
 
 const Signup = () => {
     const { setUser } = useContext(UserContext);
+    const navigate = useNavigate();
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [name, setName] = useState("");
@@ -78,16 +79,16 @@ const Signup = () => {
 
     return (
         <SignupWrapper $isKeyboardOpen={isKeyboardOpen}>
-            <FloatingPaws $delay="0s" $startX="10%" />
-            <FloatingPaws $delay="2s" $startX="30%" />
-            <FloatingPaws $delay="4s" $startX="50%" />
-            <FloatingPaws $delay="6s" $startX="70%" />
-            <FloatingPaws $delay="8s" $startX="90%" />
-            <FloatingPaws $delay="1s" $startX="20%" />
-            <FloatingPaws $delay="3s" $startX="40%" />
-            <FloatingPaws $delay="5s" $startX="60%" />
-            <FloatingPaws $delay="7s" $startX="80%" />
-            
+            <BackButton onClick={() => navigate('/')} aria-label="Go back">
+                <ArrowLeft size={20} />
+                <span>Back</span>
+            </BackButton>
+
+            <FloatingPaws $delay="0s" $startX="15%" />
+            <FloatingPaws $delay="3s" $startX="45%" />
+            <FloatingPaws $delay="6s" $startX="75%" />
+            <FloatingPaws $delay="9s" $startX="85%" />
+
             <ContentContainer $isKeyboardOpen={isKeyboardOpen}>
                 <HeaderContainer>
                     <DogImageWrapper>
@@ -274,6 +275,7 @@ const pawFloat = keyframes`
 const SignupWrapper = styled.div`
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     align-items: ${props => props.$isKeyboardOpen ? 'flex-start' : 'center'};
     justify-content: center;
@@ -283,12 +285,12 @@ const SignupWrapper = styled.div`
     overflow-x: hidden;
     overflow-y: auto;
     transition: all 0.3s ease;
-    
+
     @media (max-width: 768px) {
         align-items: ${props => props.$isKeyboardOpen ? 'flex-start' : 'flex-start'};
         padding-top: ${props => props.$isKeyboardOpen ? '40px' : '60px'};
     }
-    
+
     &::before {
         content: '';
         position: absolute;
@@ -296,7 +298,7 @@ const SignupWrapper = styled.div`
         left: 0;
         right: 0;
         bottom: 0;
-        background: 
+        background:
             radial-gradient(circle at 20% 20%, rgba(255,255,255,0.05) 2px, transparent 2px),
             radial-gradient(circle at 80% 40%, rgba(255,255,255,0.03) 1.5px, transparent 1.5px),
             radial-gradient(circle at 40% 60%, rgba(255,255,255,0.04) 1px, transparent 1px),
@@ -306,6 +308,50 @@ const SignupWrapper = styled.div`
         background-size: 80px 80px, 60px 60px, 40px 40px, 100px 100px, 30px 30px, 70px 70px;
         animation: ${float} 30s linear infinite;
         pointer-events: none;
+    }
+`;
+
+const BackButton = styled.button`
+    position: fixed;
+    top: 1.25rem;
+    left: 1.25rem;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    padding: 0.625rem 1rem;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateX(-2px);
+        border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    &:active {
+        transform: translateX(0) scale(0.98);
+    }
+
+    &:focus-visible {
+        outline: 2px solid rgba(255, 255, 255, 0.6);
+        outline-offset: 2px;
+    }
+
+    @media (max-width: 768px) {
+        top: 1rem;
+        left: 1rem;
+        padding: 0.5rem 0.875rem;
+        font-size: 0.875rem;
     }
 `;
 

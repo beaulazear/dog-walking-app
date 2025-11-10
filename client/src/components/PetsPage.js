@@ -2,6 +2,7 @@ import React, { useContext, useState, useEffect, useMemo, memo, useCallback } fr
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import dayjs from "dayjs";
+import { motion, AnimatePresence } from "motion/react";
 import {
     Search,
     Dog,
@@ -66,6 +67,9 @@ const PetCard = memo(({ pet, appointmentCount, onPetClick }) => {
                     {pet.active ? <CheckCircle size={14} /> : <Pause size={14} />}
                     {pet.active ? 'Active' : 'Inactive'}
                 </StatusBadge>
+                <ChevronIcon>
+                    <ChevronRight size={20} />
+                </ChevronIcon>
             </PetCardHeader>
 
             <PetCardInfo onClick={() => onPetClick(pet.id, 'info')}>
@@ -73,16 +77,6 @@ const PetCard = memo(({ pet, appointmentCount, onPetClick }) => {
                     <MapPin size={14} />
                     <span>{pet.address || 'No address'}</span>
                 </InfoRow>
-                <InfoRow>
-                    <Calendar size={14} />
-                    <span>Age: {pet.birthdate ? `${dayjs().diff(dayjs(pet.birthdate), 'year')} years` : 'Unknown'}</span>
-                </InfoRow>
-                {appointmentCount > 0 && (
-                    <InfoRow>
-                        <CalendarDays size={14} />
-                        <span>{appointmentCount} upcoming appointment{appointmentCount !== 1 ? 's' : ''}</span>
-                    </InfoRow>
-                )}
             </PetCardInfo>
 
             <QuickActionsRow>
@@ -94,7 +88,7 @@ const PetCard = memo(({ pet, appointmentCount, onPetClick }) => {
                     title="View and schedule appointments"
                 >
                     <CalendarDays size={16} />
-                    <span>Appointments</span>
+                    <span>Appointments {appointmentCount > 0 ? `(${appointmentCount})` : ''}</span>
                 </QuickActionButton>
                 <QuickActionButton
                     onClick={(e) => {
@@ -107,11 +101,6 @@ const PetCard = memo(({ pet, appointmentCount, onPetClick }) => {
                     <span>Invoices</span>
                 </QuickActionButton>
             </QuickActionsRow>
-
-            <ViewDetailsButton onClick={() => onPetClick(pet.id, 'info')}>
-                View Full Details
-                <ChevronRight size={16} />
-            </ViewDetailsButton>
         </StyledPetCard>
     );
 });
@@ -326,115 +315,147 @@ export default function PetsPage() {
                 />
             )}
 
-            {showCreateForm && (
-                <CreatePetModal onClick={(e) => e.target === e.currentTarget && setShowCreateForm(false)}>
-                    <ModalContainer style={{ maxWidth: '600px' }}>
-                        <ModalHeader>
-                            <ModalTitle>Add New Pet</ModalTitle>
-                            <CloseButton onClick={() => setShowCreateForm(false)}>
-                                <X size={24} />
-                            </CloseButton>
-                        </ModalHeader>
-                        
-                        <ModalScrollContent>
-                        <CreatePetForm onSubmit={handleNewPetSubmit}>
-                        <FormGrid>
-                            <FormGroup>
-                                <Label>Pet Name *</Label>
-                                <Input 
-                                    name="name" 
-                                    value={newPetFormData.name} 
-                                    onChange={handleNewPetChange} 
-                                    required 
-                                    placeholder="Enter pet's name"
-                                />
-                            </FormGroup>
+            <AnimatePresence>
+                {showCreateForm && ReactDOM.createPortal(
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={(e) => e.target === e.currentTarget && setShowCreateForm(false)}
+                        style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'rgba(0, 0, 0, 0.75)',
+                            backdropFilter: 'blur(12px)',
+                            display: 'flex',
+                            alignItems: 'flex-end',
+                            justifyContent: 'center',
+                            zIndex: 1000,
+                            padding: '20px'
+                        }}
+                    >
+                        {/* Drawer */}
+                        <motion.div
+                            initial={{ y: '100%' }}
+                            animate={{ y: 0 }}
+                            exit={{ y: '100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ width: '100%', maxWidth: '600px' }}
+                        >
+                                <ModalContainer style={{ maxWidth: '600px', marginBottom: 0 }}>
+                                    <ModalHeader>
+                                        <ModalTitle>Add New Pet</ModalTitle>
+                                        <CloseButton onClick={() => setShowCreateForm(false)}>
+                                            <X size={24} />
+                                        </CloseButton>
+                                    </ModalHeader>
 
-                            <FormGroup>
-                                <Label>Birthdate</Label>
-                                <Input 
-                                    type="date" 
-                                    name="birthdate" 
-                                    value={newPetFormData.birthdate} 
-                                    onChange={handleNewPetChange} 
-                                />
-                            </FormGroup>
+                                    <ModalScrollContent>
+                                    <CreatePetForm onSubmit={handleNewPetSubmit}>
+                                    <FormGrid>
+                                        <FormGroup>
+                                            <Label>Pet Name *</Label>
+                                            <Input
+                                                name="name"
+                                                value={newPetFormData.name}
+                                                onChange={handleNewPetChange}
+                                                required
+                                                placeholder="Enter pet's name"
+                                            />
+                                        </FormGroup>
 
-                            <FormGroup>
-                                <Label>Sex</Label>
-                                <Select name="sex" value={newPetFormData.sex} onChange={handleNewPetChange}>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                </Select>
-                            </FormGroup>
+                                        <FormGroup>
+                                            <Label>Birthdate</Label>
+                                            <Input
+                                                type="date"
+                                                name="birthdate"
+                                                value={newPetFormData.birthdate}
+                                                onChange={handleNewPetChange}
+                                            />
+                                        </FormGroup>
 
-                            <FormGroup>
-                                <Label>Spayed/Neutered</Label>
-                                <Select 
-                                    name="spayed_neutered" 
-                                    value={newPetFormData.spayed_neutered} 
-                                    onChange={handleNewPetChange}
-                                >
-                                    <option value={false}>No</option>
-                                    <option value={true}>Yes</option>
-                                </Select>
-                            </FormGroup>
-                        </FormGrid>
+                                        <FormGroup>
+                                            <Label>Sex</Label>
+                                            <Select name="sex" value={newPetFormData.sex} onChange={handleNewPetChange}>
+                                                <option value="Male">Male</option>
+                                                <option value="Female">Female</option>
+                                            </Select>
+                                        </FormGroup>
 
-                        <FormGroup>
-                            <Label>Address</Label>
-                            <Input 
-                                name="address" 
-                                value={newPetFormData.address} 
-                                onChange={handleNewPetChange} 
-                                placeholder="Pet's home address"
-                            />
-                        </FormGroup>
+                                        <FormGroup>
+                                            <Label>Spayed/Neutered</Label>
+                                            <Select
+                                                name="spayed_neutered"
+                                                value={newPetFormData.spayed_neutered}
+                                                onChange={handleNewPetChange}
+                                            >
+                                                <option value={false}>No</option>
+                                                <option value={true}>Yes</option>
+                                            </Select>
+                                        </FormGroup>
+                                    </FormGrid>
 
-                        <FormGroup>
-                            <Label>Behavioral Notes</Label>
-                            <Textarea 
-                                name="behavioral_notes" 
-                                value={newPetFormData.behavioral_notes} 
-                                onChange={handleNewPetChange} 
-                                placeholder="Any behavioral notes or special instructions..."
-                            />
-                        </FormGroup>
+                                    <FormGroup>
+                                        <Label>Address</Label>
+                                        <Input
+                                            name="address"
+                                            value={newPetFormData.address}
+                                            onChange={handleNewPetChange}
+                                            placeholder="Pet's home address"
+                                        />
+                                    </FormGroup>
 
-                        <FormGroup>
-                            <Label>Supplies Location</Label>
-                            <Textarea 
-                                name="supplies_location" 
-                                value={newPetFormData.supplies_location} 
-                                onChange={handleNewPetChange} 
-                                placeholder="Where are leashes, treats, etc. located?"
-                            />
-                        </FormGroup>
+                                    <FormGroup>
+                                        <Label>Behavioral Notes</Label>
+                                        <Textarea
+                                            name="behavioral_notes"
+                                            value={newPetFormData.behavioral_notes}
+                                            onChange={handleNewPetChange}
+                                            placeholder="Any behavioral notes or special instructions..."
+                                        />
+                                    </FormGroup>
 
-                        <FormGroup>
-                            <Label>Allergies</Label>
-                            <Input 
-                                name="allergies" 
-                                value={newPetFormData.allergies} 
-                                onChange={handleNewPetChange} 
-                                placeholder="Food allergies, medication allergies, etc."
-                            />
-                        </FormGroup>
+                                    <FormGroup>
+                                        <Label>Supplies Location</Label>
+                                        <Textarea
+                                            name="supplies_location"
+                                            value={newPetFormData.supplies_location}
+                                            onChange={handleNewPetChange}
+                                            placeholder="Where are leashes, treats, etc. located?"
+                                        />
+                                    </FormGroup>
 
-                        <FormButtons>
-                            <SaveButton type="submit" disabled={isCreatingPet}>
-                                <Save size={18} />
-                                {isCreatingPet ? 'Adding...' : 'Add Pet'}
-                            </SaveButton>
-                            <CancelButton type="button" onClick={() => setShowCreateForm(false)} disabled={isCreatingPet}>
-                                Cancel
-                            </CancelButton>
-                        </FormButtons>
-                    </CreatePetForm>
-                    </ModalScrollContent>
-                    </ModalContainer>
-                </CreatePetModal>
-            )}
+                                    <FormGroup>
+                                        <Label>Allergies</Label>
+                                        <Input
+                                            name="allergies"
+                                            value={newPetFormData.allergies}
+                                            onChange={handleNewPetChange}
+                                            placeholder="Food allergies, medication allergies, etc."
+                                        />
+                                    </FormGroup>
+
+                                    <FormButtons>
+                                        <SaveButton type="submit" disabled={isCreatingPet}>
+                                            <Save size={18} />
+                                            {isCreatingPet ? 'Adding...' : 'Add Pet'}
+                                        </SaveButton>
+                                        <CancelButton type="button" onClick={() => setShowCreateForm(false)} disabled={isCreatingPet}>
+                                            Cancel
+                                        </CancelButton>
+                                    </FormButtons>
+                                </CreatePetForm>
+                                </ModalScrollContent>
+                                </ModalContainer>
+                        </motion.div>
+                    </motion.div>,
+                    document.body
+                )}
+            </AnimatePresence>
         </Container>
     );
 }
@@ -1393,65 +1414,131 @@ const PetsGrid = styled.div`
 `;
 
 const StyledPetCard = styled.div`
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 14px;
-    padding: 1rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    opacity: ${props => props.$active ? 1 : 0.75};
+    background: ${props => props.$active
+        ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%)'
+        : 'linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%)'
+    };
+    backdrop-filter: blur(20px);
+    border: 2px solid ${props => props.$active
+        ? 'rgba(255, 255, 255, 0.5)'
+        : 'rgba(255, 255, 255, 0.25)'
+    };
+    border-radius: 20px;
+    padding: 1.25rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: ${props => props.$active
+        ? '0 8px 32px rgba(99, 102, 241, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1)'
+        : '0 4px 16px rgba(0, 0, 0, 0.1)'
+    };
+    opacity: ${props => props.$active ? 1 : 0.85};
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: ${props => props.$active
+            ? 'linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899)'
+            : 'rgba(255, 255, 255, 0.3)'
+        };
+        opacity: ${props => props.$active ? 1 : 0};
+        transition: opacity 0.3s ease;
+    }
 
     &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: ${props => props.$active
+            ? '0 12px 40px rgba(99, 102, 241, 0.3), 0 4px 12px rgba(0, 0, 0, 0.15)'
+            : '0 8px 24px rgba(0, 0, 0, 0.15)'
+        };
+        border-color: ${props => props.$active
+            ? 'rgba(255, 255, 255, 0.7)'
+            : 'rgba(255, 255, 255, 0.4)'
+        };
+
+        &::before {
+            opacity: 1;
+        }
     }
 
     @media (min-width: 768px) {
-        padding: 1.125rem;
-        gap: 0.875rem;
+        padding: 1.5rem;
+        gap: 1.125rem;
+    }
+`;
+
+const PetIcon = styled.div`
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4), 0 0 0 3px rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+
+    svg {
+        width: 24px;
+        height: 24px;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    }
+
+    @media (min-width: 768px) {
+        width: 52px;
+        height: 52px;
+
+        svg {
+            width: 26px;
+            height: 26px;
+        }
+    }
+`;
+
+const ChevronIcon = styled.div`
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.7);
+    transition: all 0.3s ease;
+
+    svg {
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
     }
 `;
 
 const PetCardHeader = styled.div`
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     cursor: pointer;
-    padding: 2px;
-    margin: -2px;
-    border-radius: 10px;
-    transition: background 0.2s ease;
+    padding: 4px;
+    margin: -4px;
+    border-radius: 14px;
+    transition: all 0.3s ease;
 
     &:hover {
-        background: rgba(0, 0, 0, 0.03);
-    }
-`;
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(2px);
 
-const PetIcon = styled.div`
-    width: 38px;
-    height: 38px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    flex-shrink: 0;
+        ${PetIcon} {
+            transform: scale(1.05) rotate(2deg);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5), 0 0 0 4px rgba(255, 255, 255, 0.3);
+        }
 
-    svg {
-        width: 20px;
-        height: 20px;
-    }
-
-    @media (min-width: 768px) {
-        width: 42px;
-        height: 42px;
-
-        svg {
-            width: 22px;
-            height: 22px;
+        ${ChevronIcon} {
+            color: rgba(255, 255, 255, 1);
+            transform: translateX(4px);
         }
     }
 `;
@@ -1459,123 +1546,147 @@ const PetIcon = styled.div`
 const PetName = styled.h3`
     flex: 1;
     font-family: 'Poppins', sans-serif;
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: #333;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
     margin: 0;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.3px;
 
     @media (min-width: 768px) {
-        font-size: 1.15rem;
+        font-size: 1.25rem;
     }
 `;
 
 const StatusBadge = styled.span`
     display: flex;
     align-items: center;
-    gap: 3px;
-    padding: 3px 8px;
-    border-radius: 12px;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 20px;
     font-family: 'Poppins', sans-serif;
-    font-size: 0.7rem;
-    font-weight: 600;
-    background: ${props => props.$active ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'};
-    color: ${props => props.$active ? '#16a34a' : '#dc2626'};
-    border: 1px solid ${props => props.$active ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'};
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: ${props => props.$active
+        ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(22, 163, 74, 0.2))'
+        : 'linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.2))'
+    };
+    color: ${props => props.$active ? '#ffffff' : '#ffffff'};
+    border: 2px solid ${props => props.$active
+        ? 'rgba(34, 197, 94, 0.6)'
+        : 'rgba(239, 68, 68, 0.6)'
+    };
     flex-shrink: 0;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: ${props => props.$active
+        ? '0 2px 8px rgba(34, 197, 94, 0.3)'
+        : '0 2px 8px rgba(239, 68, 68, 0.3)'
+    };
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
 
     svg {
-        width: 12px;
-        height: 12px;
+        width: 14px;
+        height: 14px;
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
     }
 `;
 
 const PetCardInfo = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     cursor: pointer;
-    padding: 2px;
-    margin: -2px;
-    border-radius: 6px;
-    transition: background 0.2s ease;
+    padding: 8px;
+    margin: -8px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
 
     &:hover {
-        background: rgba(0, 0, 0, 0.03);
+        background: rgba(255, 255, 255, 0.1);
     }
 `;
 
 const QuickActionsRow = styled.div`
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 6px;
-    padding-top: 6px;
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    gap: 8px;
+    padding-top: 12px;
+    margin-top: 8px;
+    border-top: 2px solid rgba(255, 255, 255, 0.2);
 `;
 
 const QuickActionButton = styled.button`
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
-    padding: 8px 10px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    gap: 6px;
+    padding: 10px 12px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(139, 92, 246, 0.9));
     color: white;
-    border: none;
-    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
     font-family: 'Poppins', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 0.8rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 1px 4px rgba(99, 102, 241, 0.15);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    backdrop-filter: blur(10px);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 
     svg {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
     }
 
     @media (min-width: 768px) {
-        padding: 9px 12px;
-        font-size: 0.8rem;
+        padding: 11px 14px;
+        font-size: 0.85rem;
 
         svg {
-            width: 15px;
-            height: 15px;
+            width: 17px;
+            height: 17px;
         }
     }
 
     &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 3px 8px rgba(99, 102, 241, 0.25);
-        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+        background: linear-gradient(135deg, #5b5fc7, #7c3aed);
+        border-color: rgba(255, 255, 255, 0.5);
     }
 
     &:active {
-        transform: translateY(0);
+        transform: translateY(-1px) scale(1);
     }
 `;
 
 const InfoRow = styled.div`
     display: flex;
     align-items: center;
-    gap: 6px;
-    color: #666;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.95);
     font-family: 'Poppins', sans-serif;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 
     svg {
-        width: 13px;
-        height: 13px;
-        color: #999;
+        width: 16px;
+        height: 16px;
+        color: rgba(255, 255, 255, 0.8);
         flex-shrink: 0;
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
     }
 
     @media (min-width: 768px) {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
 
         svg {
-            width: 14px;
-            height: 14px;
+            width: 17px;
+            height: 17px;
         }
     }
 `;
@@ -1584,32 +1695,42 @@ const ViewDetailsButton = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    padding: 8px;
-    background: rgba(99, 102, 241, 0.08);
-    color: #6366f1;
-    border-radius: 8px;
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    gap: 6px;
+    padding: 10px 12px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+    color: #ffffff;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
     font-family: 'Poppins', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
+    font-size: 0.85rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
     cursor: pointer;
+    backdrop-filter: blur(10px);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
     svg {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
     }
 
     @media (min-width: 768px) {
-        font-size: 0.85rem;
-        padding: 9px;
+        font-size: 0.9rem;
+        padding: 11px 14px;
+
+        svg {
+            width: 17px;
+            height: 17px;
+        }
     }
 
     &:hover {
-        background: rgba(99, 102, 241, 0.12);
-        border-color: rgba(99, 102, 241, 0.3);
-        transform: translateY(-1px);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2));
+        border-color: rgba(255, 255, 255, 0.6);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
     }
 `;
 
@@ -1699,18 +1820,17 @@ const ModalOverlay = styled.div`
 
 const ModalContainer = styled.div`
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 24px;
+    border-radius: 24px 24px 0 0;
     width: 100%;
     max-width: 900px;
     max-height: 90vh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    
+
     @media (max-width: 768px) {
         max-height: 100vh;
-        height: 100vh;
-        border-radius: 0;
+        height: auto;
         max-width: 100%;
     }
 `;

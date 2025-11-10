@@ -6,6 +6,7 @@ import BottomNav from "./components/BottomNav";
 import LoadingScreen from "./components/LoadingScreen";
 
 // Lazy load route components for better code splitting
+const Landing = lazy(() => import("./components/Landing"));
 const Login = lazy(() => import("./components/Login"));
 const Signup = lazy(() => import("./components/Signup"));
 const Dashboard = lazy(() => import("./components/Dashboard"));
@@ -63,8 +64,9 @@ function App() {
       ) : (
         <Suspense fallback={<LoadingScreen>Loading...</LoadingScreen>}>
           <Routes>
+            <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="*" element={<Login />} />
+            <Route path="*" element={<Landing />} />
           </Routes>
         </Suspense>
       )}

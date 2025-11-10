@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import styled from 'styled-components';
-import { X, MapPin, Clock, DollarSign, Moon, Sun, Mountain } from 'lucide-react';
+import { X, MapPin, Clock, DollarSign, Moon, Sun, Mountain, Route, Navigation, ArrowRight } from 'lucide-react';
 import dayjs from 'dayjs';
 
 // Fix Leaflet default icon issue with webpack
@@ -38,6 +38,46 @@ const createCustomIcon = (color, completed = false) => {
   });
 };
 
+// Numbered route marker icon for journey view
+const createNumberedRouteIcon = (number, stopType) => {
+  // Color based on stop type
+  let bgColor, icon;
+
+  if (stopType === 'pickup') {
+    bgColor = '#3b82f6'; // Blue for pickup
+    icon = '📥';
+  } else if (stopType === 'dropoff') {
+    bgColor = '#22c55e'; // Green for dropoff
+    icon = '📤';
+  } else {
+    bgColor = '#9333ea'; // Purple for solo
+    icon = '🐕';
+  }
+
+  return L.divIcon({
+    html: `<div style="
+      background-color: ${bgColor};
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid white;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    ">
+      <div style="color: white; font-size: 16px; font-weight: 700; line-height: 1;">${number}</div>
+      <div style="font-size: 10px; line-height: 1; margin-top: 2px;">${icon}</div>
+    </div>`,
+    className: '',
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40]
+  });
+};
+
 // Map component that auto-fits to markers
 const AutoFitBounds = ({ walks }) => {
   const map = useMap();
@@ -68,6 +108,10 @@ const AutoFitBounds = ({ walks }) => {
 export default function WalksMapView({ walks, isCompleted, onClose }) {
   const mapRef = useRef();
   const [mapStyle, setMapStyle] = useState('dark'); // 'dark', 'light', 'natural'
+  const [showRoute, setShowRoute] = useState(false);
+  const [optimizedRoute, setOptimizedRoute] = useState(null);
+  const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
 
   // Filter and categorize walks
   const { geocodedWalks, nonGeocodedCount } = useMemo(() => {
@@ -144,6 +188,111 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
     return Object.values(groups).filter(group => group.length > 1);
   }, [geocodedWalks, isCompleted]);
 
+  // Fetch optimized route from backend
+  const fetchOptimizedRoute = async () => {
+    setIsLoadingRoute(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/routes/optimize`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          date: dayjs().format('YYYY-MM-DD'),
+          compare: true
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setOptimizedRoute(data);
+      } else {
+        console.error('Failed to fetch optimized route');
+        setOptimizedRoute(null);
+      }
+    } catch (error) {
+      console.error('Error fetching route:', error);
+      setOptimizedRoute(null);
+    } finally {
+      setIsLoadingRoute(false);
+    }
+  };
+
+  // Toggle route optimization
+  const handleToggleRoute = () => {
+    if (!showRoute) {
+      fetchOptimizedRoute();
+      setShowTimeline(true); // Auto-show timeline when enabling route
+    } else {
+      setShowTimeline(false);
+    }
+    setShowRoute(!showRoute);
+  };
+
+  // Calculate arrival times for each stop
+  const routeWithTimes = useMemo(() => {
+    if (!optimizedRoute || !optimizedRoute.route) return null;
+
+    const WALKING_SPEED_MPH = 3.0;
+    const stops = optimizedRoute.route;
+    const stopsWithTimes = [];
+
+    // Start time - use first appointment's start time or current time
+    let currentTime = dayjs().hour(8).minute(0); // Default 8 AM
+    if (stops.length > 0 && stops[0].start_time) {
+      currentTime = dayjs(stops[0].start_time, "HH:mm");
+    }
+
+    for (let i = 0; i < stops.length; i++) {
+      const stop = stops[i];
+
+      // Calculate distance from previous stop
+      let distanceFromPrevious = 0;
+      if (i > 0) {
+        const prev = stops[i - 1];
+        const lat1 = prev.coordinates.lat;
+        const lng1 = prev.coordinates.lng;
+        const lat2 = stop.coordinates.lat;
+        const lng2 = stop.coordinates.lng;
+
+        // Haversine formula for distance
+        const R = 3959; // Earth radius in miles
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lng2 - lng1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        distanceFromPrevious = R * c;
+      }
+
+      // Calculate travel time to this stop (in minutes)
+      const travelTime = (distanceFromPrevious / WALKING_SPEED_MPH) * 60;
+
+      // Add travel time to current time
+      if (i > 0) {
+        currentTime = currentTime.add(travelTime, 'minute');
+      }
+
+      stopsWithTimes.push({
+        ...stop,
+        arrivalTime: currentTime.format('h:mm A'),
+        distanceFromPrevious: distanceFromPrevious.toFixed(2),
+        travelTimeFromPrevious: Math.round(travelTime),
+        stopNumber: i + 1
+      });
+
+      // Add stop duration (only for pickup stops and solo walks)
+      if (stop.stop_type === 'pickup' || stop.stop_type === 'solo') {
+        currentTime = currentTime.add(5, 'minute'); // 5 min per pickup/stop
+      }
+    }
+
+    return stopsWithTimes;
+  }, [optimizedRoute]);
+
   // Don't render anything if walks is null/undefined
   if (!walks || walks.length === 0) {
     return (
@@ -151,7 +300,7 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
         <MapHeader>
           <MapTitle>
             <MapPin size={20} />
-            Today's Walks Map
+            Today's Walks
           </MapTitle>
           <HeaderButtons>
             <MapStyleButton
@@ -196,9 +345,19 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
       <MapHeader>
         <MapTitle>
           <MapPin size={20} />
-          Today's Walks Map
+          Today's Walks
         </MapTitle>
         <HeaderButtons>
+          {geocodedWalks.length > 1 && (
+            <RouteToggleButton
+              $active={showRoute}
+              onClick={handleToggleRoute}
+              disabled={isLoadingRoute}
+              title={showRoute ? "Hide optimized route" : "Show optimized route"}
+            >
+              <Route size={18} />
+            </RouteToggleButton>
+          )}
           <MapStyleButton
             $active={mapStyle === 'dark'}
             onClick={() => setMapStyle('dark')}
@@ -285,38 +444,93 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
               );
             })}
 
-            {geocodedWalks.map(walk => (
-              <Marker
-                key={walk.id}
-                position={[walk.pet.latitude, walk.pet.longitude]}
-                icon={getIconForWalk(walk)}
-              >
-                <Popup maxWidth={250} className="custom-popup">
-                  <PopupContent data-theme={mapStyle}>
-                    <PopupPetName $mapStyle={mapStyle}>{walk.pet.name}</PopupPetName>
-                    <PopupDetail $mapStyle={mapStyle}>
-                      <MapPin size={14} />
-                      <span>{walk.pet.address}</span>
-                    </PopupDetail>
-                    <PopupDetail $mapStyle={mapStyle}>
-                      <Clock size={14} />
-                      <span>
-                        {dayjs(walk.start_time, "HH:mm").format("h:mm A")} - {dayjs(walk.end_time, "HH:mm").format("h:mm A")}
-                      </span>
-                    </PopupDetail>
-                    <PopupMeta $mapStyle={mapStyle}>
-                      <MetaChip $solo={walk.solo}>
-                        {walk.walk_type || (walk.solo ? 'Solo' : 'Group')}
-                      </MetaChip>
-                      <MetaDuration $mapStyle={mapStyle}>{walk.duration} min</MetaDuration>
-                    </PopupMeta>
-                    {walk.walk_group_id && (
-                      <PopupGroupBadge>Grouped Walk</PopupGroupBadge>
-                    )}
-                  </PopupContent>
-                </Popup>
-              </Marker>
-            ))}
+            {/* Draw optimized route polyline */}
+            {showRoute && optimizedRoute && optimizedRoute.path_coordinates && (
+              <Polyline
+                positions={optimizedRoute.path_coordinates.map(coord => [coord.lat, coord.lng])}
+                pathOptions={{
+                  color: '#3b82f6',
+                  weight: 4,
+                  opacity: 0.8,
+                  dashArray: '5, 10',
+                  lineCap: 'round',
+                  lineJoin: 'round'
+                }}
+              />
+            )}
+
+            {/* Show numbered route markers when route is active, otherwise show regular markers */}
+            {showRoute && routeWithTimes ? (
+              // Numbered route markers
+              routeWithTimes.map((stop, idx) => (
+                <Marker
+                  key={stop.id}
+                  position={[stop.coordinates.lat, stop.coordinates.lng]}
+                  icon={createNumberedRouteIcon(stop.stopNumber, stop.stop_type)}
+                >
+                  <Popup maxWidth={250} className="custom-popup">
+                    <PopupContent data-theme={mapStyle}>
+                      <PopupStopNumber>Stop #{stop.stopNumber}</PopupStopNumber>
+                      <PopupPetName $mapStyle={mapStyle}>{stop.pet_name}</PopupPetName>
+                      <PopupDetail $mapStyle={mapStyle}>
+                        <MapPin size={14} />
+                        <span>{stop.address}</span>
+                      </PopupDetail>
+                      <PopupDetail $mapStyle={mapStyle}>
+                        <Clock size={14} />
+                        <span>Arrive: {stop.arrivalTime}</span>
+                      </PopupDetail>
+                      <PopupMeta $mapStyle={mapStyle}>
+                        <MetaChip $stopType={stop.stop_type}>
+                          {stop.stop_type === 'pickup' ? '📥 Pickup' :
+                           stop.stop_type === 'dropoff' ? '📤 Dropoff' :
+                           '🐕 Solo Walk'}
+                        </MetaChip>
+                        {idx > 0 && (
+                          <MetaDuration $mapStyle={mapStyle}>
+                            {stop.distanceFromPrevious} mi
+                          </MetaDuration>
+                        )}
+                      </PopupMeta>
+                    </PopupContent>
+                  </Popup>
+                </Marker>
+              ))
+            ) : (
+              // Regular walk markers
+              geocodedWalks.map(walk => (
+                <Marker
+                  key={walk.id}
+                  position={[walk.pet.latitude, walk.pet.longitude]}
+                  icon={getIconForWalk(walk)}
+                >
+                  <Popup maxWidth={250} className="custom-popup">
+                    <PopupContent data-theme={mapStyle}>
+                      <PopupPetName $mapStyle={mapStyle}>{walk.pet.name}</PopupPetName>
+                      <PopupDetail $mapStyle={mapStyle}>
+                        <MapPin size={14} />
+                        <span>{walk.pet.address}</span>
+                      </PopupDetail>
+                      <PopupDetail $mapStyle={mapStyle}>
+                        <Clock size={14} />
+                        <span>
+                          {dayjs(walk.start_time, "HH:mm").format("h:mm A")} - {dayjs(walk.end_time, "HH:mm").format("h:mm A")}
+                        </span>
+                      </PopupDetail>
+                      <PopupMeta $mapStyle={mapStyle}>
+                        <MetaChip $solo={walk.solo}>
+                          {walk.walk_type || (walk.solo ? 'Solo' : 'Group')}
+                        </MetaChip>
+                        <MetaDuration $mapStyle={mapStyle}>{walk.duration} min</MetaDuration>
+                      </PopupMeta>
+                      {walk.walk_group_id && (
+                        <PopupGroupBadge>Grouped Walk</PopupGroupBadge>
+                      )}
+                    </PopupContent>
+                  </Popup>
+                </Marker>
+              ))
+            )}
           </StyledMapContainer>
 
           <MapLegend $mapStyle={mapStyle}>
@@ -341,6 +555,66 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
               <LegendLabel>Completed</LegendLabel>
             </LegendItem>
           </MapLegend>
+
+          {showRoute && optimizedRoute && (
+            <RouteStatsPanel $mapStyle={mapStyle}>
+              <RoutePanelClose onClick={handleToggleRoute} title="Close route view">
+                <X size={18} />
+              </RoutePanelClose>
+              <RouteStatHeader>Optimized Route</RouteStatHeader>
+              <RouteStatsRow>
+                <RouteStat>
+                  <RouteStatLabel>Distance</RouteStatLabel>
+                  <RouteStatValue>{optimizedRoute.total_distance} mi</RouteStatValue>
+                </RouteStat>
+                <RouteStat>
+                  <RouteStatLabel>Travel</RouteStatLabel>
+                  <RouteStatValue>{optimizedRoute.total_travel_time} min</RouteStatValue>
+                </RouteStat>
+                {optimizedRoute.comparison && (
+                  <RouteStat>
+                    <RouteStatLabel>Saved</RouteStatLabel>
+                    <RouteStatValue $accent>{optimizedRoute.comparison.improvement_percent}%</RouteStatValue>
+                  </RouteStat>
+                )}
+              </RouteStatsRow>
+              <TimelineToggle onClick={() => setShowTimeline(!showTimeline)}>
+                <Navigation size={14} />
+                {showTimeline ? 'Hide' : 'Show'} Step-by-Step
+              </TimelineToggle>
+            </RouteStatsPanel>
+          )}
+
+          {showRoute && showTimeline && routeWithTimes && (
+            <RouteTimelinePanel $mapStyle={mapStyle}>
+              <TimelineHeader>
+                <Navigation size={16} />
+                <span>Your Journey ({routeWithTimes.length} stops)</span>
+              </TimelineHeader>
+              <TimelineSteps>
+                {routeWithTimes.map((stop, idx) => (
+                  <TimelineStep key={stop.id}>
+                    <StepNumber $stopType={stop.stop_type}>{stop.stopNumber}</StepNumber>
+                    <StepContent>
+                      <StepTime>{stop.arrivalTime}</StepTime>
+                      <StepAction $stopType={stop.stop_type}>
+                        {stop.stop_type === 'pickup' ? '📥 Pick up' :
+                         stop.stop_type === 'dropoff' ? '📤 Drop off' :
+                         '🐕 Walk'} {stop.pet_name}
+                      </StepAction>
+                      <StepAddress>{stop.address}</StepAddress>
+                      {idx > 0 && stop.distanceFromPrevious > 0 && (
+                        <StepDistance>
+                          <ArrowRight size={12} />
+                          {stop.distanceFromPrevious} mi ({stop.travelTimeFromPrevious} min walk)
+                        </StepDistance>
+                      )}
+                    </StepContent>
+                  </TimelineStep>
+                ))}
+              </TimelineSteps>
+            </RouteTimelinePanel>
+          )}
         </>
       )}
     </MapViewContainer>
@@ -412,6 +686,46 @@ const HeaderButtons = styled.div`
   gap: 6px;
   position: relative;
   z-index: 1;
+`;
+
+const RouteToggleButton = styled.button`
+  background: ${({ $active }) =>
+    $active ? 'rgba(59, 130, 246, 0.4)' : 'rgba(255, 255, 255, 0.15)'};
+  border: 1px solid ${({ $active }) =>
+    $active ? 'rgba(59, 130, 246, 0.6)' : 'rgba(255, 255, 255, 0.25)'};
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+
+  @media (min-width: 768px) {
+    width: 38px;
+    height: 38px;
+
+    &:hover:not(:disabled) {
+      background: ${({ $active }) =>
+        $active ? 'rgba(59, 130, 246, 0.5)' : 'rgba(255, 255, 255, 0.3)'};
+      border-color: ${({ $active }) =>
+        $active ? 'rgba(59, 130, 246, 0.8)' : 'rgba(255, 255, 255, 0.5)'};
+      transform: translateY(-1px);
+    }
+  }
 `;
 
 const MapStyleButton = styled.button`
@@ -777,4 +1091,317 @@ const LegendDot = styled.div`
   border: 2px solid white;
   box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   flex-shrink: 0;
+`;
+
+const RouteStatsPanel = styled.div`
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: ${({ $mapStyle }) =>
+    $mapStyle === 'light' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(20, 20, 30, 0.95)'};
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 14px 20px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 0 1px ${({ $mapStyle }) =>
+      $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'},
+    inset 0 1px 0 ${({ $mapStyle }) =>
+      $mapStyle === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.1)'};
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  z-index: 10001;
+  transition: all 0.3s ease;
+  animation: slideDown 0.3s ease-out;
+  max-width: 90vw;
+  position: relative;
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 12px 16px;
+    top: 16px;
+    width: calc(100vw - 32px);
+    max-width: none;
+  }
+`;
+
+const RoutePanelClose = styled.button`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #ffffff;
+  transition: all 0.2s ease;
+  z-index: 10;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.6);
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  @media (max-width: 768px) {
+    width: 28px;
+    height: 28px;
+    top: 8px;
+    right: 8px;
+  }
+`;
+
+const RouteStatHeader = styled.div`
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(59, 130, 246, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 10px;
+  text-align: center;
+`;
+
+const RouteStatsRow = styled.div`
+  display: flex;
+  gap: 20px;
+  align-items: center;
+`;
+
+const RouteStat = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+`;
+
+const RouteStatLabel = styled.div`
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+const RouteStatValue = styled.div`
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: ${({ $accent }) => $accent ? '#22c55e' : '#ffffff'};
+`;
+
+const TimelineToggle = styled.button`
+  margin-top: 12px;
+  background: rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #ffffff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+
+  &:hover {
+    background: rgba(59, 130, 246, 0.3);
+    border-color: rgba(59, 130, 246, 0.6);
+  }
+`;
+
+const RouteTimelinePanel = styled.div`
+  position: absolute;
+  top: 120px;
+  right: 20px;
+  width: 320px;
+  max-height: calc(100vh - 200px);
+  background: ${({ $mapStyle }) =>
+    $mapStyle === 'light' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(20, 20, 30, 0.95)'};
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 0 1px ${({ $mapStyle }) =>
+      $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'},
+    inset 0 1px 0 ${({ $mapStyle }) =>
+      $mapStyle === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.1)'};
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  z-index: 10002;
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 0.3s ease-out;
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @media (max-width: 768px) {
+    right: 10px;
+    left: 10px;
+    width: auto;
+    max-width: none;
+    top: 180px;
+    max-height: calc(100vh - 200px);
+  }
+`;
+
+const TimelineHeader = styled.div`
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(59, 130, 246, 0.9);
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+`;
+
+const TimelineSteps = styled.div`
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.3);
+    border-radius: 3px;
+
+    &:hover {
+      background: rgba(59, 130, 246, 0.5);
+    }
+  }
+`;
+
+const TimelineStep = styled.div`
+  display: flex;
+  gap: 12px;
+  position: relative;
+
+  &:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: 40px;
+    bottom: -12px;
+    width: 2px;
+    background: rgba(59, 130, 246, 0.2);
+  }
+`;
+
+const StepNumber = styled.div`
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: ${({ $stopType }) =>
+    $stopType === 'pickup' ? 'rgba(59, 130, 246, 0.3)' :
+    $stopType === 'dropoff' ? 'rgba(34, 197, 94, 0.3)' :
+    'rgba(147, 51, 234, 0.3)'};
+  border: 2px solid ${({ $stopType }) =>
+    $stopType === 'pickup' ? '#3b82f6' :
+    $stopType === 'dropoff' ? '#22c55e' :
+    '#9333ea'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  flex-shrink: 0;
+`;
+
+const StepContent = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const StepTime = styled.div`
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(59, 130, 246, 0.9);
+`;
+
+const StepAction = styled.div`
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: ${({ $stopType }) =>
+    $stopType === 'pickup' ? '#3b82f6' :
+    $stopType === 'dropoff' ? '#22c55e' :
+    '#9333ea'};
+`;
+
+const StepAddress = styled.div`
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+`;
+
+const StepDistance = styled.div`
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+`;
+
+const PopupStopNumber = styled.div`
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(59, 130, 246, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
 `;

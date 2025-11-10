@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { Users, MapPin, Clock, TrendingDown, ChevronRight, Sparkles } from 'lucide-react';
+import { Users, MapPin, Clock, TrendingDown, ChevronRight, Sparkles, X, Check } from 'lucide-react';
 
 export default function GroupSuggestionsPanel({ date, appointments, onGroupChange }) {
     const [suggestions, setSuggestions] = useState([]);
@@ -202,6 +202,14 @@ export default function GroupSuggestionsPanel({ date, appointments, onGroupChang
                     <SectionTitle>Active Groups</SectionTitle>
                     {acceptedGroups.map((group) => (
                         <GroupCard key={group.id} $accepted>
+                            <IconButton
+                                $delete
+                                onClick={() => handleDeleteGroup(group.id)}
+                                title="Ungroup"
+                            >
+                                <X size={16} />
+                            </IconButton>
+
                             <GroupHeader>
                                 <GroupTitle>
                                     <Users size={14} />
@@ -211,17 +219,13 @@ export default function GroupSuggestionsPanel({ date, appointments, onGroupChang
                             </GroupHeader>
 
                             <PetList>
-                                {group.appointments?.map((appt) => (
-                                    <PetItem key={appt.id}>
+                                {group.appointments?.map((appt, apptIdx) => (
+                                    <PetItem key={`accepted-${group.id}-appt-${appt.id}-${apptIdx}`}>
                                         <PetDot $accepted />
                                         <PetName>{appt.pet?.name}</PetName>
                                     </PetItem>
                                 ))}
                             </PetList>
-
-                            <DeleteButton onClick={() => handleDeleteGroup(group.id)}>
-                                Ungroup
-                            </DeleteButton>
                         </GroupCard>
                     ))}
                 </GroupsContainer>
@@ -232,6 +236,19 @@ export default function GroupSuggestionsPanel({ date, appointments, onGroupChang
                     {acceptedGroups.length > 0 && <SectionTitle>Suggestions</SectionTitle>}
                     {filteredSuggestions.map((group, idx) => (
                         <GroupCard key={idx}>
+                            <IconButton
+                                $accept
+                                onClick={() => handleAcceptGroup(group)}
+                                disabled={processingGroupId === group.appointments[0]}
+                                title="Accept Group"
+                            >
+                                {processingGroupId === group.appointments[0] ? (
+                                    <Clock size={16} />
+                                ) : (
+                                    <Check size={16} />
+                                )}
+                            </IconButton>
+
                             <GroupHeader>
                                 <GroupTitle>
                                     <Users size={14} />
@@ -242,7 +259,7 @@ export default function GroupSuggestionsPanel({ date, appointments, onGroupChang
 
                             <PetList>
                                 {group.pets.map((pet, petIdx) => (
-                                    <PetItem key={pet.id}>
+                                    <PetItem key={`suggestion-${idx}-pet-${pet.id}-${petIdx}`}>
                                         <PetDot />
                                         <PetName>{pet.name}</PetName>
                                     </PetItem>
@@ -271,14 +288,6 @@ export default function GroupSuggestionsPanel({ date, appointments, onGroupChang
                                     </StatItem>
                                 )}
                             </StatsGrid>
-
-                            <AcceptButton
-                                onClick={() => handleAcceptGroup(group)}
-                                disabled={processingGroupId === group.appointments[0]}
-                            >
-                                <span>{processingGroupId === group.appointments[0] ? 'Creating...' : 'Accept Group'}</span>
-                                <ChevronRight size={18} />
-                            </AcceptButton>
                         </GroupCard>
                     ))}
                 </GroupsContainer>
@@ -290,17 +299,22 @@ export default function GroupSuggestionsPanel({ date, appointments, onGroupChang
 const Panel = styled.div`
     width: 100%;
     max-width: 448px;
-    margin-bottom: 12px;
-    background: rgba(255, 255, 255, 0.08);
+    margin-bottom: 0;
+    background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(20px);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    padding: 12px;
+    border-radius: 0;
+    border: none;
+    border-top: 2px solid rgba(255, 255, 255, 0.35);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.35);
+    box-shadow: none;
+    padding: 16px;
 
     @media (min-width: 768px) {
-        padding: 14px;
+        padding: 16px;
         margin-bottom: 14px;
+        border-radius: 12px;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 `;
 
@@ -328,10 +342,11 @@ const HeaderTitle = styled.h2`
     font-family: 'Poppins', sans-serif;
     color: #ffffff;
     font-size: 0.95rem;
-    font-weight: 600;
+    font-weight: 700;
     margin: 0;
     display: flex;
     align-items: center;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 
     @media (min-width: 768px) {
         font-size: 1rem;
@@ -340,16 +355,17 @@ const HeaderTitle = styled.h2`
 
 const HeaderSubtitle = styled.p`
     font-family: 'Poppins', sans-serif;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.9);
     font-size: 0.7rem;
     margin: 0;
-    font-weight: 500;
+    font-weight: 700;
     white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 `;
 
 const LoadingText = styled.p`
     font-family: 'Poppins', sans-serif;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.95);
     font-size: 0.9rem;
     text-align: center;
     margin: 20px 0;
@@ -357,7 +373,7 @@ const LoadingText = styled.p`
 
 const ErrorText = styled.p`
     font-family: 'Poppins', sans-serif;
-    color: rgba(239, 68, 68, 0.9);
+    color: rgba(251, 146, 60, 0.95);
     font-size: 0.9rem;
     text-align: center;
     margin: 20px 0;
@@ -366,41 +382,83 @@ const ErrorText = styled.p`
 const GroupsContainer = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0;
+    padding-top: 12px;
+    margin-top: 12px;
+    border-top: 2px solid rgba(255, 255, 255, 0.3);
+
+    &:first-child {
+        border-top: none;
+        padding-top: 0;
+        margin-top: 0;
+    }
+
+    @media (min-width: 768px) {
+        gap: 8px;
+    }
 `;
 
 const SectionTitle = styled.h3`
     font-family: 'Poppins', sans-serif;
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.7rem;
-    font-weight: 600;
+    color: rgba(255, 255, 255, 1);
+    font-size: 0.75rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 0 0 6px 2px;
+    letter-spacing: 0.8px;
+    margin: 0 0 0 0;
+    padding-bottom: 10px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+
+    @media (min-width: 768px) {
+        margin: 0 0 8px 2px;
+        padding-bottom: 0;
+    }
 `;
 
 const GroupCard = styled.div`
     background: ${({ $accepted }) =>
-        $accepted ? 'rgba(34, 197, 94, 0.12)' : 'rgba(255, 255, 255, 0.06)'
+        $accepted ? 'rgba(6, 182, 212, 0.2)' : 'rgba(255, 255, 255, 0.12)'
     };
-    border: 1px solid ${({ $accepted }) =>
-        $accepted ? 'rgba(34, 197, 94, 0.25)' : 'rgba(255, 255, 255, 0.12)'
+    border: none;
+    border-bottom: 2px solid ${({ $accepted }) =>
+        $accepted ? 'rgba(6, 182, 212, 0.5)' : 'rgba(255, 255, 255, 0.3)'
     };
-    border-radius: 10px;
-    padding: 10px;
+    border-radius: 0;
+    padding: 14px 8px;
     transition: all 0.2s ease;
+    position: relative;
 
-    &:hover {
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:active {
         background: ${({ $accepted }) =>
-            $accepted ? 'rgba(34, 197, 94, 0.18)' : 'rgba(255, 255, 255, 0.1)'
-        };
-        border-color: ${({ $accepted }) =>
-            $accepted ? 'rgba(34, 197, 94, 0.35)' : 'rgba(255, 255, 255, 0.2)'
+            $accepted ? 'rgba(6, 182, 212, 0.25)' : 'rgba(255, 255, 255, 0.16)'
         };
     }
 
     @media (min-width: 768px) {
-        padding: 12px;
+        border: 2px solid ${({ $accepted }) =>
+            $accepted ? 'rgba(6, 182, 212, 0.5)' : 'rgba(255, 255, 255, 0.3)'
+        };
+        border-radius: 10px;
+        padding: 14px;
+
+        &:last-child {
+            border: 2px solid ${({ $accepted }) =>
+                $accepted ? 'rgba(6, 182, 212, 0.5)' : 'rgba(255, 255, 255, 0.3)'
+            };
+        }
+
+        &:hover {
+            background: ${({ $accepted }) =>
+                $accepted ? 'rgba(6, 182, 212, 0.28)' : 'rgba(255, 255, 255, 0.18)'
+            };
+            border-color: ${({ $accepted }) =>
+                $accepted ? 'rgba(6, 182, 212, 0.7)' : 'rgba(255, 255, 255, 0.4)'
+            };
+        }
     }
 `;
 
@@ -409,32 +467,37 @@ const GroupHeader = styled.div`
     justify-content: space-between;
     align-items: center;
     margin-bottom: 8px;
+    padding-right: 40px; /* Space for accept/delete button */
 `;
 
 const GroupTitle = styled.h3`
     font-family: 'Poppins', sans-serif;
     color: #ffffff;
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 0.9rem;
+    font-weight: 700;
     margin: 0;
     display: flex;
     align-items: center;
     gap: 5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 `;
 
 const GroupSize = styled.span`
     font-family: 'Poppins', sans-serif;
     background: ${({ $accepted }) =>
-        $accepted ? 'rgba(34, 197, 94, 0.2)' : 'rgba(102, 126, 234, 0.2)'
+        $accepted ? 'rgba(6, 182, 212, 0.35)' : 'rgba(102, 126, 234, 0.35)'
     };
-    border: 1px solid ${({ $accepted }) =>
-        $accepted ? 'rgba(34, 197, 94, 0.35)' : 'rgba(102, 126, 234, 0.35)'
+    border: 2px solid ${({ $accepted }) =>
+        $accepted ? 'rgba(6, 182, 212, 0.7)' : 'rgba(102, 126, 234, 0.7)'
     };
     color: #ffffff;
-    padding: 3px 8px;
+    padding: 4px 10px;
     border-radius: 10px;
-    font-size: 0.7rem;
-    font-weight: 600;
+    font-size: 0.75rem;
+    font-weight: 700;
+    box-shadow: 0 2px 6px ${({ $accepted }) =>
+        $accepted ? 'rgba(6, 182, 212, 0.3)' : 'rgba(102, 126, 234, 0.3)'
+    };
 `;
 
 const PetList = styled.div`
@@ -448,25 +511,28 @@ const PetItem = styled.div`
     display: flex;
     align-items: center;
     gap: 5px;
-    padding: 4px 8px;
-    background: rgba(255, 255, 255, 0.08);
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
     font-size: 0.8rem;
 `;
 
 const PetDot = styled.div`
-    width: 5px;
-    height: 5px;
-    background: ${({ $accepted }) => $accepted ? '#22c55e' : '#fbbf24'};
+    width: 7px;
+    height: 7px;
+    background: ${({ $accepted }) => $accepted ? '#22d3ee' : '#fbbf24'};
     border-radius: 50%;
     flex-shrink: 0;
+    box-shadow: 0 0 6px ${({ $accepted }) => $accepted ? '#22d3ee' : '#fbbf24'};
 `;
 
 const PetName = styled.span`
     font-family: 'Poppins', sans-serif;
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 1);
     font-size: 0.8rem;
-    font-weight: 500;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 `;
 
 const StatsGrid = styled.div`
@@ -479,19 +545,19 @@ const StatItem = styled.div`
     display: flex;
     align-items: center;
     gap: 4px;
-    padding: 5px 8px;
+    padding: 7px 11px;
     background: ${({ $highlight }) =>
-        $highlight ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255, 255, 255, 0.05)'
+        $highlight ? 'rgba(6, 182, 212, 0.25)' : 'rgba(255, 255, 255, 0.15)'
     };
-    border: 1px solid ${({ $highlight }) =>
-        $highlight ? 'rgba(34, 197, 94, 0.25)' : 'rgba(255, 255, 255, 0.08)'
+    border: 2px solid ${({ $highlight }) =>
+        $highlight ? 'rgba(6, 182, 212, 0.5)' : 'rgba(255, 255, 255, 0.3)'
     };
     border-radius: 6px;
     flex: 1;
 `;
 
 const StatIcon = styled.div`
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.9);
     display: flex;
     align-items: center;
     line-height: 1;
@@ -515,72 +581,75 @@ const StatValue = styled.span`
     font-family: 'Poppins', sans-serif;
     color: #ffffff;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
     white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 `;
 
-const AcceptButton = styled.button`
-    width: 100%;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
-    border: 1px solid rgba(102, 126, 234, 0.3);
-    color: #ffffff;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
+const IconButton = styled.button`
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: ${({ $accept, $delete }) =>
+        $accept ? 'rgba(6, 182, 212, 0.35)' :
+        $delete ? 'rgba(251, 146, 60, 0.35)' :
+        'rgba(102, 126, 234, 0.35)'
+    };
+    border: 2px solid ${({ $accept, $delete }) =>
+        $accept ? 'rgba(6, 182, 212, 0.7)' :
+        $delete ? 'rgba(251, 146, 60, 0.7)' :
+        'rgba(102, 126, 234, 0.7)'
+    };
+    color: ${({ $accept, $delete }) =>
+        $accept ? '#22d3ee' :
+        $delete ? '#fbbf24' :
+        '#8b9eff'
+    };
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-
-    &:hover:not(:disabled) {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.25), rgba(118, 75, 162, 0.25));
-        border-color: rgba(102, 126, 234, 0.5);
-        transform: translateY(-1px);
-    }
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px ${({ $accept, $delete }) =>
+        $accept ? 'rgba(6, 182, 212, 0.3)' :
+        $delete ? 'rgba(251, 146, 60, 0.3)' :
+        'rgba(102, 126, 234, 0.3)'
+    };
+    z-index: 5;
 
     &:active:not(:disabled) {
-        transform: translateY(0);
+        transform: scale(0.95);
+    }
+
+    @media (min-width: 769px) {
+        width: 34px;
+        height: 34px;
+
+        &:hover:not(:disabled) {
+            background: ${({ $accept, $delete }) =>
+                $accept ? 'rgba(6, 182, 212, 0.5)' :
+                $delete ? 'rgba(251, 146, 60, 0.5)' :
+                'rgba(102, 126, 234, 0.5)'
+            };
+            border-color: ${({ $accept, $delete }) =>
+                $accept ? 'rgba(6, 182, 212, 0.9)' :
+                $delete ? 'rgba(251, 146, 60, 0.9)' :
+                'rgba(102, 126, 234, 0.9)'
+            };
+            box-shadow: 0 4px 12px ${({ $accept, $delete }) =>
+                $accept ? 'rgba(6, 182, 212, 0.4)' :
+                $delete ? 'rgba(251, 146, 60, 0.4)' :
+                'rgba(102, 126, 234, 0.4)'
+            };
+        }
     }
 
     &:disabled {
         opacity: 0.6;
         cursor: not-allowed;
-    }
-
-    svg {
-        width: 14px;
-        height: 14px;
-    }
-`;
-
-const DeleteButton = styled.button`
-    width: 100%;
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    color: #ef4444;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-
-    &:hover {
-        background: rgba(239, 68, 68, 0.25);
-        border-color: rgba(239, 68, 68, 0.5);
-        transform: translateY(-1px);
-    }
-
-    &:active {
-        transform: translateY(0);
     }
 `;

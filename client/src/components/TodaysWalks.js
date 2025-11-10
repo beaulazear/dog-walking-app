@@ -2,6 +2,7 @@ import React, { useContext, useState, useMemo, useEffect, useCallback } from "re
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import dayjs from "dayjs";
+import { motion, AnimatePresence } from "motion/react";
 import { UserContext } from "../context/user";
 import dogPlaceholder from "../assets/dog.png";
 import {
@@ -18,7 +19,9 @@ import {
     Heart,
     Share2,
     Calendar,
-    Map
+    Map,
+    ChevronDown,
+    ChevronUp
 } from "lucide-react";
 import ShareAppointmentModal from "./ShareAppointmentModal";
 import WalksMapView from "./WalksMapView";
@@ -27,6 +30,7 @@ import GroupSuggestionsPanel from "./GroupSuggestionsPanel";
 export default function TodaysWalks() {
     const { user, refreshUser } = useContext(UserContext);
     const [showMap, setShowMap] = useState(false);
+    const [showGroups, setShowGroups] = useState(true);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -103,14 +107,20 @@ export default function TodaysWalks() {
                         {todaysAppointments.length} {todaysAppointments.length === 1 ? 'walk' : 'walks'} scheduled • {completedCount} completed
                     </PageSubtitle>
                     {todaysAppointments.length > 0 && (
-                        <HeaderMapButton onClick={() => setShowMap(true)}>
-                            <Map size={20} />
-                            <span>Map View</span>
-                        </HeaderMapButton>
+                        <HeaderButtonGroup>
+                            <HeaderButton onClick={() => setShowGroups(!showGroups)}>
+                                {showGroups ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                <span>{showGroups ? 'Hide' : 'Show'} Groups</span>
+                            </HeaderButton>
+                            <HeaderButton onClick={() => setShowMap(true)}>
+                                <Map size={18} />
+                                <span>Map View</span>
+                            </HeaderButton>
+                        </HeaderButtonGroup>
                     )}
                 </Header>
 
-                {todaysAppointments.length > 0 && (
+                {todaysAppointments.length > 0 && showGroups && (
                     <GroupSuggestionsPanel
                         date={dayjs().format("YYYY-MM-DD")}
                         appointments={todaysAppointments}
@@ -265,9 +275,13 @@ const WalkCard = React.memo(({ appointment }) => {
     };
 
     const handleCancelWalk = async (cancellationFee = 0) => {
+        const token = localStorage.getItem("token");
         const response = await fetch("/invoices", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
             body: JSON.stringify({
                 pet_id: appointment.pet.id,
                 appointment_id: appointment.id,
@@ -443,169 +457,201 @@ const CompletionModal = ({ appointment, user, onComplete, onClose }) => {
     }, [onClose, isSubmitting]);
 
     const modalContent = (
-        <CompletionModalOverlay onClick={handleOverlayClick}>
-            <CompletionModalContainer>
-                <CompletionModalDragHandle />
+        <AnimatePresence>
+            <>
+                {/* Backdrop */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={handleOverlayClick}
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.75)',
+                        backdropFilter: 'blur(12px)',
+                        display: 'flex',
+                        alignItems: 'flex-end',
+                        justifyContent: 'center',
+                        zIndex: 10002
+                    }}
+                >
+                    {/* Drawer */}
+                    <motion.div
+                        initial={{ y: '100%' }}
+                        animate={{ y: 0 }}
+                        exit={{ y: '100%' }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <CompletionModalContainer>
+                            <CompletionModalDragHandle />
 
-                <CompletionModalHeader>
-                    <CompletionModalHeaderTop>
-                        <CompletionModalTitle>Complete Walk</CompletionModalTitle>
-                        <CompletionModalCloseButton onClick={onClose} disabled={isSubmitting}>
-                            <X size={20} />
-                        </CompletionModalCloseButton>
-                    </CompletionModalHeaderTop>
-                    <PetInfoBanner>
-                        <PetNameLarge>{appointment.pet?.name}</PetNameLarge>
-                        <WalkMetadata>
-                            <WalkTypeChip $solo={appointment.solo}>
-                                {appointment.solo ? 'Solo' : 'Group'}
-                            </WalkTypeChip>
-                            <WalkTimeText>
-                                {dayjs(appointment.start_time, "HH:mm").format("h:mm A")}
-                            </WalkTimeText>
-                        </WalkMetadata>
-                    </PetInfoBanner>
-                </CompletionModalHeader>
+                            <CompletionModalHeader>
+                                <CompletionModalHeaderTop>
+                                    <CompletionModalTitle>Complete Walk</CompletionModalTitle>
+                                    <CompletionModalCloseButton onClick={onClose} disabled={isSubmitting}>
+                                        <X size={20} />
+                                    </CompletionModalCloseButton>
+                                </CompletionModalHeaderTop>
+                                <PetInfoBanner>
+                                    <PetNameLarge>{appointment.pet?.name}</PetNameLarge>
+                                    <WalkMetadata>
+                                        <WalkTypeChip $solo={appointment.solo}>
+                                            {appointment.solo ? 'Solo' : 'Group'}
+                                        </WalkTypeChip>
+                                        <WalkTimeText>
+                                            {dayjs(appointment.start_time, "HH:mm").format("h:mm A")}
+                                        </WalkTimeText>
+                                    </WalkMetadata>
+                                </PetInfoBanner>
+                            </CompletionModalHeader>
 
-                <CompletionModalContent>
-                    <CompensationCard>
-                        <CompensationCardTitle>Compensation</CompensationCardTitle>
-                        <CompensationBreakdown>
-                            <CompensationItem>
-                                <CompensationItemLabel>Base Rate</CompensationItemLabel>
-                                <CompensationItemValue>${baseCompensation.toFixed(2)}</CompensationItemValue>
-                            </CompensationItem>
-                            {walkUpcharge > 0 && (
-                                <CompensationItem>
-                                    <CompensationItemLabel>{walkType.charAt(0).toUpperCase() + walkType.slice(1)} Upcharge</CompensationItemLabel>
-                                    <CompensationItemValue $accent>+${walkUpcharge.toFixed(2)}</CompensationItemValue>
-                                </CompensationItem>
-                            )}
-                        </CompensationBreakdown>
-                    </CompensationCard>
+                            <CompletionModalContent>
+                                <CompensationCard>
+                                    <CompensationCardTitle>Compensation</CompensationCardTitle>
+                                    <CompensationBreakdown>
+                                        <CompensationItem>
+                                            <CompensationItemLabel>Base Rate</CompensationItemLabel>
+                                            <CompensationItemValue>${baseCompensation.toFixed(2)}</CompensationItemValue>
+                                        </CompensationItem>
+                                        {walkUpcharge > 0 && (
+                                            <CompensationItem>
+                                                <CompensationItemLabel>{walkType.charAt(0).toUpperCase() + walkType.slice(1)} Upcharge</CompensationItemLabel>
+                                                <CompensationItemValue $accent>+${walkUpcharge.toFixed(2)}</CompensationItemValue>
+                                            </CompensationItem>
+                                        )}
+                                    </CompensationBreakdown>
+                                </CompensationCard>
 
-                    <DurationSection>
-                        <SectionLabel>Duration</SectionLabel>
-                        <DurationSelector>
-                            <DurationOption
-                                $active={duration === 30}
-                                onClick={() => setDuration(30)}
-                                disabled={isSubmitting}
-                            >
-                                <DurationTime>30</DurationTime>
-                                <DurationUnit>min</DurationUnit>
-                            </DurationOption>
-                            <DurationOption
-                                $active={duration === 45}
-                                onClick={() => setDuration(45)}
-                                disabled={isSubmitting}
-                            >
-                                <DurationTime>45</DurationTime>
-                                <DurationUnit>min</DurationUnit>
-                            </DurationOption>
-                            <DurationOption
-                                $active={duration === 60}
-                                onClick={() => setDuration(60)}
-                                disabled={isSubmitting}
-                            >
-                                <DurationTime>60</DurationTime>
-                                <DurationUnit>min</DurationUnit>
-                            </DurationOption>
-                        </DurationSelector>
-                    </DurationSection>
+                                <DurationSection>
+                                    <SectionLabel>Duration</SectionLabel>
+                                    <DurationSelector>
+                                        <DurationOption
+                                            $active={duration === 30}
+                                            onClick={() => setDuration(30)}
+                                            disabled={isSubmitting}
+                                        >
+                                            <DurationTime>30</DurationTime>
+                                            <DurationUnit>min</DurationUnit>
+                                        </DurationOption>
+                                        <DurationOption
+                                            $active={duration === 45}
+                                            onClick={() => setDuration(45)}
+                                            disabled={isSubmitting}
+                                        >
+                                            <DurationTime>45</DurationTime>
+                                            <DurationUnit>min</DurationUnit>
+                                        </DurationOption>
+                                        <DurationOption
+                                            $active={duration === 60}
+                                            onClick={() => setDuration(60)}
+                                            disabled={isSubmitting}
+                                        >
+                                            <DurationTime>60</DurationTime>
+                                            <DurationUnit>min</DurationUnit>
+                                        </DurationOption>
+                                    </DurationSelector>
+                                </DurationSection>
 
-                    <AdjustmentSection>
-                        <SectionLabel>Adjustment (Optional)</SectionLabel>
+                                <AdjustmentSection>
+                                    <SectionLabel>Adjustment (Optional)</SectionLabel>
 
-                        <AdjustmentTypeToggle>
-                            <AdjustmentTypeButton
-                                $active={offsetType === 'upcharge'}
-                                onClick={() => setOffsetType('upcharge')}
-                                disabled={isSubmitting}
-                            >
-                                <Plus size={16} />
-                                Add
-                            </AdjustmentTypeButton>
-                            <AdjustmentTypeButton
-                                $active={offsetType === 'discount'}
-                                onClick={() => setOffsetType('discount')}
-                                disabled={isSubmitting}
-                            >
-                                <Minus size={16} />
-                                Subtract
-                            </AdjustmentTypeButton>
-                        </AdjustmentTypeToggle>
+                                    <AdjustmentTypeToggle>
+                                        <AdjustmentTypeButton
+                                            $active={offsetType === 'upcharge'}
+                                            onClick={() => setOffsetType('upcharge')}
+                                            disabled={isSubmitting}
+                                        >
+                                            <Plus size={16} />
+                                            Add
+                                        </AdjustmentTypeButton>
+                                        <AdjustmentTypeButton
+                                            $active={offsetType === 'discount'}
+                                            onClick={() => setOffsetType('discount')}
+                                            disabled={isSubmitting}
+                                        >
+                                            <Minus size={16} />
+                                            Subtract
+                                        </AdjustmentTypeButton>
+                                    </AdjustmentTypeToggle>
 
-                        <AdjustmentInput>
-                            <DollarSign size={18} />
-                            <input
-                                type="number"
-                                value={offset}
-                                onChange={(e) => setOffset(parseFloat(e.target.value) || 0)}
-                                placeholder="0.00"
-                                step="0.01"
-                                min="0"
-                                disabled={isSubmitting}
-                            />
-                        </AdjustmentInput>
-                    </AdjustmentSection>
+                                    <AdjustmentInput>
+                                        <DollarSign size={18} />
+                                        <input
+                                            type="number"
+                                            value={offset}
+                                            onChange={(e) => setOffset(parseFloat(e.target.value) || 0)}
+                                            placeholder="0.00"
+                                            step="0.01"
+                                            min="0"
+                                            disabled={isSubmitting}
+                                        />
+                                    </AdjustmentInput>
+                                </AdjustmentSection>
 
-                    {showSplitUI && (
-                        <SplitSection>
-                            <SectionLabel>Payment Split</SectionLabel>
-                            <SplitInfo>This appointment was shared. Set payment split:</SplitInfo>
+                                {showSplitUI && (
+                                    <SplitSection>
+                                        <SectionLabel>Payment Split</SectionLabel>
+                                        <SplitInfo>This appointment was shared. Set payment split:</SplitInfo>
 
-                            <SplitSliderContainer>
-                                <SplitSlider
-                                    type="range"
-                                    min="0"
-                                    max="100"
-                                    value={splitPercentage}
-                                    onChange={(e) => setSplitPercentage(parseFloat(e.target.value))}
-                                    disabled={isSubmitting}
-                                />
-                                <SplitLabels>
-                                    <SplitLabel>You: {(100 - splitPercentage).toFixed(0)}%</SplitLabel>
-                                    <SplitLabel>Walker: {splitPercentage.toFixed(0)}%</SplitLabel>
-                                </SplitLabels>
-                            </SplitSliderContainer>
+                                        <SplitSliderContainer>
+                                            <SplitSlider
+                                                type="range"
+                                                min="0"
+                                                max="100"
+                                                value={splitPercentage}
+                                                onChange={(e) => setSplitPercentage(parseFloat(e.target.value))}
+                                                disabled={isSubmitting}
+                                            />
+                                            <SplitLabels>
+                                                <SplitLabel>You: {(100 - splitPercentage).toFixed(0)}%</SplitLabel>
+                                                <SplitLabel>Walker: {splitPercentage.toFixed(0)}%</SplitLabel>
+                                            </SplitLabels>
+                                        </SplitSliderContainer>
 
-                            <SplitBreakdown>
-                                <SplitItem>
-                                    <SplitItemLabel>Your share:</SplitItemLabel>
-                                    <SplitItemValue>${(finalAmount * ((100 - splitPercentage) / 100)).toFixed(2)}</SplitItemValue>
-                                </SplitItem>
-                                <SplitItem>
-                                    <SplitItemLabel>Walker's share:</SplitItemLabel>
-                                    <SplitItemValue>${(finalAmount * (splitPercentage / 100)).toFixed(2)}</SplitItemValue>
-                                </SplitItem>
-                            </SplitBreakdown>
-                        </SplitSection>
-                    )}
+                                        <SplitBreakdown>
+                                            <SplitItem>
+                                                <SplitItemLabel>Your share:</SplitItemLabel>
+                                                <SplitItemValue>${(finalAmount * ((100 - splitPercentage) / 100)).toFixed(2)}</SplitItemValue>
+                                            </SplitItem>
+                                            <SplitItem>
+                                                <SplitItemLabel>Walker's share:</SplitItemLabel>
+                                                <SplitItemValue>${(finalAmount * (splitPercentage / 100)).toFixed(2)}</SplitItemValue>
+                                            </SplitItem>
+                                        </SplitBreakdown>
+                                    </SplitSection>
+                                )}
 
-                    <TotalCard $positive={finalAmount >= 0}>
-                        <TotalLabel>Total Payment</TotalLabel>
-                        <TotalAmount>${finalAmount.toFixed(2)}</TotalAmount>
-                    </TotalCard>
+                                <TotalCard $positive={finalAmount >= 0}>
+                                    <TotalLabel>Total Payment</TotalLabel>
+                                    <TotalAmount>${finalAmount.toFixed(2)}</TotalAmount>
+                                </TotalCard>
 
-                    <ModalActions>
-                        <ConfirmButton onClick={handleSubmit} disabled={isSubmitting}>
-                            {isSubmitting ? (
-                                <>Processing...</>
-                            ) : (
-                                <>
-                                    <CheckCircle size={18} />
-                                    Complete Walk
-                                </>
-                            )}
-                        </ConfirmButton>
-                        <CancelActionButton onClick={onClose} disabled={isSubmitting}>
-                            Cancel
-                        </CancelActionButton>
-                    </ModalActions>
-                </CompletionModalContent>
-            </CompletionModalContainer>
-        </CompletionModalOverlay>
+                                <ModalActions>
+                                    <ConfirmButton onClick={handleSubmit} disabled={isSubmitting}>
+                                        {isSubmitting ? (
+                                            <>Processing...</>
+                                        ) : (
+                                            <>
+                                                <CheckCircle size={18} />
+                                                Complete Walk
+                                            </>
+                                        )}
+                                    </ConfirmButton>
+                                    <CancelActionButton onClick={onClose} disabled={isSubmitting}>
+                                        Cancel
+                                    </CancelActionButton>
+                                </ModalActions>
+                            </CompletionModalContent>
+                        </CompletionModalContainer>
+                    </motion.div>
+                </motion.div>
+            </>
+        </AnimatePresence>
     );
 
     return ReactDOM.createPortal(modalContent, document.body);
@@ -643,79 +689,111 @@ const CancelModal = ({ appointment, onCancel, onClose }) => {
     }, [onClose, isSubmitting]);
 
     const modalContent = (
-        <CancelModalOverlay onClick={handleOverlayClick}>
-            <CancelModalContainer>
-                <CancelModalDragHandle />
+        <AnimatePresence>
+            <>
+                {/* Backdrop */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={handleOverlayClick}
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.75)',
+                        backdropFilter: 'blur(12px)',
+                        display: 'flex',
+                        alignItems: 'flex-end',
+                        justifyContent: 'center',
+                        zIndex: 10002
+                    }}
+                >
+                    {/* Drawer */}
+                    <motion.div
+                        initial={{ y: '100%' }}
+                        animate={{ y: 0 }}
+                        exit={{ y: '100%' }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <CancelModalContainer>
+                            <CancelModalDragHandle />
 
-                <CancelModalHeader>
-                    <CancelModalHeaderTop>
-                        <CancelModalTitle>Cancel Walk</CancelModalTitle>
-                        <CancelModalCloseButton onClick={onClose} disabled={isSubmitting}>
-                            <X size={20} />
-                        </CancelModalCloseButton>
-                    </CancelModalHeaderTop>
-                    <PetInfoBanner>
-                        <PetNameLarge>{appointment.pet?.name}</PetNameLarge>
-                        <WalkMetadata>
-                            <WalkTypeChip $solo={appointment.solo}>
-                                {appointment.solo ? 'Solo' : 'Group'}
-                            </WalkTypeChip>
-                            <WalkTimeText>
-                                {dayjs(appointment.start_time, "HH:mm").format("h:mm A")}
-                            </WalkTimeText>
-                        </WalkMetadata>
-                    </PetInfoBanner>
-                </CancelModalHeader>
+                            <CancelModalHeader>
+                                <CancelModalHeaderTop>
+                                    <CancelModalTitle>Cancel Walk</CancelModalTitle>
+                                    <CancelModalCloseButton onClick={onClose} disabled={isSubmitting}>
+                                        <X size={20} />
+                                    </CancelModalCloseButton>
+                                </CancelModalHeaderTop>
+                                <PetInfoBanner>
+                                    <PetNameLarge>{appointment.pet?.name}</PetNameLarge>
+                                    <WalkMetadata>
+                                        <WalkTypeChip $solo={appointment.solo}>
+                                            {appointment.solo ? 'Solo' : 'Group'}
+                                        </WalkTypeChip>
+                                        <WalkTimeText>
+                                            {dayjs(appointment.start_time, "HH:mm").format("h:mm A")}
+                                        </WalkTimeText>
+                                    </WalkMetadata>
+                                </PetInfoBanner>
+                            </CancelModalHeader>
 
-                <CancelModalContent>
-                    <CancellationInfoCard>
-                        <CancellationWarning>
-                            <X size={24} />
-                        </CancellationWarning>
-                        <CancellationMessage>
-                            This walk will be marked as cancelled. You can optionally add a cancellation fee below.
-                        </CancellationMessage>
-                    </CancellationInfoCard>
+                            <CancelModalContent>
+                                <CancellationInfoCard>
+                                    <CancellationWarning>
+                                        <X size={24} />
+                                    </CancellationWarning>
+                                    <CancellationMessage>
+                                        This walk will be marked as cancelled. You can optionally add a cancellation fee below.
+                                    </CancellationMessage>
+                                </CancellationInfoCard>
 
-                    <CancellationFeeSection>
-                        <SectionLabel>Cancellation Fee (Optional)</SectionLabel>
+                                <CancellationFeeSection>
+                                    <SectionLabel>Cancellation Fee (Optional)</SectionLabel>
 
-                        <FeeInputWrapper>
-                            <DollarSign size={20} />
-                            <input
-                                type="number"
-                                value={cancellationFee}
-                                onChange={(e) => setCancellationFee(parseFloat(e.target.value) || 0)}
-                                placeholder="0.00"
-                                step="0.01"
-                                min="0"
-                                disabled={isSubmitting}
-                            />
-                        </FeeInputWrapper>
+                                    <FeeInputWrapper>
+                                        <DollarSign size={20} />
+                                        <input
+                                            type="number"
+                                            value={cancellationFee}
+                                            onChange={(e) => setCancellationFee(parseFloat(e.target.value) || 0)}
+                                            placeholder="0.00"
+                                            step="0.01"
+                                            min="0"
+                                            disabled={isSubmitting}
+                                        />
+                                    </FeeInputWrapper>
 
-                        <FeeHint>
-                            Leave at $0 for no charge or enter an amount to bill for the cancellation.
-                        </FeeHint>
-                    </CancellationFeeSection>
+                                    <FeeHint>
+                                        Leave at $0 for no charge or enter an amount to bill for the cancellation.
+                                    </FeeHint>
+                                </CancellationFeeSection>
 
-                    <CancelModalActions>
-                        <CancelWalkButton onClick={handleSubmit} disabled={isSubmitting}>
-                            {isSubmitting ? (
-                                <>Processing...</>
-                            ) : (
-                                <>
-                                    <X size={18} />
-                                    Confirm Cancellation
-                                </>
-                            )}
-                        </CancelWalkButton>
-                        <KeepWalkButton onClick={onClose} disabled={isSubmitting}>
-                            Keep Walk
-                        </KeepWalkButton>
-                    </CancelModalActions>
-                </CancelModalContent>
-            </CancelModalContainer>
-        </CancelModalOverlay>
+                                <CancelModalActions>
+                                    <CancelWalkButton onClick={handleSubmit} disabled={isSubmitting}>
+                                        {isSubmitting ? (
+                                            <>Processing...</>
+                                        ) : (
+                                            <>
+                                                <X size={18} />
+                                                Confirm Cancellation
+                                            </>
+                                        )}
+                                    </CancelWalkButton>
+                                    <KeepWalkButton onClick={onClose} disabled={isSubmitting}>
+                                        Keep Walk
+                                    </KeepWalkButton>
+                                </CancelModalActions>
+                            </CancelModalContent>
+                        </CancelModalContainer>
+                    </motion.div>
+                </motion.div>
+            </>
+        </AnimatePresence>
     );
 
     return ReactDOM.createPortal(modalContent, document.body);
@@ -884,7 +962,7 @@ const Container = styled.div`
     }
 
     @media (max-width: 768px) {
-        padding: 16px 12px;
+        padding: 16px 0;
         padding-top: 16px;
         padding-bottom: 30px;
     }
@@ -896,9 +974,14 @@ const Header = styled.div`
     margin: 0 auto 20px;
     text-align: center;
     z-index: 1;
+    padding: 0 16px;
 
     @media (min-width: 768px) {
         margin: 0 auto 24px;
+    }
+
+    @media (max-width: 768px) {
+        padding: 0 12px;
     }
 `;
 
@@ -936,15 +1019,18 @@ const EmptyState = styled.div`
     padding: 50px 32px;
     text-align: center;
     background: linear-gradient(145deg, rgba(74, 26, 74, 0.8), rgba(107, 43, 107, 0.6));
-    border-radius: 20px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0;
+    border: none;
     backdrop-filter: blur(15px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    box-shadow: none;
     max-width: 500px;
+    width: 100%;
 
     @media (min-width: 768px) {
         padding: 60px 40px;
         border-radius: 24px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     }
 `;
 
@@ -989,7 +1075,7 @@ const WalkList = styled.div`
     max-width: 448px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 0;
 
     @media (min-width: 768px) {
         gap: 12px;
@@ -999,36 +1085,49 @@ const WalkList = styled.div`
 // Sleek modern walk card
 const Card = styled.div`
     background: ${({ $completed, $cancelled }) =>
-        $completed ? 'rgba(255, 255, 255, 0.12)' :
-        $cancelled ? 'rgba(255, 255, 255, 0.08)' :
-        'rgba(255, 255, 255, 0.1)'
-    };
-    backdrop-filter: blur(20px);
-    border-radius: 16px;
-    border: 1px solid ${({ $completed, $cancelled }) =>
-        $completed ? 'rgba(34, 197, 94, 0.3)' :
-        $cancelled ? 'rgba(239, 68, 68, 0.3)' :
+        $completed ? 'rgba(255, 255, 255, 0.18)' :
+        $cancelled ? 'rgba(255, 255, 255, 0.12)' :
         'rgba(255, 255, 255, 0.15)'
     };
-    box-shadow: ${({ $completed, $cancelled }) =>
-        $completed ? '0 4px 16px rgba(34, 197, 94, 0.15)' :
-        $cancelled ? '0 4px 16px rgba(239, 68, 68, 0.15)' :
-        '0 4px 16px rgba(0, 0, 0, 0.1)'
+    backdrop-filter: blur(20px);
+    border-radius: 0;
+    border: none;
+    border-bottom: 2px solid ${({ $completed, $cancelled }) =>
+        $completed ? 'rgba(6, 182, 212, 0.5)' :
+        $cancelled ? 'rgba(251, 146, 60, 0.5)' :
+        'rgba(255, 255, 255, 0.25)'
     };
+    box-shadow: none;
     transition: all 0.2s ease;
-    opacity: ${({ $cancelled }) => $cancelled ? 0.6 : 1};
+    opacity: ${({ $cancelled }) => $cancelled ? 0.7 : 1};
 
     &:active {
-        transform: scale(0.98);
+        background: ${({ $completed, $cancelled }) =>
+            $completed ? 'rgba(255, 255, 255, 0.22)' :
+            $cancelled ? 'rgba(255, 255, 255, 0.16)' :
+            'rgba(255, 255, 255, 0.2)'
+        };
     }
 
     @media (min-width: 769px) {
+        border-radius: 16px;
+        border: 2px solid ${({ $completed, $cancelled }) =>
+            $completed ? 'rgba(6, 182, 212, 0.5)' :
+            $cancelled ? 'rgba(251, 146, 60, 0.5)' :
+            'rgba(255, 255, 255, 0.3)'
+        };
+        box-shadow: ${({ $completed, $cancelled }) =>
+            $completed ? '0 4px 16px rgba(6, 182, 212, 0.3)' :
+            $cancelled ? '0 4px 16px rgba(251, 146, 60, 0.3)' :
+            '0 4px 16px rgba(0, 0, 0, 0.15)'
+        };
+
         &:hover {
             transform: translateY(-2px);
             box-shadow: ${({ $completed, $cancelled }) =>
-                $completed ? '0 8px 24px rgba(34, 197, 94, 0.2)' :
-                $cancelled ? '0 8px 24px rgba(239, 68, 68, 0.2)' :
-                '0 8px 24px rgba(0, 0, 0, 0.15)'
+                $completed ? '0 8px 24px rgba(6, 182, 212, 0.4)' :
+                $cancelled ? '0 8px 24px rgba(251, 146, 60, 0.4)' :
+                '0 8px 24px rgba(0, 0, 0, 0.2)'
             };
         }
     }
@@ -1042,7 +1141,7 @@ const CardContent = styled.div`
     position: relative;
 
     @media (max-width: 768px) {
-        padding: 12px;
+        padding: 16px 12px;
         gap: 10px;
     }
 `;
@@ -1061,22 +1160,24 @@ const TopRow = styled.div`
     justify-content: space-between;
     align-items: center;
     gap: 12px;
+    padding-right: 32px; /* Space for completed/cancelled badge */
 `;
 
 const PetName = styled.h3`
     font-family: 'Poppins', sans-serif;
     color: #ffffff;
     font-size: 1.05rem;
-    font-weight: 600;
+    font-weight: 700;
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     cursor: pointer;
     transition: color 0.2s ease;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 
     &:hover {
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(255, 255, 255, 0.9);
     }
 
     @media (max-width: 768px) {
@@ -1086,10 +1187,11 @@ const PetName = styled.h3`
 
 const WalkTime = styled.div`
     font-family: 'Poppins', sans-serif;
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.95);
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 700;
     flex-shrink: 0;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 
     @media (max-width: 768px) {
         font-size: 0.8rem;
@@ -1098,9 +1200,9 @@ const WalkTime = styled.div`
 
 const Address = styled.div`
     font-family: 'Poppins', sans-serif;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.85);
     font-size: 0.8rem;
-    font-weight: 400;
+    font-weight: 500;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -1121,9 +1223,9 @@ const WalkInfo = styled.div`
 
 const InfoItem = styled.span`
     font-family: 'Poppins', sans-serif;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.85);
     font-size: 0.75rem;
-    font-weight: 500;
+    font-weight: 600;
 
     @media (max-width: 768px) {
         font-size: 0.7rem;
@@ -1131,8 +1233,9 @@ const InfoItem = styled.span`
 `;
 
 const InfoDivider = styled.span`
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.6);
     font-size: 0.75rem;
+    font-weight: 700;
 `;
 
 
@@ -1143,9 +1246,10 @@ const EarningsDisplay = styled.div`
     gap: 4px;
     margin-left: auto;
     padding: 6px 10px;
-    background: rgba(34, 197, 94, 0.15);
+    background: rgba(6, 182, 212, 0.3);
     border-radius: 8px;
-    border: 1px solid rgba(34, 197, 94, 0.3);
+    border: 2px solid rgba(6, 182, 212, 0.6);
+    box-shadow: 0 2px 8px rgba(6, 182, 212, 0.25);
 
     @media (max-width: 768px) {
         padding: 5px 8px;
@@ -1155,8 +1259,9 @@ const EarningsDisplay = styled.div`
 const EarningsAmount = styled.span`
     font-family: 'Poppins', sans-serif;
     font-size: 0.9rem;
-    font-weight: 700;
-    color: #22c55e;
+    font-weight: 800;
+    color: #22d3ee;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 
     @media (max-width: 768px) {
         font-size: 0.85rem;
@@ -1172,9 +1277,9 @@ const ActionButtons = styled.div`
 `;
 
 const ShareButton = styled.button`
-    background: rgba(102, 126, 234, 0.2);
-    border: 1px solid rgba(102, 126, 234, 0.4);
-    color: #667eea;
+    background: rgba(102, 126, 234, 0.35);
+    border: 2px solid rgba(102, 126, 234, 0.7);
+    color: #8b9eff;
     width: 36px;
     height: 36px;
     border-radius: 10px;
@@ -1184,6 +1289,7 @@ const ShareButton = styled.button`
     cursor: pointer;
     transition: all 0.2s ease;
     flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 
     &:active {
         transform: scale(0.95);
@@ -1191,8 +1297,9 @@ const ShareButton = styled.button`
 
     @media (min-width: 769px) {
         &:hover {
-            background: rgba(102, 126, 234, 0.3);
-            border-color: rgba(102, 126, 234, 0.6);
+            background: rgba(102, 126, 234, 0.5);
+            border-color: rgba(102, 126, 234, 0.9);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
     }
 
@@ -1203,9 +1310,9 @@ const ShareButton = styled.button`
 `;
 
 const CompleteButton = styled.button`
-    background: rgba(34, 197, 94, 0.2);
-    border: 1px solid rgba(34, 197, 94, 0.4);
-    color: #22c55e;
+    background: rgba(6, 182, 212, 0.35);
+    border: 2px solid rgba(6, 182, 212, 0.7);
+    color: #22d3ee;
     width: 36px;
     height: 36px;
     border-radius: 10px;
@@ -1215,6 +1322,7 @@ const CompleteButton = styled.button`
     cursor: pointer;
     transition: all 0.2s ease;
     flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
 
     &:active {
         transform: scale(0.95);
@@ -1222,8 +1330,9 @@ const CompleteButton = styled.button`
 
     @media (min-width: 769px) {
         &:hover {
-            background: rgba(34, 197, 94, 0.3);
-            border-color: rgba(34, 197, 94, 0.6);
+            background: rgba(6, 182, 212, 0.5);
+            border-color: rgba(6, 182, 212, 0.9);
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
         }
     }
 
@@ -1234,9 +1343,9 @@ const CompleteButton = styled.button`
 `;
 
 const CancelButton = styled.button`
-    background: rgba(239, 68, 68, 0.2);
-    border: 1px solid rgba(239, 68, 68, 0.4);
-    color: #ef4444;
+    background: rgba(251, 146, 60, 0.35);
+    border: 2px solid rgba(251, 146, 60, 0.7);
+    color: #fbbf24;
     width: 36px;
     height: 36px;
     border-radius: 10px;
@@ -1246,6 +1355,7 @@ const CancelButton = styled.button`
     cursor: pointer;
     transition: all 0.2s ease;
     flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(251, 146, 60, 0.3);
 
     &:active {
         transform: scale(0.95);
@@ -1253,8 +1363,9 @@ const CancelButton = styled.button`
 
     @media (min-width: 769px) {
         &:hover {
-            background: rgba(239, 68, 68, 0.3);
-            border-color: rgba(239, 68, 68, 0.6);
+            background: rgba(251, 146, 60, 0.5);
+            border-color: rgba(251, 146, 60, 0.9);
+            box-shadow: 0 4px 12px rgba(251, 146, 60, 0.4);
         }
     }
 
@@ -1270,15 +1381,16 @@ const DelegatedBadge = styled.div`
     top: 8px;
     right: 8px;
     padding: 4px 8px;
-    background: rgba(102, 126, 234, 0.2);
-    border: 1px solid rgba(102, 126, 234, 0.4);
+    background: rgba(102, 126, 234, 0.35);
+    border: 2px solid rgba(102, 126, 234, 0.7);
     border-radius: 12px;
     display: flex;
     align-items: center;
     gap: 4px;
-    color: #667eea;
+    color: #8b9eff;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
 
     @media (max-width: 768px) {
         font-size: 10px;
@@ -1288,41 +1400,49 @@ const DelegatedBadge = styled.div`
 
 const CompletedBadge = styled.div`
     position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 24px;
-    height: 24px;
-    background: rgba(34, 197, 94, 0.2);
-    border: 1px solid rgba(34, 197, 94, 0.4);
+    top: 12px;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    background: rgba(6, 182, 212, 0.35);
+    border: 2px solid rgba(6, 182, 212, 0.7);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #22c55e;
+    color: #22d3ee;
+    box-shadow: 0 2px 6px rgba(6, 182, 212, 0.3);
+    z-index: 5;
 
     @media (max-width: 768px) {
-        width: 22px;
-        height: 22px;
+        width: 26px;
+        height: 26px;
+        top: 10px;
+        right: 10px;
     }
 `;
 
 const CancelledBadge = styled.div`
     position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 24px;
-    height: 24px;
-    background: rgba(239, 68, 68, 0.2);
-    border: 1px solid rgba(239, 68, 68, 0.4);
+    top: 12px;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    background: rgba(251, 146, 60, 0.35);
+    border: 2px solid rgba(251, 146, 60, 0.7);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #ef4444;
+    color: #fbbf24;
+    box-shadow: 0 2px 6px rgba(251, 146, 60, 0.3);
+    z-index: 5;
 
     @media (max-width: 768px) {
-        width: 22px;
-        height: 22px;
+        width: 26px;
+        height: 26px;
+        top: 10px;
+        right: 10px;
     }
 `;
 
@@ -1330,18 +1450,22 @@ const CancelledBadge = styled.div`
 const DailyTotalCard = styled.div`
     width: 100%;
     max-width: 448px;
-    margin-top: 16px;
-    padding: 16px;
-    background: rgba(255, 255, 255, 0.12);
+    margin-top: 0;
+    padding: 20px 12px;
+    background: rgba(255, 255, 255, 0.18);
     backdrop-filter: blur(20px);
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border-radius: 0;
+    border: none;
+    border-top: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: none;
     text-align: center;
 
     @media (min-width: 768px) {
         padding: 20px;
         margin-top: 20px;
+        border-radius: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.35);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
     }
 `;
 
@@ -1365,9 +1489,9 @@ const DailyTotalAmount = styled.div`
     font-family: 'Poppins', sans-serif;
     font-size: 2.5rem;
     font-weight: 800;
-    color: #22c55e;
+    color: #22d3ee;
     margin-bottom: 8px;
-    text-shadow: 0 2px 12px rgba(34, 197, 94, 0.3);
+    text-shadow: 0 2px 12px rgba(6, 182, 212, 0.5);
 
     @media (max-width: 768px) {
         font-size: 2rem;
@@ -1419,27 +1543,9 @@ const CompletionModalContainer = styled.div`
     overflow-y: auto;
     position: relative;
     box-shadow: 0 -4px 40px rgba(0, 0, 0, 0.5);
-    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-
-    @keyframes slideUp {
-        from {
-            transform: translateY(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateY(0);
-            opacity: 1;
-        }
-    }
-
-    @media (max-width: 767px) {
-        border-radius: 24px 24px 0 0;
-    }
+    border-radius: 24px 24px 0 0;
 
     @media (min-width: 768px) {
-        border-radius: 24px;
-        animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-
         @keyframes scaleIn {
             from {
                 transform: scale(0.9);
@@ -1900,10 +2006,10 @@ const AdjustmentInput = styled.div`
 
 const TotalCard = styled.div`
     background: ${({ $positive }) =>
-        $positive ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)'
+        $positive ? 'rgba(6, 182, 212, 0.2)' : 'rgba(251, 146, 60, 0.2)'
     };
     border: 2px solid ${({ $positive }) =>
-        $positive ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'
+        $positive ? 'rgba(6, 182, 212, 0.4)' : 'rgba(251, 146, 60, 0.4)'
     };
     border-radius: 16px;
     padding: 20px;
@@ -1946,7 +2052,7 @@ const ModalActions = styled.div`
 `;
 
 const ConfirmButton = styled.button`
-    background: linear-gradient(135deg, #22c55e, #16a34a);
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
     border: none;
     border-radius: 16px;
     padding: 18px 24px;
@@ -1960,13 +2066,13 @@ const ConfirmButton = styled.button`
     align-items: center;
     justify-content: center;
     gap: 10px;
-    box-shadow: 0 8px 24px rgba(34, 197, 94, 0.3);
+    box-shadow: 0 8px 24px rgba(6, 182, 212, 0.4);
     letter-spacing: -0.01em;
 
     &:hover:not(:disabled) {
-        background: linear-gradient(135deg, #16a34a, #15803d);
+        background: linear-gradient(135deg, #0891b2, #0e7490);
         transform: translateY(-1px);
-        box-shadow: 0 10px 28px rgba(34, 197, 94, 0.4);
+        box-shadow: 0 10px 28px rgba(6, 182, 212, 0.5);
     }
 
     &:active:not(:disabled) {
@@ -2050,27 +2156,9 @@ const CancelModalContainer = styled.div`
     overflow-y: auto;
     position: relative;
     box-shadow: 0 -4px 40px rgba(0, 0, 0, 0.5);
-    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-
-    @keyframes slideUp {
-        from {
-            transform: translateY(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateY(0);
-            opacity: 1;
-        }
-    }
-
-    @media (max-width: 767px) {
-        border-radius: 24px 24px 0 0;
-    }
+    border-radius: 24px 24px 0 0;
 
     @media (min-width: 768px) {
-        border-radius: 24px;
-        animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-
         @keyframes scaleIn {
             from {
                 transform: scale(0.9);
@@ -2130,7 +2218,7 @@ const CancelModalTitle = styled.h2`
     font-family: 'Poppins', sans-serif;
     font-size: 1.25rem;
     font-weight: 700;
-    color: #ff8a80;
+    color: #fb923c;
     margin: 0;
     letter-spacing: -0.01em;
 
@@ -2180,8 +2268,8 @@ const CancelModalContent = styled.div`
 `;
 
 const CancellationInfoCard = styled.div`
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.25);
+    background: rgba(251, 146, 60, 0.15);
+    border: 1px solid rgba(251, 146, 60, 0.3);
     border-radius: 16px;
     padding: 20px;
     display: flex;
@@ -2197,13 +2285,13 @@ const CancellationInfoCard = styled.div`
 const CancellationWarning = styled.div`
     width: 44px;
     height: 44px;
-    background: rgba(239, 68, 68, 0.2);
+    background: rgba(251, 146, 60, 0.25);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    color: #ff8a80;
+    color: #fb923c;
 
     @media (max-width: 767px) {
         width: 40px;
@@ -2257,7 +2345,7 @@ const FeeInputWrapper = styled.div`
 
         &:focus {
             outline: none;
-            border-color: rgba(239, 68, 68, 0.5);
+            border-color: rgba(251, 146, 60, 0.6);
             background: rgba(255, 255, 255, 0.12);
         }
 
@@ -2298,7 +2386,7 @@ const CancelModalActions = styled.div`
 `;
 
 const CancelWalkButton = styled.button`
-    background: linear-gradient(135deg, #ef4444, #dc2626);
+    background: linear-gradient(135deg, #fb923c, #f97316);
     border: none;
     border-radius: 16px;
     padding: 18px 24px;
@@ -2312,13 +2400,13 @@ const CancelWalkButton = styled.button`
     align-items: center;
     justify-content: center;
     gap: 10px;
-    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3);
+    box-shadow: 0 8px 24px rgba(251, 146, 60, 0.4);
     letter-spacing: -0.01em;
 
     &:hover:not(:disabled) {
-        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        background: linear-gradient(135deg, #f97316, #ea580c);
         transform: translateY(-1px);
-        box-shadow: 0 10px 28px rgba(239, 68, 68, 0.4);
+        box-shadow: 0 10px 28px rgba(251, 146, 60, 0.5);
     }
 
     &:active:not(:disabled) {
@@ -2571,8 +2659,17 @@ const NotesText = styled.p`
     font-weight: 400;
 `;
 
-// Header Map Button - Holographic Style
-const HeaderMapButton = styled.button`
+// Header Button Group
+const HeaderButtonGroup = styled.div`
+    display: flex;
+    gap: 8px;
+    margin: 12px auto 0;
+    justify-content: center;
+    align-items: center;
+`;
+
+// Header Button - Holographic Style
+const HeaderButton = styled.button`
     background: linear-gradient(
         135deg,
         rgba(255, 255, 255, 0.15),
@@ -2583,7 +2680,6 @@ const HeaderMapButton = styled.button`
     border: 1px solid rgba(255, 255, 255, 0.4);
     border-radius: 20px;
     padding: 8px 16px;
-    margin: 12px auto 0;
     display: flex;
     align-items: center;
     justify-content: center;
