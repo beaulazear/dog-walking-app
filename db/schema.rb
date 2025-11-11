@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 20_251_109_230_502) do
+ActiveRecord::Schema[7.2].define(version: 20_251_111_204_518) do
   # These are extensions that must be enabled in order to support this database
   enable_extension 'plpgsql'
 
@@ -99,6 +99,18 @@ ActiveRecord::Schema[7.2].define(version: 20_251_109_230_502) do
     t.index %w[user_id recurring canceled completed], name: 'index_appointments_on_user_and_status'
     t.index ['user_id'], name: 'index_appointments_on_user_id'
     t.index ['walk_group_id'], name: 'index_appointments_on_walk_group_id'
+  end
+
+  create_table 'blogs', force: :cascade do |t|
+    t.bigint 'user_id', null: false
+    t.bigint 'pet_id'
+    t.text 'content'
+    t.string 'training_focus', default: [], array: true
+    t.datetime 'created_at', null: false
+    t.datetime 'updated_at', null: false
+    t.index ['pet_id'], name: 'index_blogs_on_pet_id'
+    t.index %w[user_id created_at], name: 'index_blogs_on_user_id_and_created_at'
+    t.index ['user_id'], name: 'index_blogs_on_user_id'
   end
 
   create_table 'books', force: :cascade do |t|
@@ -271,6 +283,8 @@ ActiveRecord::Schema[7.2].define(version: 20_251_109_230_502) do
   add_foreign_key 'appointments', 'users'
   add_foreign_key 'appointments', 'users', column: 'completed_by_user_id'
   add_foreign_key 'appointments', 'walk_groups'
+  add_foreign_key 'blogs', 'pets'
+  add_foreign_key 'blogs', 'users'
   add_foreign_key 'books', 'users'
   add_foreign_key 'cancellations', 'appointments'
   add_foreign_key 'certification_goals', 'users'

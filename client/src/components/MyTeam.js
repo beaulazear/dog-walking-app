@@ -192,11 +192,15 @@ export default function MyTeam() {
         <Container>
             <Content>
                 <Header>
-                    <Title>
-                        <Users size={28} />
-                        My Team
-                    </Title>
-                    <Subtitle>Connect with other dog walkers to share appointments</Subtitle>
+                    <HeaderContent>
+                        <PageTitle>
+                            <Users size={24} />
+                            My Team
+                        </PageTitle>
+                        <PageSubtitle>
+                            {acceptedConnections.length} {acceptedConnections.length === 1 ? 'member' : 'members'} • {pendingReceived.length + pendingSent.length} pending
+                        </PageSubtitle>
+                    </HeaderContent>
                 </Header>
 
                 <Section>
@@ -357,24 +361,49 @@ const LoadingText = styled.div`
 `;
 
 const Header = styled.div`
-    margin-bottom: 30px;
-    text-align: center;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto 20px;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+
+    @media (min-width: 768px) {
+        margin: 0 auto 30px;
+    }
 `;
 
-const Title = styled.h1`
+const HeaderContent = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+`;
+
+const PageTitle = styled.h1`
     color: white;
-    font-size: 32px;
-    font-weight: bold;
-    margin-bottom: 10px;
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0;
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 10px;
+
+    @media (min-width: 768px) {
+        font-size: 32px;
+    }
 `;
 
-const Subtitle = styled.p`
+const PageSubtitle = styled.p`
     color: rgba(255, 255, 255, 0.9);
-    font-size: 16px;
+    font-size: 14px;
+    margin: 0;
+
+    @media (min-width: 768px) {
+        font-size: 15px;
+    }
 `;
 
 const Section = styled.div`

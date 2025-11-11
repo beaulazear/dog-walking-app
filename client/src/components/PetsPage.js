@@ -221,13 +221,26 @@ export default function PetsPage() {
     };
 
     return (
+        <>
         <Container>
             <Header>
-                <HeaderTitle>
-                    <Dog size={24} />
-                    My Pets
-                </HeaderTitle>
-                <Subtitle>Manage your furry friends</Subtitle>
+                <HeaderContent>
+                    <PageTitle>
+                        <Dog size={24} />
+                        My Pets
+                    </PageTitle>
+                    <PageSubtitle>
+                        {totalPets} {totalPets === 1 ? 'pet' : 'pets'} • {activePets} active
+                    </PageSubtitle>
+                </HeaderContent>
+                <HeaderButtonGroup>
+                    <HeaderButton
+                        onClick={() => setShowCreateForm(true)}
+                        title="Add new pet"
+                    >
+                        <Plus size={18} />
+                    </HeaderButton>
+                </HeaderButtonGroup>
             </Header>
 
             <SearchAndFilterSection>
@@ -264,11 +277,6 @@ export default function PetsPage() {
                             Inactive ({inactivePets})
                         </FilterTab>
                     </FilterTabs>
-
-                    <AddPetButton onClick={() => setShowCreateForm(true)}>
-                        <Plus size={16} />
-                        Add Pet
-                    </AddPetButton>
                 </SearchAndFilter>
             </SearchAndFilterSection>
 
@@ -314,38 +322,11 @@ export default function PetsPage() {
                     }}
                 />
             )}
+        </Container>
 
-            <AnimatePresence>
-                {showCreateForm && ReactDOM.createPortal(
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={(e) => e.target === e.currentTarget && setShowCreateForm(false)}
-                        style={{
-                            position: 'fixed',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            background: 'rgba(0, 0, 0, 0.75)',
-                            backdropFilter: 'blur(12px)',
-                            display: 'flex',
-                            alignItems: 'flex-end',
-                            justifyContent: 'center',
-                            zIndex: 1000,
-                            padding: '20px'
-                        }}
-                    >
-                        {/* Drawer */}
-                        <motion.div
-                            initial={{ y: '100%' }}
-                            animate={{ y: 0 }}
-                            exit={{ y: '100%' }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                            onClick={(e) => e.stopPropagation()}
-                            style={{ width: '100%', maxWidth: '600px' }}
-                        >
+        {showCreateForm && ReactDOM.createPortal(
+            <CreatePetModalOverlay onClick={(e) => e.target === e.currentTarget && setShowCreateForm(false)}>
+                <CreatePetModalContent>
                                 <ModalContainer style={{ maxWidth: '600px', marginBottom: 0 }}>
                                     <ModalHeader>
                                         <ModalTitle>Add New Pet</ModalTitle>
@@ -451,12 +432,11 @@ export default function PetsPage() {
                                 </CreatePetForm>
                                 </ModalScrollContent>
                                 </ModalContainer>
-                        </motion.div>
-                    </motion.div>,
-                    document.body
-                )}
-            </AnimatePresence>
-        </Container>
+                    </CreatePetModalContent>
+                </CreatePetModalOverlay>,
+            document.body
+        )}
+        </>
     );
 }
 
@@ -1187,23 +1167,40 @@ const Container = styled.div`
 `;
 
 const Header = styled.div`
+    width: 100%;
     max-width: 448px;
     margin: 0 auto 20px;
-    text-align: center;
+    z-index: 100;
+    position: relative;
+    padding: 0 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
 
     @media (min-width: 768px) {
-        margin: 0 auto 30px;
+        margin: 0 auto 24px;
+    }
+
+    @media (max-width: 768px) {
+        padding: 0 12px;
     }
 `;
 
-const HeaderTitle = styled.h1`
+const HeaderContent = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+`;
+
+const PageTitle = styled.h1`
     color: white;
     font-size: 26px;
     font-weight: 700;
-    margin-bottom: 8px;
+    margin: 0;
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 10px;
 
     @media (min-width: 768px) {
@@ -1211,13 +1208,47 @@ const HeaderTitle = styled.h1`
     }
 `;
 
-const Subtitle = styled.p`
+const PageSubtitle = styled.p`
     color: rgba(255, 255, 255, 0.9);
     font-size: 14px;
     margin: 0;
 
     @media (min-width: 768px) {
-        font-size: 16px;
+        font-size: 15px;
+    }
+`;
+
+const HeaderButtonGroup = styled.div`
+    display: flex;
+    gap: 6px;
+    align-items: center;
+`;
+
+const HeaderButton = styled.button`
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(12px);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 10;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+        transform: translateY(0);
     }
 `;
 
@@ -2568,10 +2599,34 @@ const FormButtons = styled.div`
     margin-top: 24px;
 `;
 
+const CreatePetModalOverlay = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 999999;
+    padding: 20px;
+`;
+
+const CreatePetModalContent = styled.div`
+    width: 100%;
+    max-width: 600px;
+`;
+
 export {
     Container,
     Header,
-    HeaderTitle,
+    HeaderContent,
+    PageTitle,
+    PageSubtitle,
+    HeaderButtonGroup,
+    HeaderButton,
     AddPetButton,
     SearchAndFilter,
     SearchBar,

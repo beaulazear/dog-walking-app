@@ -20,28 +20,52 @@ import {
     Share2,
     Calendar,
     Map,
-    ChevronDown,
-    ChevronUp
+    Route,
+    Sparkles
 } from "lucide-react";
 import ShareAppointmentModal from "./ShareAppointmentModal";
 import WalksMapView from "./WalksMapView";
-import GroupSuggestionsPanel from "./GroupSuggestionsPanel";
 
 export default function TodaysWalks() {
     const { user, refreshUser } = useContext(UserContext);
     const [showMap, setShowMap] = useState(false);
-    const [showGroups, setShowGroups] = useState(false);
+    const [optimizedRoute, setOptimizedRoute] = useState(null);
+    const [isLoadingRoute, setIsLoadingRoute] = useState(false);
 
     useEffect(() => {
         window.scrollTo(0, 0);
     }, []);
 
-    const handleGroupChange = useCallback(() => {
-        // Refresh user data to get updated appointment groups
-        if (refreshUser) {
-            refreshUser();
+    const fetchOptimizedRoute = async () => {
+        setIsLoadingRoute(true);
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch(`/routes/optimize`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    date: dayjs().format('YYYY-MM-DD'),
+                    compare: true
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setOptimizedRoute(data);
+            } else {
+                console.error('Failed to fetch optimized route');
+                setOptimizedRoute(null);
+            }
+        } catch (error) {
+            console.error('Error fetching optimized route:', error);
+            setOptimizedRoute(null);
+        } finally {
+            setIsLoadingRoute(false);
         }
-    }, [refreshUser]);
+    };
 
     // Memoize expensive filtering and sorting operation
     const todaysAppointments = useMemo(() => {
@@ -99,34 +123,32 @@ export default function TodaysWalks() {
         <>
             <Container>
                 <Header>
-                    <PageTitle>
-                        <Calendar size={24} />
-                        Today's Walks
-                    </PageTitle>
-                    <PageSubtitle>
-                        {todaysAppointments.length} {todaysAppointments.length === 1 ? 'walk' : 'walks'} scheduled • {completedCount} completed
-                    </PageSubtitle>
+                    <HeaderContent>
+                        <PageTitle>
+                            <Calendar size={24} />
+                            Today's Walks
+                        </PageTitle>
+                        <PageSubtitle>
+                            {todaysAppointments.length} {todaysAppointments.length === 1 ? 'walk' : 'walks'} scheduled • {completedCount} completed
+                        </PageSubtitle>
+                    </HeaderContent>
                     {todaysAppointments.length > 0 && (
                         <HeaderButtonGroup>
-                            <HeaderButton onClick={() => setShowGroups(!showGroups)}>
-                                {showGroups ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                                <span>{showGroups ? 'Hide' : 'Show'} Groups</span>
-                            </HeaderButton>
+                            {todaysAppointments.length > 1 && (
+                                <OptimizedRouteButton
+                                    onClick={fetchOptimizedRoute}
+                                    disabled={isLoadingRoute}
+                                    title="Get optimized route"
+                                >
+                                    <Route size={18} />
+                                </OptimizedRouteButton>
+                            )}
                             <HeaderButton onClick={() => setShowMap(true)}>
                                 <Map size={18} />
-                                <span>Map View</span>
                             </HeaderButton>
                         </HeaderButtonGroup>
                     )}
                 </Header>
-
-                {todaysAppointments.length > 0 && showGroups && (
-                    <GroupSuggestionsPanel
-                        date={dayjs().format("YYYY-MM-DD")}
-                        appointments={todaysAppointments}
-                        onGroupChange={handleGroupChange}
-                    />
-                )}
 
                 {todaysAppointments.length === 0 ? (
                     <EmptyState>
@@ -138,6 +160,42 @@ export default function TodaysWalks() {
                     </EmptyState>
                 ) : (
                     <>
+                        {optimizedRoute && optimizedRoute.route && (
+                            <RouteDisplayContainer>
+                                <RouteHeader>
+                                    <RouteHeaderLeft>
+                                        <RouteTitle>
+                                            <Sparkles size={18} />
+                                            Optimized Route
+                                        </RouteTitle>
+                                        <RouteSummary>
+                                            {optimizedRoute.route.length} stops
+                                        </RouteSummary>
+                                    </RouteHeaderLeft>
+                                    <CloseRouteButton
+                                        onClick={() => setOptimizedRoute(null)}
+                                        title="Close optimized route"
+                                    >
+                                        <X size={20} />
+                                    </CloseRouteButton>
+                                </RouteHeader>
+                                <RouteStops>
+                                    {optimizedRoute.route.map((stop, index) => (
+                                        <RouteStop key={index}>
+                                            <StopNumber $type={stop.stop_type}>{index + 1}</StopNumber>
+                                            <StopDetails>
+                                                <StopType $type={stop.stop_type}>
+                                                    {stop.stop_type === 'pickup' ? 'Pick up' : 'Drop off'}
+                                                </StopType>
+                                                <StopName>{stop.pet_name}</StopName>
+                                                <StopTime>{stop.time}</StopTime>
+                                            </StopDetails>
+                                        </RouteStop>
+                                    ))}
+                                </RouteStops>
+                            </RouteDisplayContainer>
+                        )}
+
                         <WalkList>
                             {todaysAppointments.map(appointment => (
                                 <WalkCard key={appointment.id} appointment={appointment} />
@@ -972,9 +1030,12 @@ const Header = styled.div`
     width: 100%;
     max-width: 448px;
     margin: 0 auto 20px;
-    text-align: center;
     z-index: 1;
     padding: 0 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
 
     @media (min-width: 768px) {
         margin: 0 auto 24px;
@@ -985,14 +1046,20 @@ const Header = styled.div`
     }
 `;
 
+const HeaderContent = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+`;
+
 const PageTitle = styled.h1`
     color: white;
     font-size: 26px;
     font-weight: 700;
-    margin: 0 0 8px 0;
+    margin: 0;
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 10px;
 
     @media (min-width: 768px) {
@@ -1008,6 +1075,242 @@ const PageSubtitle = styled.p`
     @media (min-width: 768px) {
         font-size: 16px;
     }
+`;
+
+const OptimizedRouteButton = styled.button`
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    backdrop-filter: blur(12px);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow:
+        0 4px 12px rgba(251, 191, 36, 0.4),
+        0 0 20px rgba(251, 191, 36, 0.3);
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+            45deg,
+            transparent 30%,
+            rgba(255, 255, 255, 0.5) 50%,
+            transparent 70%
+        );
+        animation: gleam 3s infinite;
+    }
+
+    @keyframes gleam {
+        0% {
+            transform: translateX(-100%) translateY(-100%) rotate(45deg);
+        }
+        100% {
+            transform: translateX(100%) translateY(100%) rotate(45deg);
+        }
+    }
+
+    &:hover:not(:disabled) {
+        transform: scale(1.05);
+        box-shadow:
+            0 6px 20px rgba(251, 191, 36, 0.5),
+            0 0 30px rgba(251, 191, 36, 0.4);
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.95);
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    svg {
+        position: relative;
+        z-index: 1;
+    }
+
+    @media (min-width: 768px) {
+        width: 44px;
+        height: 44px;
+
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
+`;
+
+const RouteDisplayContainer = styled.div`
+    width: 100%;
+    background: rgba(20, 20, 30, 0.95);
+    backdrop-filter: blur(20px);
+    border-top: 2px solid rgba(251, 191, 36, 0.4);
+    border-bottom: 2px solid rgba(251, 191, 36, 0.4);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    margin-bottom: 0;
+    position: relative;
+    z-index: 1;
+`;
+
+const RouteHeader = styled.div`
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+`;
+
+const RouteHeaderLeft = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+`;
+
+const RouteTitle = styled.div`
+    color: rgba(251, 191, 36, 0.95);
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+`;
+
+const RouteSummary = styled.div`
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+`;
+
+const CloseRouteButton = styled.button`
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
+    }
+
+    &:active {
+        transform: scale(0.95);
+    }
+`;
+
+const RouteStops = styled.div`
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 500px;
+    overflow-y: auto;
+
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(251, 191, 36, 0.3);
+        border-radius: 3px;
+
+        &:hover {
+            background: rgba(251, 191, 36, 0.5);
+        }
+    }
+`;
+
+const RouteStop = styled.div`
+    display: flex;
+    gap: 12px;
+    position: relative;
+
+    &:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        left: 19px;
+        top: 40px;
+        bottom: -12px;
+        width: 2px;
+        background: rgba(251, 191, 36, 0.2);
+    }
+`;
+
+const StopNumber = styled.div`
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: ${({ $type }) =>
+        $type === 'pickup'
+            ? 'linear-gradient(135deg, #10b981, #059669)'
+            : 'linear-gradient(135deg, #8b5cf6, #7c3aed)'};
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+`;
+
+const StopDetails = styled.div`
+    flex: 1;
+    padding-top: 2px;
+`;
+
+const StopType = styled.div`
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: ${props => props.$type === 'pickup' ? '#10b981' : '#8b5cf6'};
+    margin-bottom: 4px;
+`;
+
+const StopName = styled.div`
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 2px;
+`;
+
+const StopTime = styled.div`
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 13px;
 `;
 
 // Empty state styling
@@ -2662,28 +2965,23 @@ const NotesText = styled.p`
 // Header Button Group
 const HeaderButtonGroup = styled.div`
     display: flex;
-    gap: 8px;
-    margin: 12px auto 0;
-    justify-content: center;
+    gap: 6px;
     align-items: center;
+    margin-right: 16px;
 `;
 
-// Header Button - Holographic Style
+// Header Button - Rounded Icon Button
 const HeaderButton = styled.button`
-    background: linear-gradient(
-        135deg,
-        rgba(255, 255, 255, 0.15),
-        rgba(255, 255, 255, 0.05)
-    );
+    background: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(12px);
     color: white;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    border-radius: 20px;
-    padding: 8px 16px;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
     font-family: 'Poppins', sans-serif;
     font-size: 0.85rem;
     font-weight: 600;
@@ -2732,8 +3030,13 @@ const HeaderButton = styled.button`
     }
 
     @media (min-width: 768px) {
-        padding: 9px 18px;
-        font-size: 0.9rem;
+        width: 44px;
+        height: 44px;
+
+        svg {
+            width: 20px;
+            height: 20px;
+        }
 
         &:hover {
             background: linear-gradient(

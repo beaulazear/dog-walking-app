@@ -26,6 +26,9 @@ class TrainingController < ApplicationController
       recent_sessions: user.training_sessions.includes(:pet).order(session_date: :desc).limit(5).as_json(include: { pet: { only: %i[
                                                                                                            id name
                                                                                                          ] } }),
+      recent_blogs: user.blogs.includes(:pet).order(created_at: :desc).limit(5).as_json(include: { pet: { only: %i[
+                                                                                          id name
+                                                                                        ] } }),
       uncelebrated_milestones: user.milestones.uncelebrated
     }
   end

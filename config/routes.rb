@@ -54,6 +54,9 @@ Rails.application.routes.draw do
     end
   end
 
+  # Blogs
+  resources :blogs, only: %i[index create update destroy]
+
   # Dashboard & Stats
   get '/training/dashboard', to: 'training#dashboard'
   get '/training/stats', to: 'training#stats'

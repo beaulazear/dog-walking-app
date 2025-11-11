@@ -11,12 +11,15 @@ const Landing = () => {
         <LandingWrapper>
             <BackgroundPattern />
 
+            <TopHeader>
+                <AppTitle src="/PocketWalks.svg" alt="Pocket Walks" />
+            </TopHeader>
+
             <ContentContainer>
                 <HeaderSection>
                     <LogoContainer>
                         <DogImage src={dogImage} alt="Dog Walking App" />
                     </LogoContainer>
-                    <AppTitle>Pocket Walks</AppTitle>
                     <AppSubtitle>Manage your walks, clients, and schedule</AppSubtitle>
                 </HeaderSection>
 
@@ -114,6 +117,26 @@ const BackgroundPattern = styled.div`
     pointer-events: none;
 `;
 
+const TopHeader = styled.div`
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 0.625rem 2rem;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+
+    @media (max-width: 768px) {
+        padding: 0.5rem 1.5rem;
+    }
+
+    @media (max-width: 480px) {
+        padding: 0.5rem 1rem;
+    }
+`;
+
 const ContentContainer = styled.div`
     max-width: 480px;
     width: 100%;
@@ -122,10 +145,16 @@ const ContentContainer = styled.div`
     gap: 2rem;
     animation: ${fadeIn} 0.8s ease-out;
     z-index: 1;
+    padding-top: 125px;
 
     @media (max-width: 768px) {
         gap: 1.5rem;
         max-width: 100%;
+        padding-top: 105px;
+    }
+
+    @media (max-width: 480px) {
+        padding-top: 90px;
     }
 `;
 
@@ -142,43 +171,39 @@ const HeaderSection = styled.div`
 `;
 
 const LogoContainer = styled.div`
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 24px;
-    padding: 1.5rem;
-    box-shadow:
-        0 10px 40px rgba(0, 0, 0, 0.2),
-        0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     animation: ${float} 3s ease-in-out infinite;
-
-    @media (max-width: 768px) {
-        padding: 1.25rem;
-        border-radius: 20px;
-    }
 `;
 
 const DogImage = styled.img`
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     display: block;
     object-fit: contain;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
 
     @media (max-width: 768px) {
-        width: 70px;
-        height: 70px;
+        width: 85px;
+        height: 85px;
     }
 `;
 
-const AppTitle = styled.h1`
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 2rem;
-    font-weight: 700;
-    color: #ffffff;
-    margin: 0;
-    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
-    letter-spacing: -0.5px;
+const AppTitle = styled.img`
+    height: 85px;
+    width: auto;
+    max-width: 450px;
+    display: block;
 
     @media (max-width: 768px) {
-        font-size: 1.75rem;
+        height: 70px;
+        max-width: 360px;
+    }
+
+    @media (max-width: 480px) {
+        height: 58px;
+        max-width: 280px;
     }
 `;
 

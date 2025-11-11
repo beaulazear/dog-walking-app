@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import styled from 'styled-components';
-import { X, MapPin, Clock, DollarSign, Moon, Sun, Mountain, Route, Navigation, ArrowRight } from 'lucide-react';
+import { X, MapPin, Clock, DollarSign, Moon, Sun, Mountain, Route, Navigation, ArrowRight, List } from 'lucide-react';
 import dayjs from 'dayjs';
 
 // Fix Leaflet default icon issue with webpack
@@ -181,11 +181,6 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
       return createCustomIcon('#22c55e', true, count); // Green for completed
     }
 
-    // Check if walk is part of an active group
-    if (walk.walk_group_id) {
-      return createCustomIcon('#f97316', false, count); // Orange for grouped walks
-    }
-
     const walkType = walk.walk_type || (walk.solo ? 'solo' : 'group');
     if (walkType === 'solo') {
       return createCustomIcon('#9333EA', false, count); // Purple for solo
@@ -218,20 +213,6 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
 
     return Object.values(locationGroups);
   }, [geocodedWalks]);
-
-  // Group walks by walk_group_id for visual connections
-  const walkGroups = useMemo(() => {
-    const groups = {};
-    geocodedWalks.forEach(walk => {
-      if (walk.walk_group_id && !isCompleted(walk)) {
-        if (!groups[walk.walk_group_id]) {
-          groups[walk.walk_group_id] = [];
-        }
-        groups[walk.walk_group_id].push(walk);
-      }
-    });
-    return Object.values(groups).filter(group => group.length > 1);
-  }, [geocodedWalks, isCompleted]);
 
   // Fetch optimized route from backend
   const fetchOptimizedRoute = async () => {
@@ -301,8 +282,8 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
     // Start time - use earliest appointment time or current time
     let currentTime = earliestTime || dayjs();
 
-    // Track group walk start times for each walk_group_id
-    const groupWalkStartTimes = {}; // { walk_group_id: start_time }
+    // Track pickup times for each appointment
+    const pickupTimes = {}; // { appointment_id: pickup_time }
 
     for (let i = 0; i < stops.length; i++) {
       const stop = stops[i];
@@ -346,17 +327,15 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
       }
 
       // Track when each dog is picked up (for rolling pickup timing)
-      if (stop.stop_type === 'pickup' && stop.walk_group_id) {
-        // Record this dog's pickup time
-        if (!groupWalkStartTimes[`${stop.walk_group_id}_${stop.appointment_id}`]) {
-          groupWalkStartTimes[`${stop.walk_group_id}_${stop.appointment_id}`] = currentTime.add(5, 'minute');
-        }
+      if (stop.stop_type === 'pickup') {
+        // Record this dog's pickup time (after the 5 min pickup duration)
+        pickupTimes[stop.appointment_id] = currentTime.add(5, 'minute');
       }
 
       // Handle dropoff timing - each dog's walk completes based on THEIR pickup time
-      if (stop.stop_type === 'dropoff' && stop.walk_group_id) {
+      if (stop.stop_type === 'dropoff') {
         // Find when THIS specific dog was picked up
-        const thisDogsPickupTime = groupWalkStartTimes[`${stop.walk_group_id}_${stop.appointment_id}`];
+        const thisDogsPickupTime = pickupTimes[stop.appointment_id];
 
         if (thisDogsPickupTime) {
           // Calculate when this dog's walk completes (from THEIR pickup time)
@@ -426,8 +405,8 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
             >
               <Mountain size={18} />
             </MapStyleButton>
-            <CloseButton onClick={onClose} title="Close map">
-              <X size={24} />
+            <CloseButton onClick={onClose} title="Back to list">
+              <List size={24} />
             </CloseButton>
           </HeaderButtons>
         </MapHeader>
@@ -481,8 +460,8 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
           >
             <Mountain size={18} />
           </MapStyleButton>
-          <CloseButton onClick={onClose} title="Close map">
-            <X size={24} />
+          <CloseButton onClick={onClose} title="Back to list">
+            <List size={24} />
           </CloseButton>
         </HeaderButtons>
       </MapHeader>
@@ -531,23 +510,6 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
             />
 
             <AutoFitBounds walks={geocodedWalks} />
-
-            {/* Draw lines between grouped walks */}
-            {walkGroups.map((group, idx) => {
-              const positions = group.map(walk => [walk.pet.latitude, walk.pet.longitude]);
-              return (
-                <Polyline
-                  key={`group-${idx}`}
-                  positions={positions}
-                  pathOptions={{
-                    color: '#f97316',
-                    weight: 3,
-                    opacity: 0.6,
-                    dashArray: '10, 10'
-                  }}
-                />
-              );
-            })}
 
             {/* Draw optimized route polyline */}
             {showRoute && optimizedRoute && optimizedRoute.path_coordinates && (
@@ -643,9 +605,6 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
                               </MetaChip>
                               <MetaDuration $mapStyle={mapStyle}>{walk.duration} min</MetaDuration>
                             </PopupMeta>
-                            {walk.walk_group_id && (
-                              <PopupGroupBadge>Grouped Walk</PopupGroupBadge>
-                            )}
                           </PopupWalkItem>
                         ))}
                       </PopupContent>
@@ -670,46 +629,16 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
               <LegendLabel>Training</LegendLabel>
             </LegendItem>
             <LegendItem>
-              <LegendDot color="#f97316" />
-              <LegendLabel>Grouped</LegendLabel>
-            </LegendItem>
-            <LegendItem>
               <LegendDot color="#22c55e" />
               <LegendLabel>Completed</LegendLabel>
             </LegendItem>
           </MapLegend>
 
-          {showRoute && optimizedRoute && (
-            <RouteStatsPanel $mapStyle={mapStyle}>
-              <RoutePanelClose onClick={handleToggleRoute} title="Close route view">
-                <X size={18} />
-              </RoutePanelClose>
-              <RouteStatHeader>Optimized Route</RouteStatHeader>
-              <RouteStatsRow>
-                <RouteStat>
-                  <RouteStatLabel>Distance</RouteStatLabel>
-                  <RouteStatValue>{optimizedRoute.total_distance} mi</RouteStatValue>
-                </RouteStat>
-                <RouteStat>
-                  <RouteStatLabel>Travel</RouteStatLabel>
-                  <RouteStatValue>{optimizedRoute.total_travel_time} min</RouteStatValue>
-                </RouteStat>
-                {optimizedRoute.comparison && (
-                  <RouteStat>
-                    <RouteStatLabel>Saved</RouteStatLabel>
-                    <RouteStatValue $accent>{optimizedRoute.comparison.improvement_percent}%</RouteStatValue>
-                  </RouteStat>
-                )}
-              </RouteStatsRow>
-              <TimelineToggle onClick={() => setShowTimeline(!showTimeline)}>
-                <Navigation size={14} />
-                {showTimeline ? 'Hide' : 'Show'} Step-by-Step
-              </TimelineToggle>
-            </RouteStatsPanel>
-          )}
-
           {showRoute && showTimeline && routeWithTimes && (
             <RouteTimelinePanel $mapStyle={mapStyle}>
+              <TimelineCloseButton onClick={handleToggleRoute} title="Hide route">
+                <X size={18} />
+              </TimelineCloseButton>
               <TimelineHeader>
                 <Navigation size={16} />
                 <span>Your Journey ({routeWithTimes.length} stops)</span>
@@ -750,13 +679,17 @@ const MapViewContainer = styled.div`
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: 80px; /* Leave space for bottom navigation */
   background: ${({ $mapStyle }) =>
     $mapStyle === 'light' ? '#f8f9fa' : '#14141e'};
   z-index: 9999;
   display: flex;
   flex-direction: column;
   transition: background-color 0.3s ease;
+
+  @media (max-width: 768px) {
+    bottom: 70px; /* Slightly less on mobile */
+  }
 `;
 
 const MapHeader = styled.div`
@@ -812,41 +745,78 @@ const HeaderButtons = styled.div`
 `;
 
 const RouteToggleButton = styled.button`
-  background: ${({ $active }) =>
-    $active ? 'rgba(59, 130, 246, 0.4)' : 'rgba(255, 255, 255, 0.15)'};
-  border: 1px solid ${({ $active }) =>
-    $active ? 'rgba(59, 130, 246, 0.6)' : 'rgba(255, 255, 255, 0.25)'};
-  border-radius: 10px;
-  width: 36px;
-  height: 36px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  backdrop-filter: blur(12px);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: white;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 4px 12px rgba(251, 191, 36, 0.4),
+    0 0 20px rgba(251, 191, 36, 0.3);
   position: relative;
+  overflow: hidden;
   z-index: 1;
 
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      45deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.5) 50%,
+      transparent 70%
+    );
+    animation: gleam 3s infinite;
+  }
+
+  @keyframes gleam {
+    0% {
+      transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+      transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+  }
+
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: not-allowed;
   }
 
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow:
+      0 6px 16px rgba(251, 191, 36, 0.5),
+      0 0 25px rgba(251, 191, 36, 0.4);
+  }
+
   &:active:not(:disabled) {
-    transform: scale(0.95);
+    transform: translateY(0);
+  }
+
+  svg {
+    position: relative;
+    z-index: 1;
   }
 
   @media (min-width: 768px) {
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
 
-    &:hover:not(:disabled) {
-      background: ${({ $active }) =>
-        $active ? 'rgba(59, 130, 246, 0.5)' : 'rgba(255, 255, 255, 0.3)'};
-      border-color: ${({ $active }) =>
-        $active ? 'rgba(59, 130, 246, 0.8)' : 'rgba(255, 255, 255, 0.5)'};
-      transform: translateY(-1px);
+    svg {
+      width: 20px;
+      height: 20px;
     }
   }
 `;
@@ -1191,7 +1161,7 @@ const LegendLabel = styled.span`
 
 const MapLegend = styled.div`
   position: absolute;
-  bottom: 20px;
+  bottom: 100px;
   left: 50%;
   transform: translateX(-50%);
   background: ${({ $mapStyle }) =>
@@ -1217,7 +1187,7 @@ const MapLegend = styled.div`
   }
 
   @media (max-width: 768px) {
-    bottom: 90px;
+    bottom: 100px;
   }
 
   @media (max-width: 400px) {
@@ -1243,150 +1213,9 @@ const LegendDot = styled.div`
   flex-shrink: 0;
 `;
 
-const RouteStatsPanel = styled.div`
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: ${({ $mapStyle }) =>
-    $mapStyle === 'light' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(20, 20, 30, 0.95)'};
-  backdrop-filter: blur(20px);
-  border-radius: 16px;
-  padding: 14px 20px;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.5),
-    0 0 0 1px ${({ $mapStyle }) =>
-      $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'},
-    inset 0 1px 0 ${({ $mapStyle }) =>
-      $mapStyle === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.1)'};
-  border: 1px solid rgba(59, 130, 246, 0.4);
-  z-index: 10001;
-  transition: all 0.3s ease;
-  animation: slideDown 0.3s ease-out;
-  max-width: 90vw;
-  position: relative;
-
-  @keyframes slideDown {
-    from {
-      opacity: 0;
-      transform: translateX(-50%) translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-  }
-
-  @media (max-width: 768px) {
-    padding: 12px 16px;
-    top: 60px; /* Position below the map header */
-    width: calc(100vw - 32px);
-    max-width: none;
-  }
-`;
-
-const RoutePanelClose = styled.button`
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(239, 68, 68, 0.2);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #ffffff;
-  transition: all 0.2s ease;
-  z-index: 10;
-
-  &:hover {
-    background: rgba(239, 68, 68, 0.3);
-    border-color: rgba(239, 68, 68, 0.6);
-    transform: scale(1.1);
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-
-  @media (max-width: 768px) {
-    width: 28px;
-    height: 28px;
-    top: 8px;
-    right: 8px;
-  }
-`;
-
-const RouteStatHeader = styled.div`
-  font-family: 'Poppins', sans-serif;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: rgba(59, 130, 246, 0.9);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin-bottom: 10px;
-  text-align: center;
-`;
-
-const RouteStatsRow = styled.div`
-  display: flex;
-  gap: 20px;
-  align-items: center;
-`;
-
-const RouteStat = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-`;
-
-const RouteStatLabel = styled.div`
-  font-family: 'Poppins', sans-serif;
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.6);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-`;
-
-const RouteStatValue = styled.div`
-  font-family: 'Poppins', sans-serif;
-  font-size: 1rem;
-  font-weight: 700;
-  color: ${({ $accent }) => $accent ? '#22c55e' : '#ffffff'};
-`;
-
-const TimelineToggle = styled.button`
-  margin-top: 12px;
-  background: rgba(59, 130, 246, 0.2);
-  border: 1px solid rgba(59, 130, 246, 0.4);
-  color: #ffffff;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-family: 'Poppins', sans-serif;
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-
-  &:hover {
-    background: rgba(59, 130, 246, 0.3);
-    border-color: rgba(59, 130, 246, 0.6);
-  }
-`;
-
 const RouteTimelinePanel = styled.div`
   position: absolute;
-  top: 120px;
+  top: 100px;
   right: 20px;
   width: 320px;
   max-height: calc(100vh - 200px);
@@ -1422,13 +1251,49 @@ const RouteTimelinePanel = styled.div`
     left: 10px;
     width: auto;
     max-width: none;
-    top: 180px; /* Position below route stats panel */
-    max-height: calc(100vh - 200px);
+    top: 80px;
+    max-height: calc(100vh - 170px);
+  }
+`;
+
+const TimelineCloseButton = styled.button`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #ffffff;
+  transition: all 0.2s ease;
+  z-index: 10;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.6);
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  @media (max-width: 768px) {
+    width: 28px;
+    height: 28px;
+    top: 10px;
+    right: 10px;
   }
 `;
 
 const TimelineHeader = styled.div`
   padding: 14px 16px;
+  padding-right: 48px; /* Make room for close button */
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;

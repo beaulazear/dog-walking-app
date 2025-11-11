@@ -7,6 +7,7 @@ class User < ApplicationRecord
   has_many :appointments, through: :pets
   has_many :invoices, through: :pets
   has_many :training_sessions, dependent: :destroy
+  has_many :blogs, dependent: :destroy
   has_one :certification_goal, dependent: :destroy
   has_many :milestones, dependent: :destroy
   has_many :books, dependent: :destroy

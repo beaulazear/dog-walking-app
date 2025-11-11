@@ -16,7 +16,8 @@ import {
     Mail,
     AtSign,
     Camera,
-    Upload
+    Upload,
+    LogOut
 } from "lucide-react";
 
 const calculateTrainingHours = (invoices) => {
@@ -277,6 +278,26 @@ export default function Profile() {
             toast.error("An error occurred while uploading photo");
         } finally {
             setIsUploadingPhoto(false);
+        }
+    };
+
+    const handleLogout = async () => {
+        try {
+            const response = await fetch("/logout", {
+                method: "DELETE",
+                credentials: "include",
+            });
+
+            if (response.ok) {
+                setUser(null);
+                toast.success('Logged out successfully');
+            } else {
+                console.error("Logout failed.");
+                toast.error('Logout failed');
+            }
+        } catch (error) {
+            console.error("Error during logout:", error);
+            toast.error('An error occurred during logout');
         }
     };
 
@@ -631,6 +652,11 @@ export default function Profile() {
             <FinanceOverviewWrapper>
                 <YearlyFinanceOverview />
             </FinanceOverviewWrapper>
+
+            <LogoutButton onClick={handleLogout}>
+                <LogOut size={16} />
+                Logout
+            </LogoutButton>
         </Container>
     );
 }
@@ -1452,5 +1478,40 @@ const ModernUpdateButton = styled.button`
 
     &:active:not(:disabled) {
         transform: translateY(0);
+    }
+`;
+
+const LogoutButton = styled.button`
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 20px 20px 0;
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+    position: relative;
+    z-index: 1;
+
+    &:hover {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 28px rgba(239, 68, 68, 0.4);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+
+    @media (max-width: 768px) {
+        margin: 20px 16px 0;
     }
 `;

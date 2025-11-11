@@ -414,10 +414,10 @@ class RouteOptimizerService
     # Otherwise, start from earliest window (planning the route)
     if earliest_window && latest_window && Time.current >= earliest_window && Time.current <= latest_window
       current_time = Time.current
-      Rails.logger.info "📍 Mid-day re-routing: starting from current time"
+      Rails.logger.info '📍 Mid-day re-routing: starting from current time'
     else
       current_time = earliest_window || Time.current
-      Rails.logger.info "📋 Route planning: starting from earliest window"
+      Rails.logger.info '📋 Route planning: starting from earliest window'
     end
 
     current_location = start_location || {
@@ -567,15 +567,15 @@ class RouteOptimizerService
       best_action = actions.min_by { |a| a[:cost] }
 
       # 4. EXECUTE ACTION
+      appt = best_action[:appointment]
+      travel_time = calculate_travel_time_between_locations(
+        current_location,
+        { lat: appt.pet.latitude, lng: appt.pet.longitude }
+      )
+      current_time += travel_time.minutes
       if best_action[:type] == :pickup
-        appt = best_action[:appointment]
 
         # Travel to pickup location
-        travel_time = calculate_travel_time_between_locations(
-          current_location,
-          { lat: appt.pet.latitude, lng: appt.pet.longitude }
-        )
-        current_time += travel_time.minutes
 
         # START PICKUP - Walk timer starts NOW
         pickup_start_times[appt.id] = current_time
@@ -596,14 +596,8 @@ class RouteOptimizerService
         end.join(', ')}"
 
       else # dropoff
-        appt = best_action[:appointment]
 
         # Travel to dropoff location
-        travel_time = calculate_travel_time_between_locations(
-          current_location,
-          { lat: appt.pet.latitude, lng: appt.pet.longitude }
-        )
-        current_time += travel_time.minutes
 
         stop = format_route_stop(appt, :dropoff)
         stop[:walk_group_id] ||= temp_group_id
@@ -624,7 +618,7 @@ class RouteOptimizerService
       total_minutes = ((current_time - pickup_start_times.values.min) / 60.0).round
       Rails.logger.info "Total route time: #{total_minutes} minutes"
     else
-      Rails.logger.warn "⚠️ No pickups were made - all windows may be closed or invalid"
+      Rails.logger.warn '⚠️ No pickups were made - all windows may be closed or invalid'
     end
 
     Rails.logger.info "Stop sequence: #{stops.map { |s| "#{s[:pet_name]}-#{s[:stop_type]}" }.join(' → ')}"
@@ -653,7 +647,7 @@ class RouteOptimizerService
 
     # Nearby pickups bonus (chaining opportunities)
     nearby_pickups = remaining_appointments.count do |appt|
-      start_window = parse_time(appt.start_time)
+      parse_time(appt.start_time)
       end_window = parse_time(appt.end_time)
       # Only count if window is currently open or opens soon
       next false unless end_window && end_window > current_time
@@ -673,7 +667,7 @@ class RouteOptimizerService
 
   # Calculate cost for picking up a dog
   # Lower cost = better pickup option
-  def self.calculate_pickup_cost(appointment, current_location, current_time, pickup_start_times, currently_walking, remaining_appointments)
+  def self.calculate_pickup_cost(appointment, current_location, current_time, pickup_start_times, currently_walking, _remaining_appointments)
     # Base cost: travel time to pickup location
     travel_time = calculate_travel_time_between_locations(
       current_location,

@@ -2,13 +2,13 @@ import React, { useContext, useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
 import toast from 'react-hot-toast';
 import dayjs from "dayjs";
+import { useNavigate } from 'react-router-dom';
 import { UserContext } from "../context/user";
 import dogPlaceholder from "../assets/dog.png";
 import ConfirmModal from "./ConfirmModal";
 import { useConfirm } from "../hooks/useConfirm";
 import {
     Cake,
-    LogOut,
     ChevronLeft,
     ChevronRight,
     CalendarDays,
@@ -48,6 +48,7 @@ const getUpcomingBirthday = (pets) => {
 export default function Dashboard() {
     const { user, setUser, removeAppointment } = useContext(UserContext);
     const { confirmState, confirm } = useConfirm();
+    const navigate = useNavigate();
     const [currentDate, setCurrentDate] = useState(dayjs());
     const [upcomingBirthdayPet, setUpcomingBirthdayPet] = useState(null);
     const [selectedDate, setSelectedDate] = useState(null);
@@ -67,23 +68,6 @@ export default function Dashboard() {
         }
         setPhotoError(false); // Reset photo error when user changes
     }, [user]);
-
-    const handleLogout = async () => {
-        try {
-            const response = await fetch("/logout", {
-                method: "DELETE",
-                credentials: "include",
-            });
-
-            if (response.ok) {
-                setUser(null);
-            } else {
-                console.error("Logout failed.");
-            }
-        } catch (error) {
-            console.error("Error during logout:", error);
-        }
-    };
 
     // Memoize helper function - stable reference across renders
     const isRecurringOnDate = useCallback((appointment, date) => {
@@ -215,6 +199,9 @@ export default function Dashboard() {
 
     return (
         <Container>
+            <TopHeader>
+                <HeaderLogo src="/PocketWalks.svg" alt="Pocket Walks" />
+            </TopHeader>
             <ContentSections>
                 <ProfileHeader>
                     <ProfilePicWrapper>
@@ -261,7 +248,7 @@ export default function Dashboard() {
                                 Your Week
                             </ScheduleTitle>
                             <ButtonGroup>
-                                <TodayButton onClick={() => setCurrentDate(dayjs())}>
+                                <TodayButton onClick={() => navigate('/todays-walks')}>
                                     Today
                                 </TodayButton>
                                 <MonthViewButton onClick={() => setShowMonthView(true)}>
@@ -366,12 +353,7 @@ export default function Dashboard() {
                     </ModernBirthdayCard>
                 )}
             </ContentSections>
-            
-            <LogoutButton onClick={handleLogout}>
-                <LogOut size={16} />
-                Logout
-            </LogoutButton>
-            
+
             {showAppointments && selectedDate && (
                 <AppointmentsModal onClick={closeAppointmentsModal}>
                     <ModalContent onClick={(e) => e.stopPropagation()}>
@@ -515,10 +497,55 @@ const Container = styled.div`
     }
 `;
 
-// Simple content sections layout
+const TopHeader = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 0.625rem 2rem;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+
+    @media (max-width: 768px) {
+        padding: 0.5rem 1.5rem;
+    }
+
+    @media (max-width: 480px) {
+        padding: 0.5rem 1rem;
+    }
+`;
+
+const HeaderLogo = styled.img`
+    height: 85px;
+    width: auto;
+    max-width: 450px;
+    display: block;
+
+    @media (max-width: 768px) {
+        height: 70px;
+        max-width: 360px;
+    }
+
+    @media (max-width: 480px) {
+        height: 58px;
+        max-width: 280px;
+    }
+`;
+
 const ContentSections = styled.div`
     display: flex;
     flex-direction: column;
+    padding-top: 107px;
+
+    @media (max-width: 768px) {
+        padding-top: 92px;
+    }
+
+    @media (max-width: 480px) {
+        padding-top: 80px;
+    }
 `;
 
 // Profile Header Section
@@ -530,6 +557,7 @@ const ProfileHeader = styled.div`
     align-items: center;
     gap: 16px;
     border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    border-top: 2px solid rgba(255, 255, 255, 0.2);
     position: relative;
     z-index: 1;
     animation: fadeInDown 0.5s ease;
@@ -1426,38 +1454,4 @@ const MonthWalkIndicator = styled.div`
     align-items: center;
     justify-content: center;
     box-shadow: 0 2px 6px rgba(34, 197, 94, 0.4);
-`;
-
-const LogoutButton = styled.button`
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    border: none;
-    border-radius: 12px;
-    padding: 12px 24px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #ffffff;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 20px 20px 0;
-    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
-    position: relative;
-    z-index: 1;
-
-    &:hover {
-        background: linear-gradient(135deg, #dc2626, #b91c1c);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 28px rgba(239, 68, 68, 0.4);
-    }
-
-    &:active {
-        transform: translateY(0);
-    }
-
-    @media (max-width: 768px) {
-        margin: 20px 16px 0;
-    }
 `;
