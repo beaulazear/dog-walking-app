@@ -260,9 +260,15 @@ export default function Dashboard() {
                                 <CalendarDays size={20} />
                                 Your Week
                             </ScheduleTitle>
-                            <TodayButton onClick={() => setCurrentDate(dayjs())}>
-                                Today
-                            </TodayButton>
+                            <ButtonGroup>
+                                <TodayButton onClick={() => setCurrentDate(dayjs())}>
+                                    Today
+                                </TodayButton>
+                                <MonthViewButton onClick={() => setShowMonthView(true)}>
+                                    <CalendarDays size={16} />
+                                    Month
+                                </MonthViewButton>
+                            </ButtonGroup>
                         </ScheduleTitleRow>
                         <WeekNavigation>
                             <WeekNavButton onClick={() => navigateWeek(-1)}>
@@ -486,10 +492,7 @@ export default function Dashboard() {
 const Container = styled.div`
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
-    padding: 20px 16px 100px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    padding-bottom: 100px;
     position: relative;
     overflow: hidden;
 
@@ -510,36 +513,25 @@ const Container = styled.div`
         background-size: 80px 80px, 60px 60px, 40px 40px, 100px 100px, 30px 30px, 70px 70px;
         pointer-events: none;
     }
-
-    @media (min-width: 768px) {
-        padding: 24px 20px 100px;
-    }
 `;
 
 // Simple content sections layout
 const ContentSections = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    width: 100%;
-    max-width: 448px;
-    margin-bottom: 16px;
-
-    @media (min-width: 768px) {
-        gap: 20px;
-    }
 `;
 
 // Profile Header Section
 const ProfileHeader = styled.div`
     background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(20px);
-    border-radius: 20px;
-    padding: 20px;
+    padding: 24px 20px;
     display: flex;
     align-items: center;
     gap: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    z-index: 1;
     animation: fadeInDown 0.5s ease;
 
     @keyframes fadeInDown {
@@ -551,6 +543,10 @@ const ProfileHeader = styled.div`
             opacity: 1;
             transform: translateY(0);
         }
+    }
+
+    @media (max-width: 768px) {
+        padding: 20px 16px;
     }
 `;
 
@@ -655,13 +651,14 @@ const TodayWalksCount = styled.div`
 
 // New Week Overview Section
 const WeekOverviewSection = styled.div`
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(20px);
-    border-radius: 24px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    padding: 24px 20px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    z-index: 1;
     animation: fadeInUp 0.5s ease;
-    
+
     @keyframes fadeInUp {
         from {
             opacity: 0;
@@ -672,10 +669,9 @@ const WeekOverviewSection = styled.div`
             transform: translateY(0);
         }
     }
-    
+
     @media (max-width: 768px) {
-        padding: 16px;
-        border-radius: 20px;
+        padding: 20px 16px;
     }
 `;
 
@@ -713,6 +709,12 @@ const ScheduleTitle = styled.h3`
     }
 `;
 
+const ButtonGroup = styled.div`
+    display: flex;
+    gap: 8px;
+    align-items: center;
+`;
+
 const TodayButton = styled.button`
     background: rgba(255, 255, 255, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.3);
@@ -738,6 +740,42 @@ const TodayButton = styled.button`
     @media (max-width: 768px) {
         padding: 5px 12px;
         font-size: 0.75rem;
+    }
+`;
+
+const MonthViewButton = styled.button`
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    padding: 6px 14px;
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Poppins', sans-serif;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.25);
+        border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    &:active {
+        transform: scale(0.98);
+    }
+
+    @media (max-width: 768px) {
+        padding: 5px 12px;
+        font-size: 0.75rem;
+
+        svg {
+            width: 14px;
+            height: 14px;
+        }
     }
 `;
 
@@ -990,16 +1028,16 @@ const EmptyText = styled.div`
 
 // Modern Birthday Card
 const ModernBirthdayCard = styled.div`
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(20px);
-    border-radius: 24px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    padding: 24px 20px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    z-index: 1;
     animation: fadeInUp 0.6s ease;
-    
+
     @media (max-width: 768px) {
-        padding: 16px;
-        border-radius: 20px;
+        padding: 20px 16px;
     }
 `;
 
@@ -1404,8 +1442,10 @@ const LogoutButton = styled.button`
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: 20px;
+    margin: 20px 20px 0;
     box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+    position: relative;
+    z-index: 1;
 
     &:hover {
         background: linear-gradient(135deg, #dc2626, #b91c1c);
@@ -1415,5 +1455,9 @@ const LogoutButton = styled.button`
 
     &:active {
         transform: translateY(0);
+    }
+
+    @media (max-width: 768px) {
+        margin: 20px 16px 0;
     }
 `;

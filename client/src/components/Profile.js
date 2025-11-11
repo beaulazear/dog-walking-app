@@ -669,7 +669,7 @@ const ProfileHeader = styled.div`
     padding: 24px 20px;
     background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
     position: relative;
     z-index: 1;
 
@@ -781,7 +781,7 @@ const ProfileInfoCard = styled.div`
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(20px);
     padding: 24px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
     position: relative;
     z-index: 1;
 
@@ -792,7 +792,7 @@ const ProfileInfoCard = styled.div`
 
 const InfoSection = styled.div`
     padding: 16px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
     &:first-child {
         padding-top: 0;
@@ -953,7 +953,7 @@ const TrainingTrackerCard = styled.div`
     backdrop-filter: blur(20px);
     padding: 24px 20px;
     border-top: 2px solid rgba(255, 215, 0, 0.3);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
     position: relative;
     overflow: hidden;
     z-index: 1;
@@ -1039,12 +1039,12 @@ const TrainingContent = styled.div`
 const StatsRow = styled.div`
     display: grid;
     grid-template-columns: 1fr auto 1fr auto 1fr;
-    gap: 16px;
+    gap: 12px;
     align-items: center;
 
     @media (max-width: 480px) {
-        grid-template-columns: 1fr;
-        gap: 12px;
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        gap: 8px;
     }
 `;
 
@@ -1052,37 +1052,38 @@ const StatBox = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
 `;
 
 const StatValue = styled.div`
-    font-size: 2rem;
-    font-weight: 800;
+    font-size: 1.4rem;
+    font-weight: 700;
     color: #fbbf24;
     line-height: 1;
     text-shadow: 0 2px 10px rgba(251, 191, 36, 0.4);
 
     @media (max-width: 480px) {
-        font-size: 1.6rem;
+        font-size: 1.2rem;
     }
 `;
 
 const StatLabel = styled.div`
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     color: rgba(255, 255, 255, 0.7);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     font-weight: 600;
+    white-space: nowrap;
+
+    @media (max-width: 480px) {
+        font-size: 0.6rem;
+    }
 `;
 
 const StatDivider = styled.div`
     width: 1px;
-    height: 40px;
+    height: 30px;
     background: rgba(255, 255, 255, 0.2);
-
-    @media (max-width: 480px) {
-        display: none;
-    }
 `;
 
 const ProgressBarContainer = styled.div`
@@ -1244,7 +1245,7 @@ const ModernRatesCard = styled.div`
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(20px);
     padding: 24px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
     position: relative;
     z-index: 1;
 

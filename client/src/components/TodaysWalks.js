@@ -936,7 +936,7 @@ const Container = styled.div`
     min-height: 100vh;
     padding: 8px 16px;
     padding-top: 8px;
-    padding-bottom: 100px;
+    padding-bottom: 140px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -964,7 +964,7 @@ const Container = styled.div`
     @media (max-width: 768px) {
         padding: 16px 0;
         padding-top: 16px;
-        padding-bottom: 30px;
+        padding-bottom: 140px;
     }
 `;
 

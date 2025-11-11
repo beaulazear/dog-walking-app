@@ -40,7 +40,15 @@ class User < ApplicationRecord
   validates :thirty, :fortyfive, :sixty, :solo_rate, :training_rate, :sibling_rate, numericality: { only_integer: true }
 
   def profile_pic_url
-    profile_pic.attached? ? Rails.application.routes.url_helpers.rails_blob_url(profile_pic, only_path: true) : nil
+    return nil unless profile_pic.attached?
+
+    # In production with S3, use service_url for direct S3 URLs to avoid redirect issues
+    # In development/test, use rails_blob_url for local storage
+    if Rails.application.config.active_storage.service == :amazon
+      profile_pic.url
+    else
+      Rails.application.routes.url_helpers.rails_blob_url(profile_pic, only_path: true)
+    end
   end
 
   # Training-related methods
