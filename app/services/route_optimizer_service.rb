@@ -421,73 +421,120 @@ class RouteOptimizerService
 
     Rails.logger.info "Starting rolling pickup algorithm..."
 
-    # PHASE 1: ROLLING PICKUPS
-    # Pick up dogs while actively walking, interleaving pickups and dropoffs
+    # SMART ROUTING: At each step, decide best action (pickup vs dropoff)
     while remaining_appointments.any? || currently_walking.any?
 
-      # Check if any currently walking dogs need to be dropped off
-      dogs_ready_for_dropoff = currently_walking.select do |appt|
+      # Get dogs that could be dropped off (walk complete OR nearly complete with flexibility)
+      droppable_dogs = currently_walking.select do |appt|
         walk_completion_time = pickup_times[appt.id] + (appt.duration || 30)
-        current_time >= walk_completion_time
+        flexibility_minutes = 10 # Allow ±10 min flexibility
+        current_time >= (walk_completion_time - flexibility_minutes)
       end
 
-      # Drop off any dogs whose walk is complete
-      if dogs_ready_for_dropoff.any?
-        dogs_ready_for_dropoff.each do |appt|
-          # Navigate to dropoff location (same as pickup)
-          travel_time = calculate_travel_time_between_locations(
+      # Evaluate all possible next actions
+      actions = []
+
+      # OPTION 1: Drop off ready dogs
+      if droppable_dogs.any?
+        droppable_dogs.each do |appt|
+          dropoff_cost = calculate_action_cost(
+            :dropoff,
+            appt,
             current_location,
-            { lat: appt.pet.latitude, lng: appt.pet.longitude }
+            current_time,
+            pickup_times,
+            currently_walking,
+            remaining_appointments
           )
-          current_time += travel_time
-
-          # Create dropoff stop
-          stop = format_route_stop(appt, :dropoff)
-          stop[:walk_group_id] ||= temp_group_id
-          stop[:actual_dropoff_time] = current_time
-          stops << stop
-
-          current_time += DROPOFF_TIME_MINUTES
-          current_location = { lat: appt.pet.latitude, lng: appt.pet.longitude }
-          currently_walking.delete(appt)
-
-          Rails.logger.info "Dropped off #{appt.pet.name} at time #{current_time}"
+          actions << {
+            type: :dropoff,
+            appointment: appt,
+            cost: dropoff_cost
+          }
         end
       end
 
-      # Pick up next dog if any remain
+      # OPTION 2: Pick up next dogs
       if remaining_appointments.any?
-        # Find best next pickup based on proximity and timing
-        next_appt = find_best_next_pickup(
-          current_location,
-          remaining_appointments,
-          currently_walking,
-          pickup_times,
-          current_time
-        )
+        # Consider top 3 closest dogs for pickup
+        closest_dogs = remaining_appointments.sort_by do |appt|
+          DistanceCalculator.distance_between(
+            current_location[:lat],
+            current_location[:lng],
+            appt.pet.latitude,
+            appt.pet.longitude
+          ) || 100.0
+        end.take(3)
 
-        # Travel to pickup location (we're walking with current dogs)
+        closest_dogs.each do |appt|
+          pickup_cost = calculate_action_cost(
+            :pickup,
+            appt,
+            current_location,
+            current_time,
+            pickup_times,
+            currently_walking,
+            remaining_appointments
+          )
+          actions << {
+            type: :pickup,
+            appointment: appt,
+            cost: pickup_cost
+          }
+        end
+      end
+
+      # Choose the action with LOWEST cost (most efficient)
+      break if actions.empty?
+      best_action = actions.min_by { |a| a[:cost] }
+
+      # Execute the chosen action
+      if best_action[:type] == :pickup
+        appt = best_action[:appointment]
+
+        # Travel to pickup location
         travel_time = calculate_travel_time_between_locations(
           current_location,
-          { lat: next_appt.pet.latitude, lng: next_appt.pet.longitude }
+          { lat: appt.pet.latitude, lng: appt.pet.longitude }
         )
         current_time += travel_time
 
         # Create pickup stop
-        stop = format_route_stop(next_appt, :pickup)
+        stop = format_route_stop(appt, :pickup)
         stop[:walk_group_id] ||= temp_group_id
         stop[:actual_pickup_time] = current_time
         stops << stop
 
-        # Record when this dog was picked up (for calculating when to drop off)
-        pickup_times[next_appt.id] = current_time
-
+        pickup_times[appt.id] = current_time
         current_time += PICKUP_TIME_MINUTES
-        current_location = { lat: next_appt.pet.latitude, lng: next_appt.pet.longitude }
-        currently_walking << next_appt
-        remaining_appointments.delete(next_appt)
+        current_location = { lat: appt.pet.latitude, lng: appt.pet.longitude }
+        currently_walking << appt
+        remaining_appointments.delete(appt)
 
-        Rails.logger.info "Picked up #{next_appt.pet.name} at time #{current_time}. Currently walking: #{currently_walking.map { |a| a.pet.name }.join(', ')}"
+        Rails.logger.info "✓ Picked up #{appt.pet.name} at #{current_time}. Pack: #{currently_walking.map { |a| a.pet.name }.join(', ')}"
+
+      else # dropoff
+        appt = best_action[:appointment]
+
+        # Travel to dropoff location
+        travel_time = calculate_travel_time_between_locations(
+          current_location,
+          { lat: appt.pet.latitude, lng: appt.pet.longitude }
+        )
+        current_time += travel_time
+
+        # Create dropoff stop
+        stop = format_route_stop(appt, :dropoff)
+        stop[:walk_group_id] ||= temp_group_id
+        stop[:actual_dropoff_time] = current_time
+        stops << stop
+
+        current_time += DROPOFF_TIME_MINUTES
+        current_location = { lat: appt.pet.latitude, lng: appt.pet.longitude }
+        currently_walking.delete(appt)
+
+        actual_walk_time = current_time - pickup_times[appt.id]
+        Rails.logger.info "✓ Dropped off #{appt.pet.name} at #{current_time} (walked #{actual_walk_time} min)"
       end
     end
 
@@ -499,6 +546,77 @@ class RouteOptimizerService
     Rails.logger.info "Stop sequence: #{stops.map { |s| "#{s[:pet_name]}-#{s[:stop_type]}" }.join(' → ')}"
 
     stops
+  end
+
+  # Calculate the "cost" of an action (pickup or dropoff)
+  # Lower cost = better action
+  def self.calculate_action_cost(action_type, appointment, current_location, current_time, pickup_times, currently_walking, remaining_appointments)
+    # Base cost: travel distance
+    distance = DistanceCalculator.distance_between(
+      current_location[:lat],
+      current_location[:lng],
+      appointment.pet.latitude,
+      appointment.pet.longitude
+    ) || 5.0
+
+    travel_time = (distance / 3.0 * 60).round
+    base_cost = travel_time
+
+    if action_type == :pickup
+      # PICKUP COST FACTORS:
+
+      # 1. Distance penalty (farther = higher cost)
+      distance_penalty = distance * 10
+
+      # 2. Duration compatibility with current pack
+      if currently_walking.any?
+        avg_remaining_time = currently_walking.map do |walking_appt|
+          walk_completion_time = pickup_times[walking_appt.id] + (walking_appt.duration || 30)
+          [walk_completion_time - current_time, 0].max
+        end.sum / currently_walking.length.to_f
+
+        # Prefer dogs with similar remaining walk times
+        duration_diff = ((appointment.duration || 30) - avg_remaining_time).abs
+        duration_penalty = duration_diff * 0.5
+      else
+        duration_penalty = 0
+      end
+
+      # 3. Pack size penalty (don't want too many dogs at once)
+      pack_size_penalty = currently_walking.length > 3 ? 50 : 0
+
+      total_cost = base_cost + distance_penalty + duration_penalty + pack_size_penalty
+
+    else # dropoff
+      # DROPOFF COST FACTORS:
+
+      # 1. Distance penalty
+      distance_penalty = distance * 10
+
+      # 2. Urgency bonus (overdue dogs should be dropped off sooner)
+      walk_completion_time = pickup_times[appointment.id] + (appointment.duration || 30)
+      time_overdue = [current_time - walk_completion_time, 0].max
+      urgency_bonus = time_overdue * -2 # Negative cost = higher priority
+
+      # 3. Pack relief bonus (dropping off makes room for more pickups)
+      pack_relief_bonus = currently_walking.length > 3 ? -20 : 0
+
+      # 4. Check if there are good pickups nearby this dropoff
+      nearby_pickups = remaining_appointments.count do |appt|
+        nearby_distance = DistanceCalculator.distance_between(
+          appointment.pet.latitude,
+          appointment.pet.longitude,
+          appt.pet.latitude,
+          appt.pet.longitude
+        ) || 100
+        nearby_distance < 0.3 # Within 0.3 miles
+      end
+      nearby_pickup_bonus = nearby_pickups * -15 # More nearby pickups = better to dropoff here
+
+      total_cost = base_cost + distance_penalty + urgency_bonus + pack_relief_bonus + nearby_pickup_bonus
+    end
+
+    total_cost
   end
 
   # Find the best next dog to pick up based on current state
