@@ -394,89 +394,160 @@ class RouteOptimizerService
     end
   end
 
-  # Build route stops for a group walk where dogs walk TOGETHER simultaneously
-  # Dogs are picked up, walk together as a group, then dropped off as their individual walk times complete
+  # Build route stops with ROLLING PICKUPS - pick up dogs while actively walking
+  # Dogs are picked up during walks, walk together, and dropped off as their individual walk times complete
   def self.build_group_route_stops(group_appointments, start_location)
     stops = []
 
-    Rails.logger.info "=== Building group route for #{group_appointments.length} appointments ==="
+    Rails.logger.info "=== Building ROLLING PICKUP route for #{group_appointments.length} appointments ==="
 
     # Generate a temporary group ID for this group
     temp_group_id = group_appointments.first.walk_group_id || "temp_group_#{group_appointments.first.id}"
 
-    # Optimize pickup order using TSP
-    pickup_order = optimize_appointment_order(group_appointments, start_location)
+    # Constants
+    PICKUP_TIME_MINUTES = 5
+    DROPOFF_TIME_MINUTES = 2
+    WALKING_SPEED_MPH = 3.0
 
-    Rails.logger.info "Pickup order has #{pickup_order.length} appointments"
-
-    # PHASE 1: ALL PICKUPS (5 min each)
-    # Dogs are picked up sequentially
-    pickup_time_minutes = 5
+    # State tracking
     current_time = 0
+    current_location = start_location || {
+      lat: group_appointments.first.pet.latitude,
+      lng: group_appointments.first.pet.longitude
+    }
+    remaining_appointments = group_appointments.dup
+    currently_walking = [] # Dogs currently being walked
+    pickup_times = {} # { appointment_id => pickup_time }
 
-    pickup_order.each_with_index do |appt, index|
-      stop = format_route_stop(appt, :pickup)
-      stop[:walk_group_id] ||= temp_group_id
-      stop[:pickup_sequence] = index
-      stop[:pickup_time] = current_time # Track when this dog was picked up
-      stops << stop
+    Rails.logger.info "Starting rolling pickup algorithm..."
 
-      current_time += pickup_time_minutes
-    end
+    # PHASE 1: ROLLING PICKUPS
+    # Pick up dogs while actively walking, interleaving pickups and dropoffs
+    while remaining_appointments.any? || currently_walking.any?
 
-    # PHASE 2: GROUP WALK STARTS
-    # The group walk begins after the last dog is picked up
-    group_walk_start_time = current_time
-
-    Rails.logger.info "All pickups complete at time #{current_time}. Group walk starts."
-
-    # Calculate when each dog's walk completes (from group walk start)
-    # Dogs walk TOGETHER during overlapping time periods
-    dropoff_schedule = pickup_order.map.with_index do |appt, index|
-      walk_duration = appt.duration || 30
-      # Each dog's walk completes at: group_walk_start + their_walk_duration
-      dropoff_time = group_walk_start_time + walk_duration
-
-      {
-        appointment: appt,
-        dropoff_time: dropoff_time,
-        walk_duration: walk_duration,
-        pickup_sequence: index
-      }
-    end
-
-    # Sort dropoffs by when they complete (dogs with shorter walks dropped off first)
-    dropoff_schedule.sort_by! { |d| d[:dropoff_time] }
-
-    # PHASE 3: DROPOFFS
-    # Dogs are dropped off as their walk time completes
-    # Assume 2 min per dropoff
-    dropoff_time_minutes = 2
-    current_time = group_walk_start_time # Start from when group walk began
-
-    dropoff_schedule.each do |dropoff|
-      # If this dog's walk isn't done yet, wait
-      if current_time < dropoff[:dropoff_time]
-        current_time = dropoff[:dropoff_time]
+      # Check if any currently walking dogs need to be dropped off
+      dogs_ready_for_dropoff = currently_walking.select do |appt|
+        walk_completion_time = pickup_times[appt.id] + (appt.duration || 30)
+        current_time >= walk_completion_time
       end
 
-      stop = format_route_stop(dropoff[:appointment], :dropoff)
-      stop[:walk_group_id] ||= temp_group_id
-      stop[:pickup_sequence] = dropoff[:pickup_sequence]
-      stop[:group_walk_start_time] = group_walk_start_time # For frontend timing calculations
-      stops << stop
+      # Drop off any dogs whose walk is complete
+      if dogs_ready_for_dropoff.any?
+        dogs_ready_for_dropoff.each do |appt|
+          # Navigate to dropoff location (same as pickup)
+          travel_time = calculate_travel_time_between_locations(
+            current_location,
+            { lat: appt.pet.latitude, lng: appt.pet.longitude }
+          )
+          current_time += travel_time
 
-      current_time += dropoff_time_minutes
+          # Create dropoff stop
+          stop = format_route_stop(appt, :dropoff)
+          stop[:walk_group_id] ||= temp_group_id
+          stop[:actual_dropoff_time] = current_time
+          stops << stop
+
+          current_time += DROPOFF_TIME_MINUTES
+          current_location = { lat: appt.pet.latitude, lng: appt.pet.longitude }
+          currently_walking.delete(appt)
+
+          Rails.logger.info "Dropped off #{appt.pet.name} at time #{current_time}"
+        end
+      end
+
+      # Pick up next dog if any remain
+      if remaining_appointments.any?
+        # Find best next pickup based on proximity and timing
+        next_appt = find_best_next_pickup(
+          current_location,
+          remaining_appointments,
+          currently_walking,
+          pickup_times,
+          current_time
+        )
+
+        # Travel to pickup location (we're walking with current dogs)
+        travel_time = calculate_travel_time_between_locations(
+          current_location,
+          { lat: next_appt.pet.latitude, lng: next_appt.pet.longitude }
+        )
+        current_time += travel_time
+
+        # Create pickup stop
+        stop = format_route_stop(next_appt, :pickup)
+        stop[:walk_group_id] ||= temp_group_id
+        stop[:actual_pickup_time] = current_time
+        stops << stop
+
+        # Record when this dog was picked up (for calculating when to drop off)
+        pickup_times[next_appt.id] = current_time
+
+        current_time += PICKUP_TIME_MINUTES
+        current_location = { lat: next_appt.pet.latitude, lng: next_appt.pet.longitude }
+        currently_walking << next_appt
+        remaining_appointments.delete(next_appt)
+
+        Rails.logger.info "Picked up #{next_appt.pet.name} at time #{current_time}. Currently walking: #{currently_walking.map { |a| a.pet.name }.join(', ')}"
+      end
     end
 
     pickup_count = stops.count { |s| s[:stop_type] == 'pickup' }
     dropoff_count = stops.count { |s| s[:stop_type] == 'dropoff' }
 
-    Rails.logger.info "Created #{pickup_count} pickup stops and #{dropoff_count} dropoff stops"
-    Rails.logger.info "Group walk duration: #{dropoff_schedule.last[:dropoff_time] - group_walk_start_time} minutes"
+    Rails.logger.info "Created #{pickup_count} pickup stops and #{dropoff_count} dropoff stops using rolling pickup"
+    Rails.logger.info "Total route time: #{current_time} minutes"
     Rails.logger.info "Stop sequence: #{stops.map { |s| "#{s[:pet_name]}-#{s[:stop_type]}" }.join(' → ')}"
 
     stops
+  end
+
+  # Find the best next dog to pick up based on current state
+  def self.find_best_next_pickup(current_location, remaining_appointments, currently_walking, pickup_times, current_time)
+    # Score each remaining appointment
+    scores = remaining_appointments.map do |appt|
+      # Distance score (closer is better)
+      distance = DistanceCalculator.distance_between(
+        current_location[:lat],
+        current_location[:lng],
+        appt.pet.latitude,
+        appt.pet.longitude
+      ) || 10.0
+
+      # Prefer dogs with similar walk durations to current pack
+      if currently_walking.any?
+        avg_remaining_time = currently_walking.map do |walking_appt|
+          walk_completion_time = pickup_times[walking_appt.id] + (walking_appt.duration || 30)
+          walk_completion_time - current_time
+        end.sum / currently_walking.length.to_f
+
+        duration_diff = ((appt.duration || 30) - avg_remaining_time).abs
+        duration_score = 1.0 / (1.0 + duration_diff / 10.0)
+      else
+        duration_score = 1.0
+      end
+
+      # Combined score (distance weighted 70%, duration 30%)
+      total_score = (1.0 / (distance + 0.1)) * 0.7 + duration_score * 0.3
+
+      { appointment: appt, score: total_score, distance: distance }
+    end
+
+    # Pick the best scoring appointment
+    best = scores.max_by { |s| s[:score] }
+    best[:appointment]
+  end
+
+  # Calculate travel time between two locations (in minutes)
+  def self.calculate_travel_time_between_locations(loc1, loc2)
+    distance = DistanceCalculator.distance_between(
+      loc1[:lat],
+      loc1[:lng],
+      loc2[:lat],
+      loc2[:lng]
+    ) || 0
+
+    # Time = Distance / Speed * 60 (convert to minutes)
+    (distance / 3.0 * 60).round
   end
 
   # Optimize order of appointments within a group using TSP

@@ -345,27 +345,23 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
         }
       }
 
-      // Check if this is the last pickup in a group - if so, mark when group walk starts
+      // Track when each dog is picked up (for rolling pickup timing)
       if (stop.stop_type === 'pickup' && stop.walk_group_id) {
-        // Look ahead to see if this is the last pickup for this group
-        const nextStop = i + 1 < stops.length ? stops[i + 1] : null;
-        const isLastPickup = !nextStop || nextStop.stop_type !== 'pickup' || nextStop.walk_group_id !== stop.walk_group_id;
-
-        if (isLastPickup) {
-          // Group walk will start after this pickup completes
-          const groupWalkStart = currentTime.add(5, 'minute'); // After 5 min pickup time
-          groupWalkStartTimes[stop.walk_group_id] = groupWalkStart;
+        // Record this dog's pickup time
+        if (!groupWalkStartTimes[`${stop.walk_group_id}_${stop.appointment_id}`]) {
+          groupWalkStartTimes[`${stop.walk_group_id}_${stop.appointment_id}`] = currentTime.add(5, 'minute');
         }
       }
 
-      // Handle dropoff timing - dogs walk TOGETHER, drop off when their individual walk completes
+      // Handle dropoff timing - each dog's walk completes based on THEIR pickup time
       if (stop.stop_type === 'dropoff' && stop.walk_group_id) {
-        const groupWalkStartTime = groupWalkStartTimes[stop.walk_group_id];
+        // Find when THIS specific dog was picked up
+        const thisDogsPickupTime = groupWalkStartTimes[`${stop.walk_group_id}_${stop.appointment_id}`];
 
-        if (groupWalkStartTime) {
-          // Calculate when this dog's walk completes (from group walk start)
+        if (thisDogsPickupTime) {
+          // Calculate when this dog's walk completes (from THEIR pickup time)
           const walkDuration = stop.duration || 30;
-          const targetDropoffTime = groupWalkStartTime.add(walkDuration, 'minute');
+          const targetDropoffTime = thisDogsPickupTime.add(walkDuration, 'minute');
 
           // If we arrive before the dog's walk is done, wait
           if (currentTime.isBefore(targetDropoffTime)) {
