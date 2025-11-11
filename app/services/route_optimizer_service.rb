@@ -1,5 +1,7 @@
 class RouteOptimizerService
   WALKING_SPEED_MPH = 3.0 # Average walking speed
+  PICKUP_TIME_MINUTES = 5 # Time to pick up a dog
+  DROPOFF_TIME_MINUTES = 2 # Time to drop off a dog
 
   # Optimize the route for a set of appointments considering group walks
   # Group walks have pickup and drop-off phases
@@ -403,11 +405,6 @@ class RouteOptimizerService
 
     # Generate a temporary group ID for this group
     temp_group_id = group_appointments.first.walk_group_id || "temp_group_#{group_appointments.first.id}"
-
-    # Constants
-    PICKUP_TIME_MINUTES = 5
-    DROPOFF_TIME_MINUTES = 2
-    WALKING_SPEED_MPH = 3.0
 
     # State tracking
     current_time = 0
