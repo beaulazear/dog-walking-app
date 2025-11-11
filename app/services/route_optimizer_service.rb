@@ -405,9 +405,20 @@ class RouteOptimizerService
 
     Rails.logger.info "=== Building CONSTRAINT-BASED route for #{group_appointments.length} appointments ==="
 
-    # Initialize: Start from current time or earliest window
+    # Initialize: Start from earliest window for route planning
+    # Only use current time if we're within the day's pickup windows (for real-time re-routing)
     earliest_window = group_appointments.map { |a| parse_time(a.start_time) }.compact.min
-    current_time = [Time.current, earliest_window].compact.max
+    latest_window = group_appointments.map { |a| parse_time(a.end_time) }.compact.max
+
+    # If current time is within the pickup window range, start from current time (mid-day re-routing)
+    # Otherwise, start from earliest window (planning the route)
+    if earliest_window && latest_window && Time.current >= earliest_window && Time.current <= latest_window
+      current_time = Time.current
+      Rails.logger.info "📍 Mid-day re-routing: starting from current time"
+    else
+      current_time = earliest_window || Time.current
+      Rails.logger.info "📋 Route planning: starting from earliest window"
+    end
 
     current_location = start_location || {
       lat: group_appointments.first.pet.latitude,
@@ -520,12 +531,12 @@ class RouteOptimizerService
             target_duration = appt.duration || 30
             min_walk_time = target_duration - 10
 
-            if elapsed_minutes < min_walk_time
-              # Calculate when this dog will be droppable
-              minutes_until_droppable = min_walk_time - elapsed_minutes
-              droppable_at = current_time + minutes_until_droppable.minutes
-              next_events << { type: :droppable, time: droppable_at, dog: appt.pet.name }
-            end
+            next unless elapsed_minutes < min_walk_time
+
+            # Calculate when this dog will be droppable
+            minutes_until_droppable = min_walk_time - elapsed_minutes
+            droppable_at = current_time + minutes_until_droppable.minutes
+            next_events << { type: :droppable, time: droppable_at, dog: appt.pet.name }
           end
         end
 
@@ -548,7 +559,7 @@ class RouteOptimizerService
           next
         else
           # No more events possible - we're done
-          Rails.logger.info "✅ All appointments completed or no more valid actions"
+          Rails.logger.info '✅ All appointments completed or no more valid actions'
           break
         end
       end
@@ -580,7 +591,9 @@ class RouteOptimizerService
         currently_walking << appt
         remaining_appointments.delete(appt)
 
-        Rails.logger.info "✓ Picked up #{appt.pet.name} at #{current_time.strftime('%H:%M')}. Pack: #{currently_walking.map { |a| a.pet.name }.join(', ')}"
+        Rails.logger.info "✓ Picked up #{appt.pet.name} at #{current_time.strftime('%H:%M')}. Pack: #{currently_walking.map do |a|
+          a.pet.name
+        end.join(', ')}"
 
       else # dropoff
         appt = best_action[:appointment]
@@ -607,8 +620,13 @@ class RouteOptimizerService
       end
     end
 
-    total_minutes = ((current_time - pickup_start_times.values.min) / 60.0).round
-    Rails.logger.info "Total route time: #{total_minutes} minutes"
+    if pickup_start_times.any?
+      total_minutes = ((current_time - pickup_start_times.values.min) / 60.0).round
+      Rails.logger.info "Total route time: #{total_minutes} minutes"
+    else
+      Rails.logger.warn "⚠️ No pickups were made - all windows may be closed or invalid"
+    end
+
     Rails.logger.info "Stop sequence: #{stops.map { |s| "#{s[:pet_name]}-#{s[:stop_type]}" }.join(' → ')}"
 
     stops
