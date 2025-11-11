@@ -301,9 +301,8 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
     // Start time - use earliest appointment time or current time
     let currentTime = earliestTime || dayjs();
 
-    // Track when each appointment is picked up to calculate dropoff times
-    const pickupTimes = {}; // { appointment_id: pickup_time }
-    const groupPickupComplete = {}; // Track if we've started dropoffs for a group
+    // Track group walk start times for each walk_group_id
+    const groupWalkStartTimes = {}; // { walk_group_id: start_time }
 
     for (let i = 0; i < stops.length; i++) {
       const stop = stops[i];
@@ -346,24 +345,32 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
         }
       }
 
-      // Handle dropoff timing based on when this specific dog was picked up
-      if (stop.stop_type === 'dropoff' && stop.walk_group_id) {
-        const pickupTime = pickupTimes[stop.appointment_id];
+      // Check if this is the last pickup in a group - if so, mark when group walk starts
+      if (stop.stop_type === 'pickup' && stop.walk_group_id) {
+        // Look ahead to see if this is the last pickup for this group
+        const nextStop = i + 1 < stops.length ? stops[i + 1] : null;
+        const isLastPickup = !nextStop || nextStop.stop_type !== 'pickup' || nextStop.walk_group_id !== stop.walk_group_id;
 
-        if (pickupTime) {
-          // Calculate when this dog's walk should complete
+        if (isLastPickup) {
+          // Group walk will start after this pickup completes
+          const groupWalkStart = currentTime.add(5, 'minute'); // After 5 min pickup time
+          groupWalkStartTimes[stop.walk_group_id] = groupWalkStart;
+        }
+      }
+
+      // Handle dropoff timing - dogs walk TOGETHER, drop off when their individual walk completes
+      if (stop.stop_type === 'dropoff' && stop.walk_group_id) {
+        const groupWalkStartTime = groupWalkStartTimes[stop.walk_group_id];
+
+        if (groupWalkStartTime) {
+          // Calculate when this dog's walk completes (from group walk start)
           const walkDuration = stop.duration || 30;
-          const targetDropoffTime = pickupTime.add(walkDuration, 'minute');
+          const targetDropoffTime = groupWalkStartTime.add(walkDuration, 'minute');
 
           // If we arrive before the dog's walk is done, wait
           if (currentTime.isBefore(targetDropoffTime)) {
             currentTime = targetDropoffTime;
           }
-        } else if (!groupPickupComplete[stop.walk_group_id]) {
-          // Fallback: if we can't find pickup time, use group-level timing (first dropoff)
-          groupPickupComplete[stop.walk_group_id] = true;
-          const walkDuration = stop.duration || 30;
-          currentTime = currentTime.add(walkDuration, 'minute');
         }
       }
 
@@ -375,10 +382,8 @@ export default function WalksMapView({ walks, isCompleted, onClose }) {
         stopNumber: i + 1
       });
 
-      // Add stop duration and track pickup times
+      // Add stop duration
       if (stop.stop_type === 'pickup') {
-        // Track when this dog was picked up
-        pickupTimes[stop.appointment_id] = currentTime;
         // 5 min per pickup
         currentTime = currentTime.add(5, 'minute');
       } else if (stop.stop_type === 'solo') {
