@@ -55,6 +55,7 @@ export default function Dashboard() {
     const [showMonthView, setShowMonthView] = useState(false);
     const [monthViewDate, setMonthViewDate] = useState(dayjs());
     const [isDeleting, setIsDeleting] = useState(false);
+    const [photoError, setPhotoError] = useState(false);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -64,6 +65,7 @@ export default function Dashboard() {
         if (user?.pets) {
             setUpcomingBirthdayPet(getUpcomingBirthday(user.pets));
         }
+        setPhotoError(false); // Reset photo error when user changes
     }, [user]);
 
     const handleLogout = async () => {
@@ -216,12 +218,17 @@ export default function Dashboard() {
             <ContentSections>
                 <ProfileHeader>
                     <ProfilePicWrapper>
-                        {user?.profile_pic_url ? (
-                            <ProfilePic src={user.profile_pic_url} alt={user.name} />
+                        {user?.profile_pic_url && !photoError ? (
+                            <ProfilePic
+                                src={user.profile_pic_url}
+                                alt={user.name}
+                                onError={() => setPhotoError(true)}
+                            />
                         ) : (
-                            <DefaultProfileIcon>
-                                <User size={28} strokeWidth={2} />
-                            </DefaultProfileIcon>
+                            <ProfilePic
+                                src={dogPlaceholder}
+                                alt="Profile placeholder"
+                            />
                         )}
                     </ProfilePicWrapper>
                     <ProfileInfo>

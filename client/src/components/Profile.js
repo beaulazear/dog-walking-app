@@ -3,6 +3,7 @@ import styled from "styled-components";
 import toast from 'react-hot-toast';
 import { UserContext } from "../context/user";
 import YearlyFinanceOverview from "./YearlyFinanceOverview";
+import dogPlaceholder from "../assets/dog.png";
 import {
     DollarSign,
     Settings,
@@ -60,6 +61,7 @@ export default function Profile() {
     const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
     const [usernameError, setUsernameError] = useState("");
     const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+    const [photoError, setPhotoError] = useState(false);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -68,6 +70,7 @@ export default function Profile() {
     useEffect(() => {
         setEditedName(user?.name || "");
         setEditedUsername(user?.username || "");
+        setPhotoError(false); // Reset photo error when user changes
     }, [user]);
 
     // Calculate training hours for certification
@@ -281,12 +284,17 @@ export default function Profile() {
         <Container>
             <ProfileHeader>
                 <ProfilePhotoWrapper>
-                    {user?.profile_pic_url ? (
-                        <ProfilePhoto src={user.profile_pic_url} alt={user.name} />
+                    {user?.profile_pic_url && !photoError ? (
+                        <ProfilePhoto
+                            src={user.profile_pic_url}
+                            alt={user.name}
+                            onError={() => setPhotoError(true)}
+                        />
                     ) : (
-                        <ProfileIconWrapper>
-                            <UserIcon size={32} />
-                        </ProfileIconWrapper>
+                        <ProfilePhoto
+                            src={dogPlaceholder}
+                            alt="Profile placeholder"
+                        />
                     )}
                     <PhotoUploadOverlay>
                         <PhotoUploadLabel htmlFor="profile-photo-upload">
