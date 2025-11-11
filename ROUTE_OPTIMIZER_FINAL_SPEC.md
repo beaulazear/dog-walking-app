@@ -205,29 +205,29 @@ Higher priority to drop off at X because can immediately pick up B and C!
 
 ## Implementation Checklist
 
-### Phase 1: Core Algorithm ✓ (Mostly Done)
+### Phase 1: Core Algorithm ✓ (COMPLETE)
 - [x] Rolling pickup/dropoff system
 - [x] Cost evaluation for actions
-- [ ] Fix walk time tracking (currently broken - uses pickup_times instead of pickup_start_times)
-- [ ] Fix cost calculation to consider walk duration constraints properly
+- [x] Fix walk time tracking (now uses pickup_start_times correctly)
+- [x] Fix cost calculation to consider walk duration constraints properly
 
-### Phase 2: Constraint Enforcement (Needs Work)
-- [ ] Enforce pickup window constraints (start_time to end_time)
-- [ ] Enforce ±10 min walk duration flexibility
-- [ ] Enforce max 4 dogs at once
-- [ ] Handle overdue dogs (URGENT dropoff)
+### Phase 2: Constraint Enforcement ✓ (COMPLETE)
+- [x] Enforce pickup window constraints (start_time to end_time)
+- [x] Enforce ±10 min walk duration flexibility
+- [x] Enforce max 4 dogs at once
+- [x] Handle overdue dogs (URGENT dropoff)
 
-### Phase 3: Time Awareness (Not Implemented)
-- [ ] Start from current time vs earliest window
-- [ ] Filter completed appointments
-- [ ] Dynamic re-routing during the day
+### Phase 3: Time Awareness ✓ (COMPLETE)
+- [x] Start from current time vs earliest window
+- [x] Filter completed appointments (in routes_controller.rb)
+- [x] Dynamic re-routing during the day
 
-### Phase 4: Cost Optimization (Partially Done)
+### Phase 4: Cost Optimization ✓ (COMPLETE)
 - [x] Basic distance-based costs
-- [ ] Window urgency factor
-- [ ] Duration compatibility factor
-- [ ] Chaining opportunity factor
-- [ ] Pack size optimization
+- [x] Window urgency factor
+- [x] Duration compatibility factor
+- [x] Chaining opportunity factor
+- [x] Pack size optimization
 
 ## Key Variables
 
@@ -317,4 +317,28 @@ Expected:
 ---
 
 Last updated: November 11, 2025
-Status: Algorithm designed, implementation in progress
+Status: ✅ Implementation complete - ready for testing
+
+## Implementation Summary (Nov 11, 2025)
+
+The constraint-based greedy algorithm has been fully implemented in `app/services/route_optimizer_service.rb`:
+
+### Key Changes:
+1. **Walk time tracking fixed**: Now uses `pickup_start_times` to track when pickup STARTS (walk timer begins), not when it completes
+2. **Hard constraints enforced**:
+   - Pickup windows: Only picks up dogs within their start_time to end_time window
+   - Walk duration: Drops off dogs within ±10 minutes of target duration
+   - Max pack size: Enforces maximum 4 dogs at once
+   - Overdue handling: Immediately drops off dogs that exceed max time
+3. **Cost calculation implemented**:
+   - `calculate_dropoff_cost`: Considers duration deviation, pack relief bonus, nearby pickup opportunities
+   - `calculate_pickup_cost`: Considers window urgency, overdue risk, duration compatibility
+4. **Dynamic time awareness**: Starts from current time or earliest window, waits when no windows are open
+5. **Completed appointment filtering**: Already implemented in routes_controller.rb (lines 30-31, 37-38, 92-93, 99-100)
+
+### Next Steps for User:
+1. Test with real production data (9-dog scenario)
+2. Verify pickups/dropoffs are interleaved properly
+3. Check that all walks finish within their duration ±10 min
+4. Verify total route time is minimized
+5. Monitor logs for constraint violations or timing issues
