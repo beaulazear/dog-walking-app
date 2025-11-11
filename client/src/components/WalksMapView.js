@@ -1216,6 +1216,10 @@ const MapLegend = styled.div`
       $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)'};
   }
 
+  @media (max-width: 768px) {
+    bottom: 90px;
+  }
+
   @media (max-width: 400px) {
     flex-wrap: wrap;
     gap: 12px;
@@ -1275,7 +1279,7 @@ const RouteStatsPanel = styled.div`
 
   @media (max-width: 768px) {
     padding: 12px 16px;
-    top: 76px; /* Position below the map header (~68px + 8px margin) */
+    top: 60px; /* Position below the map header */
     width: calc(100vw - 32px);
     max-width: none;
   }
@@ -1418,8 +1422,8 @@ const RouteTimelinePanel = styled.div`
     left: 10px;
     width: auto;
     max-width: none;
-    top: 220px; /* Position below route stats panel (76px + ~130px panel + 14px gap) */
-    max-height: calc(100vh - 240px);
+    top: 180px; /* Position below route stats panel */
+    max-height: calc(100vh - 200px);
   }
 `;
 
