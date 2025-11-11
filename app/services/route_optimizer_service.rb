@@ -510,17 +510,47 @@ class RouteOptimizerService
 
       # 3. CHOOSE LOWEST COST ACTION
       if actions.empty?
-        # No valid actions - check if we need to wait for a window to open
-        if remaining_appointments.any? && currently_walking.empty?
-          next_window = remaining_appointments.map { |a| parse_time(a.start_time) }.compact.min
-          if next_window && next_window > current_time
-            wait_minutes = ((next_window - current_time) / 60.0).round
-            Rails.logger.info "⏳ Waiting #{wait_minutes} min for next pickup window"
-            current_time = next_window
-            next
+        # No valid actions - need to advance time to next event
+        next_events = []
+
+        # When can we drop off the next dog?
+        if currently_walking.any?
+          currently_walking.each do |appt|
+            elapsed_minutes = ((current_time - pickup_start_times[appt.id]) / 60.0).round
+            target_duration = appt.duration || 30
+            min_walk_time = target_duration - 10
+
+            if elapsed_minutes < min_walk_time
+              # Calculate when this dog will be droppable
+              minutes_until_droppable = min_walk_time - elapsed_minutes
+              droppable_at = current_time + minutes_until_droppable.minutes
+              next_events << { type: :droppable, time: droppable_at, dog: appt.pet.name }
+            end
           end
         end
-        break
+
+        # When does the next pickup window open?
+        if remaining_appointments.any?
+          remaining_appointments.each do |appt|
+            start_window = parse_time(appt.start_time)
+            if start_window && start_window > current_time
+              next_events << { type: :window_opens, time: start_window, dog: appt.pet.name }
+            end
+          end
+        end
+
+        if next_events.any?
+          # Advance to the soonest event
+          next_event = next_events.min_by { |e| e[:time] }
+          wait_minutes = ((next_event[:time] - current_time) / 60.0).round
+          Rails.logger.info "⏳ Waiting #{wait_minutes} min until #{next_event[:type]} (#{next_event[:dog]})"
+          current_time = next_event[:time]
+          next
+        else
+          # No more events possible - we're done
+          Rails.logger.info "✅ All appointments completed or no more valid actions"
+          break
+        end
       end
 
       best_action = actions.min_by { |a| a[:cost] }
