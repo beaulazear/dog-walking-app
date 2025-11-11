@@ -394,14 +394,14 @@ class RouteOptimizerService
     end
   end
 
-  # Build route stops for a group walk
-  # Dogs are dropped off as their individual walk durations complete
+  # Build route stops for a group walk with timeline-based scheduling
+  # Dogs are picked up and dropped off based on actual walk completion times
   def self.build_group_route_stops(group_appointments, start_location)
     stops = []
 
     Rails.logger.info "=== Building group route for #{group_appointments.length} appointments ==="
 
-    # Generate a temporary group ID for this group (use first appointment's ID or existing walk_group_id)
+    # Generate a temporary group ID for this group
     temp_group_id = group_appointments.first.walk_group_id || "temp_group_#{group_appointments.first.id}"
 
     # Optimize pickup order using TSP
@@ -409,46 +409,68 @@ class RouteOptimizerService
 
     Rails.logger.info "Pickup order has #{pickup_order.length} appointments"
 
-    # Track when each dog should be dropped off (pickup_index + walk_duration)
-    # We'll schedule dropoffs to happen after their walk time completes
-    pickup_schedule = []
+    # Build timeline-based schedule with realistic timing
+    # Assume 5 minutes per pickup, then track when each walk completes
+    PICKUP_TIME_MINUTES = 5
+    events = []
+    current_time = 0
 
     pickup_order.each_with_index do |appt, index|
-      pickup_stop = format_route_stop(appt, :pickup)
-      pickup_stop[:walk_group_id] ||= temp_group_id
-      pickup_stop[:pickup_index] = index # Track order for timing
-
-      pickup_schedule << {
+      # Create pickup event at current time
+      pickup_time = current_time
+      pickup_event = {
+        type: :pickup,
         appointment: appt,
-        pickup_stop: pickup_stop,
-        pickup_index: index,
-        duration: appt.duration || 30
+        time: pickup_time,
+        sequence: index,
+        duration: appt.duration || 30,
+        temp_group_id: temp_group_id
       }
+      events << pickup_event
+
+      # Create corresponding dropoff event
+      # Dropoff time = pickup_time + walk_duration
+      dropoff_time = pickup_time + (appt.duration || 30)
+      dropoff_event = {
+        type: :dropoff,
+        appointment: appt,
+        time: dropoff_time,
+        sequence: index,
+        duration: appt.duration || 30,
+        temp_group_id: temp_group_id
+      }
+      events << dropoff_event
+
+      # Move time forward for next pickup
+      current_time += PICKUP_TIME_MINUTES
     end
 
-    # Sort by duration (shortest walks first for dropoffs)
-    # This ensures dogs with shorter walks get dropped off sooner
-    dropoff_order = pickup_schedule.sort_by { |p| p[:duration] }
-
-    # Build interleaved schedule:
-    # - All pickups first (to minimize travel)
-    # - Then dropoffs ordered by walk duration (shortest first)
-    pickup_schedule.each do |item|
-      stops << item[:pickup_stop]
+    # Sort events by time, with pickups taking priority over dropoffs at the same time
+    sorted_events = events.sort_by do |event|
+      [event[:time], event[:type] == :pickup ? 0 : 1]
     end
 
-    Rails.logger.info "Created #{pickup_schedule.length} pickup stops"
-
-    # Add dropoffs in order of walk duration (shortest first)
-    dropoff_order.each do |item|
-      dropoff_stop = format_route_stop(item[:appointment], :dropoff)
-      dropoff_stop[:walk_group_id] ||= temp_group_id
-      dropoff_stop[:pickup_index] = item[:pickup_index] # Keep track of which pickup this corresponds to
-      stops << dropoff_stop
+    # Build stops from sorted events
+    sorted_events.each do |event|
+      if event[:type] == :pickup
+        stop = format_route_stop(event[:appointment], :pickup)
+        stop[:walk_group_id] ||= event[:temp_group_id]
+        stop[:pickup_index] = event[:sequence]
+        stops << stop
+      else
+        stop = format_route_stop(event[:appointment], :dropoff)
+        stop[:walk_group_id] ||= event[:temp_group_id]
+        stop[:pickup_index] = event[:sequence]
+        stops << stop
+      end
     end
 
-    Rails.logger.info "Created #{dropoff_order.length} dropoff stops"
+    pickup_count = stops.count { |s| s[:stop_type] == 'pickup' }
+    dropoff_count = stops.count { |s| s[:stop_type] == 'dropoff' }
+
+    Rails.logger.info "Created #{pickup_count} pickup stops and #{dropoff_count} dropoff stops"
     Rails.logger.info "Total stops: #{stops.length}"
+    Rails.logger.info "Stop sequence: #{stops.map { |s| "#{s[:pet_name]}-#{s[:stop_type]}" }.join(' → ')}"
 
     stops
   end
