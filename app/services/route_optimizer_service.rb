@@ -411,7 +411,7 @@ class RouteOptimizerService
 
     # Build timeline-based schedule with realistic timing
     # Assume 5 minutes per pickup, then track when each walk completes
-    PICKUP_TIME_MINUTES = 5
+    pickup_time_minutes = 5
     events = []
     current_time = 0
 
@@ -442,7 +442,7 @@ class RouteOptimizerService
       events << dropoff_event
 
       # Move time forward for next pickup
-      current_time += PICKUP_TIME_MINUTES
+      current_time += pickup_time_minutes
     end
 
     # Sort events by time, with pickups taking priority over dropoffs at the same time
