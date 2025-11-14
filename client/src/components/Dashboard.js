@@ -57,6 +57,8 @@ export default function Dashboard() {
     const [monthViewDate, setMonthViewDate] = useState(dayjs());
     const [isDeleting, setIsDeleting] = useState(false);
     const [photoError, setPhotoError] = useState(false);
+    const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const calendarGridRef = React.useRef(null);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -128,17 +130,56 @@ export default function Dashboard() {
         const endOfMonth = date.endOf('month');
         const startOfCalendar = startOfMonth.startOf('week');
         const endOfCalendar = endOfMonth.endOf('week');
-        
+
         const days = [];
         let currentDay = startOfCalendar;
-        
+
         while (currentDay.isBefore(endOfCalendar) || currentDay.isSame(endOfCalendar)) {
             days.push(currentDay);
             currentDay = currentDay.add(1, 'day');
         }
-        
+
         return days;
     };
+
+    // Generate time slots for calendar grid (6 AM to 10 PM)
+    const generateTimeSlots = () => {
+        const slots = [];
+        for (let hour = 6; hour <= 22; hour++) {
+            slots.push(hour);
+        }
+        return slots;
+    };
+
+    // Calculate position and height for appointment blocks
+    const getAppointmentStyle = (appointment) => {
+        const startTime = dayjs(appointment.start_time, "HH:mm");
+        const endTime = dayjs(appointment.end_time, "HH:mm");
+
+        const startHour = startTime.hour() + startTime.minute() / 60;
+        const endHour = endTime.hour() + endTime.minute() / 60;
+
+        const top = ((startHour - 6) * 60); // 60px per hour, offset by 6 AM
+        const height = ((endHour - startHour) * 60);
+
+        return { top, height };
+    };
+
+    // Auto-scroll to current time
+    useEffect(() => {
+        if (calendarGridRef.current) {
+            const currentHour = dayjs().hour();
+            if (currentHour >= 6 && currentHour <= 22) {
+                const scrollPosition = (currentHour - 6) * 60 - 100; // Center current time
+                setTimeout(() => {
+                    calendarGridRef.current?.scrollTo({
+                        top: Math.max(0, scrollPosition),
+                        behavior: 'smooth'
+                    });
+                }, 300);
+            }
+        }
+    }, [currentDate]);
 
     const navigateWeek = (direction) => {
         setCurrentDate(prev => prev.add(direction * 1, 'week'));
@@ -270,52 +311,84 @@ export default function Dashboard() {
                         </WeekNavigation>
                     </WeekHeader>
                     
-                    <WeekCardsContainer>
-                        {weekDays.map((day, index) => {
-                            const dayAppointments = getAppointmentsForDate(day.format("YYYY-MM-DD"));
-                            const isToday = day.isSame(dayjs(), 'day');
-                            const isPast = day.isBefore(dayjs(), 'day');
-                            
-                            return (
-                                <DayCard 
-                                    key={day.format("YYYY-MM-DD")} 
-                                    $isToday={isToday}
-                                    $isPast={isPast}
-                                    $hasAppointments={dayAppointments.length > 0}
-                                    $delay={index * 0.05}
-                                    onClick={() => handleDayClick(day, dayAppointments)}
-                                >
-                                    <DayCardHeader $isToday={isToday}>
-                                        <DayName>{day.format('ddd')}</DayName>
-                                        <DayDate $isToday={isToday}>{day.format('D')}</DayDate>
-                                    </DayCardHeader>
-                                    
-                                    <DayCardContent>
-                                        {dayAppointments.length > 0 ? (
-                                            <>
-                                                <WalkCount $count={dayAppointments.length}>
-                                                    {dayAppointments.length}
-                                                </WalkCount>
-                                                <WalkLabel>
-                                                    walk{dayAppointments.length > 1 ? 's' : ''}
-                                                </WalkLabel>
-                                                <PreviewDots>
-                                                    {dayAppointments.slice(0, 3).map((_, i) => (
-                                                        <Dot key={i} $delay={i * 0.1} />
-                                                    ))}
-                                                </PreviewDots>
-                                            </>
-                                        ) : (
-                                            <EmptyDay>
-                                                <EmptyIcon>—</EmptyIcon>
-                                                <EmptyText>Free</EmptyText>
-                                            </EmptyDay>
-                                        )}
-                                    </DayCardContent>
-                                </DayCard>
-                            );
-                        })}
-                    </WeekCardsContainer>
+                    <CalendarGridWrapper ref={calendarGridRef}>
+                        <CalendarGrid>
+                            {/* Time labels column */}
+                            <TimeLabelsColumn>
+                                <TimeHeaderSpacer />
+                                {generateTimeSlots().map(hour => (
+                                    <TimeLabel key={hour}>
+                                        {dayjs().hour(hour).format('h A')}
+                                    </TimeLabel>
+                                ))}
+                            </TimeLabelsColumn>
+
+                            {/* Day columns */}
+                            {weekDays.map((day, dayIndex) => {
+                                const dayAppointments = getAppointmentsForDate(day.format("YYYY-MM-DD"));
+                                const isToday = day.isSame(dayjs(), 'day');
+                                const isPast = day.isBefore(dayjs(), 'day');
+
+                                return (
+                                    <DayColumn key={day.format("YYYY-MM-DD")} $isToday={isToday}>
+                                        {/* Day header */}
+                                        <DayColumnHeader $isToday={isToday} $isPast={isPast}>
+                                            <DayHeaderName>{day.format('ddd')}</DayHeaderName>
+                                            <DayHeaderDate $isToday={isToday}>{day.format('D')}</DayHeaderDate>
+                                        </DayColumnHeader>
+
+                                        {/* Time grid cells */}
+                                        <DayColumnContent>
+                                            {generateTimeSlots().map(hour => (
+                                                <TimeSlotCell key={hour} $isToday={isToday} />
+                                            ))}
+
+                                            {/* Appointment blocks */}
+                                            {dayAppointments.map((appointment, idx) => {
+                                                const { top, height } = getAppointmentStyle(appointment);
+                                                return (
+                                                    <AppointmentBlock
+                                                        key={`${appointment.id}-${idx}`}
+                                                        $top={top}
+                                                        $height={height}
+                                                        $isPast={isPast}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedAppointment(appointment);
+                                                            setSelectedDate(day);
+                                                            setShowAppointments(true);
+                                                        }}
+                                                    >
+                                                        <AppointmentBlockContent>
+                                                            <AppointmentPetName>{appointment.pet?.name}</AppointmentPetName>
+                                                            <AppointmentBlockTime>
+                                                                {dayjs(appointment.start_time, "HH:mm").format("h:mm A")}
+                                                            </AppointmentBlockTime>
+                                                        </AppointmentBlockContent>
+                                                    </AppointmentBlock>
+                                                );
+                                            })}
+
+                                            {/* Current time indicator */}
+                                            {isToday && (() => {
+                                                const currentHour = dayjs().hour() + dayjs().minute() / 60;
+                                                if (currentHour >= 6 && currentHour <= 22) {
+                                                    const position = (currentHour - 6) * 60;
+                                                    return (
+                                                        <CurrentTimeIndicator $top={position}>
+                                                            <CurrentTimeDot />
+                                                            <CurrentTimeLine />
+                                                        </CurrentTimeIndicator>
+                                                    );
+                                                }
+                                                return null;
+                                            })()}
+                                        </DayColumnContent>
+                                    </DayColumn>
+                                );
+                            })}
+                        </CalendarGrid>
+                    </CalendarGridWrapper>
                 </WeekOverviewSection>
 
                 {upcomingBirthdayPet && (
@@ -856,202 +929,221 @@ const WeekDateRange = styled.div`
     }
 `;
 
-const WeekCardsContainer = styled.div`
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 12px;
+// Calendar Grid Components
+const CalendarGridWrapper = styled.div`
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 600px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    &::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    }
 
     @media (max-width: 768px) {
-        gap: 10px;
-        overflow-x: auto;
-        display: flex;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 10px;
-        margin: 0 -4px;
-        padding-left: 4px;
-        padding-right: 4px;
-
-        &::-webkit-scrollbar {
-            height: 6px;
-        }
-
-        &::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 3px;
-        }
-
-        &::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.25);
-            border-radius: 3px;
-
-            &:hover {
-                background: rgba(255, 255, 255, 0.35);
-            }
-        }
+        max-height: 500px;
     }
 `;
 
-const DayCard = styled.div`
-    background: ${props => {
-        if (props.$isToday) return 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.15))';
-        if (props.$hasAppointments) return 'rgba(255, 255, 255, 0.12)';
-        return 'rgba(255, 255, 255, 0.06)';
-    }};
-    border: 2px solid ${props => {
-        if (props.$isToday) return 'rgba(59, 130, 246, 0.4)';
-        if (props.$hasAppointments) return 'rgba(255, 255, 255, 0.2)';
-        return 'rgba(255, 255, 255, 0.1)';
-    }};
-    border-radius: 14px;
-    padding: 14px 10px;
-    min-height: 110px;
+const CalendarGrid = styled.div`
+    display: grid;
+    grid-template-columns: 70px repeat(7, minmax(100px, 1fr));
+    min-width: 900px;
+    position: relative;
+
+    @media (max-width: 768px) {
+        grid-template-columns: 60px repeat(7, minmax(90px, 1fr));
+        min-width: 700px;
+    }
+`;
+
+const TimeLabelsColumn = styled.div`
     display: flex;
     flex-direction: column;
-    align-items: center;
-    cursor: ${props => props.$hasAppointments ? 'pointer' : 'default'};
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-    opacity: ${props => props.$isPast ? 0.5 : 1};
-    animation: slideIn ${props => 0.3 + props.$delay}s ease-out;
+    border-right: 2px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+`;
 
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(8px);
-        }
-        to {
-            opacity: ${props => props.$isPast ? 0.5 : 1};
-            transform: translateY(0);
-        }
-    }
+const TimeHeaderSpacer = styled.div`
+    height: 60px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+    flex-shrink: 0;
+`;
 
-    &:hover {
-        transform: ${props => props.$hasAppointments ? 'translateY(-2px)' : 'none'};
-        background: ${props => {
-            if (props.$isToday) return 'linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(139, 92, 246, 0.2))';
-            if (props.$hasAppointments) return 'rgba(255, 255, 255, 0.15)';
-            return 'rgba(255, 255, 255, 0.08)';
-        }};
-        border-color: ${props => {
-            if (props.$isToday) return 'rgba(59, 130, 246, 0.5)';
-            if (props.$hasAppointments) return 'rgba(255, 255, 255, 0.3)';
-            return 'rgba(255, 255, 255, 0.15)';
-        }};
-        box-shadow: ${props => props.$hasAppointments ? '0 6px 16px rgba(0, 0, 0, 0.15)' : 'none'};
-    }
+const TimeLabel = styled.div`
+    height: 60px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 4px 12px 0 4px;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 500;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-family: 'Poppins', sans-serif;
 
     @media (max-width: 768px) {
-        min-width: 100px;
-        flex: 0 0 auto;
-        scroll-snap-align: center;
-        padding: 12px 8px;
-        min-height: 105px;
+        font-size: 0.7rem;
+        padding: 4px 8px 0 4px;
     }
 `;
 
-const DayCardHeader = styled.div`
-    text-align: center;
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    width: 100%;
+const DayColumn = styled.div`
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    background: ${props => props.$isToday ? 'rgba(59, 130, 246, 0.05)' : 'transparent'};
+
+    &:last-child {
+        border-right: none;
+    }
 `;
 
-const DayName = styled.div`
-    color: rgba(255, 255, 255, 0.75);
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 6px;
-    font-family: 'Poppins', sans-serif;
-`;
-
-const DayDate = styled.div`
-    color: ${props => props.$isToday ? '#ffffff' : 'rgba(255, 255, 255, 0.95)'};
-    font-size: 1.4rem;
-    font-weight: ${props => props.$isToday ? '700' : '600'};
-    font-family: 'Poppins', sans-serif;
-    line-height: 1;
-`;
-
-const DayCardContent = styled.div`
-    flex: 1;
+const DayColumnHeader = styled.div`
+    height: 60px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 100%;
-`;
-
-const WalkCount = styled.div`
-    font-size: 2.2rem;
-    font-weight: 700;
-    color: #ffffff;
-    background: ${props => {
-        if (props.$count >= 5) return 'linear-gradient(135deg, #f59e0b, #dc2626)';
-        if (props.$count >= 3) return 'linear-gradient(135deg, #3b82f6, #8b5cf6)';
-        return 'linear-gradient(135deg, #10b981, #06b6d4)';
-    }};
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1;
-    font-family: 'Poppins', sans-serif;
-    margin-bottom: 4px;
-
-    @media (max-width: 768px) {
-        font-size: 1.8rem;
-    }
-`;
-
-const WalkLabel = styled.div`
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 0.8rem;
-    font-weight: 500;
-    margin-top: 2px;
-    font-family: 'Poppins', sans-serif;
-`;
-
-const PreviewDots = styled.div`
-    display: flex;
     gap: 4px;
-    margin-top: 8px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+    background: ${props => props.$isToday
+        ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(139, 92, 246, 0.2))'
+        : 'rgba(255, 255, 255, 0.03)'};
+    opacity: ${props => props.$isPast ? 0.6 : 1};
+    flex-shrink: 0;
 `;
 
-const Dot = styled.div`
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.4);
-    animation: pulse ${props => 2 + props.$delay}s infinite;
-    
-    @keyframes pulse {
-        0%, 100% { opacity: 0.4; transform: scale(1); }
-        50% { opacity: 0.8; transform: scale(1.2); }
+const DayHeaderName = styled.div`
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.75);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: 'Poppins', sans-serif;
+`;
+
+const DayHeaderDate = styled.div`
+    font-size: 1.3rem;
+    font-weight: ${props => props.$isToday ? '700' : '600'};
+    color: ${props => props.$isToday ? '#ffffff' : 'rgba(255, 255, 255, 0.95)'};
+    font-family: 'Poppins', sans-serif;
+    line-height: 1;
+`;
+
+const DayColumnContent = styled.div`
+    position: relative;
+    flex: 1;
+`;
+
+const TimeSlotCell = styled.div`
+    height: 60px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+    &:hover {
+        background: ${props => props.$isToday
+            ? 'rgba(59, 130, 246, 0.08)'
+            : 'rgba(255, 255, 255, 0.03)'};
     }
 `;
 
-const EmptyDay = styled.div`
+const AppointmentBlock = styled.div`
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    top: ${props => props.$top}px;
+    height: ${props => Math.max(props.$height, 30)}px;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.85), rgba(16, 185, 129, 0.75));
+    border-left: 3px solid rgba(34, 197, 94, 1);
+    border-radius: 6px;
+    padding: 6px 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    opacity: ${props => props.$isPast ? 0.5 : 1};
+    z-index: 1;
+
+    &:hover {
+        transform: translateX(-2px);
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.95), rgba(16, 185, 129, 0.85));
+        z-index: 2;
+    }
+
+    &:active {
+        transform: scale(0.98);
+    }
+`;
+
+const AppointmentBlockContent = styled.div`
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 6px;
+    gap: 2px;
+    height: 100%;
 `;
 
-const EmptyIcon = styled.div`
-    color: rgba(255, 255, 255, 0.35);
-    font-size: 1.4rem;
-    font-weight: 300;
-`;
-
-const EmptyText = styled.div`
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 0.75rem;
-    font-weight: 500;
+const AppointmentPetName = styled.div`
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #ffffff;
     font-family: 'Poppins', sans-serif;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+`;
+
+const AppointmentBlockTime = styled.div`
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: 'Poppins', sans-serif;
+`;
+
+const CurrentTimeIndicator = styled.div`
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: ${props => props.$top}px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+`;
+
+const CurrentTimeDot = styled.div`
+    width: 10px;
+    height: 10px;
+    background: #ef4444;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+    flex-shrink: 0;
+    margin-left: -5px;
+`;
+
+const CurrentTimeLine = styled.div`
+    flex: 1;
+    height: 2px;
+    background: #ef4444;
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
 `;
 
 // Modern Birthday Card

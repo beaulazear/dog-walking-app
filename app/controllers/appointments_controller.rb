@@ -65,6 +65,10 @@ class AppointmentsController < ApplicationController
 
     # Filter to only appointments that occur on the requested date
     owned_appointments = all_owned_appointments.select do |apt|
+      # Filter out appointments with a cancellation for this specific date
+      has_cancellation = apt.cancellations.any? { |c| c.date == date }
+      next false if has_cancellation
+
       if apt.recurring
         # For recurring appointments, check if the day-of-week field is true
         apt.send(day_of_week)
