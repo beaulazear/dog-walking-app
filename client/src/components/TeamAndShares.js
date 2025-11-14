@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import toast from 'react-hot-toast';
 import dayjs from "dayjs";
-import { Users, UserPlus, Search, Check, X, Trash2, Share2, Clock, MapPin, DollarSign, Dog } from "lucide-react";
+import { Users, UserPlus, Search, Check, X, Trash2, Share2, Clock, MapPin, DollarSign, Dog, Plus } from "lucide-react";
 
 export default function TeamAndShares() {
     const [connections, setConnections] = useState([]);
@@ -11,19 +11,23 @@ export default function TeamAndShares() {
         received_all: [],
         sent: []
     });
+    const [financials, setFinancials] = useState(null);
     const [searchEmail, setSearchEmail] = useState("");
     const [searchResult, setSearchResult] = useState(null);
     const [isSearching, setIsSearching] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState("team"); // "team", "requests", "appointments", "history"
+    const [activeTab, setActiveTab] = useState("team"); // "team", "walks", "financials"
+    const [showSearchBar, setShowSearchBar] = useState(false);
+    const searchInputRef = useRef(null);
 
     useEffect(() => {
         window.scrollTo(0, 0);
         fetchData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const fetchData = async () => {
-        await Promise.all([fetchConnections(), fetchShares()]);
+        await Promise.all([fetchConnections(), fetchShares(), fetchFinancials()]);
         setIsLoading(false);
     };
 
@@ -58,6 +62,23 @@ export default function TeamAndShares() {
             }
         } catch (error) {
             console.error("Error fetching shares:", error);
+        }
+    };
+
+    const fetchFinancials = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch("/appointments/team_financials", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setFinancials(data);
+            } else {
+                toast.error("Failed to load team financials");
+            }
+        } catch (error) {
+            console.error("Error fetching financials:", error);
         }
     };
 
@@ -267,29 +288,55 @@ export default function TeamAndShares() {
         <Container>
             <Content>
                 <Header>
-                    <Title>
-                        <Users size={24} />
-                        Team & Shares
-                    </Title>
-                    <Subtitle>Manage your team and shared appointments</Subtitle>
+                    <HeaderContent>
+                        <PageTitle>
+                            <Users size={24} />
+                            My Team
+                        </PageTitle>
+                        <PageSubtitle>
+                            {acceptedConnections.length} member{acceptedConnections.length !== 1 ? 's' : ''} • {pendingReceived.length} pending
+                        </PageSubtitle>
+                    </HeaderContent>
+                    <HeaderButtonGroup>
+                        <HeaderButton
+                            onClick={() => {
+                                if (showSearchBar) {
+                                    // Closing search bar - clear search state
+                                    setShowSearchBar(false);
+                                    setSearchEmail("");
+                                    setSearchResult(null);
+                                } else {
+                                    // Opening search bar - focus input
+                                    setShowSearchBar(true);
+                                    setTimeout(() => searchInputRef.current?.focus(), 100);
+                                }
+                            }}
+                            title={showSearchBar ? "Close search" : "Add team member"}
+                        >
+                            {showSearchBar ? <X size={18} /> : <Plus size={18} />}
+                        </HeaderButton>
+                    </HeaderButtonGroup>
                 </Header>
 
-                {/* Search Section - Always visible at top */}
-                <SearchSection>
-                    <SearchForm onSubmit={handleSearchUser}>
-                        <SearchInputWrapper>
-                            <Search size={18} />
-                            <SearchInput
+                {/* Search Section */}
+                {showSearchBar && (
+                <SearchAndFilterSection>
+                    <SearchAndFilter as="form" onSubmit={handleSearchUser}>
+                        <SearchBar>
+                            <Search size={20} />
+                            <input
+                                ref={searchInputRef}
                                 type="email"
-                                placeholder="Search walkers by email..."
+                                placeholder="Search by email to add team members..."
                                 value={searchEmail}
                                 onChange={(e) => setSearchEmail(e.target.value)}
                             />
-                        </SearchInputWrapper>
-                        <SearchButton type="submit" disabled={isSearching}>
-                            {isSearching ? "..." : "Search"}
-                        </SearchButton>
-                    </SearchForm>
+                        </SearchBar>
+                        <AddTeamMemberButton type="submit" disabled={isSearching}>
+                            <UserPlus size={18} />
+                            {isSearching ? "Searching..." : "Add"}
+                        </AddTeamMemberButton>
+                    </SearchAndFilter>
 
                     {searchResult && (
                         <SearchResultCard>
@@ -299,11 +346,12 @@ export default function TeamAndShares() {
                             </UserInfo>
                             <SendButton onClick={() => handleSendRequest(searchResult.id)}>
                                 <UserPlus size={16} />
-                                <span>Send</span>
+                                <span>Send Request</span>
                             </SendButton>
                         </SearchResultCard>
                     )}
-                </SearchSection>
+                </SearchAndFilterSection>
+                )}
 
                 {/* Tab Navigation */}
                 <TabContainer>
@@ -312,28 +360,27 @@ export default function TeamAndShares() {
                         onClick={() => setActiveTab("team")}
                     >
                         <TabLabel>Team</TabLabel>
-                        <TabCount>{acceptedConnections.length}</TabCount>
+                        <TabCount $active={activeTab === "team"}>
+                            {acceptedConnections.length + pendingReceived.length + pendingSent.length}
+                        </TabCount>
                     </Tab>
                     <Tab
-                        $active={activeTab === "requests"}
-                        onClick={() => setActiveTab("requests")}
-                    >
-                        <TabLabel>Requests</TabLabel>
-                        <TabCount>{pendingReceived.length + pendingSent.length}</TabCount>
-                    </Tab>
-                    <Tab
-                        $active={activeTab === "appointments"}
-                        onClick={() => setActiveTab("appointments")}
+                        $active={activeTab === "walks"}
+                        onClick={() => setActiveTab("walks")}
                     >
                         <TabLabel>Walks</TabLabel>
-                        <TabCount>{shares.received_pending.length}</TabCount>
+                        <TabCount $active={activeTab === "walks"}>
+                            {shares.received_pending.length + shares.received_all.length + shares.sent.length}
+                        </TabCount>
                     </Tab>
                     <Tab
-                        $active={activeTab === "history"}
-                        onClick={() => setActiveTab("history")}
+                        $active={activeTab === "financials"}
+                        onClick={() => setActiveTab("financials")}
                     >
-                        <TabLabel>History</TabLabel>
-                        <TabCount>{shares.received_all.length + shares.sent.length}</TabCount>
+                        <TabLabel>Financials</TabLabel>
+                        <TabCount $active={activeTab === "financials"}>
+                            {financials ? (financials.my_earnings.length + financials.team_payouts.length) : 0}
+                        </TabCount>
                     </Tab>
                 </TabContainer>
 
@@ -341,40 +388,30 @@ export default function TeamAndShares() {
                 <ContentSection>
                     {activeTab === "team" && (
                         <>
-                            {acceptedConnections.length === 0 ? (
-                                <EmptyState>
-                                    <Users size={48} />
-                                    <EmptyText>No team members yet</EmptyText>
-                                    <EmptySubtext>Search for walkers above to build your team</EmptySubtext>
-                                </EmptyState>
-                            ) : (
-                                <List>
-                                    {acceptedConnections.map(connection => (
-                                        <Card key={connection.id}>
-                                            <CardContent>
-                                                <UserInfo>
-                                                    <UserName>{connection.other_user.name}</UserName>
-                                                    <UserEmail>@{connection.other_user.username}</UserEmail>
-                                                </UserInfo>
-                                                <RemoveButton onClick={() => handleRemoveConnection(connection.id)}>
-                                                    <Trash2 size={16} />
-                                                </RemoveButton>
-                                            </CardContent>
-                                        </Card>
-                                    ))}
-                                </List>
+                            {/* Active Team Members */}
+                            {acceptedConnections.length > 0 && (
+                                <>
+                                    <SectionTitle>Team Members ({acceptedConnections.length})</SectionTitle>
+                                    <List>
+                                        {acceptedConnections.map(connection => (
+                                            <Card key={connection.id}>
+                                                <CardContent>
+                                                    <UserInfo>
+                                                        <UserName>{connection.other_user.name}</UserName>
+                                                        <UserEmail>@{connection.other_user.username}</UserEmail>
+                                                    </UserInfo>
+                                                    <RemoveButton onClick={() => handleRemoveConnection(connection.id)}>
+                                                        <Trash2 size={16} />
+                                                    </RemoveButton>
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </List>
+                                </>
                             )}
-                        </>
-                    )}
 
-                    {activeTab === "requests" && (
-                        <>
-                            {pendingReceived.length === 0 && pendingSent.length === 0 ? (
-                                <EmptyState>
-                                    <UserPlus size={48} />
-                                    <EmptyText>No pending requests</EmptyText>
-                                </EmptyState>
-                            ) : (
+                            {/* Pending Requests */}
+                            {(pendingReceived.length > 0 || pendingSent.length > 0) && (
                                 <>
                                     {pendingReceived.length > 0 && (
                                         <>
@@ -425,19 +462,25 @@ export default function TeamAndShares() {
                                     )}
                                 </>
                             )}
+
+                            {/* Empty state for completely new team */}
+                            {acceptedConnections.length === 0 && pendingReceived.length === 0 && pendingSent.length === 0 && (
+                                <EmptyState>
+                                    <Users size={48} />
+                                    <EmptyText>No team members yet</EmptyText>
+                                    <EmptySubtext>Search for walkers above to build your team</EmptySubtext>
+                                </EmptyState>
+                            )}
                         </>
                     )}
 
-                    {activeTab === "appointments" && (
+                    {activeTab === "walks" && (
                         <>
-                            {shares.received_pending.length === 0 ? (
-                                <EmptyState>
-                                    <Share2 size={48} />
-                                    <EmptyText>No pending walks</EmptyText>
-                                    <EmptySubtext>Shared walks will appear here</EmptySubtext>
-                                </EmptyState>
-                            ) : (
-                                <List>
+                            {/* Pending Walk Requests */}
+                            {shares.received_pending.length > 0 && (
+                                <>
+                                    <SectionTitle>Pending Requests ({shares.received_pending.length})</SectionTitle>
+                                    <List>
                                     {shares.received_pending.map(share => (
                                         <AppointmentCard key={share.id}>
                                             <AppointmentHeader>
@@ -464,8 +507,49 @@ export default function TeamAndShares() {
                                                 </DetailRow>
                                                 <DetailRow>
                                                     <DollarSign size={16} />
-                                                    <DetailText>${share.appointment.price}</DetailText>
+                                                    <DetailText>${(share.appointment.price / 100).toFixed(2)}</DetailText>
                                                 </DetailRow>
+
+                                                {/* Income Split Display */}
+                                                {share.covering_walker_percentage && (
+                                                    <IncomeSplitBox>
+                                                        <SplitLabel>Income Split</SplitLabel>
+                                                        <SplitRow>
+                                                            <SplitItem>
+                                                                <SplitLabel>You get:</SplitLabel>
+                                                                <SplitValue $highlight>
+                                                                    {share.covering_walker_percentage}%
+                                                                    (${((share.appointment.price / 100) * share.covering_walker_percentage / 100).toFixed(2)})
+                                                                </SplitValue>
+                                                            </SplitItem>
+                                                            <SplitDivider>•</SplitDivider>
+                                                            <SplitItem>
+                                                                <SplitLabel>{share.other_user.name} keeps:</SplitLabel>
+                                                                <SplitValue>
+                                                                    {share.original_walker_percentage}%
+                                                                    (${((share.appointment.price / 100) * share.original_walker_percentage / 100).toFixed(2)})
+                                                                </SplitValue>
+                                                            </SplitItem>
+                                                        </SplitRow>
+                                                    </IncomeSplitBox>
+                                                )}
+
+                                                {/* Share Dates for Recurring Appointments */}
+                                                {share.share_dates && share.share_dates.length > 0 && (
+                                                    <ShareDatesBox>
+                                                        <ShareDatesLabel>Shared dates ({share.share_dates.length}):</ShareDatesLabel>
+                                                        <ShareDatesGrid>
+                                                            {share.share_dates.slice(0, 6).map((date, idx) => (
+                                                                <DateChip key={idx}>
+                                                                    {dayjs(date).format('MMM D')}
+                                                                </DateChip>
+                                                            ))}
+                                                            {share.share_dates.length > 6 && (
+                                                                <DateChip>+{share.share_dates.length - 6} more</DateChip>
+                                                            )}
+                                                        </ShareDatesGrid>
+                                                    </ShareDatesBox>
+                                                )}
 
                                                 {share.appointment.pet.behavioral_notes && (
                                                     <NotesBox>
@@ -488,19 +572,13 @@ export default function TeamAndShares() {
                                         </AppointmentCard>
                                     ))}
                                 </List>
+                                </>
                             )}
-                        </>
-                    )}
 
-                    {activeTab === "history" && (
-                        <>
-                            {shares.received_all.length === 0 && shares.sent.length === 0 ? (
-                                <EmptyState>
-                                    <Share2 size={48} />
-                                    <EmptyText>No history</EmptyText>
-                                </EmptyState>
-                            ) : (
+                            {/* Walk History */}
+                            {(shares.received_all.length > 0 || shares.sent.length > 0) && (
                                 <>
+                                    <SectionTitle>Walk History ({shares.received_all.length + shares.sent.length})</SectionTitle>
                                     {shares.received_all.length > 0 && (
                                         <>
                                             <Subsection>Received</Subsection>
@@ -517,7 +595,7 @@ export default function TeamAndShares() {
                                                             <span>•</span>
                                                             <span>{dayjs(share.appointment.appointment_date).format('MMM D')}</span>
                                                             <span>•</span>
-                                                            <span>${share.appointment.price}</span>
+                                                            <span>${(share.appointment.price / 100).toFixed(2)}</span>
                                                         </HistoryDetails>
                                                     </HistoryCard>
                                                 ))}
@@ -541,12 +619,27 @@ export default function TeamAndShares() {
                                                             <span>•</span>
                                                             <span>{dayjs(share.appointment.appointment_date).format('MMM D')}</span>
                                                             <span>•</span>
-                                                            <span>${share.appointment.price}</span>
+                                                            <span>${(share.appointment.price / 100).toFixed(2)}</span>
+                                                            {share.covering_walker_percentage && (
+                                                                <>
+                                                                    <span>•</span>
+                                                                    <span>{share.covering_walker_percentage}% / {share.original_walker_percentage}%</span>
+                                                                </>
+                                                            )}
                                                         </HistoryDetails>
                                                         {share.status === 'pending' && (
                                                             <CancelShareButton onClick={() => handleCancelShare(share.id)}>
                                                                 <X size={14} />
                                                                 Cancel
+                                                            </CancelShareButton>
+                                                        )}
+                                                        {share.status === 'accepted' && (
+                                                            <CancelShareButton
+                                                                onClick={() => handleCancelShare(share.id)}
+                                                                style={{ background: '#fb923c', borderColor: '#f97316' }}
+                                                            >
+                                                                <X size={14} />
+                                                                Unshare
                                                             </CancelShareButton>
                                                         )}
                                                     </HistoryCard>
@@ -555,6 +648,117 @@ export default function TeamAndShares() {
                                         </>
                                     )}
                                 </>
+                            )}
+
+                            {/* Empty state for no walks */}
+                            {shares.received_pending.length === 0 && shares.received_all.length === 0 && shares.sent.length === 0 && (
+                                <EmptyState>
+                                    <Share2 size={48} />
+                                    <EmptyText>No shared walks</EmptyText>
+                                    <EmptySubtext>Shared walks will appear here</EmptySubtext>
+                                </EmptyState>
+                            )}
+                        </>
+                    )}
+
+                    {activeTab === "financials" && (
+                        <>
+                            <SectionTitle>Team Financials</SectionTitle>
+
+                            {/* Summary Cards */}
+                            {financials && (
+                                <FinancialSummary>
+                                    <SummaryCard $type="earning">
+                                        <SummaryLabel>My Earnings (Covering)</SummaryLabel>
+                                        <SummaryValue>${(financials.totals.total_earnings / 100).toFixed(2)}</SummaryValue>
+                                        <SummarySubtext>Unpaid: ${(financials.totals.total_earnings_unpaid / 100).toFixed(2)}</SummarySubtext>
+                                    </SummaryCard>
+                                    <SummaryCard $type="payout">
+                                        <SummaryLabel>Team Payouts (I Owe)</SummaryLabel>
+                                        <SummaryValue>${(financials.totals.total_payouts / 100).toFixed(2)}</SummaryValue>
+                                        <SummarySubtext>Unpaid: ${(financials.totals.total_payouts_unpaid / 100).toFixed(2)}</SummarySubtext>
+                                    </SummaryCard>
+                                </FinancialSummary>
+                            )}
+
+                            {/* My Earnings Section */}
+                            <SubSectionTitle>💰 My Earnings (Walks I Covered)</SubSectionTitle>
+                            {!financials || financials.my_earnings.length === 0 ? (
+                                <EmptyState>
+                                    <DollarSign size={48} />
+                                    <EmptyText>No covering earnings yet</EmptyText>
+                                    <EmptySubtext>Accept shared walks to start earning</EmptySubtext>
+                                </EmptyState>
+                            ) : (
+                                <List>
+                                    {financials.my_earnings.map(earning => (
+                                        <FinancialCard key={earning.id} $type="earning">
+                                            <CardHeader>
+                                                <CardTitle>
+                                                    <Dog size={18} />
+                                                    {earning.pet?.name || 'Walk'}
+                                                </CardTitle>
+                                                <Amount $paid={earning.paid}>
+                                                    ${(earning.compensation / 100).toFixed(2)}
+                                                </Amount>
+                                            </CardHeader>
+                                            <CardDetails>
+                                                <DetailItem>
+                                                    <Clock size={14} />
+                                                    {dayjs(earning.date_completed).format('MMM D, YYYY')}
+                                                </DetailItem>
+                                                <Badge $type="earning">
+                                                    {earning.split_percentage}% split
+                                                </Badge>
+                                                {earning.paid ? (
+                                                    <Badge $type="paid">Paid</Badge>
+                                                ) : (
+                                                    <Badge $type="unpaid">Unpaid</Badge>
+                                                )}
+                                            </CardDetails>
+                                        </FinancialCard>
+                                    ))}
+                                </List>
+                            )}
+
+                            {/* Team Payouts Section */}
+                            <SubSectionTitle>📤 Team Payouts (I Need to Pay)</SubSectionTitle>
+                            {!financials || financials.team_payouts.length === 0 ? (
+                                <EmptyState>
+                                    <DollarSign size={48} />
+                                    <EmptyText>No team payouts</EmptyText>
+                                    <EmptySubtext>Share walks with your team to see payouts here</EmptySubtext>
+                                </EmptyState>
+                            ) : (
+                                <List>
+                                    {financials.team_payouts.map(payout => (
+                                        <FinancialCard key={payout.id} $type="payout">
+                                            <CardHeader>
+                                                <CardTitle>
+                                                    <Dog size={18} />
+                                                    {payout.pet?.name || 'Walk'} • {payout.walker?.name}
+                                                </CardTitle>
+                                                <Amount $paid={payout.paid}>
+                                                    ${(payout.compensation / 100).toFixed(2)}
+                                                </Amount>
+                                            </CardHeader>
+                                            <CardDetails>
+                                                <DetailItem>
+                                                    <Clock size={14} />
+                                                    {dayjs(payout.date_completed).format('MMM D, YYYY')}
+                                                </DetailItem>
+                                                <Badge $type="payout">
+                                                    {payout.split_percentage}% split
+                                                </Badge>
+                                                {payout.paid ? (
+                                                    <Badge $type="paid">Paid</Badge>
+                                                ) : (
+                                                    <Badge $type="unpaid">Unpaid - Pay {payout.walker?.name}</Badge>
+                                                )}
+                                            </CardDetails>
+                                        </FinancialCard>
+                                    ))}
+                                </List>
                             )}
                         </>
                     )}
@@ -588,22 +792,74 @@ const LoadingText = styled.div`
 `;
 
 const Header = styled.div`
-    margin-bottom: 20px;
-    text-align: center;
+    width: 100%;
+    max-width: 448px;
+    margin: 0 auto 20px;
+    z-index: 100;
+    position: relative;
+    padding: 0 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
 
     @media (min-width: 768px) {
-        margin-bottom: 30px;
+        margin: 0 auto 24px;
+    }
+
+    @media (max-width: 768px) {
+        padding: 0 12px;
     }
 `;
 
-const Title = styled.h1`
+const HeaderContent = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+`;
+
+const HeaderButtonGroup = styled.div`
+    display: flex;
+    gap: 6px;
+    align-items: center;
+`;
+
+const HeaderButton = styled.button`
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(12px);
     color: white;
-    font-size: 26px;
-    font-weight: 700;
-    margin-bottom: 8px;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 10;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+`;
+
+const PageTitle = styled.h1`
+    color: white;
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
     gap: 10px;
 
     @media (min-width: 768px) {
@@ -611,92 +867,99 @@ const Title = styled.h1`
     }
 `;
 
-const Subtitle = styled.p`
+const PageSubtitle = styled.p`
     color: rgba(255, 255, 255, 0.9);
     font-size: 14px;
     margin: 0;
-
-    @media (min-width: 768px) {
-        font-size: 16px;
-    }
-`;
-
-const SearchSection = styled.div`
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-
-    @media (min-width: 768px) {
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-`;
-
-const SearchForm = styled.form`
-    display: flex;
-    gap: 8px;
-
-    @media (min-width: 768px) {
-        gap: 12px;
-    }
-`;
-
-const SearchInputWrapper = styled.div`
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 12px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    background: #f9f9f9;
-
-    svg {
-        color: #999;
-        flex-shrink: 0;
-    }
-
-    @media (min-width: 768px) {
-        padding: 12px 16px;
-    }
-`;
-
-const SearchInput = styled.input`
-    flex: 1;
-    border: none;
-    background: transparent;
-    font-size: 14px;
-    outline: none;
-    color: #333;
-    min-width: 0;
-
-    &::placeholder {
-        color: #999;
-    }
 
     @media (min-width: 768px) {
         font-size: 15px;
     }
 `;
 
-const SearchButton = styled.button`
-    padding: 10px 16px;
-    background: #667eea;
-    color: white;
+const SearchAndFilterSection = styled.div`
+    max-width: 448px;
+    margin: 0 auto 20px;
+    animation: slideDown 0.3s ease-out;
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+`;
+
+const SearchAndFilter = styled.div`
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    @media (max-width: 768px) {
+        flex-direction: column;
+        align-items: stretch;
+    }
+`;
+
+const SearchBar = styled.div`
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 12px 20px;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+
+    &:focus-within {
+        background: rgba(255, 255, 255, 1);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    input {
+        flex: 1;
+        border: none;
+        background: none;
+        font-family: 'Poppins', sans-serif;
+        font-size: 1rem;
+        color: #111827;
+        outline: none;
+
+        &::placeholder {
+            color: #9ca3af;
+        }
+    }
+`;
+
+const AddTeamMemberButton = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #667eea;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
     font-weight: 600;
-    font-size: 14px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
     white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
 
     &:hover:not(:disabled) {
-        background: #5568d3;
-        transform: translateY(-1px);
+        background: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
     }
 
     &:disabled {
@@ -704,9 +967,28 @@ const SearchButton = styled.button`
         cursor: not-allowed;
     }
 
-    @media (min-width: 768px) {
-        padding: 12px 24px;
-        font-size: 15px;
+    @media (max-width: 768px) {
+        width: 100%;
+        justify-content: center;
+        padding: 8px 14px;
+        font-size: 0.85rem;
+        gap: 5px;
+
+        svg {
+            width: 15px;
+            height: 15px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        padding: 7px 10px;
+        font-size: 0.8rem;
+        gap: 4px;
+
+        svg {
+            width: 14px;
+            height: 14px;
+        }
     }
 `;
 
@@ -760,55 +1042,81 @@ const SendButton = styled.button`
 `;
 
 const TabContainer = styled.div`
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-    margin-bottom: 16px;
+    display: flex;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 6px;
+    border-radius: 14px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: fit-content;
+    margin: 0 auto 20px;
+    max-width: 90%;
 
-    @media (min-width: 768px) {
-        gap: 8px;
-        margin-bottom: 20px;
+    @media (max-width: 768px) {
+        gap: 5px;
+        padding: 4px;
+        width: calc(100% - 32px);
+        max-width: 448px;
+    }
+
+    @media (max-width: 480px) {
+        gap: 3px;
+        padding: 3px;
     }
 `;
 
 const Tab = styled.button`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    padding: 10px 6px;
-    background: ${props => props.$active ? 'white' : 'rgba(255, 255, 255, 0.3)'};
-    color: ${props => props.$active ? '#667eea' : 'white'};
+    background: ${props => props.$active ? 'rgba(255, 255, 255, 0.95)' : 'transparent'};
+    color: ${props => props.$active ? '#667eea' : 'rgba(255, 255, 255, 0.9)'};
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    justify-content: center;
+    white-space: nowrap;
 
-    &:hover {
-        background: ${props => props.$active ? 'white' : 'rgba(255, 255, 255, 0.4)'};
+    @media (max-width: 768px) {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        gap: 6px;
     }
 
-    @media (min-width: 768px) {
-        padding: 12px 10px;
+    @media (max-width: 480px) {
+        padding: 7px 8px;
+        font-size: 0.75rem;
+        gap: 4px;
+    }
+
+    &:hover {
+        background: ${props => props.$active ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 255, 255, 0.2)'};
+        transform: translateY(-1px);
     }
 `;
 
 const TabLabel = styled.span`
-    font-size: 12px;
-
-    @media (min-width: 768px) {
-        font-size: 14px;
-    }
+    font-size: inherit;
 `;
 
 const TabCount = styled.span`
-    font-size: 16px;
+    background: ${props => props.$active ? 'rgba(102, 126, 234, 0.1)' : 'rgba(255, 255, 255, 0.2)'};
+    color: ${props => props.$active ? '#667eea' : 'rgba(255, 255, 255, 0.9)'};
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
     font-weight: 700;
 
-    @media (min-width: 768px) {
-        font-size: 18px;
+    @media (max-width: 480px) {
+        padding: 2px 6px;
+        font-size: 0.8em;
     }
 `;
 
@@ -1077,6 +1385,79 @@ const DetailText = styled.span`
     white-space: nowrap;
 `;
 
+const IncomeSplitBox = styled.div`
+    margin-top: 12px;
+    padding: 12px;
+    background: linear-gradient(135deg, #f0f4ff, #f9f0ff);
+    border-radius: 8px;
+    border: 2px solid rgba(102, 126, 234, 0.3);
+`;
+
+const SplitRow = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 8px;
+`;
+
+const SplitItem = styled.div`
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+`;
+
+const SplitLabel = styled.div`
+    font-size: 11px;
+    font-weight: 600;
+    color: #667eea;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+`;
+
+const SplitValue = styled.div`
+    font-size: 14px;
+    font-weight: ${props => props.$highlight ? 700 : 600};
+    color: ${props => props.$highlight ? '#667eea' : '#666'};
+`;
+
+const SplitDivider = styled.div`
+    color: #e0e0e0;
+    font-weight: bold;
+`;
+
+const ShareDatesBox = styled.div`
+    margin-top: 12px;
+    padding: 10px;
+    background: rgba(102, 126, 234, 0.08);
+    border-radius: 8px;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+`;
+
+const ShareDatesLabel = styled.div`
+    font-size: 11px;
+    font-weight: 600;
+    color: #667eea;
+    margin-bottom: 8px;
+`;
+
+const ShareDatesGrid = styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+`;
+
+const DateChip = styled.div`
+    padding: 4px 8px;
+    background: white;
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #667eea;
+`;
+
 const NotesBox = styled.div`
     margin-top: 4px;
     padding: 10px;
@@ -1313,4 +1694,139 @@ const EmptySubtext = styled.div`
         font-size: 14px;
         max-width: 400px;
     }
+`;
+
+
+const FinancialSummary = styled.div`
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+    }
+`;
+
+const SummaryCard = styled.div`
+    background: ${props => props.$type === 'earning' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'};
+    padding: 20px;
+    border-radius: 12px;
+    color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+`;
+
+const SummaryLabel = styled.div`
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0.9;
+    margin-bottom: 8px;
+`;
+
+const SummaryValue = styled.div`
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 4px;
+`;
+
+const SummarySubtext = styled.div`
+    font-size: 12px;
+    opacity: 0.8;
+`;
+
+const SubSectionTitle = styled.h3`
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 24px 0 16px 0;
+`;
+
+const FinancialCard = styled.div`
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    border-left: 4px solid ${props => props.$type === 'earning' ? '#10b981' : '#f59e0b'};
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+`;
+
+const Amount = styled.div`
+    font-size: 20px;
+    font-weight: 700;
+    color: ${props => props.$paid ? '#10b981' : '#f59e0b'};
+`;
+
+
+const SectionTitle = styled.h2`
+    font-size: 20px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 20px 0;
+`;
+
+const CardHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+`;
+
+const CardTitle = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    color: #1f2937;
+    flex: 1;
+
+    svg {
+        flex-shrink: 0;
+    }
+`;
+
+const CardDetails = styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+`;
+
+const DetailItem = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #6b7280;
+
+    svg {
+        width: 14px;
+        height: 14px;
+    }
+`;
+
+const Badge = styled.span`
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    background: ${props => {
+        if (props.$type === 'earning') return '#d1fae5';
+        if (props.$type === 'payout') return '#fef3c7';
+        if (props.$type === 'paid') return '#d1fae5';
+        if (props.$type === 'unpaid') return '#fee2e2';
+        return '#e5e7eb';
+    }};
+    color: ${props => {
+        if (props.$type === 'earning') return '#065f46';
+        if (props.$type === 'payout') return '#92400e';
+        if (props.$type === 'paid') return '#065f46';
+        if (props.$type === 'unpaid') return '#991b1b';
+        return '#374151';
+    }};
 `;

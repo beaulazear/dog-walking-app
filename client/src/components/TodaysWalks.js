@@ -27,13 +27,44 @@ import ShareAppointmentModal from "./ShareAppointmentModal";
 import WalksMapView from "./WalksMapView";
 
 export default function TodaysWalks() {
-    const { user, refreshUser } = useContext(UserContext);
+    const { user, refreshUser, addInvoice } = useContext(UserContext);
     const [showMap, setShowMap] = useState(false);
     const [optimizedRoute, setOptimizedRoute] = useState(null);
     const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+    const [ownedAppointments, setOwnedAppointments] = useState([]);
+    const [coveringAppointments, setCoveringAppointments] = useState([]);
+    const [isLoadingAppointments, setIsLoadingAppointments] = useState(true);
 
     useEffect(() => {
         window.scrollTo(0, 0);
+
+        // Fetch appointments for today from new endpoint
+        const fetchAppointments = async () => {
+            setIsLoadingAppointments(true);
+            try {
+                const token = localStorage.getItem("token");
+                const todayString = dayjs().format('YYYY-MM-DD');
+                const response = await fetch(`/appointments/for_date?date=${todayString}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    setOwnedAppointments(data.owned || []);
+                    setCoveringAppointments(data.covering || []);
+                } else {
+                    console.error('Failed to fetch appointments');
+                }
+            } catch (error) {
+                console.error('Error fetching appointments:', error);
+            } finally {
+                setIsLoadingAppointments(false);
+            }
+        };
+
+        fetchAppointments();
     }, []);
 
     const fetchOptimizedRoute = async () => {
@@ -67,36 +98,24 @@ export default function TodaysWalks() {
         }
     };
 
-    // Memoize expensive filtering and sorting operation
+    // Combine owned (excluding shared-out) and covering appointments
     const todaysAppointments = useMemo(() => {
-        return (user?.appointments
-            ?.filter(appointment => {
-                if (appointment.canceled) return false;
+        const activeOwned = ownedAppointments.filter(apt => !apt.is_shared_out);
+        const allActive = [...activeOwned, ...coveringAppointments];
 
-                const todayFormatted = dayjs().format("YYYY-MM-DD");
+        // Sort by start time
+        return allActive.sort((a, b) => {
+            const startA = dayjs(a.start_time, "HH:mm");
+            const startB = dayjs(b.start_time, "HH:mm");
+            const endA = dayjs(a.end_time, "HH:mm");
+            const endB = dayjs(b.end_time, "HH:mm");
 
-                const hasCancellationToday = appointment.cancellations?.some(cancellation =>
-                    dayjs(cancellation.date).format("YYYY-MM-DD") === todayFormatted
-                );
+            if (startA.isBefore(startB)) return -1;
+            if (startA.isAfter(startB)) return 1;
 
-                if (appointment.recurring) {
-                    return appointment[dayjs().format("dddd").toLowerCase()] && !hasCancellationToday;
-                }
-
-                return dayjs(appointment.appointment_date).format("YYYY-MM-DD") === todayFormatted;
-            })
-            ?.sort((a, b) => {
-                const startA = dayjs(a.start_time, "HH:mm");
-                const startB = dayjs(b.start_time, "HH:mm");
-                const endA = dayjs(a.end_time, "HH:mm");
-                const endB = dayjs(b.end_time, "HH:mm");
-
-                if (startA.isBefore(startB)) return -1;
-                if (startA.isAfter(startB)) return 1;
-
-                return endA.isBefore(endB) ? -1 : 1;
-            }) || []);
-    }, [user?.appointments]);
+            return endA.isBefore(endB) ? -1 : 1;
+        });
+    }, [ownedAppointments, coveringAppointments]);
 
     // Calculate daily earnings from today's invoices
     const dailyEarnings = useMemo(() => {
@@ -198,7 +217,13 @@ export default function TodaysWalks() {
 
                         <WalkList>
                             {todaysAppointments.map(appointment => (
-                                <WalkCard key={appointment.id} appointment={appointment} />
+                                <WalkCard
+                                    key={`${appointment.is_covering ? 'covering' : 'owned'}-${appointment.id}`}
+                                    appointment={appointment}
+                                    isCovering={appointment.is_covering || false}
+                                    coveredBy={appointment.covered_by || null}
+                                    myPercentage={appointment.my_percentage || null}
+                                />
                             ))}
                         </WalkList>
 
@@ -255,7 +280,7 @@ const getInvoiceAmountForToday = (appointment, invoices) => {
     return invoice?.compensation || 0;
 };
 
-const WalkCard = React.memo(({ appointment }) => {
+const WalkCard = React.memo(({ appointment, isCovering, coveredBy, myPercentage }) => {
     const { user, addInvoice } = useContext(UserContext);
     const [isCompleted, setIsCompleted] = useState(
         hasInvoiceForToday(appointment, user?.invoices)
@@ -383,6 +408,22 @@ const WalkCard = React.memo(({ appointment }) => {
                             {appointment.solo ? 'Solo' : 'Group'}
                         </InfoItem>
                     </WalkInfo>
+
+                    {/* Badge for covering appointments */}
+                    {isCovering && myPercentage && (
+                        <CoveringBadge>
+                            <CheckCircle size={14} />
+                            Covering ({myPercentage}%)
+                        </CoveringBadge>
+                    )}
+
+                    {/* Badge for covered-by appointments */}
+                    {coveredBy && (
+                        <CoveredByBadge>
+                            <Share2 size={14} />
+                            Covered by {coveredBy.profile?.full_name || coveredBy.name}
+                        </CoveredByBadge>
+                    )}
                 </WalkDetails>
 
                 {isCompleted && invoiceAmount > 0 && (
@@ -394,19 +435,33 @@ const WalkCard = React.memo(({ appointment }) => {
 
                 {!isCompleted && !isCancelled && (
                     <ActionButtons>
-                        <ShareButton onClick={() => setShowShareModal(true)} title="Share with team">
-                            <Share2 size={18} />
-                        </ShareButton>
-                        <CompleteButton onClick={() => setShowCompletionModal(true)}>
+                        {/* Only show share button if this is owned appointment (not covering) */}
+                        {!isCovering && (
+                            <ShareButton onClick={() => setShowShareModal(true)} title="Share with team">
+                                <Share2 size={18} />
+                            </ShareButton>
+                        )}
+                        {/* Only enable complete if covering OR not covered by someone else */}
+                        <CompleteButton
+                            onClick={() => setShowCompletionModal(true)}
+                            disabled={coveredBy !== null}
+                            style={{
+                                opacity: coveredBy ? 0.5 : 1,
+                                cursor: coveredBy ? 'not-allowed' : 'pointer'
+                            }}
+                        >
                             <CheckCircle size={18} />
                         </CompleteButton>
-                        <CancelButton onClick={() => setShowCancelModal(true)}>
-                            <X size={18} />
-                        </CancelButton>
+                        {/* Only show cancel for owned appointments */}
+                        {!isCovering && (
+                            <CancelButton onClick={() => setShowCancelModal(true)}>
+                                <X size={18} />
+                            </CancelButton>
+                        )}
                     </ActionButtons>
                 )}
 
-                {appointment.delegation_status === 'delegated' && !isCompleted && !isCancelled && (
+                {appointment.delegation_status === 'delegated' && !isCompleted && !isCancelled && !isCovering && !coveredBy && (
                     <DelegatedBadge>
                         <Share2 size={12} />
                         Shared
@@ -1698,6 +1753,56 @@ const DelegatedBadge = styled.div`
     @media (max-width: 768px) {
         font-size: 10px;
         padding: 3px 6px;
+    }
+`;
+
+const CoveringBadge = styled.div`
+    margin-top: 8px;
+    padding: 6px 10px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.25));
+    border: 2px solid rgba(16, 185, 129, 0.6);
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #10b981;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    width: fit-content;
+
+    svg {
+        flex-shrink: 0;
+    }
+
+    @media (max-width: 768px) {
+        font-size: 11px;
+        padding: 5px 8px;
+    }
+`;
+
+const CoveredByBadge = styled.div`
+    margin-top: 8px;
+    padding: 6px 10px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(79, 70, 229, 0.25));
+    border: 2px solid rgba(99, 102, 241, 0.6);
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #6366f1;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    width: fit-content;
+
+    svg {
+        flex-shrink: 0;
+    }
+
+    @media (max-width: 768px) {
+        font-size: 11px;
+        padding: 5px 8px;
     }
 `;
 

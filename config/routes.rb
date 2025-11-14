@@ -2,7 +2,13 @@ Rails.application.routes.draw do
   resources :cancellations
   resources :additional_incomes
   resources :invoices, except: :update
-  resources :appointments
+  resources :appointments do
+    collection do
+      get :for_date
+      get :my_earnings
+      get :team_financials
+    end
+  end
   resources :pets
 
   # User routes - search must be before resources to avoid matching as :id

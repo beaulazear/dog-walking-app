@@ -17,6 +17,7 @@ import {
     Heart,
     Calendar,
     CalendarDays,
+    CalendarX,
     Clock,
     X,
     Save,
@@ -25,12 +26,14 @@ import {
     Edit2,
     DollarSign,
     User,
-    ArrowLeft
+    ArrowLeft,
+    Share2
 } from "lucide-react";
 import { UserContext } from "../context/user";
 import PetInvoices from "./PetInvoices";
 import NewAppointmentForm from "./NewAppointmentForm";
 import CancellationModal from "./CancellationModal";
+import ShareAppointmentModal from "./ShareAppointmentModal";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import toast from 'react-hot-toast';
 import { useConfirm } from '../hooks/useConfirm';
@@ -450,6 +453,7 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
     const [appointments, setAppointments] = useState([]);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [showCancellationModal, setShowCancellationModal] = useState(false);
+    const [showShareModal, setShowShareModal] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [isEditingAppointment, setIsEditingAppointment] = useState(false);
     const [editingAppointmentData, setEditingAppointmentData] = useState(null);
@@ -574,6 +578,61 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
             } else {
                 toast.error("Failed to delete appointment.");
             }
+        } finally {
+            setIsDeletingAppointment(false);
+        }
+    };
+
+    const handleUnshareAppointment = async (appointment) => {
+        const activeShares = appointment.appointment_shares?.filter(share =>
+            share.status === 'accepted' || share.status === 'pending'
+        );
+
+        if (!activeShares || activeShares.length === 0) {
+            toast.error('No active shares found');
+            return;
+        }
+
+        const confirmed = await confirm({
+            title: 'Unshare Appointment?',
+            message: `This will remove ${activeShares.length} active share(s). The appointment will return to your schedule only.`,
+            confirmText: 'Unshare',
+            cancelText: 'Cancel',
+            variant: 'danger'
+        });
+
+        if (!confirmed) return;
+
+        setIsDeletingAppointment(true);
+        try {
+            const token = localStorage.getItem('token');
+            const deletePromises = activeShares.map(share =>
+                fetch(`/appointment_shares/${share.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+            );
+
+            const results = await Promise.all(deletePromises);
+            const allSuccessful = results.every(r => r.ok);
+
+            if (allSuccessful) {
+                // Update the appointment in state to remove shares
+                setAppointments(prev => prev.map(apt =>
+                    apt.id === appointment.id
+                        ? { ...apt, appointment_shares: [], delegation_status: 'none' }
+                        : apt
+                ));
+                setSelectedAppointment(null);
+                toast.success('Appointment unshared successfully!');
+            } else {
+                toast.error('Failed to unshare some appointments');
+            }
+        } catch (error) {
+            console.error('Error unsharing appointment:', error);
+            toast.error('Error unsharing appointment');
         } finally {
             setIsDeletingAppointment(false);
         }
@@ -934,6 +993,22 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
                                                     ))}
                                                 </CancellationsList>
                                             )}
+
+                                            {apt.recurring && apt.appointment_shares?.some(share => share.status === 'accepted') && (
+                                                <CancellationsList style={{ borderColor: '#667eea', background: 'rgba(102, 126, 234, 0.05)' }}>
+                                                    <CancellationsTitle style={{ color: '#667eea' }}>Shared dates:</CancellationsTitle>
+                                                    {apt.appointment_shares
+                                                        .filter(share => share.status === 'accepted')
+                                                        .flatMap(share => share.share_dates || [])
+                                                        .slice(0, 10)
+                                                        .map((dateStr, idx) => (
+                                                            <CancellationDate key={idx} style={{ borderColor: '#667eea', color: '#667eea' }}>
+                                                                {dayjs(dateStr).format("MMM D")}
+                                                            </CancellationDate>
+                                                        ))
+                                                    }
+                                                </CancellationsList>
+                                            )}
                                         </AppointmentCard>
                                     ))}
                                 </AppointmentsList>
@@ -1000,13 +1075,34 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
                                                 <ButtonGroup style={{ marginTop: '24px' }}>
                                                     {selectedAppointment.recurring && (
                                                         <PrimaryButton onClick={() => setShowCancellationModal(true)} disabled={isDeletingAppointment}>
-                                                            Add Cancellation Date
+                                                            <CalendarX size={16} />
+                                                            Add Cancellation
                                                         </PrimaryButton>
                                                     )}
-                                                    <DeleteButton onClick={() => handleDeleteAppointment(selectedAppointment.id)} disabled={isDeletingAppointment}>
-                                                        <Trash2 size={16} />
-                                                        {isDeletingAppointment ? 'Deleting...' : 'Delete Appointment'}
-                                                    </DeleteButton>
+                                                    <PrimaryButton
+                                                        onClick={() => setShowShareModal(true)}
+                                                        disabled={isDeletingAppointment}
+                                                        style={{
+                                                            background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                                                            border: 'none'
+                                                        }}
+                                                    >
+                                                        <Share2 size={16} />
+                                                        Share
+                                                    </PrimaryButton>
+                                                    {selectedAppointment.appointment_shares?.some(share => share.status === 'accepted' || share.status === 'pending') && (
+                                                        <DeleteButton
+                                                            onClick={() => handleUnshareAppointment(selectedAppointment)}
+                                                            disabled={isDeletingAppointment}
+                                                            style={{
+                                                                background: '#fb923c',
+                                                                borderColor: '#f97316'
+                                                            }}
+                                                        >
+                                                            <X size={16} />
+                                                            Unshare
+                                                        </DeleteButton>
+                                                    )}
                                                 </ButtonGroup>
                                             </>
                                         ) : (
@@ -1111,6 +1207,10 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
                                                     }} disabled={isUpdatingAppointment}>
                                                         Cancel
                                                     </CancelButton>
+                                                    <DeleteButton onClick={() => handleDeleteAppointment(selectedAppointment.id)} disabled={isDeletingAppointment}>
+                                                        <Trash2 size={16} />
+                                                        {isDeletingAppointment ? 'Deleting...' : 'Delete'}
+                                                    </DeleteButton>
                                                 </FormButtons>
                                             </EditForm>
                                         )}
@@ -1124,6 +1224,18 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
                                     appointment={selectedAppointment}
                                     setSelectedAppointment={setSelectedAppointment}
                                     onClose={() => setShowCancellationModal(false)}
+                                />
+                            )}
+
+                            {showShareModal && selectedAppointment && (
+                                <ShareAppointmentModal
+                                    isOpen={showShareModal}
+                                    appointment={selectedAppointment}
+                                    onClose={() => setShowShareModal(false)}
+                                    onShareSuccess={() => {
+                                        setShowShareModal(false);
+                                        toast.success('Appointment shared successfully!');
+                                    }}
                                 />
                             )}
                         </AppointmentsTab>
@@ -2335,24 +2447,49 @@ const Textarea = styled.textarea`
 `;
 
 const ButtonGroup = styled.div`
-    display: flex;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+
+    @media (min-width: 768px) {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
 `;
 
 const SaveButton = styled.button`
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
-    padding: 10px 20px;
+    padding: 8px 12px;
     background: linear-gradient(135deg, #22c55e, #16a34a);
     color: white;
     border: none;
     border-radius: 8px;
     font-family: 'Poppins', sans-serif;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    white-space: nowrap;
+
+    svg {
+        flex-shrink: 0;
+        width: 14px;
+        height: 14px;
+    }
+
+    @media (min-width: 768px) {
+        padding: 10px 20px;
+        font-size: 0.95rem;
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
 
     &:hover:not(:disabled) {
         transform: translateY(-1px);
@@ -2366,19 +2503,29 @@ const SaveButton = styled.button`
 `;
 
 const CancelButton = styled.button`
-    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
     background: #f3f4f6;
     color: #666;
     border: none;
     border-radius: 8px;
     font-family: 'Poppins', sans-serif;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    white-space: nowrap;
+
+    @media (min-width: 768px) {
+        padding: 10px 20px;
+        font-size: 0.95rem;
+    }
 
     &:hover:not(:disabled) {
         background: #e5e7eb;
+        transform: translateY(-1px);
     }
 
     &:disabled {
@@ -2534,16 +2681,37 @@ const DayCheckbox = styled.label`
 `;
 
 const PrimaryButton = styled.button`
-    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
     background: #6366f1;
     color: white;
     border: none;
     border-radius: 8px;
     font-family: 'Poppins', sans-serif;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    white-space: nowrap;
+
+    svg {
+        flex-shrink: 0;
+        width: 14px;
+        height: 14px;
+    }
+
+    @media (min-width: 768px) {
+        padding: 10px 20px;
+        font-size: 0.95rem;
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
 
     &:hover:not(:disabled) {
         background: #4f46e5;
@@ -2560,21 +2728,40 @@ const PrimaryButton = styled.button`
 const DeleteButton = styled.button`
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
-    padding: 10px 20px;
+    padding: 8px 12px;
     background: rgba(239, 68, 68, 0.1);
     color: #dc2626;
     border: 2px solid rgba(239, 68, 68, 0.2);
     border-radius: 8px;
     font-family: 'Poppins', sans-serif;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    white-space: nowrap;
+
+    svg {
+        flex-shrink: 0;
+        width: 14px;
+        height: 14px;
+    }
+
+    @media (min-width: 768px) {
+        padding: 10px 20px;
+        font-size: 0.95rem;
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
 
     &:hover:not(:disabled) {
         background: rgba(239, 68, 68, 0.2);
         border-color: rgba(239, 68, 68, 0.3);
+        transform: translateY(-1px);
     }
 
     &:disabled {
@@ -2594,9 +2781,16 @@ const CreatePetForm = styled.form`
 `;
 
 const FormButtons = styled.div`
-    display: flex;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
     margin-top: 24px;
+
+    @media (min-width: 768px) {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
 `;
 
 const CreatePetModalOverlay = styled.div`

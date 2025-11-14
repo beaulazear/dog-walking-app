@@ -1,8 +1,8 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import styled from "styled-components";
 import dayjs from "dayjs";
 import { UserContext } from "../context/user";
-import { Calendar, Clock, Plus, X, Users, Repeat, CalendarDays } from "lucide-react";
+import { Calendar, Clock, Plus, X, Users, Repeat, CalendarDays, DollarSign } from "lucide-react";
 import toast from 'react-hot-toast';
 
 const NewAppointmentForm = ({ pet }) => {
@@ -24,17 +24,56 @@ const NewAppointmentForm = ({ pet }) => {
         thursday: false,
         friday: false,
         saturday: false,
-        sunday: false
+        sunday: false,
+        price: 0
     });
+
+    // Calculate default price based on duration and walk type
+    const calculateDefaultPrice = () => {
+        if (!user) return 0;
+
+        const duration = formData.duration;
+        const walkType = formData.walk_type;
+
+        let basePrice = 0;
+        if (duration === 30) basePrice = user.thirty || 0;
+        else if (duration === 45) basePrice = user.fortyfive || 0;
+        else if (duration === 60) basePrice = user.sixty || 0;
+
+        if (walkType === 'solo') return user.solo_rate || basePrice;
+        if (walkType === 'training') return user.training_rate || basePrice;
+        if (walkType === 'sibling') return user.sibling_rate || basePrice;
+
+        return basePrice;
+    };
+
+    // Update price when duration or walk_type changes
+    useEffect(() => {
+        const defaultPrice = calculateDefaultPrice();
+        setFormData(prev => ({
+            ...prev,
+            price: defaultPrice * 100 // Convert dollars to cents
+        }));
+    }, [formData.duration, formData.walk_type]);
 
     const toggleForm = () => setShowForm((prev) => !prev);
 
     const handleChange = (e) => {
         const { name, type, value, checked } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: type === "checkbox" ? checked : value
-        }));
+
+        // Handle price separately to convert dollars to cents
+        if (name === "price") {
+            const priceInCents = Math.round(parseFloat(value || 0) * 100);
+            setFormData((prev) => ({
+                ...prev,
+                price: priceInCents
+            }));
+        } else {
+            setFormData((prev) => ({
+                ...prev,
+                [name]: type === "checkbox" ? checked : value
+            }));
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -58,6 +97,7 @@ const NewAppointmentForm = ({ pet }) => {
             friday: formData.friday,
             saturday: formData.saturday,
             sunday: formData.sunday,
+            price: formData.price
         };
 
         setIsCreating(true);
@@ -221,6 +261,25 @@ const NewAppointmentForm = ({ pet }) => {
                                 </Select>
                             </InputGroup>
                         </TwoColumnGroup>
+
+                        <InputGroup>
+                            <Label>
+                                <DollarSign size={16} />
+                                Price
+                            </Label>
+                            <PriceInputContainer>
+                                <DollarPrefix>$</DollarPrefix>
+                                <PriceInput
+                                    type="number"
+                                    name="price"
+                                    step="0.01"
+                                    min="0"
+                                    value={(formData.price / 100).toFixed(2)}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </PriceInputContainer>
+                        </InputGroup>
 
                         <ButtonGroup>
                             <SubmitButton type="submit" disabled={isCreating}>
@@ -533,5 +592,66 @@ const CancelButton = styled.button`
     @media (max-width: 768px) {
         padding: 16px;
         font-size: 1rem;
+    }
+`;
+
+const PriceInputContainer = styled.div`
+    position: relative;
+    display: flex;
+    align-items: center;
+`;
+
+const DollarPrefix = styled.span`
+    position: absolute;
+    left: 14px;
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    pointer-events: none;
+
+    @media (max-width: 768px) {
+        left: 16px;
+        font-size: 1rem;
+    }
+`;
+
+const PriceInput = styled.input`
+    padding: 12px 14px 12px 28px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+    width: 100%;
+
+    &:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    }
+
+    &::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Remove number input spinners */
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    &[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    @media (max-width: 768px) {
+        padding: 14px 16px 14px 32px;
+        font-size: 16px;
     }
 `;

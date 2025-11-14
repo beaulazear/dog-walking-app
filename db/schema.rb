@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 20_251_111_204_518) do
+ActiveRecord::Schema[7.2].define(version: 20_251_113_212_407) do
   # These are extensions that must be enabled in order to support this database
   enable_extension 'plpgsql'
 
@@ -61,6 +61,8 @@ ActiveRecord::Schema[7.2].define(version: 20_251_111_204_518) do
     t.boolean 'recurring_share', default: false
     t.datetime 'created_at', null: false
     t.datetime 'updated_at', null: false
+    t.integer 'covering_walker_percentage'
+    t.string 'proposed_by'
     t.index %w[appointment_id shared_with_user_id], name: 'index_appointment_shares_unique', unique: true
     t.index ['appointment_id'], name: 'index_appointment_shares_on_appointment_id'
     t.index ['shared_by_user_id'], name: 'index_appointment_shares_on_shared_by_user_id'
@@ -92,6 +94,7 @@ ActiveRecord::Schema[7.2].define(version: 20_251_111_204_518) do
     t.string 'delegation_status', default: 'none', null: false
     t.string 'walk_type'
     t.bigint 'walk_group_id'
+    t.integer 'cloned_from_appointment_id'
     t.index ['completed_by_user_id'], name: 'index_appointments_on_completed_by_user_id'
     t.index ['delegation_status'], name: 'index_appointments_on_delegation_status'
     t.index ['pet_id'], name: 'index_appointments_on_pet_id'
@@ -221,6 +224,15 @@ ActiveRecord::Schema[7.2].define(version: 20_251_111_204_518) do
     t.index ['user_id'], name: 'index_pets_on_user_id'
   end
 
+  create_table 'share_dates', force: :cascade do |t|
+    t.bigint 'appointment_share_id', null: false
+    t.date 'date', null: false
+    t.datetime 'created_at', null: false
+    t.datetime 'updated_at', null: false
+    t.index %w[appointment_share_id date], name: 'index_share_dates_on_appointment_share_id_and_date', unique: true
+    t.index ['appointment_share_id'], name: 'index_share_dates_on_appointment_share_id'
+  end
+
   create_table 'training_sessions', force: :cascade do |t|
     t.bigint 'user_id', null: false
     t.bigint 'pet_id'
@@ -273,6 +285,29 @@ ActiveRecord::Schema[7.2].define(version: 20_251_111_204_518) do
     t.index ['user_id'], name: 'index_walker_connections_on_user_id'
   end
 
+  create_table 'walker_earnings', force: :cascade do |t|
+    t.bigint 'appointment_id', null: false
+    t.bigint 'walker_id', null: false
+    t.bigint 'appointment_share_id', null: false
+    t.bigint 'pet_id', null: false
+    t.date 'date_completed', null: false
+    t.integer 'compensation', null: false
+    t.integer 'split_percentage', null: false
+    t.boolean 'paid', default: false, null: false
+    t.boolean 'pending', default: false, null: false
+    t.string 'title'
+    t.datetime 'created_at', null: false
+    t.datetime 'updated_at', null: false
+    t.bigint 'training_session_id'
+    t.index ['appointment_id'], name: 'index_walker_earnings_on_appointment_id'
+    t.index ['appointment_share_id'], name: 'index_walker_earnings_on_appointment_share_id'
+    t.index ['date_completed'], name: 'index_walker_earnings_on_date_completed'
+    t.index ['pet_id'], name: 'index_walker_earnings_on_pet_id'
+    t.index ['training_session_id'], name: 'index_walker_earnings_on_training_session_id'
+    t.index %w[walker_id paid pending], name: 'index_walker_earnings_on_walker_and_payment_status'
+    t.index ['walker_id'], name: 'index_walker_earnings_on_walker_id'
+  end
+
   add_foreign_key 'active_storage_attachments', 'active_storage_blobs', column: 'blob_id'
   add_foreign_key 'active_storage_variant_records', 'active_storage_blobs', column: 'blob_id'
   add_foreign_key 'additional_incomes', 'pets'
@@ -294,9 +329,15 @@ ActiveRecord::Schema[7.2].define(version: 20_251_111_204_518) do
   add_foreign_key 'invoices', 'users', column: 'completed_by_user_id'
   add_foreign_key 'milestones', 'users'
   add_foreign_key 'pets', 'users'
+  add_foreign_key 'share_dates', 'appointment_shares'
   add_foreign_key 'training_sessions', 'pets'
   add_foreign_key 'training_sessions', 'users'
   add_foreign_key 'walk_groups', 'users'
   add_foreign_key 'walker_connections', 'users'
   add_foreign_key 'walker_connections', 'users', column: 'connected_user_id'
+  add_foreign_key 'walker_earnings', 'appointment_shares'
+  add_foreign_key 'walker_earnings', 'appointments'
+  add_foreign_key 'walker_earnings', 'pets'
+  add_foreign_key 'walker_earnings', 'training_sessions'
+  add_foreign_key 'walker_earnings', 'users', column: 'walker_id'
 end

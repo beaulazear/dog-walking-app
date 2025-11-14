@@ -8,6 +8,10 @@ class Invoice < ApplicationRecord
   validates :compensation, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :title, presence: true
 
+  # Scopes
+  scope :unpaid, -> { where(paid: false) }
+  scope :paid, -> { where(paid: true) }
+
   # Detect if this invoice is for a training session based on title
   def training_walk?
     return false unless title.present?

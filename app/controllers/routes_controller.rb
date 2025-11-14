@@ -41,6 +41,21 @@ class RoutesController < ApplicationController
                      (recurring_appointments + non_recurring_appointments).sort_by(&:start_time)
                    end
 
+    # Filter out appointments that are shared out on this date
+    appointments = appointments.reject { |apt| apt.shared_out_on?(date, for_user: @current_user) }
+
+    # Include appointments where user is covering on this date
+    covering_shares = AppointmentShare
+                      .accepted
+                      .where(shared_with_user: @current_user)
+                      .includes(:appointment, :share_dates, appointment: :pet)
+
+    covering_appointments = covering_shares.select { |share| share.covers_date?(date) }.map(&:appointment)
+    appointments += covering_appointments
+
+    # Sort final list by start time
+    appointments = appointments.uniq.sort_by(&:start_time)
+
     if appointments.empty?
       return render json: {
         error: 'No appointments found',
@@ -101,6 +116,21 @@ class RoutesController < ApplicationController
 
     # Combine and sort by start time
     appointments = (recurring_appointments + non_recurring_appointments).sort_by(&:start_time)
+
+    # Filter out appointments that are shared out on this date
+    appointments = appointments.reject { |apt| apt.shared_out_on?(date, for_user: @current_user) }
+
+    # Include appointments where user is covering on this date
+    covering_shares = AppointmentShare
+                      .accepted
+                      .where(shared_with_user: @current_user)
+                      .includes(:appointment, :share_dates, appointment: :pet)
+
+    covering_appointments = covering_shares.select { |share| share.covers_date?(date) }.map(&:appointment)
+    appointments += covering_appointments
+
+    # Sort final list by start time
+    appointments = appointments.uniq.sort_by(&:start_time)
 
     if appointments.empty?
       return render json: {

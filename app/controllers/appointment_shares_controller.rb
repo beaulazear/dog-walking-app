@@ -30,7 +30,10 @@ class AppointmentSharesController < ApplicationController
   # POST /appointment_shares
   # Share one or more appointments with another user
   def create
-    shared_with_user = User.find_by(id: params[:shared_with_user_id])
+    # Extract params from nested appointment_share object if present
+    share_params = params[:appointment_share] || params
+
+    shared_with_user = User.find_by(id: share_params[:shared_with_user_id])
 
     return render json: { error: 'User not found' }, status: :not_found if shared_with_user.nil?
 
@@ -40,9 +43,16 @@ class AppointmentSharesController < ApplicationController
                     status: :forbidden
     end
 
-    appointment_ids = params[:appointment_ids] || [params[:appointment_id]].compact
+    appointment_ids = share_params[:appointment_ids] || [share_params[:appointment_id]].compact
 
     return render json: { error: 'No appointments specified' }, status: :bad_request if appointment_ids.empty?
+
+    # Validate covering_walker_percentage is provided
+    covering_percentage = share_params[:covering_walker_percentage]
+    if covering_percentage.nil? || covering_percentage.to_i.negative? || covering_percentage.to_i > 100
+      return render json: { error: 'Invalid covering_walker_percentage. Must be between 0 and 100.' },
+                    status: :bad_request
+    end
 
     # Find appointments that belong to the current user
     appointments = Appointment.joins(:pet)
@@ -55,17 +65,57 @@ class AppointmentSharesController < ApplicationController
     errors = []
 
     appointments.each do |appointment|
-      share = AppointmentShare.new(
-        appointment: appointment,
-        shared_by_user: @current_user,
-        shared_with_user: shared_with_user,
-        recurring_share: params[:recurring_share] || false
-      )
+      # Handle recurring appointments by creating one-time clones for each selected date
+      if appointment.recurring && share_params[:share_dates].present? && share_params[:share_dates].is_a?(Array)
+        share_params[:share_dates].each do |date_str|
+          date = Date.parse(date_str)
 
-      if share.save
-        shares_created << format_share(share, :sent)
+          # Create a one-time clone of the recurring appointment for this specific date
+          cloned_appointment = Appointment.create!(
+            user_id: appointment.user_id,
+            pet_id: appointment.pet_id,
+            recurring: false, # Make it one-time
+            appointment_date: date,
+            start_time: appointment.start_time,
+            end_time: appointment.end_time,
+            duration: appointment.duration,
+            price: appointment.price,
+            cloned_from_appointment_id: appointment.id # Track the source
+          )
+
+          # Create share for the cloned appointment
+          share = AppointmentShare.new(
+            appointment: cloned_appointment,
+            shared_by_user: @current_user,
+            shared_with_user: shared_with_user,
+            covering_walker_percentage: covering_percentage,
+            recurring_share: false
+          )
+
+          if share.save
+            shares_created << format_share(share, :sent)
+          else
+            errors << { appointment_id: appointment.id, date: date_str, errors: share.errors.full_messages }
+            cloned_appointment.destroy # Clean up if share creation fails
+          end
+        rescue StandardError => e
+          errors << { appointment_id: appointment.id, date: date_str, errors: ["Error: #{e.message}"] }
+        end
       else
-        errors << { appointment_id: appointment.id, errors: share.errors.full_messages }
+        # Handle non-recurring appointments normally
+        share = AppointmentShare.new(
+          appointment: appointment,
+          shared_by_user: @current_user,
+          shared_with_user: shared_with_user,
+          covering_walker_percentage: covering_percentage,
+          recurring_share: false
+        )
+
+        if share.save
+          shares_created << format_share(share, :sent)
+        else
+          errors << { appointment_id: appointment.id, errors: share.errors.full_messages }
+        end
       end
     end
 
@@ -105,8 +155,13 @@ class AppointmentSharesController < ApplicationController
   def destroy
     return render json: { error: 'Not authorized' }, status: :forbidden unless authorized_to_manage?
 
+    appointment = @share.appointment
     @share.destroy
-    render json: { message: 'Share cancelled' }
+
+    # Reset appointment delegation status if no more accepted shares exist
+    appointment.update(delegation_status: 'none') if appointment.appointment_shares.accepted.none?
+
+    render json: { message: 'Appointment unshared successfully' }
   end
 
   # GET /appointment_shares/my_shared_appointments
@@ -137,7 +192,7 @@ class AppointmentSharesController < ApplicationController
           behavioral_notes: appointment.pet.behavioral_notes,
           supplies_location: appointment.pet.supplies_location,
           allergies: appointment.pet.allergies,
-          profile_picture_url: if appointment.pet.profile_picture.attached?
+          profile_picture_url: if appointment.pet.respond_to?(:profile_picture) && appointment.pet.profile_picture.attached?
                                  Rails.application.routes.url_helpers.rails_blob_url(appointment.pet.profile_picture,
                                                                                      only_path: true)
                                end
@@ -190,7 +245,20 @@ class AppointmentSharesController < ApplicationController
       id: share.id,
       status: share.status,
       recurring_share: share.recurring_share,
+      covering_walker_percentage: share.covering_walker_percentage,
+      original_walker_percentage: 100 - share.covering_walker_percentage,
+      share_dates: share.share_dates.pluck(:date),
       created_at: share.created_at,
+      shared_by: {
+        id: share.shared_by_user.id,
+        name: share.shared_by_user.name,
+        username: share.shared_by_user.username
+      },
+      shared_with: {
+        id: share.shared_with_user.id,
+        name: share.shared_with_user.name,
+        username: share.shared_with_user.username
+      },
       other_user: {
         id: other_user.id,
         name: other_user.name,
@@ -206,6 +274,7 @@ class AppointmentSharesController < ApplicationController
         completed: appointment.completed,
         canceled: appointment.canceled,
         delegation_status: appointment.delegation_status,
+        recurring: appointment.recurring,
         pet: {
           id: appointment.pet.id,
           name: appointment.pet.name,
