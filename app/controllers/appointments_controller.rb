@@ -57,11 +57,18 @@ class AppointmentsController < ApplicationController
     date = params[:date] ? Date.parse(params[:date]) : Date.today
     day_of_week = date.strftime('%A').downcase # "monday", "tuesday", etc.
 
+    Rails.logger.debug "🔍 for_date DEBUG - User ID: #{@current_user.id}"
+    Rails.logger.debug "🔍 for_date DEBUG - Requested date: #{date}, day_of_week: #{day_of_week}"
+
     # Appointments owned by current user
     all_owned_appointments = @current_user.appointments
                                           .where(canceled: false)
                                           .includes(:pet, :user, :cancellations, appointment_shares: %i[shared_with_user
                                                                                                         share_dates])
+
+    Rails.logger.debug "🔍 for_date DEBUG - all_owned_appointments count: #{all_owned_appointments.count}"
+    Rails.logger.debug "🔍 for_date DEBUG - all_owned_appointments recurring count: #{all_owned_appointments.where(recurring: true).count}"
+    Rails.logger.debug "🔍 for_date DEBUG - all_owned_appointments recurring friday count: #{all_owned_appointments.where(recurring: true, friday: true).count}"
 
     # Filter to only appointments that occur on the requested date
     owned_appointments = all_owned_appointments.select do |apt|
@@ -77,6 +84,8 @@ class AppointmentsController < ApplicationController
         apt.appointment_date == date
       end
     end
+
+    Rails.logger.debug "🔍 for_date DEBUG - owned_appointments after filtering: #{owned_appointments.count}"
 
     # Appointments where current user is covering (accepted shares)
     covering_shares = AppointmentShare
@@ -96,6 +105,8 @@ class AppointmentsController < ApplicationController
 
       format_covered_appointment(share.appointment, share, date)
     end.compact
+
+    Rails.logger.debug "🔍 for_date DEBUG - Returning owned: #{owned_data.count}, covering: #{covering_data.count}"
 
     render json: {
       owned: owned_data,
