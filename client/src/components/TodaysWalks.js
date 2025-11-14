@@ -421,7 +421,7 @@ const WalkCard = React.memo(({ appointment, isCovering, coveredBy, myPercentage 
                     {coveredBy && (
                         <CoveredByBadge>
                             <Share2 size={14} />
-                            Covered by {coveredBy.profile?.full_name || coveredBy.name}
+                            Covered by {coveredBy.name}
                         </CoveredByBadge>
                     )}
                 </WalkDetails>

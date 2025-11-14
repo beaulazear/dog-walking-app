@@ -55,12 +55,24 @@ class AppointmentsController < ApplicationController
   # Returns appointments for a specific date including both owned and covering
   def for_date
     date = params[:date] ? Date.parse(params[:date]) : Date.today
+    day_of_week = date.strftime('%A').downcase # "monday", "tuesday", etc.
 
     # Appointments owned by current user
-    owned_appointments = @current_user.appointments
-                                      .where(completed: false, canceled: false)
-                                      .includes(:pet, :user, :cancellations, appointment_shares: %i[shared_with_user
-                                                                                                    share_dates])
+    all_owned_appointments = @current_user.appointments
+                                          .where(completed: false, canceled: false)
+                                          .includes(:pet, :user, :cancellations, appointment_shares: %i[shared_with_user
+                                                                                                        share_dates])
+
+    # Filter to only appointments that occur on the requested date
+    owned_appointments = all_owned_appointments.select do |apt|
+      if apt.recurring
+        # For recurring appointments, check if the day-of-week field is true
+        apt.send(day_of_week)
+      else
+        # For one-time appointments, check if appointment_date matches
+        apt.appointment_date == date
+      end
+    end
 
     # Appointments where current user is covering (accepted shares)
     covering_shares = AppointmentShare
