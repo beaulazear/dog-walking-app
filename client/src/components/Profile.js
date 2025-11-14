@@ -1,6 +1,7 @@
 import React, { useContext, useState, useEffect } from "react";
 import styled from "styled-components";
 import toast from 'react-hot-toast';
+import dayjs from "dayjs";
 import { UserContext } from "../context/user";
 import YearlyFinanceOverview from "./YearlyFinanceOverview";
 import dogPlaceholder from "../assets/dog.png";
@@ -17,7 +18,8 @@ import {
     AtSign,
     Camera,
     Upload,
-    LogOut
+    LogOut,
+    Cake
 } from "lucide-react";
 
 const calculateTrainingHours = (invoices) => {
@@ -42,6 +44,33 @@ const calculateTrainingHours = (invoices) => {
     return { totalMinutes, totalHours };
 };
 
+const getUpcomingBirthday = (pets) => {
+    const today = dayjs().startOf("day");
+    let closestPet = null;
+    let minDays = Infinity;
+
+    pets.forEach(pet => {
+        if (pet.birthdate) {
+            const birthdate = dayjs(pet.birthdate);
+            const birthdayThisYear = birthdate.year(today.year());
+            const birthdayNextYear = birthdate.year(today.year() + 1);
+
+            let upcomingBirthday = birthdayThisYear.isAfter(today)
+                ? birthdayThisYear
+                : birthdayNextYear;
+
+            const daysUntil = upcomingBirthday.diff(today, "day");
+
+            if (daysUntil < minDays) {
+                minDays = daysUntil;
+                closestPet = { ...pet, upcomingBirthday };
+            }
+        }
+    });
+
+    return closestPet;
+};
+
 export default function Profile() {
     const { user, setUser } = useContext(UserContext);
     const [isUpdatingRates, setIsUpdatingRates] = useState(false);
@@ -63,6 +92,7 @@ export default function Profile() {
     const [usernameError, setUsernameError] = useState("");
     const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
     const [photoError, setPhotoError] = useState(false);
+    const [upcomingBirthdayPet, setUpcomingBirthdayPet] = useState(null);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -72,6 +102,10 @@ export default function Profile() {
         setEditedName(user?.name || "");
         setEditedUsername(user?.username || "");
         setPhotoError(false); // Reset photo error when user changes
+
+        if (user?.pets) {
+            setUpcomingBirthdayPet(getUpcomingBirthday(user.pets));
+        }
     }, [user]);
 
     // Calculate training hours for certification
@@ -652,6 +686,41 @@ export default function Profile() {
             <FinanceOverviewWrapper>
                 <YearlyFinanceOverview />
             </FinanceOverviewWrapper>
+
+            {upcomingBirthdayPet && (
+                <BirthdayCard>
+                    <BirthdayCardHeader>
+                        <BirthdayIcon>
+                            <Cake size={20} />
+                        </BirthdayIcon>
+                        <BirthdayTitle>Birthday Coming Up!</BirthdayTitle>
+                    </BirthdayCardHeader>
+                    <BirthdayContent>
+                        <BirthdayImageWrapper>
+                            <BirthdayImage
+                                src={dogPlaceholder}
+                                alt={upcomingBirthdayPet.name}
+                                loading="lazy"
+                            />
+                            <BirthdayEmojiBadge>🎉</BirthdayEmojiBadge>
+                        </BirthdayImageWrapper>
+                        <BirthdayInfo>
+                            <BirthdayPetName>{upcomingBirthdayPet.name}</BirthdayPetName>
+                            <BirthdayDate>
+                                {dayjs(upcomingBirthdayPet.birthdate).format("MMMM D")}
+                            </BirthdayDate>
+                            <DaysUntilBirthday>
+                                {(() => {
+                                    const days = dayjs(upcomingBirthdayPet.upcomingBirthday).diff(dayjs(), 'day');
+                                    if (days === 0) return "Today! 🎂";
+                                    if (days === 1) return "Tomorrow!";
+                                    return `In ${days} days`;
+                                })()}
+                            </DaysUntilBirthday>
+                        </BirthdayInfo>
+                    </BirthdayContent>
+                </BirthdayCard>
+            )}
 
             <LogoutButton onClick={handleLogout}>
                 <LogOut size={16} />
@@ -1513,5 +1582,142 @@ const LogoutButton = styled.button`
 
     @media (max-width: 768px) {
         margin: 20px 16px 0;
+    }
+`;
+
+// Birthday Card Styled Components
+const BirthdayCard = styled.div`
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    backdrop-filter: blur(20px);
+    border-radius: 0;
+    padding: 24px 20px;
+    margin-top: 20px;
+    border-top: 2px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 1;
+    animation: fadeInUp 0.6s ease;
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (max-width: 768px) {
+        padding: 20px 16px;
+    }
+`;
+
+const BirthdayCardHeader = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+`;
+
+const BirthdayIcon = styled.div`
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+`;
+
+const BirthdayTitle = styled.h3`
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+`;
+
+const BirthdayContent = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 20px;
+`;
+
+const BirthdayImageWrapper = styled.div`
+    position: relative;
+    flex-shrink: 0;
+`;
+
+const BirthdayImage = styled.img`
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    object-fit: cover;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+`;
+
+const BirthdayEmojiBadge = styled.div`
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    background: linear-gradient(135deg, #ec4899, #f43f5e);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4);
+`;
+
+const BirthdayInfo = styled.div`
+    flex: 1;
+    min-width: 0;
+`;
+
+const BirthdayPetName = styled.h3`
+    color: #ffffff;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    font-family: 'Poppins', sans-serif;
+
+    @media (max-width: 768px) {
+        font-size: 1.2rem;
+    }
+`;
+
+const BirthdayDate = styled.p`
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1rem;
+    margin: 0 0 8px 0;
+    font-family: 'Poppins', sans-serif;
+
+    @media (max-width: 768px) {
+        font-size: 0.9rem;
+    }
+`;
+
+const DaysUntilBirthday = styled.div`
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.1);
+    color: #10b981;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    font-family: 'Poppins', sans-serif;
+
+    @media (max-width: 768px) {
+        font-size: 0.8rem;
+        padding: 3px 10px;
     }
 `;

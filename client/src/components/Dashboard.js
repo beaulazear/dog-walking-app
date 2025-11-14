@@ -164,7 +164,10 @@ export default function Dashboard() {
     };
 
     // Calculate layout for overlapping appointments
+    // On mobile, we stack overlapping appointments vertically instead of side-by-side
     const calculateAppointmentLayout = (appointments) => {
+        const isMobile = window.innerWidth <= 768;
+
         const layouts = appointments.map((apt, index) => {
             const startTime = dayjs(apt.start_time, "HH:mm");
             const endTime = dayjs(apt.end_time, "HH:mm");
@@ -177,7 +180,8 @@ export default function Dashboard() {
                 top: (startHour - 6) * 60,
                 height: (endHour - startHour) * 60,
                 column: 0,
-                totalColumns: 1
+                totalColumns: 1,
+                verticalOffset: 0
             };
         });
 
@@ -193,10 +197,22 @@ export default function Dashboard() {
 
             if (overlappingIndices.length > 1) {
                 const totalColumns = overlappingIndices.length;
-                overlappingIndices.forEach((idx, col) => {
-                    layouts[idx].column = col;
-                    layouts[idx].totalColumns = totalColumns;
-                });
+
+                if (isMobile && totalColumns > 2) {
+                    // On mobile with 3+ overlapping appointments, stack them vertically
+                    overlappingIndices.forEach((idx, position) => {
+                        layouts[idx].column = 0;
+                        layouts[idx].totalColumns = 1;
+                        layouts[idx].verticalOffset = position * 8; // 8px offset for each stacked appointment
+                        layouts[idx].isStacked = true;
+                    });
+                } else {
+                    // Desktop or mobile with 2 appointments - side by side
+                    overlappingIndices.forEach((idx, col) => {
+                        layouts[idx].column = col;
+                        layouts[idx].totalColumns = totalColumns;
+                    });
+                }
             }
         }
 
@@ -332,14 +348,27 @@ export default function Dashboard() {
                                 On Pocket Walk since {dayjs(user?.created_at || new Date()).format('MMM YYYY')}
                             </ProfileMemberSince>
                         </ProfileMetaRow>
-                        {(() => {
-                            const todayWalks = getAppointmentsForDate(dayjs().format("YYYY-MM-DD"));
-                            return todayWalks.length > 0 ? (
-                                <TodayWalksCount>
-                                    {todayWalks.length} walk{todayWalks.length !== 1 ? 's' : ''} today
-                                </TodayWalksCount>
-                            ) : null;
-                        })()}
+                        <ProfileBadgesRow>
+                            {(() => {
+                                const todayWalks = getAppointmentsForDate(dayjs().format("YYYY-MM-DD"));
+                                return todayWalks.length > 0 ? (
+                                    <TodayWalksCount>
+                                        {todayWalks.length} walk{todayWalks.length !== 1 ? 's' : ''} today
+                                    </TodayWalksCount>
+                                ) : null;
+                            })()}
+                            {upcomingBirthdayPet && (
+                                <BirthdayBadge>
+                                    <Cake size={12} />
+                                    {upcomingBirthdayPet.name}'s birthday {(() => {
+                                        const days = dayjs(upcomingBirthdayPet.upcomingBirthday).diff(dayjs(), 'day');
+                                        if (days === 0) return "today!";
+                                        if (days === 1) return "tomorrow!";
+                                        return `in ${days} days`;
+                                    })()}
+                                </BirthdayBadge>
+                            )}
+                        </ProfileBadgesRow>
                     </ProfileInfo>
                 </ProfileHeader>
 
@@ -427,12 +456,13 @@ export default function Dashboard() {
                                                 return (
                                                     <AppointmentBlock
                                                         key={`${layout.id}-${layout.index}`}
-                                                        $top={layout.top}
+                                                        $top={layout.top + layout.verticalOffset}
                                                         $height={layout.height}
                                                         $left={leftPercent}
                                                         $width={widthPercent}
                                                         $isPast={isPast}
                                                         $isOverlapping={layout.totalColumns > 1}
+                                                        $isStacked={layout.isStacked}
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             setSelectedAppointment({...layout, date: day});
@@ -470,41 +500,6 @@ export default function Dashboard() {
                         </CalendarGrid>
                     </CalendarGridWrapper>
                 </WeekOverviewSection>
-
-                {upcomingBirthdayPet && (
-                    <ModernBirthdayCard>
-                        <BirthdayHeader>
-                            <BirthdayIcon>
-                                <Cake size={20} />
-                            </BirthdayIcon>
-                            <BirthdayTitle>Birthday Coming Up!</BirthdayTitle>
-                        </BirthdayHeader>
-                        <ModernBirthdayContent>
-                            <BirthdayImageWrapper>
-                                <ModernBirthdayImage
-                                    src={dogPlaceholder}
-                                    alt={upcomingBirthdayPet.name}
-                                    loading="lazy"
-                                />
-                                <BirthdayBadge>🎉</BirthdayBadge>
-                            </BirthdayImageWrapper>
-                            <ModernBirthdayInfo>
-                                <ModernPetName>{upcomingBirthdayPet.name}</ModernPetName>
-                                <ModernBirthdayDate>
-                                    {dayjs(upcomingBirthdayPet.birthdate).format("MMMM D")}
-                                </ModernBirthdayDate>
-                                <DaysUntil>
-                                    {(() => {
-                                        const days = dayjs(upcomingBirthdayPet.upcomingBirthday).diff(dayjs(), 'day');
-                                        if (days === 0) return "Today! 🎂";
-                                        if (days === 1) return "Tomorrow!";
-                                        return `In ${days} days`;
-                                    })()}
-                                </DaysUntil>
-                            </ModernBirthdayInfo>
-                        </ModernBirthdayContent>
-                    </ModernBirthdayCard>
-                )}
             </ContentSections>
 
             {showAppointments && selectedDate && (
@@ -871,6 +866,18 @@ const ProfileMemberSince = styled.span`
     font-weight: 400;
 `;
 
+const ProfileBadgesRow = styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-top: 2px;
+
+    @media (max-width: 768px) {
+        gap: 6px;
+    }
+`;
+
 const TodayWalksCount = styled.div`
     display: inline-flex;
     align-items: center;
@@ -883,11 +890,40 @@ const TodayWalksCount = styled.div`
     color: rgba(255, 255, 255, 0.95);
     font-family: 'Poppins', sans-serif;
     width: fit-content;
-    margin-top: 2px;
 
     @media (max-width: 768px) {
         font-size: 0.7rem;
         padding: 3px 8px;
+    }
+`;
+
+const BirthdayBadge = styled.div`
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.2));
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+    font-family: 'Poppins', sans-serif;
+    width: fit-content;
+
+    svg {
+        flex-shrink: 0;
+    }
+
+    @media (max-width: 768px) {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+        gap: 4px;
+
+        svg {
+            width: 11px;
+            height: 11px;
+        }
     }
 `;
 
@@ -1113,8 +1149,8 @@ const CalendarGrid = styled.div`
     position: relative;
 
     @media (max-width: 768px) {
-        grid-template-columns: 60px repeat(7, minmax(110px, 1fr));
-        min-width: 800px;
+        grid-template-columns: 65px repeat(7, minmax(120px, 1fr));
+        min-width: 850px;
     }
 `;
 
@@ -1129,6 +1165,10 @@ const TimeHeaderSpacer = styled.div`
     height: 60px;
     border-bottom: 2px solid rgba(255, 255, 255, 0.15);
     flex-shrink: 0;
+
+    @media (max-width: 768px) {
+        height: 76px;
+    }
 `;
 
 const TimeLabel = styled.div`
@@ -1144,8 +1184,8 @@ const TimeLabel = styled.div`
     font-family: 'Poppins', sans-serif;
 
     @media (max-width: 768px) {
-        font-size: 0.7rem;
-        padding: 4px 8px 0 4px;
+        font-size: 0.72rem;
+        padding: 6px 10px 0 4px;
     }
 `;
 
@@ -1192,8 +1232,9 @@ const DayColumnHeader = styled.div`
     }
 
     @media (max-width: 768px) {
-        height: 70px;
-        gap: 6px;
+        height: 76px;
+        gap: 8px;
+        padding: 8px 4px;
     }
 `;
 
@@ -1204,6 +1245,10 @@ const DayHeaderName = styled.div`
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-family: 'Poppins', sans-serif;
+
+    @media (max-width: 768px) {
+        font-size: 0.75rem;
+    }
 `;
 
 const DayHeaderDate = styled.div`
@@ -1212,6 +1257,10 @@ const DayHeaderDate = styled.div`
     color: ${props => props.$isToday ? '#ffffff' : 'rgba(255, 255, 255, 0.95)'};
     font-family: 'Poppins', sans-serif;
     line-height: 1;
+
+    @media (max-width: 768px) {
+        font-size: 1.5rem;
+    }
 `;
 
 const DayColumnContent = styled.div`
@@ -1233,20 +1282,24 @@ const TimeSlotCell = styled.div`
 const AppointmentBlock = styled.div`
     position: absolute;
     left: ${props => props.$left || 0}%;
-    width: ${props => props.$width ? `calc(${props.$width}% - ${props.$isOverlapping ? '4px' : '2px'})` : 'calc(100% - 4px)'};
+    width: ${props => {
+        // On mobile with stacked appointments, use full width
+        if (props.$isStacked) return 'calc(100% - 4px)';
+        return props.$width ? `calc(${props.$width}% - ${props.$isOverlapping ? '4px' : '2px'})` : 'calc(100% - 4px)';
+    }};
     top: ${props => props.$top}px;
     height: ${props => Math.max(props.$height, 30)}px;
-    min-height: 36px;
+    min-height: ${props => props.$isStacked ? '52px' : '36px'};
     background: linear-gradient(135deg, rgba(34, 197, 94, 0.85), rgba(16, 185, 129, 0.75));
     border-left: 3px solid rgba(34, 197, 94, 1);
     border-radius: 6px;
-    padding: ${props => props.$isOverlapping ? '4px 6px' : '6px 8px'};
+    padding: ${props => props.$isOverlapping && !props.$isStacked ? '4px 6px' : '6px 8px'};
     cursor: pointer;
     transition: all 0.15s ease;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: ${props => props.$isStacked ? '0 3px 10px rgba(0, 0, 0, 0.25)' : '0 2px 8px rgba(0, 0, 0, 0.2)'};
     opacity: ${props => props.$isPast ? 0.5 : 1};
-    z-index: 1;
+    z-index: ${props => props.$isStacked ? 2 : 1};
     margin-left: 2px;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
@@ -1264,8 +1317,8 @@ const AppointmentBlock = styled.div`
     }
 
     @media (max-width: 768px) {
-        min-height: 44px;
-        padding: ${props => props.$isOverlapping ? '6px 8px' : '8px 10px'};
+        min-height: ${props => props.$isStacked ? '56px' : '48px'};
+        padding: ${props => props.$isStacked ? '10px 12px' : props.$isOverlapping ? '8px 10px' : '10px 12px'};
         border-left-width: 4px;
     }
 `;
@@ -1282,13 +1335,13 @@ const AppointmentPetName = styled.div`
     font-weight: 700;
     color: #ffffff;
     font-family: 'Poppins', sans-serif;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    line-height: 1.2;
+    line-height: 1.3;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 
     @media (max-width: 768px) {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
+        line-height: 1.4;
     }
 `;
 
@@ -1297,10 +1350,12 @@ const AppointmentBlockTime = styled.div`
     font-weight: 500;
     color: rgba(255, 255, 255, 0.9);
     font-family: 'Poppins', sans-serif;
-    line-height: 1.2;
+    line-height: 1.3;
+    margin-top: 2px;
 
     @media (max-width: 768px) {
-        font-size: 0.7rem;
+        font-size: 0.75rem;
+        line-height: 1.4;
     }
 `;
 
@@ -1333,108 +1388,6 @@ const CurrentTimeLine = styled.div`
     box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
 `;
 
-// Modern Birthday Card
-const ModernBirthdayCard = styled.div`
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px);
-    padding: 24px 20px;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-    position: relative;
-    z-index: 1;
-    animation: fadeInUp 0.6s ease;
-
-    @media (max-width: 768px) {
-        padding: 20px 16px;
-    }
-`;
-
-const BirthdayHeader = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
-`;
-
-const BirthdayIcon = styled.div`
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, #fbbf24, #f59e0b);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
-`;
-
-const BirthdayTitle = styled.h3`
-    color: #ffffff;
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin: 0;
-`;
-
-const ModernBirthdayContent = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 20px;
-`;
-
-const BirthdayImageWrapper = styled.div`
-    position: relative;
-`;
-
-const ModernBirthdayImage = styled.img`
-    width: 80px;
-    height: 80px;
-    border-radius: 20px;
-    object-fit: cover;
-    border: 3px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-`;
-
-const BirthdayBadge = styled.div`
-    position: absolute;
-    bottom: -5px;
-    right: -5px;
-    background: linear-gradient(135deg, #ec4899, #f43f5e);
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4);
-`;
-
-const ModernBirthdayInfo = styled.div`
-    flex: 1;
-`;
-
-const ModernPetName = styled.h3`
-    color: #ffffff;
-    font-size: 1.4rem;
-    font-weight: 700;
-    margin: 0 0 4px 0;
-`;
-
-const ModernBirthdayDate = styled.p`
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 1rem;
-    margin: 0 0 8px 0;
-`;
-
-const DaysUntil = styled.div`
-    display: inline-block;
-    background: rgba(255, 255, 255, 0.1);
-    color: #10b981;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    border: 1px solid rgba(16, 185, 129, 0.3);
-`;
 
 // Modal Components
 const AppointmentsModal = styled.div`

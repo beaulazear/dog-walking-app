@@ -1503,8 +1503,8 @@ const CardContent = styled.div`
     position: relative;
 
     @media (max-width: 768px) {
-        padding: 16px 12px;
-        gap: 10px;
+        padding: 18px 14px;
+        gap: 12px;
     }
 `;
 
@@ -1531,19 +1531,19 @@ const PetName = styled.h3`
     font-size: 1.05rem;
     font-weight: 700;
     margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     cursor: pointer;
     transition: color 0.2s ease;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    line-height: 1.3;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 
     &:hover {
         color: rgba(255, 255, 255, 0.9);
     }
 
     @media (max-width: 768px) {
-        font-size: 1rem;
+        font-size: 1.1rem;
     }
 `;
 
@@ -1554,9 +1554,10 @@ const WalkTime = styled.div`
     font-weight: 700;
     flex-shrink: 0;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
 
     @media (max-width: 768px) {
-        font-size: 0.8rem;
+        font-size: 0.85rem;
     }
 `;
 
@@ -1566,14 +1567,19 @@ const Address = styled.div`
     font-size: 0.8rem;
     font-weight: 500;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.4;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+
+    svg {
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
 
     @media (max-width: 768px) {
-        font-size: 0.75rem;
+        font-size: 0.8rem;
     }
 `;
 
@@ -1590,7 +1596,7 @@ const InfoItem = styled.span`
     font-weight: 600;
 
     @media (max-width: 768px) {
-        font-size: 0.7rem;
+        font-size: 0.78rem;
     }
 `;
 
@@ -1636,6 +1642,10 @@ const ActionButtons = styled.div`
     gap: 6px;
     margin-left: auto;
     flex-shrink: 0;
+
+    @media (max-width: 768px) {
+        gap: 8px;
+    }
 `;
 
 const ShareButton = styled.button`
@@ -1666,8 +1676,9 @@ const ShareButton = styled.button`
     }
 
     @media (max-width: 768px) {
-        width: 34px;
-        height: 34px;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
     }
 `;
 
@@ -1699,8 +1710,9 @@ const CompleteButton = styled.button`
     }
 
     @media (max-width: 768px) {
-        width: 34px;
-        height: 34px;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
     }
 `;
 
@@ -1732,8 +1744,9 @@ const CancelButton = styled.button`
     }
 
     @media (max-width: 768px) {
-        width: 34px;
-        height: 34px;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
     }
 `;
 
