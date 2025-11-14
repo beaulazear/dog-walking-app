@@ -59,7 +59,7 @@ class AppointmentsController < ApplicationController
 
     # Appointments owned by current user
     all_owned_appointments = @current_user.appointments
-                                          .where(completed: false, canceled: false)
+                                          .where(canceled: false)
                                           .includes(:pet, :user, :cancellations, appointment_shares: %i[shared_with_user
                                                                                                         share_dates])
 

@@ -13,8 +13,7 @@ import {
     ChevronRight,
     CalendarDays,
     X,
-    Trash2,
-    User
+    Trash2
 } from "lucide-react";
 
 const getUpcomingBirthday = (pets) => {
@@ -46,7 +45,7 @@ const getUpcomingBirthday = (pets) => {
 
 
 export default function Dashboard() {
-    const { user, setUser, removeAppointment } = useContext(UserContext);
+    const { user, removeAppointment } = useContext(UserContext);
     const { confirmState, confirm } = useConfirm();
     const navigate = useNavigate();
     const [currentDate, setCurrentDate] = useState(dayjs());
@@ -58,7 +57,10 @@ export default function Dashboard() {
     const [isDeleting, setIsDeleting] = useState(false);
     const [photoError, setPhotoError] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [showPetInfoModal, setShowPetInfoModal] = useState(false);
     const calendarGridRef = React.useRef(null);
+    const [touchStart, setTouchStart] = useState(null);
+    const [touchEnd, setTouchEnd] = useState(null);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -151,18 +153,54 @@ export default function Dashboard() {
         return slots;
     };
 
-    // Calculate position and height for appointment blocks
-    const getAppointmentStyle = (appointment) => {
-        const startTime = dayjs(appointment.start_time, "HH:mm");
-        const endTime = dayjs(appointment.end_time, "HH:mm");
+    // Detect if two appointments overlap
+    const appointmentsOverlap = (apt1, apt2) => {
+        const start1 = dayjs(apt1.start_time, "HH:mm");
+        const end1 = dayjs(apt1.end_time, "HH:mm");
+        const start2 = dayjs(apt2.start_time, "HH:mm");
+        const end2 = dayjs(apt2.end_time, "HH:mm");
 
-        const startHour = startTime.hour() + startTime.minute() / 60;
-        const endHour = endTime.hour() + endTime.minute() / 60;
+        return start1.isBefore(end2) && start2.isBefore(end1);
+    };
 
-        const top = ((startHour - 6) * 60); // 60px per hour, offset by 6 AM
-        const height = ((endHour - startHour) * 60);
+    // Calculate layout for overlapping appointments
+    const calculateAppointmentLayout = (appointments) => {
+        const layouts = appointments.map((apt, index) => {
+            const startTime = dayjs(apt.start_time, "HH:mm");
+            const endTime = dayjs(apt.end_time, "HH:mm");
+            const startHour = startTime.hour() + startTime.minute() / 60;
+            const endHour = endTime.hour() + endTime.minute() / 60;
 
-        return { top, height };
+            return {
+                ...apt,
+                index,
+                top: (startHour - 6) * 60,
+                height: (endHour - startHour) * 60,
+                column: 0,
+                totalColumns: 1
+            };
+        });
+
+        // Find overlapping groups and assign columns
+        for (let i = 0; i < layouts.length; i++) {
+            const overlappingIndices = [i];
+
+            for (let j = i + 1; j < layouts.length; j++) {
+                if (appointmentsOverlap(appointments[i], appointments[j])) {
+                    overlappingIndices.push(j);
+                }
+            }
+
+            if (overlappingIndices.length > 1) {
+                const totalColumns = overlappingIndices.length;
+                overlappingIndices.forEach((idx, col) => {
+                    layouts[idx].column = col;
+                    layouts[idx].totalColumns = totalColumns;
+                });
+            }
+        }
+
+        return layouts;
     };
 
     // Auto-scroll to current time
@@ -189,18 +227,42 @@ export default function Dashboard() {
         setMonthViewDate(prev => prev.add(direction * 1, 'month'));
     };
 
-    const weekDays = getWeekDays(currentDate);
+    // Swipe gesture handlers
+    const minSwipeDistance = 50;
 
-    const handleDayClick = (day, appointments) => {
-        if (appointments.length > 0) {
-            setSelectedDate(day);
-            setShowAppointments(true);
+    const onTouchStart = (e) => {
+        setTouchEnd(null);
+        setTouchStart(e.targetTouches[0].clientX);
+    };
+
+    const onTouchMove = (e) => {
+        setTouchEnd(e.targetTouches[0].clientX);
+    };
+
+    const onTouchEnd = () => {
+        if (!touchStart || !touchEnd) return;
+        const distance = touchStart - touchEnd;
+        const isLeftSwipe = distance > minSwipeDistance;
+        const isRightSwipe = distance < -minSwipeDistance;
+
+        if (isLeftSwipe) {
+            navigateWeek(1); // Next week
+        }
+        if (isRightSwipe) {
+            navigateWeek(-1); // Previous week
         }
     };
+
+    const weekDays = getWeekDays(currentDate);
 
     const closeAppointmentsModal = () => {
         setShowAppointments(false);
         setSelectedDate(null);
+    };
+
+    const closePetInfoModal = () => {
+        setShowPetInfoModal(false);
+        setSelectedAppointment(null);
     };
 
     const handleDeleteAppointment = async (appointmentId) => {
@@ -281,7 +343,11 @@ export default function Dashboard() {
                     </ProfileInfo>
                 </ProfileHeader>
 
-                <WeekOverviewSection>
+                <WeekOverviewSection
+                    onTouchStart={onTouchStart}
+                    onTouchMove={onTouchMove}
+                    onTouchEnd={onTouchEnd}
+                >
                     <WeekHeader>
                         <ScheduleTitleRow>
                             <ScheduleTitle>
@@ -331,8 +397,18 @@ export default function Dashboard() {
 
                                 return (
                                     <DayColumn key={day.format("YYYY-MM-DD")} $isToday={isToday}>
-                                        {/* Day header */}
-                                        <DayColumnHeader $isToday={isToday} $isPast={isPast}>
+                                        {/* Day header - clickable for full day view */}
+                                        <DayColumnHeader
+                                            $isToday={isToday}
+                                            $isPast={isPast}
+                                            $clickable={dayAppointments.length > 0}
+                                            onClick={() => {
+                                                if (dayAppointments.length > 0) {
+                                                    setSelectedDate(day);
+                                                    setShowAppointments(true);
+                                                }
+                                            }}
+                                        >
                                             <DayHeaderName>{day.format('ddd')}</DayHeaderName>
                                             <DayHeaderDate $isToday={isToday}>{day.format('D')}</DayHeaderDate>
                                         </DayColumnHeader>
@@ -344,25 +420,29 @@ export default function Dashboard() {
                                             ))}
 
                                             {/* Appointment blocks */}
-                                            {dayAppointments.map((appointment, idx) => {
-                                                const { top, height } = getAppointmentStyle(appointment);
+                                            {calculateAppointmentLayout(dayAppointments).map((layout) => {
+                                                const widthPercent = (100 / layout.totalColumns);
+                                                const leftPercent = (layout.column * widthPercent);
+
                                                 return (
                                                     <AppointmentBlock
-                                                        key={`${appointment.id}-${idx}`}
-                                                        $top={top}
-                                                        $height={height}
+                                                        key={`${layout.id}-${layout.index}`}
+                                                        $top={layout.top}
+                                                        $height={layout.height}
+                                                        $left={leftPercent}
+                                                        $width={widthPercent}
                                                         $isPast={isPast}
+                                                        $isOverlapping={layout.totalColumns > 1}
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            setSelectedAppointment(appointment);
-                                                            setSelectedDate(day);
-                                                            setShowAppointments(true);
+                                                            setSelectedAppointment({...layout, date: day});
+                                                            setShowPetInfoModal(true);
                                                         }}
                                                     >
                                                         <AppointmentBlockContent>
-                                                            <AppointmentPetName>{appointment.pet?.name}</AppointmentPetName>
+                                                            <AppointmentPetName>{layout.pet?.name}</AppointmentPetName>
                                                             <AppointmentBlockTime>
-                                                                {dayjs(appointment.start_time, "HH:mm").format("h:mm A")}
+                                                                {dayjs(layout.start_time, "HH:mm").format("h:mm A")}
                                                             </AppointmentBlockTime>
                                                         </AppointmentBlockContent>
                                                     </AppointmentBlock>
@@ -463,6 +543,80 @@ export default function Dashboard() {
                             ))}
                         </ModalAppointmentsList>
                     </ModalContent>
+                </AppointmentsModal>
+            )}
+
+            {showPetInfoModal && selectedAppointment && (
+                <AppointmentsModal onClick={closePetInfoModal}>
+                    <PetInfoModalContent onClick={(e) => e.stopPropagation()}>
+                        <ModalHeader>
+                            <ModalTitle>
+                                {selectedAppointment.pet?.name}
+                            </ModalTitle>
+                            <CloseButton onClick={closePetInfoModal}>
+                                <X size={20} />
+                            </CloseButton>
+                        </ModalHeader>
+                        <PetInfoContent>
+                            <PetInfoSection>
+                                <PetInfoLabel>Date & Time</PetInfoLabel>
+                                <PetInfoValue>
+                                    {selectedAppointment.date?.format('dddd, MMMM D, YYYY')}
+                                </PetInfoValue>
+                                <PetInfoValue>
+                                    {dayjs(selectedAppointment.start_time, "HH:mm").format("h:mm A")} - {dayjs(selectedAppointment.end_time, "HH:mm").format("h:mm A")}
+                                </PetInfoValue>
+                                <PetInfoBadge>
+                                    {selectedAppointment.duration} minutes
+                                </PetInfoBadge>
+                            </PetInfoSection>
+
+                            {selectedAppointment.pet?.owner && (
+                                <PetInfoSection>
+                                    <PetInfoLabel>Owner</PetInfoLabel>
+                                    <PetInfoValue>{selectedAppointment.pet.owner.name}</PetInfoValue>
+                                    {selectedAppointment.pet.owner.email && (
+                                        <PetInfoValue>{selectedAppointment.pet.owner.email}</PetInfoValue>
+                                    )}
+                                    {selectedAppointment.pet.owner.phone_number && (
+                                        <PetInfoValue>{selectedAppointment.pet.owner.phone_number}</PetInfoValue>
+                                    )}
+                                </PetInfoSection>
+                            )}
+
+                            {selectedAppointment.pet?.address && (
+                                <PetInfoSection>
+                                    <PetInfoLabel>Address</PetInfoLabel>
+                                    <PetInfoValue>{selectedAppointment.pet.address}</PetInfoValue>
+                                </PetInfoSection>
+                            )}
+
+                            {selectedAppointment.pet?.breed && (
+                                <PetInfoSection>
+                                    <PetInfoLabel>Breed</PetInfoLabel>
+                                    <PetInfoValue>{selectedAppointment.pet.breed}</PetInfoValue>
+                                </PetInfoSection>
+                            )}
+
+                            {selectedAppointment.recurring && (
+                                <PetInfoSection>
+                                    <PetInfoLabel>Recurring</PetInfoLabel>
+                                    <PetInfoBadge>This is a recurring appointment</PetInfoBadge>
+                                </PetInfoSection>
+                            )}
+
+                            <PetInfoActions>
+                                <DeleteButton
+                                    onClick={() => handleDeleteAppointment(selectedAppointment.id)}
+                                    title="Delete appointment"
+                                    disabled={isDeleting}
+                                >
+                                    <Trash2 size={18} />
+                                    Delete
+                                </DeleteButton>
+                            </PetInfoActions>
+                        </PetInfoContent>
+                    </PetInfoModalContent>
                 </AppointmentsModal>
             )}
 
@@ -660,19 +814,6 @@ const ProfilePic = styled.img`
     height: 60px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-`;
-
-const DefaultProfileIcon = styled.div`
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(255, 255, 255, 0.9);
     border: 3px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 `;
@@ -958,7 +1099,10 @@ const CalendarGridWrapper = styled.div`
     }
 
     @media (max-width: 768px) {
-        max-height: 500px;
+        max-height: calc(100vh - 320px);
+        overflow-x: auto;
+        border-radius: 16px;
+        -webkit-overflow-scrolling: touch;
     }
 `;
 
@@ -969,8 +1113,8 @@ const CalendarGrid = styled.div`
     position: relative;
 
     @media (max-width: 768px) {
-        grid-template-columns: 60px repeat(7, minmax(90px, 1fr));
-        min-width: 700px;
+        grid-template-columns: 60px repeat(7, minmax(110px, 1fr));
+        min-width: 800px;
     }
 `;
 
@@ -1029,6 +1173,28 @@ const DayColumnHeader = styled.div`
         : 'rgba(255, 255, 255, 0.03)'};
     opacity: ${props => props.$isPast ? 0.6 : 1};
     flex-shrink: 0;
+    cursor: ${props => props.$clickable ? 'pointer' : 'default'};
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+
+    &:hover {
+        background: ${props => props.$clickable ? (props.$isToday
+            ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.35), rgba(139, 92, 246, 0.3))'
+            : 'rgba(255, 255, 255, 0.08)') : (props.$isToday
+            ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(139, 92, 246, 0.2))'
+            : 'rgba(255, 255, 255, 0.03)')};
+    }
+
+    &:active {
+        ${props => props.$clickable && `
+            transform: scale(0.98);
+        `}
+    }
+
+    @media (max-width: 768px) {
+        height: 70px;
+        gap: 6px;
+    }
 `;
 
 const DayHeaderName = styled.div`
@@ -1066,30 +1232,41 @@ const TimeSlotCell = styled.div`
 
 const AppointmentBlock = styled.div`
     position: absolute;
-    left: 2px;
-    right: 2px;
+    left: ${props => props.$left || 0}%;
+    width: ${props => props.$width ? `calc(${props.$width}% - ${props.$isOverlapping ? '4px' : '2px'})` : 'calc(100% - 4px)'};
     top: ${props => props.$top}px;
     height: ${props => Math.max(props.$height, 30)}px;
+    min-height: 36px;
     background: linear-gradient(135deg, rgba(34, 197, 94, 0.85), rgba(16, 185, 129, 0.75));
     border-left: 3px solid rgba(34, 197, 94, 1);
     border-radius: 6px;
-    padding: 6px 8px;
+    padding: ${props => props.$isOverlapping ? '4px 6px' : '6px 8px'};
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     opacity: ${props => props.$isPast ? 0.5 : 1};
     z-index: 1;
+    margin-left: 2px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 
     &:hover {
-        transform: translateX(-2px);
+        transform: ${props => props.$isOverlapping ? 'scale(1.02)' : 'translateX(-2px)'};
         box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
         background: linear-gradient(135deg, rgba(34, 197, 94, 0.95), rgba(16, 185, 129, 0.85));
-        z-index: 2;
+        z-index: 10;
     }
 
     &:active {
-        transform: scale(0.98);
+        transform: scale(0.96);
+        box-shadow: 0 2px 6px rgba(34, 197, 94, 0.3);
+    }
+
+    @media (max-width: 768px) {
+        min-height: 44px;
+        padding: ${props => props.$isOverlapping ? '6px 8px' : '8px 10px'};
+        border-left-width: 4px;
     }
 `;
 
@@ -1101,20 +1278,30 @@ const AppointmentBlockContent = styled.div`
 `;
 
 const AppointmentPetName = styled.div`
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 700;
     color: #ffffff;
     font-family: 'Poppins', sans-serif;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    line-height: 1.2;
+
+    @media (max-width: 768px) {
+        font-size: 0.85rem;
+    }
 `;
 
 const AppointmentBlockTime = styled.div`
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 500;
     color: rgba(255, 255, 255, 0.9);
     font-family: 'Poppins', sans-serif;
+    line-height: 1.2;
+
+    @media (max-width: 768px) {
+        font-size: 0.7rem;
+    }
 `;
 
 const CurrentTimeIndicator = styled.div`
@@ -1263,6 +1450,17 @@ const AppointmentsModal = styled.div`
     justify-content: center;
     z-index: 1000;
     padding: 20px;
+    animation: fadeIn 0.2s ease;
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @media (max-width: 768px) {
+        padding: 0;
+        align-items: flex-end;
+    }
 `;
 
 const ModalContent = styled.div`
@@ -1277,6 +1475,35 @@ const ModalContent = styled.div`
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    animation: slideUp 0.3s ease;
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    @media (max-width: 768px) {
+        max-width: 100%;
+        max-height: 85vh;
+        border-radius: 20px 20px 0 0;
+        border-bottom: none;
+        animation: slideUpMobile 0.3s ease;
+
+        @keyframes slideUpMobile {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+    }
 `;
 
 const ModalHeader = styled.div`
@@ -1375,13 +1602,17 @@ const DeleteButton = styled.button`
     background: rgba(255, 77, 77, 0.2);
     border: 1px solid rgba(255, 77, 77, 0.3);
     border-radius: 8px;
-    padding: 8px;
+    padding: 8px 12px;
     color: rgba(255, 255, 255, 0.9);
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 6px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
 
     &:disabled {
         opacity: 0.5;
@@ -1397,6 +1628,125 @@ const DeleteButton = styled.button`
     &:active:not(:disabled) {
         transform: scale(0.95);
     }
+`;
+
+// Pet Info Modal Components
+const PetInfoModalContent = styled.div`
+    background: linear-gradient(145deg, rgba(74, 26, 74, 0.95), rgba(107, 43, 107, 0.9));
+    border-radius: 20px;
+    box-shadow: 0px 20px 60px rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(139, 90, 140, 0.5);
+    backdrop-filter: blur(20px);
+    width: 100%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease;
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    @media (max-width: 768px) {
+        max-width: 100%;
+        max-height: 85vh;
+        border-radius: 20px 20px 0 0;
+        border-bottom: none;
+        animation: slideUpMobile 0.3s ease;
+
+        @keyframes slideUpMobile {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+    }
+`;
+
+const PetInfoContent = styled.div`
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    }
+`;
+
+const PetInfoSection = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+const PetInfoLabel = styled.div`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+`;
+
+const PetInfoValue = styled.div`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.95);
+    line-height: 1.5;
+`;
+
+const PetInfoBadge = styled.div`
+    display: inline-flex;
+    align-items: center;
+    background: rgba(34, 197, 94, 0.2);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+    font-family: 'Poppins', sans-serif;
+    width: fit-content;
+`;
+
+const PetInfoActions = styled.div`
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 // Month Modal Components

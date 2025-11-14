@@ -4,7 +4,7 @@ class User < ApplicationRecord
   has_one_attached :profile_pic
 
   has_many :pets
-  has_many :appointments, through: :pets
+  has_many :appointments, foreign_key: 'user_id'
   has_many :invoices, through: :pets
   has_many :training_sessions, dependent: :destroy
   has_many :blogs, dependent: :destroy
