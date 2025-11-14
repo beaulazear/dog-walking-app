@@ -245,8 +245,8 @@ class AppointmentSharesController < ApplicationController
       id: share.id,
       status: share.status,
       recurring_share: share.recurring_share,
-      covering_walker_percentage: share.covering_walker_percentage,
-      original_walker_percentage: 100 - share.covering_walker_percentage,
+      covering_walker_percentage: share.covering_walker_percentage || 50,
+      original_walker_percentage: 100 - (share.covering_walker_percentage || 50),
       share_dates: share.share_dates.pluck(:date),
       created_at: share.created_at,
       shared_by: {
