@@ -80,6 +80,7 @@ class AppointmentSharesController < ApplicationController
             end_time: appointment.end_time,
             duration: appointment.duration,
             price: appointment.price,
+            walk_type: appointment.walk_type,
             cloned_from_appointment_id: appointment.id # Track the source
           )
 
@@ -277,7 +278,6 @@ class AppointmentSharesController < ApplicationController
         delegation_status: appointment.delegation_status,
         recurring: appointment.recurring,
         walk_type: appointment.walk_type,
-        solo: appointment.solo,
         pet: {
           id: appointment.pet.id,
           name: appointment.pet.name,
