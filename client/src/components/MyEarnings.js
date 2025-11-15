@@ -11,6 +11,7 @@ const MyEarnings = () => {
     const [invoiceLimit, setInvoiceLimit] = useState(50);
 
     useEffect(() => {
+        window.scrollTo(0, 0);
         fetchEarnings();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);

@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import styled from "styled-components";
 import { UserContext } from "../context/user";
 import dayjs from "dayjs";
@@ -19,6 +19,10 @@ const currentYear = dayjs().year();
 export default function YearlyFinanceOverview() {
     const { user } = useContext(UserContext);
     const [taxPercentage, setTaxPercentage] = useState(15);
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     const invoicesFromCurrentYear = user?.invoices?.filter(inv =>
         dayjs(inv.date_completed).year() === currentYear

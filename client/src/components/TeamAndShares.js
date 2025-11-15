@@ -340,10 +340,19 @@ export default function TeamAndShares() {
 
                     {searchResult && (
                         <SearchResultCard>
-                            <UserInfo>
-                                <UserName>{searchResult.name}</UserName>
-                                <UserEmail>@{searchResult.username}</UserEmail>
-                            </UserInfo>
+                            <TeamMemberAvatar $size="small">
+                                {searchResult.profile_picture_url ? (
+                                    <AvatarImage src={searchResult.profile_picture_url} alt={searchResult.name} />
+                                ) : (
+                                    <AvatarInitials $size="small">
+                                        {searchResult.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                                    </AvatarInitials>
+                                )}
+                            </TeamMemberAvatar>
+                            <TeamMemberInfo>
+                                <TeamMemberName>{searchResult.name}</TeamMemberName>
+                                <TeamMemberUsername>@{searchResult.username}</TeamMemberUsername>
+                            </TeamMemberInfo>
                             <SendButton onClick={() => handleSendRequest(searchResult.id)}>
                                 <UserPlus size={16} />
                                 <span>Send Request</span>
@@ -394,17 +403,24 @@ export default function TeamAndShares() {
                                     <SectionTitle>Team Members ({acceptedConnections.length})</SectionTitle>
                                     <List>
                                         {acceptedConnections.map(connection => (
-                                            <Card key={connection.id}>
-                                                <CardContent>
-                                                    <UserInfo>
-                                                        <UserName>{connection.other_user.name}</UserName>
-                                                        <UserEmail>@{connection.other_user.username}</UserEmail>
-                                                    </UserInfo>
-                                                    <RemoveButton onClick={() => handleRemoveConnection(connection.id)}>
-                                                        <Trash2 size={16} />
-                                                    </RemoveButton>
-                                                </CardContent>
-                                            </Card>
+                                            <TeamMemberCard key={connection.id}>
+                                                <TeamMemberAvatar>
+                                                    {connection.other_user.profile_picture_url ? (
+                                                        <AvatarImage src={connection.other_user.profile_picture_url} alt={connection.other_user.name} />
+                                                    ) : (
+                                                        <AvatarInitials>
+                                                            {connection.other_user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                                                        </AvatarInitials>
+                                                    )}
+                                                </TeamMemberAvatar>
+                                                <TeamMemberInfo>
+                                                    <TeamMemberName>{connection.other_user.name}</TeamMemberName>
+                                                    <TeamMemberUsername>@{connection.other_user.username}</TeamMemberUsername>
+                                                </TeamMemberInfo>
+                                                <RemoveButton onClick={() => handleRemoveConnection(connection.id)}>
+                                                    <Trash2 size={16} />
+                                                </RemoveButton>
+                                            </TeamMemberCard>
                                         ))}
                                     </List>
                                 </>
@@ -418,22 +434,29 @@ export default function TeamAndShares() {
                                             <Subsection>Received</Subsection>
                                             <List>
                                                 {pendingReceived.map(connection => (
-                                                    <Card key={connection.id}>
-                                                        <CardContent>
-                                                            <UserInfo>
-                                                                <UserName>{connection.other_user.name}</UserName>
-                                                                <UserEmail>@{connection.other_user.username}</UserEmail>
-                                                            </UserInfo>
-                                                            <ActionButtons>
-                                                                <AcceptButton onClick={() => handleAcceptConnection(connection.id)}>
-                                                                    <Check size={16} />
-                                                                </AcceptButton>
-                                                                <DeclineButton onClick={() => handleDeclineConnection(connection.id)}>
-                                                                    <X size={16} />
-                                                                </DeclineButton>
-                                                            </ActionButtons>
-                                                        </CardContent>
-                                                    </Card>
+                                                    <PendingCard key={connection.id}>
+                                                        <TeamMemberAvatar $size="small">
+                                                            {connection.other_user.profile_picture_url ? (
+                                                                <AvatarImage src={connection.other_user.profile_picture_url} alt={connection.other_user.name} />
+                                                            ) : (
+                                                                <AvatarInitials $size="small">
+                                                                    {connection.other_user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                                                                </AvatarInitials>
+                                                            )}
+                                                        </TeamMemberAvatar>
+                                                        <TeamMemberInfo>
+                                                            <TeamMemberName>{connection.other_user.name}</TeamMemberName>
+                                                            <TeamMemberUsername>@{connection.other_user.username}</TeamMemberUsername>
+                                                        </TeamMemberInfo>
+                                                        <ActionButtons>
+                                                            <AcceptButton onClick={() => handleAcceptConnection(connection.id)}>
+                                                                <Check size={16} />
+                                                            </AcceptButton>
+                                                            <DeclineButton onClick={() => handleDeclineConnection(connection.id)}>
+                                                                <X size={16} />
+                                                            </DeclineButton>
+                                                        </ActionButtons>
+                                                    </PendingCard>
                                                 ))}
                                             </List>
                                         </>
@@ -444,18 +467,25 @@ export default function TeamAndShares() {
                                             <Subsection>Sent</Subsection>
                                             <List>
                                                 {pendingSent.map(connection => (
-                                                    <Card key={connection.id}>
-                                                        <CardContent>
-                                                            <UserInfo>
-                                                                <UserName>{connection.other_user.name}</UserName>
-                                                                <UserEmail>@{connection.other_user.username}</UserEmail>
-                                                                <PendingBadge>Awaiting response</PendingBadge>
-                                                            </UserInfo>
-                                                            <CancelButton onClick={() => handleRemoveConnection(connection.id)}>
-                                                                <X size={16} />
-                                                            </CancelButton>
-                                                        </CardContent>
-                                                    </Card>
+                                                    <PendingCard key={connection.id} $sent>
+                                                        <TeamMemberAvatar $size="small">
+                                                            {connection.other_user.profile_picture_url ? (
+                                                                <AvatarImage src={connection.other_user.profile_picture_url} alt={connection.other_user.name} />
+                                                            ) : (
+                                                                <AvatarInitials $size="small">
+                                                                    {connection.other_user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                                                                </AvatarInitials>
+                                                            )}
+                                                        </TeamMemberAvatar>
+                                                        <TeamMemberInfo>
+                                                            <TeamMemberName>{connection.other_user.name}</TeamMemberName>
+                                                            <TeamMemberUsername>@{connection.other_user.username}</TeamMemberUsername>
+                                                            <PendingBadge>Awaiting response</PendingBadge>
+                                                        </TeamMemberInfo>
+                                                        <CancelButton onClick={() => handleRemoveConnection(connection.id)}>
+                                                            <X size={16} />
+                                                        </CancelButton>
+                                                    </PendingCard>
                                                 ))}
                                             </List>
                                         </>
@@ -771,11 +801,11 @@ export default function TeamAndShares() {
 // Styled Components
 const Container = styled.div`
     min-height: 100vh;
-    padding: 20px 16px 100px;
+    padding: 120px 16px 100px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 
     @media (min-width: 768px) {
-        padding: 24px 20px 100px;
+        padding: 130px 20px 100px;
     }
 `;
 
@@ -792,23 +822,22 @@ const LoadingText = styled.div`
 `;
 
 const Header = styled.div`
-    width: 100%;
-    max-width: 448px;
-    margin: 0 auto 20px;
-    z-index: 100;
-    position: relative;
-    padding: 0 16px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px 16px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 16px;
 
-    @media (min-width: 768px) {
-        margin: 0 auto 24px;
-    }
-
     @media (max-width: 768px) {
-        padding: 0 12px;
+        padding: 16px 12px;
     }
 `;
 
@@ -994,17 +1023,30 @@ const AddTeamMemberButton = styled.button`
 
 const SearchResultCard = styled.div`
     display: flex;
-    justify-content: space-between;
     align-items: center;
     gap: 12px;
-    padding: 12px;
+    padding: 14px;
     margin-top: 12px;
-    background: #f0f4ff;
+    background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);
     border: 2px solid #667eea;
-    border-radius: 8px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    animation: slideIn 0.3s ease-out;
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 
     @media (min-width: 768px) {
         padding: 16px;
+        gap: 14px;
     }
 `;
 
@@ -1012,20 +1054,27 @@ const SendButton = styled.button`
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 14px;
-    background: #667eea;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    border-radius: 6px;
-    font-weight: 600;
+    border-radius: 10px;
+    font-weight: 700;
     font-size: 14px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s;
     white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    flex-shrink: 0;
 
     &:hover {
-        background: #5568d3;
-        transform: translateY(-1px);
+        background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    }
+
+    &:active {
+        transform: translateY(0);
     }
 
     span {
@@ -1033,7 +1082,7 @@ const SendButton = styled.button`
     }
 
     @media (min-width: 768px) {
-        padding: 10px 16px;
+        padding: 10px 18px;
 
         span {
             display: inline;
@@ -1135,10 +1184,32 @@ const ContentSection = styled.div`
 const List = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
+
+    & > * {
+        animation: fadeInUp 0.4s ease-out backwards;
+    }
+
+    & > *:nth-child(1) { animation-delay: 0.05s; }
+    & > *:nth-child(2) { animation-delay: 0.1s; }
+    & > *:nth-child(3) { animation-delay: 0.15s; }
+    & > *:nth-child(4) { animation-delay: 0.2s; }
+    & > *:nth-child(5) { animation-delay: 0.25s; }
+    & > *:nth-child(n+6) { animation-delay: 0.3s; }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 
     @media (min-width: 768px) {
-        gap: 12px;
+        gap: 14px;
     }
 `;
 
@@ -1156,6 +1227,160 @@ const Card = styled.div`
 
     @media (min-width: 768px) {
         padding: 16px;
+    }
+`;
+
+const TeamMemberCard = styled.div`
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 16px;
+        padding: 2px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+
+        &::before {
+            opacity: 1;
+        }
+    }
+
+    @media (min-width: 768px) {
+        padding: 18px;
+        gap: 16px;
+    }
+`;
+
+const PendingCard = styled(TeamMemberCard)`
+    background: ${props => props.$sent
+        ? 'linear-gradient(135deg, #fef3c7 0%, #fef9e6 100%)'
+        : 'linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%)'
+    };
+
+    &::before {
+        background: ${props => props.$sent
+            ? 'linear-gradient(135deg, #f59e0b, #d97706)'
+            : 'linear-gradient(135deg, #3b82f6, #2563eb)'
+        };
+    }
+`;
+
+const TeamMemberAvatar = styled.div`
+    width: ${props => props.$size === 'small' ? '48px' : '56px'};
+    height: ${props => props.$size === 'small' ? '48px' : '56px'};
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+    transition: all 0.3s;
+    position: relative;
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        opacity: 0;
+        transition: opacity 0.3s;
+        z-index: -1;
+    }
+
+    ${TeamMemberCard}:hover &, ${PendingCard}:hover & {
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.35);
+
+        &::after {
+            opacity: 0.5;
+        }
+    }
+
+    @media (min-width: 768px) {
+        width: ${props => props.$size === 'small' ? '52px' : '60px'};
+        height: ${props => props.$size === 'small' ? '52px' : '60px'};
+    }
+`;
+
+const AvatarImage = styled.img`
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+`;
+
+const AvatarInitials = styled.div`
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: ${props => props.$size === 'small' ? '16px' : '20px'};
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    @media (min-width: 768px) {
+        font-size: ${props => props.$size === 'small' ? '18px' : '22px'};
+    }
+`;
+
+const TeamMemberInfo = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1;
+`;
+
+const TeamMemberName = styled.div`
+    font-weight: 700;
+    font-size: 16px;
+    color: #1f2937;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    @media (min-width: 768px) {
+        font-size: 17px;
+    }
+`;
+
+const TeamMemberUsername = styled.div`
+    font-size: 13px;
+    color: #667eea;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    @media (min-width: 768px) {
+        font-size: 14px;
     }
 `;
 
@@ -1200,17 +1425,30 @@ const UserEmail = styled.div`
 `;
 
 const PendingBadge = styled.div`
-    display: inline-block;
-    padding: 3px 8px;
-    background: #fef3c7;
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
     color: #92400e;
-    border-radius: 4px;
+    border-radius: 12px;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
     width: fit-content;
+    box-shadow: 0 2px 4px rgba(146, 64, 14, 0.1);
+    animation: pulse 2s ease-in-out infinite;
+
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.8;
+        }
+    }
 
     @media (min-width: 768px) {
         font-size: 12px;
+        padding: 5px 12px;
     }
 `;
 
@@ -1229,23 +1467,29 @@ const AcceptButton = styled.button`
     align-items: center;
     justify-content: center;
     padding: 8px;
-    background: #10b981;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: all 0.2s;
-    min-width: 36px;
-    height: 36px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 40px;
+    height: 40px;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
 
     &:hover {
-        background: #059669;
-        transform: translateY(-1px);
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+    }
+
+    &:active {
+        transform: translateY(0) scale(1);
     }
 
     @media (min-width: 768px) {
-        min-width: 40px;
-        height: 40px;
+        min-width: 44px;
+        height: 44px;
     }
 `;
 
@@ -1254,23 +1498,29 @@ const DeclineButton = styled.button`
     align-items: center;
     justify-content: center;
     padding: 8px;
-    background: #ef4444;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: all 0.2s;
-    min-width: 36px;
-    height: 36px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 40px;
+    height: 40px;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
 
     &:hover {
-        background: #dc2626;
-        transform: translateY(-1px);
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+    }
+
+    &:active {
+        transform: translateY(0) scale(1);
     }
 
     @media (min-width: 768px) {
-        min-width: 40px;
-        height: 40px;
+        min-width: 44px;
+        height: 44px;
     }
 `;
 
@@ -1279,43 +1529,64 @@ const RemoveButton = styled.button`
     align-items: center;
     justify-content: center;
     padding: 8px;
-    background: #f3f4f6;
-    color: #666;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
+    background: rgba(239, 68, 68, 0.08);
+    color: #dc2626;
+    border: 2px solid rgba(239, 68, 68, 0.2);
+    border-radius: 10px;
     cursor: pointer;
-    transition: all 0.2s;
-    min-width: 36px;
-    height: 36px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 40px;
+    height: 40px;
 
     &:hover {
-        background: #fee;
-        color: #ef4444;
-        border-color: #ef4444;
+        background: rgba(239, 68, 68, 0.15);
+        color: #b91c1c;
+        border-color: rgba(239, 68, 68, 0.4);
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    }
+
+    &:active {
+        transform: translateY(0) scale(1);
     }
 
     @media (min-width: 768px) {
-        min-width: 40px;
-        height: 40px;
+        min-width: 44px;
+        height: 44px;
     }
 `;
 
 const CancelButton = styled(RemoveButton)``;
 
 const Subsection = styled.h3`
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 700;
     color: #667eea;
-    margin: 0 0 12px 0;
+    margin: 0 0 14px 0;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 
     &:not(:first-child) {
-        margin-top: 24px;
+        margin-top: 28px;
+    }
+
+    &::before {
+        content: '';
+        width: 4px;
+        height: 16px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 2px;
     }
 
     @media (min-width: 768px) {
-        font-size: 15px;
+        font-size: 14px;
+
+        &::before {
+            height: 18px;
+        }
     }
 `;
 
@@ -1656,42 +1927,54 @@ const EmptyState = styled.div`
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px 20px;
+    padding: 50px 20px;
     text-align: center;
 
     svg {
-        color: #ccc;
-        margin-bottom: 12px;
+        color: #e0e7ff;
+        margin-bottom: 16px;
+        filter: drop-shadow(0 4px 8px rgba(102, 126, 234, 0.1));
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
     }
 
     @media (min-width: 768px) {
-        padding: 60px 20px;
+        padding: 70px 20px;
 
         svg {
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
     }
 `;
 
 const EmptyText = styled.div`
-    font-size: 16px;
-    font-weight: 600;
-    color: #666;
-    margin-bottom: 6px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #4b5563;
+    margin-bottom: 8px;
 
     @media (min-width: 768px) {
-        font-size: 18px;
-        margin-bottom: 8px;
+        font-size: 20px;
+        margin-bottom: 10px;
     }
 `;
 
 const EmptySubtext = styled.div`
-    font-size: 13px;
-    color: #999;
+    font-size: 14px;
+    color: #9ca3af;
     max-width: 300px;
+    line-height: 1.5;
 
     @media (min-width: 768px) {
-        font-size: 14px;
+        font-size: 15px;
         max-width: 400px;
     }
 `;
@@ -1764,9 +2047,19 @@ const Amount = styled.div`
 
 const SectionTitle = styled.h2`
     font-size: 20px;
-    font-weight: 700;
-    color: #1f2937;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    @media (min-width: 768px) {
+        font-size: 22px;
+    }
 `;
 
 const CardHeader = styled.div`

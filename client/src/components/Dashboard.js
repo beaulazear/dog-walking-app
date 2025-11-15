@@ -1,19 +1,14 @@
 import React, { useContext, useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
-import toast from 'react-hot-toast';
 import dayjs from "dayjs";
-import { useNavigate } from 'react-router-dom';
 import { UserContext } from "../context/user";
 import dogPlaceholder from "../assets/dog.png";
-import ConfirmModal from "./ConfirmModal";
-import { useConfirm } from "../hooks/useConfirm";
 import {
     Cake,
     ChevronLeft,
     ChevronRight,
-    CalendarDays,
-    X,
-    Trash2
+    ArrowLeft,
+    X
 } from "lucide-react";
 
 const getUpcomingBirthday = (pets) => {
@@ -45,17 +40,12 @@ const getUpcomingBirthday = (pets) => {
 
 
 export default function Dashboard() {
-    const { user, removeAppointment } = useContext(UserContext);
-    const { confirmState, confirm } = useConfirm();
-    const navigate = useNavigate();
+    const { user } = useContext(UserContext);
     const [currentDate, setCurrentDate] = useState(dayjs());
     const [upcomingBirthdayPet, setUpcomingBirthdayPet] = useState(null);
     const [selectedDate, setSelectedDate] = useState(null);
     const [showDayDetail, setShowDayDetail] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
     const [photoError, setPhotoError] = useState(false);
-    const [selectedAppointment, setSelectedAppointment] = useState(null);
-    const [showPetInfoModal, setShowPetInfoModal] = useState(false);
     const dayDetailRef = React.useRef(null);
 
     useEffect(() => {
@@ -147,44 +137,8 @@ export default function Dashboard() {
         setTimeout(() => setSelectedDate(null), 300); // Delay to allow animation
     };
 
-    const closePetInfoModal = () => {
-        setShowPetInfoModal(false);
-        setSelectedAppointment(null);
-    };
-
-    const handleDeleteAppointment = async (appointmentId) => {
-        const confirmed = await confirm({
-            title: 'Delete Appointment',
-            message: 'Are you sure you want to delete this appointment? This action cannot be undone.',
-            confirmText: 'Delete',
-            cancelText: 'Cancel',
-            variant: 'danger'
-        });
-
-        if (!confirmed) return;
-
-        setIsDeleting(true);
-
-        try {
-            const response = await fetch(`/appointments/${appointmentId}`, {
-                method: 'DELETE',
-                credentials: 'include'
-            });
-
-            if (response.ok) {
-                // Use smart update - prevents full re-render
-                removeAppointment(appointmentId);
-                toast.success('Appointment deleted successfully');
-            } else {
-                const error = await response.json();
-                toast.error(`Failed to delete: ${error.error || 'Unknown error'}`);
-            }
-        } catch (error) {
-            console.error('Error deleting appointment:', error);
-            toast.error('Failed to delete appointment');
-        } finally {
-            setIsDeleting(false);
-        }
+    const navigateDay = (direction) => {
+        setSelectedDate(prev => prev.add(direction, 'day'));
     };
 
     return (
@@ -328,34 +282,31 @@ export default function Dashboard() {
                 </MonthCalendarSection>
             </ContentSections>
 
-            {/* Day Detail Feed - Slides up from bottom */}
+            {/* Day Detail Feed - Full Screen View */}
             {showDayDetail && selectedDate && (
-                <DayDetailOverlay onClick={closeDayDetail} $show={showDayDetail}>
-                    <DayDetailPanel
-                        ref={dayDetailRef}
-                        onClick={(e) => e.stopPropagation()}
-                        $show={showDayDetail}
-                    >
-                        <SwipeHandle />
-                        <DayDetailHeader>
-                            <DayDetailDateInfo>
-                                <DayDetailDayName>{selectedDate.format('dddd')}</DayDetailDayName>
-                                <DayDetailDate>{selectedDate.format('MMMM D, YYYY')}</DayDetailDate>
-                            </DayDetailDateInfo>
-                            <CloseButton onClick={closeDayDetail}>
-                                <X size={24} />
-                            </CloseButton>
-                        </DayDetailHeader>
+                <DayDetailFullScreen $show={showDayDetail}>
+                    <DayDetailHeader>
+                        <BackButton onClick={closeDayDetail}>
+                            <ArrowLeft size={24} />
+                        </BackButton>
+                        <DayDetailDateInfo>
+                            <DayDetailDayName>{selectedDate.format('dddd')}</DayDetailDayName>
+                            <DayDetailDate>{selectedDate.format('MMMM D, YYYY')}</DayDetailDate>
+                        </DayDetailDateInfo>
+                        <DateNavButtons>
+                            <DateNavButton onClick={() => navigateDay(-1)}>
+                                <ChevronLeft size={20} />
+                            </DateNavButton>
+                            <DateNavButton onClick={() => navigateDay(1)}>
+                                <ChevronRight size={20} />
+                            </DateNavButton>
+                        </DateNavButtons>
+                    </DayDetailHeader>
 
-                        <DayDetailContent>
-                            {getAppointmentsForDate(selectedDate.format("YYYY-MM-DD")).map((appointment, index) => (
-                                <WalkCard
-                                    key={`${appointment.id}-${index}`}
-                                    onClick={() => {
-                                        setSelectedAppointment({...appointment, date: selectedDate});
-                                        setShowPetInfoModal(true);
-                                    }}
-                                >
+                    <DayDetailContent>
+                        {getAppointmentsForDate(selectedDate.format("YYYY-MM-DD")).length > 0 ? (
+                            getAppointmentsForDate(selectedDate.format("YYYY-MM-DD")).map((appointment, index) => (
+                                <WalkCard key={`${appointment.id}-${index}`}>
                                     <WalkTimeColumn>
                                         <WalkTime>{dayjs(appointment.start_time, "HH:mm").format("h:mm")}</WalkTime>
                                         <WalkTimePeriod>{dayjs(appointment.start_time, "HH:mm").format("A")}</WalkTimePeriod>
@@ -377,100 +328,15 @@ export default function Dashboard() {
                                             <RecurringBadge>Recurring</RecurringBadge>
                                         )}
                                     </WalkInfoColumn>
-                                    <WalkChevron>
-                                        <ChevronRight size={20} />
-                                    </WalkChevron>
                                 </WalkCard>
-                            ))}
-                        </DayDetailContent>
-                    </DayDetailPanel>
-                </DayDetailOverlay>
-            )}
-
-            {showPetInfoModal && selectedAppointment && (
-                <AppointmentsModal onClick={closePetInfoModal}>
-                    <PetInfoModalContent onClick={(e) => e.stopPropagation()}>
-                        <ModalHeader>
-                            <ModalTitle>
-                                {selectedAppointment.pet?.name}
-                            </ModalTitle>
-                            <CloseButton onClick={closePetInfoModal}>
-                                <X size={20} />
-                            </CloseButton>
-                        </ModalHeader>
-                        <PetInfoContent>
-                            <PetInfoSection>
-                                <PetInfoLabel>Date & Time</PetInfoLabel>
-                                <PetInfoValue>
-                                    {selectedAppointment.date?.format('dddd, MMMM D, YYYY')}
-                                </PetInfoValue>
-                                <PetInfoValue>
-                                    {dayjs(selectedAppointment.start_time, "HH:mm").format("h:mm A")} - {dayjs(selectedAppointment.end_time, "HH:mm").format("h:mm A")}
-                                </PetInfoValue>
-                                <PetInfoBadge>
-                                    {selectedAppointment.duration} minutes
-                                </PetInfoBadge>
-                            </PetInfoSection>
-
-                            {selectedAppointment.pet?.owner && (
-                                <PetInfoSection>
-                                    <PetInfoLabel>Owner</PetInfoLabel>
-                                    <PetInfoValue>{selectedAppointment.pet.owner.name}</PetInfoValue>
-                                    {selectedAppointment.pet.owner.email && (
-                                        <PetInfoValue>{selectedAppointment.pet.owner.email}</PetInfoValue>
-                                    )}
-                                    {selectedAppointment.pet.owner.phone_number && (
-                                        <PetInfoValue>{selectedAppointment.pet.owner.phone_number}</PetInfoValue>
-                                    )}
-                                </PetInfoSection>
-                            )}
-
-                            {selectedAppointment.pet?.address && (
-                                <PetInfoSection>
-                                    <PetInfoLabel>Address</PetInfoLabel>
-                                    <PetInfoValue>{selectedAppointment.pet.address}</PetInfoValue>
-                                </PetInfoSection>
-                            )}
-
-                            {selectedAppointment.pet?.breed && (
-                                <PetInfoSection>
-                                    <PetInfoLabel>Breed</PetInfoLabel>
-                                    <PetInfoValue>{selectedAppointment.pet.breed}</PetInfoValue>
-                                </PetInfoSection>
-                            )}
-
-                            {selectedAppointment.recurring && (
-                                <PetInfoSection>
-                                    <PetInfoLabel>Recurring</PetInfoLabel>
-                                    <PetInfoBadge>This is a recurring appointment</PetInfoBadge>
-                                </PetInfoSection>
-                            )}
-
-                            <PetInfoActions>
-                                <DeleteButton
-                                    onClick={() => handleDeleteAppointment(selectedAppointment.id)}
-                                    title="Delete appointment"
-                                    disabled={isDeleting}
-                                >
-                                    <Trash2 size={18} />
-                                    Delete
-                                </DeleteButton>
-                            </PetInfoActions>
-                        </PetInfoContent>
-                    </PetInfoModalContent>
-                </AppointmentsModal>
-            )}
-
-            {confirmState.isOpen && (
-                <ConfirmModal
-                    title={confirmState.title}
-                    message={confirmState.message}
-                    onConfirm={confirmState.onConfirm}
-                    onCancel={confirmState.onCancel}
-                    confirmText={confirmState.confirmText}
-                    cancelText={confirmState.cancelText}
-                    variant={confirmState.variant}
-                />
+                            ))
+                        ) : (
+                            <EmptyState>
+                                <EmptyStateText>No walks scheduled for this day</EmptyStateText>
+                            </EmptyState>
+                        )}
+                    </DayDetailContent>
+                </DayDetailFullScreen>
             )}
         </Container>
     );
@@ -507,18 +373,18 @@ const TopHeader = styled.div`
     top: 0;
     left: 0;
     right: 0;
-    background: white;
-    padding: 0.625rem 2rem;
-    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 0 2rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     z-index: 1000;
 
     @media (max-width: 768px) {
-        padding: 0.5rem 1.5rem;
+        padding: 0 1.5rem;
     }
 
     @media (max-width: 480px) {
-        padding: 0.5rem 1rem;
+        padding: 0 1rem;
     }
 `;
 
@@ -527,6 +393,7 @@ const HeaderLogo = styled.img`
     width: auto;
     max-width: 450px;
     display: block;
+    filter: brightness(0) saturate(100%) invert(95%) sepia(5%) saturate(200%) hue-rotate(180deg) brightness(105%) contrast(90%);
 
     @media (max-width: 768px) {
         height: 70px;
@@ -1148,71 +1015,128 @@ const MoreWalks = styled.div`
     }
 `;
 
-// Day Detail Panel (Slides up from bottom)
-const DayDetailOverlay = styled.div`
+// Day Detail Full Screen View
+const DayDetailFullScreen = styled.div`
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    z-index: 2000;
-    opacity: ${props => props.$show ? 1 : 0};
-    transition: opacity 0.3s ease;
-`;
-
-const DayDetailPanel = styled.div`
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(to bottom, rgba(74, 26, 74, 0.98), rgba(107, 43, 107, 0.98));
-    border-radius: 24px 24px 0 0;
-    max-height: 90vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    z-index: 3000;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
-    transform: ${props => props.$show ? 'translateY(0)' : 'translateY(100%)'};
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 2001;
+    opacity: ${props => props.$show ? 1 : 0};
+    transform: ${props => props.$show ? 'translateX(0)' : 'translateX(100%)'};
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
 
-    @media (max-width: 768px) {
-        border-radius: 20px 20px 0 0;
-    }
-
-    @media (min-width: 769px) {
-        left: 50%;
-        right: auto;
-        transform: ${props => props.$show ? 'translate(-50%, 0)' : 'translate(-50%, 100%)'};
-        width: 600px;
-        max-width: 90vw;
-    }
-`;
-
-const SwipeHandle = styled.div`
-    width: 40px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
-    margin: 12px auto 0;
-    flex-shrink: 0;
-
-    @media (min-width: 769px) {
-        display: none;
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+            radial-gradient(circle at 20% 20%, rgba(255,255,255,0.05) 2px, transparent 2px),
+            radial-gradient(circle at 80% 40%, rgba(255,255,255,0.03) 1.5px, transparent 1.5px),
+            radial-gradient(circle at 40% 60%, rgba(255,255,255,0.04) 1px, transparent 1px),
+            radial-gradient(circle at 70% 80%, rgba(255,255,255,0.06) 2.5px, transparent 2.5px),
+            radial-gradient(circle at 15% 70%, rgba(255,255,255,0.02) 1px, transparent 1px),
+            radial-gradient(circle at 90% 15%, rgba(255,255,255,0.04) 1.5px, transparent 1.5px);
+        background-size: 80px 80px, 60px 60px, 40px 40px, 100px 100px, 30px 30px, 70px 70px;
+        pointer-events: none;
     }
 `;
 
 const DayDetailHeader = styled.div`
-    padding: 16px 24px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px 24px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    position: relative;
+    z-index: 1;
 
     @media (max-width: 768px) {
-        padding: 12px 20px 16px;
+        padding: 16px 20px;
+    }
+`;
+
+const BackButton = styled.button`
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    color: #ffffff;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    min-width: 40px;
+    min-height: 40px;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: scale(1.05);
+    }
+
+    &:active {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(0.95);
+    }
+
+    @media (max-width: 768px) {
+        min-width: 44px;
+        min-height: 44px;
+    }
+`;
+
+const DateNavButtons = styled.div`
+    display: flex;
+    gap: 8px;
+    align-items: center;
+`;
+
+const DateNavButton = styled.button`
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+    }
+
+    &:active {
+        transform: scale(0.95);
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    @media (max-width: 768px) {
+        width: 42px;
+        height: 42px;
+
+        svg {
+            width: 22px;
+            height: 22px;
+        }
     }
 `;
 
@@ -1243,25 +1167,29 @@ const DayDetailDate = styled.p`
 `;
 
 const DayDetailContent = styled.div`
-    padding: 16px 24px 24px;
+    padding: 0;
+    margin-top: 20px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 0;
     -webkit-overflow-scrolling: touch;
+    flex: 1;
+    position: relative;
+    z-index: 1;
 
     &::-webkit-scrollbar {
-        width: 6px;
+        width: 8px;
     }
 
     &::-webkit-scrollbar-track {
         background: rgba(255, 255, 255, 0.05);
-        border-radius: 3px;
+        border-radius: 4px;
     }
 
     &::-webkit-scrollbar-thumb {
         background: rgba(255, 255, 255, 0.2);
-        border-radius: 3px;
+        border-radius: 4px;
 
         &:hover {
             background: rgba(255, 255, 255, 0.3);
@@ -1269,43 +1197,52 @@ const DayDetailContent = styled.div`
     }
 
     @media (max-width: 768px) {
-        padding: 12px 16px calc(24px + env(safe-area-inset-bottom));
+        margin-top: 20px;
+        padding-bottom: calc(env(safe-area-inset-bottom));
     }
+`;
+
+const EmptyState = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+`;
+
+const EmptyStateText = styled.p`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
 `;
 
 // Walk Card (Apple Calendar-inspired)
 const WalkCard = styled.div`
     background: rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 16px;
+    border-radius: 0;
+    padding: 20px 24px;
     display: flex;
     gap: 16px;
     align-items: center;
-    cursor: pointer;
     transition: all 0.2s ease;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.15);
     min-height: 80px;
 
-    &:hover {
-        background: rgba(255, 255, 255, 0.12);
-        transform: translateX(4px);
-    }
-
-    &:active {
-        transform: scale(0.98);
-        background: rgba(255, 255, 255, 0.15);
+    &:first-child {
+        border-top: 2px solid rgba(255, 255, 255, 0.15);
     }
 
     @media (max-width: 768px) {
-        padding: 18px 16px;
+        padding: 20px 16px;
         gap: 14px;
         min-height: 88px;
     }
 
     @media (max-width: 480px) {
-        padding: 16px 14px;
+        padding: 18px 16px;
         gap: 12px;
         min-height: 84px;
     }
@@ -1447,296 +1384,3 @@ const RecurringBadge = styled.div`
     }
 `;
 
-const WalkChevron = styled.div`
-    color: rgba(255, 255, 255, 0.4);
-    flex-shrink: 0;
-
-    @media (max-width: 768px) {
-        svg {
-            width: 22px;
-            height: 22px;
-        }
-    }
-`;
-
-// Modal Components (kept for pet info)
-const AppointmentsModal = styled.div`
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(5px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 20px;
-    animation: fadeIn 0.2s ease;
-
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-
-    @media (max-width: 768px) {
-        padding: 0;
-        align-items: flex-end;
-    }
-`;
-
-const ModalContent = styled.div`
-    background: linear-gradient(145deg, rgba(74, 26, 74, 0.95), rgba(107, 43, 107, 0.9));
-    border-radius: 20px;
-    box-shadow: 0px 20px 60px rgba(0, 0, 0, 0.4);
-    border: 2px solid rgba(139, 90, 140, 0.5);
-    backdrop-filter: blur(20px);
-    width: 100%;
-    max-width: 500px;
-    max-height: 80vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    animation: slideUp 0.3s ease;
-
-    @keyframes slideUp {
-        from {
-            transform: translateY(20px);
-            opacity: 0;
-        }
-        to {
-            transform: translateY(0);
-            opacity: 1;
-        }
-    }
-
-    @media (max-width: 768px) {
-        max-width: 100%;
-        max-height: 85vh;
-        border-radius: 20px 20px 0 0;
-        border-bottom: none;
-        animation: slideUpMobile 0.3s ease;
-
-        @keyframes slideUpMobile {
-            from {
-                transform: translateY(100%);
-            }
-            to {
-                transform: translateY(0);
-            }
-        }
-    }
-`;
-
-const ModalHeader = styled.div`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 24px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-`;
-
-const ModalTitle = styled.h3`
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #ffffff;
-    margin: 0;
-`;
-
-const CloseButton = styled.button`
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    color: #ffffff;
-    padding: 6px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    -webkit-tap-highlight-color: transparent;
-    min-width: 40px;
-    min-height: 40px;
-
-    &:hover {
-        background: rgba(255, 255, 255, 0.2);
-        transform: scale(1.05);
-    }
-
-    &:active {
-        background: rgba(255, 255, 255, 0.25);
-        transform: scale(0.95);
-    }
-
-    @media (max-width: 768px) {
-        min-width: 44px;
-        min-height: 44px;
-        padding: 8px;
-
-        svg {
-            width: 22px;
-            height: 22px;
-        }
-    }
-`;
-
-const ModalAppointmentsList = styled.div`
-    padding: 16px 24px 24px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-`;
-
-const DeleteButton = styled.button`
-    background: rgba(255, 77, 77, 0.2);
-    border: 1px solid rgba(255, 77, 77, 0.3);
-    border-radius: 8px;
-    padding: 8px 12px;
-    color: rgba(255, 255, 255, 0.9);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 600;
-
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    &:hover:not(:disabled) {
-        background: rgba(255, 77, 77, 0.3);
-        border-color: rgba(255, 77, 77, 0.5);
-        transform: scale(1.05);
-    }
-
-    &:active:not(:disabled) {
-        transform: scale(0.95);
-    }
-`;
-
-// Pet Info Modal Components
-const PetInfoModalContent = styled.div`
-    background: linear-gradient(145deg, rgba(74, 26, 74, 0.95), rgba(107, 43, 107, 0.9));
-    border-radius: 20px;
-    box-shadow: 0px 20px 60px rgba(0, 0, 0, 0.4);
-    border: 2px solid rgba(139, 90, 140, 0.5);
-    backdrop-filter: blur(20px);
-    width: 100%;
-    max-width: 500px;
-    max-height: 80vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    animation: slideUp 0.3s ease;
-
-    @keyframes slideUp {
-        from {
-            transform: translateY(20px);
-            opacity: 0;
-        }
-        to {
-            transform: translateY(0);
-            opacity: 1;
-        }
-    }
-
-    @media (max-width: 768px) {
-        max-width: 100%;
-        max-height: 85vh;
-        border-radius: 20px 20px 0 0;
-        border-bottom: none;
-        animation: slideUpMobile 0.3s ease;
-
-        @keyframes slideUpMobile {
-            from {
-                transform: translateY(100%);
-            }
-            to {
-                transform: translateY(0);
-            }
-        }
-    }
-`;
-
-const PetInfoContent = styled.div`
-    padding: 24px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-
-    &::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    &::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 3px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 3px;
-
-        &:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-    }
-`;
-
-const PetInfoSection = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 16px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-`;
-
-const PetInfoLabel = styled.div`
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.6);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-`;
-
-const PetInfoValue = styled.div`
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.95);
-    line-height: 1.5;
-`;
-
-const PetInfoBadge = styled.div`
-    display: inline-flex;
-    align-items: center;
-    background: rgba(34, 197, 94, 0.2);
-    border: 1px solid rgba(34, 197, 94, 0.3);
-    padding: 6px 12px;
-    border-radius: 12px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.95);
-    font-family: 'Poppins', sans-serif;
-    width: fit-content;
-`;
-
-const PetInfoActions = styled.div`
-    display: flex;
-    gap: 12px;
-    justify-content: flex-end;
-    padding-top: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-`;

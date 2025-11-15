@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { LogIn, UserPlus, PawPrint } from "lucide-react";
@@ -6,6 +6,10 @@ import dogImage from "../assets/dog.png";
 
 const Landing = () => {
     const navigate = useNavigate();
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     return (
         <LandingWrapper>

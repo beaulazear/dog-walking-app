@@ -12,6 +12,7 @@ export default function MyTeam() {
     const [activeTab, setActiveTab] = useState("team"); // "team" or "pending"
 
     useEffect(() => {
+        window.scrollTo(0, 0);
         fetchConnections();
     }, []);
 

@@ -14,6 +14,7 @@ export default function SharedAppointments() {
     const [activeTab, setActiveTab] = useState("pending"); // "pending" or "history" or "sent"
 
     useEffect(() => {
+        window.scrollTo(0, 0);
         fetchShares();
     }, []);
 

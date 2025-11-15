@@ -1271,31 +1271,30 @@ PetDetailsModal.displayName = 'PetDetailsModal';
 const Container = styled.div`
     min-height: 100vh;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 20px 16px 100px;
+    padding: 100px 16px 100px;
 
     @media (min-width: 768px) {
-        padding: 24px 20px 100px;
+        padding: 100px 20px 100px;
     }
 `;
 
 const Header = styled.div`
-    width: 100%;
-    max-width: 448px;
-    margin: 0 auto 20px;
-    z-index: 100;
-    position: relative;
-    padding: 0 16px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px 16px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 16px;
 
-    @media (min-width: 768px) {
-        margin: 0 auto 24px;
-    }
-
     @media (max-width: 768px) {
-        padding: 0 12px;
+        padding: 16px 12px;
     }
 `;
 
