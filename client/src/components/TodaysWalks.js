@@ -31,18 +31,21 @@ export default function TodaysWalks() {
     const [showMap, setShowMap] = useState(false);
     const [optimizedRoute, setOptimizedRoute] = useState(null);
     const [isLoadingRoute, setIsLoadingRoute] = useState(false);
-    const [acceptedShares, setAcceptedShares] = useState([]);
+    const [todaysWalks, setTodaysWalks] = useState({ owned: [], covering: [] });
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         window.scrollTo(0, 0);
     }, []);
 
-    // Fetch accepted shared appointments
+    // Fetch today's walks from the /for_date endpoint
     useEffect(() => {
-        const fetchAcceptedShares = async () => {
+        const fetchTodaysWalks = async () => {
             try {
+                setIsLoading(true);
                 const token = localStorage.getItem("token");
-                const response = await fetch("/appointment_shares", {
+                const today = dayjs().format("YYYY-MM-DD");
+                const response = await fetch(`/appointments/for_date?date=${today}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -50,88 +53,19 @@ export default function TodaysWalks() {
 
                 if (response.ok) {
                     const data = await response.json();
-                    // The API returns an object with received_all, sent, etc.
-                    // We want received shares that are accepted
-                    const receivedShares = data.received_all || [];
-                    const accepted = receivedShares.filter(share => share.status === 'accepted');
-                    setAcceptedShares(accepted);
+                    setTodaysWalks(data);
                 }
             } catch (error) {
-                console.error('Error fetching accepted shares:', error);
+                console.error('Error fetching today\'s walks:', error);
+            } finally {
+                setIsLoading(false);
             }
         };
 
         if (user) {
-            fetchAcceptedShares();
+            fetchTodaysWalks();
         }
     }, [user]);
-
-    // Helper to check if recurring appointment occurs on a specific date
-    const isRecurringOnDate = useCallback((appointment, date) => {
-        const dayOfWeek = dayjs(date).day();  // Returns 0-6 (Sunday-Saturday)
-        const recurringDays = {
-            0: appointment.sunday,
-            1: appointment.monday,
-            2: appointment.tuesday,
-            3: appointment.wednesday,
-            4: appointment.thursday,
-            5: appointment.friday,
-            6: appointment.saturday
-        };
-        return recurringDays[dayOfWeek];
-    }, []);
-
-    // Get appointments for today using the same logic as Dashboard
-    const getAppointmentsForToday = useCallback(() => {
-        const today = dayjs().format("YYYY-MM-DD");
-        return (user?.appointments
-            ?.filter(appointment => {
-                if (appointment.canceled) return false;
-
-                const formattedDate = today;
-                const hasCancellation = appointment.cancellations?.some(cancellation =>
-                    dayjs(cancellation.date).format("YYYY-MM-DD") === formattedDate
-                );
-                if (hasCancellation) return false;
-
-                if (appointment.recurring) {
-                    return isRecurringOnDate(appointment, today);
-                }
-                return dayjs(appointment.appointment_date).format("YYYY-MM-DD") === formattedDate;
-            })
-            || []);
-    }, [user?.appointments, isRecurringOnDate]);
-
-    // Get accepted shared walks for today
-    const getAcceptedSharedWalksForToday = useCallback(() => {
-        const today = dayjs().format("YYYY-MM-DD");
-
-        return acceptedShares
-            .filter(share => {
-                const appointment = share.appointment;
-                if (!appointment || appointment.canceled) return false;
-
-                // Check if this share covers today
-                if (share.share_dates && share.share_dates.length > 0) {
-                    // Recurring share - check share_dates array
-                    return share.share_dates.some(shareDate =>
-                        dayjs(shareDate.date).format("YYYY-MM-DD") === today
-                    );
-                } else {
-                    // One-time share - check appointment date
-                    if (appointment.recurring) {
-                        return isRecurringOnDate(appointment, today);
-                    }
-                    return dayjs(appointment.appointment_date).format("YYYY-MM-DD") === today;
-                }
-            })
-            .map(share => ({
-                ...share.appointment,
-                is_covering: true,
-                my_percentage: share.covering_walker_percentage,
-                original_owner_rates: share.original_owner_rates
-            }));
-    }, [acceptedShares, isRecurringOnDate]);
 
     const fetchOptimizedRoute = async () => {
         setIsLoadingRoute(true);
@@ -164,13 +98,10 @@ export default function TodaysWalks() {
         }
     };
 
-    // Get today's appointments (owned + accepted shared walks)
+    // Combine and sort today's appointments
     const todaysAppointments = useMemo(() => {
-        const ownedWalks = getAppointmentsForToday();
-        const sharedWalks = getAcceptedSharedWalksForToday();
-
-        // Combine both arrays
-        const allWalks = [...ownedWalks, ...sharedWalks];
+        // Combine owned and covering walks
+        const allWalks = [...todaysWalks.owned, ...todaysWalks.covering];
 
         // Sort by start time
         return allWalks.sort((a, b) => {
@@ -184,7 +115,7 @@ export default function TodaysWalks() {
 
             return endA.isBefore(endB) ? -1 : 1;
         });
-    }, [getAppointmentsForToday, getAcceptedSharedWalksForToday]);
+    }, [todaysWalks]);
 
     // Calculate daily earnings from today's invoices
     const dailyEarnings = useMemo(() => {

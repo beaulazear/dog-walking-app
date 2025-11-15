@@ -85,6 +85,16 @@ class AppointmentsController < ApplicationController
       end
     end
 
+    # Filter out recurring appointments if a clone exists for this date
+    # This prevents duplicates when recurring appointments are shared
+    cloned_recurring_ids = owned_appointments
+                           .select { |apt| !apt.recurring && apt.cloned_from_appointment_id.present? && apt.appointment_date == date }
+                           .map(&:cloned_from_appointment_id)
+
+    owned_appointments = owned_appointments.reject do |apt|
+      apt.recurring && cloned_recurring_ids.include?(apt.id)
+    end
+
     Rails.logger.debug "🔍 for_date DEBUG - owned_appointments after filtering: #{owned_appointments.count}"
 
     # Appointments where current user is covering (accepted shares)
@@ -263,16 +273,29 @@ class AppointmentsController < ApplicationController
   end
 
   def destroy
-    appointment = @current_user.appointments.find_by(id: params[:id])
+    appointment = Appointment.find_by(id: params[:id])
 
-    if appointment
-      if appointment.destroy
-        render json: { message: 'Appointment deleted successfully' }, status: :ok
-      else
-        render json: { errors: appointment.errors.full_messages }, status: :unprocessable_entity
-      end
+    unless appointment
+      return render json: { error: 'Appointment not found' }, status: :not_found
+    end
+
+    # Check if user is the owner
+    is_owner = appointment.user_id == @current_user.id
+
+    # Check if user is covering this appointment
+    is_covering = appointment.appointment_shares.accepted.any? do |share|
+      share.shared_with_user_id == @current_user.id
+    end
+
+    # Only allow deletion if user owns it OR is covering it
+    unless is_owner || is_covering
+      return render json: { error: 'Not authorized to delete this appointment' }, status: :forbidden
+    end
+
+    if appointment.destroy
+      render json: { message: 'Appointment deleted successfully' }, status: :ok
     else
-      render json: { error: 'Appointment not found' }, status: :not_found
+      render json: { errors: appointment.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
@@ -332,6 +355,7 @@ class AppointmentsController < ApplicationController
   end
 
   def format_covered_appointment(apt, share, _date)
+    original_owner = share.shared_by_user
     {
       id: apt.id,
       appointment_date: apt.appointment_date,
@@ -365,11 +389,19 @@ class AppointmentsController < ApplicationController
       },
       is_covering: true,
       original_owner: {
-        id: share.shared_by_user.id,
-        name: share.shared_by_user.name,
-        email: share.shared_by_user.email_address
+        id: original_owner.id,
+        name: original_owner.name,
+        email: original_owner.email_address
       },
       my_percentage: share.covering_walker_percentage,
+      original_owner_rates: {
+        thirty: original_owner.thirty,
+        fortyfive: original_owner.fortyfive,
+        sixty: original_owner.sixty,
+        solo_rate: original_owner.solo_rate,
+        training_rate: original_owner.training_rate,
+        sibling_rate: original_owner.sibling_rate
+      },
       can_complete: true,
       share_id: share.id
     }
