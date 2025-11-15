@@ -2608,27 +2608,34 @@ const DetailRow = styled.div`
 
 const CancellationsList = styled.div`
     margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 12px;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
 `;
 
 const CancellationsTitle = styled.div`
     font-family: 'Poppins', sans-serif;
     font-size: 0.85rem;
-    font-weight: 600;
-    color: #dc2626;
-    margin-bottom: 6px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 8px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 `;
 
 const CancellationDate = styled.span`
     display: inline-block;
-    padding: 2px 8px;
-    margin: 2px;
-    background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
-    border-radius: 4px;
+    padding: 4px 10px;
+    margin: 3px;
+    background: rgba(239, 68, 68, 0.35);
+    color: #ffffff;
+    border: 1px solid rgba(239, 68, 68, 0.6);
+    border-radius: 6px;
     font-family: 'Poppins', sans-serif;
     font-size: 0.8rem;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 `;
 
 const EmptyAppointments = styled.div`

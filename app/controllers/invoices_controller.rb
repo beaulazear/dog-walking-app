@@ -142,7 +142,31 @@ class InvoicesController < ApplicationController
   end
 
   def create_split_invoices(appointment, share, date, base_params)
-    total_compensation = base_params[:compensation].to_i
+    # Get the original owner (who shared the appointment)
+    original_owner = share.shared_by_user
+
+    # Calculate compensation based on ORIGINAL OWNER's rates, not covering walker's rates
+    # Use the duration and walk_type from params
+    duration = base_params[:walk_duration].to_i
+    walk_type = appointment.walk_type || (appointment.solo ? 'solo' : 'group')
+
+    # Base rate from original owner
+    base_rate = case duration
+                when 30 then original_owner.thirty
+                when 45 then original_owner.fortyfive
+                when 60 then original_owner.sixty
+                else 0
+                end
+
+    # Add walk type upcharge from original owner
+    upcharge = case walk_type
+               when 'solo' then original_owner.solo_rate || 0
+               when 'training' then original_owner.training_rate || 0
+               when 'sibling' then original_owner.sibling_rate || 0
+               else 0
+               end
+
+    total_compensation = base_rate + upcharge
     split = share.calculate_split(total_compensation)
 
     training_session = nil

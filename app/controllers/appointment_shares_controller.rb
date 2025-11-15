@@ -240,8 +240,9 @@ class AppointmentSharesController < ApplicationController
   def format_share(share, direction)
     appointment = share.appointment
     other_user = direction == :received ? share.shared_by_user : share.shared_with_user
+    original_owner = share.shared_by_user
 
-    {
+    base_data = {
       id: share.id,
       status: share.status,
       recurring_share: share.recurring_share,
@@ -275,6 +276,8 @@ class AppointmentSharesController < ApplicationController
         canceled: appointment.canceled,
         delegation_status: appointment.delegation_status,
         recurring: appointment.recurring,
+        walk_type: appointment.walk_type,
+        solo: appointment.solo,
         pet: {
           id: appointment.pet.id,
           name: appointment.pet.name,
@@ -285,5 +288,19 @@ class AppointmentSharesController < ApplicationController
         }
       }
     }
+
+    # Add original owner's rates for covering walkers (when direction is :received)
+    if direction == :received
+      base_data[:original_owner_rates] = {
+        thirty: original_owner.thirty,
+        fortyfive: original_owner.fortyfive,
+        sixty: original_owner.sixty,
+        solo_rate: original_owner.solo_rate,
+        training_rate: original_owner.training_rate,
+        sibling_rate: original_owner.sibling_rate
+      }
+    end
+
+    base_data
   end
 end
