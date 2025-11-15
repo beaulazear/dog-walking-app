@@ -19,11 +19,12 @@ import {
     Share2,
     Calendar,
     Map,
-    Route,
-    Sparkles
+    Route
 } from "lucide-react";
 import ShareAppointmentModal from "./ShareAppointmentModal";
 import WalksMapView from "./WalksMapView";
+import RouteJourneyPanel from "./RouteJourneyPanel";
+import { calculateRouteWithTimes } from "../utils/routeCalculations";
 import * as S from "./TodaysWalks.styles";
 
 export default function TodaysWalks() {
@@ -138,6 +139,11 @@ export default function TodaysWalks() {
         })?.length || 0;
     }, [user?.invoices]);
 
+    // Calculate route with times for the journey panel
+    const routeWithTimes = useMemo(() => {
+        return calculateRouteWithTimes(optimizedRoute);
+    }, [optimizedRoute]);
+
     return (
         <>
             <S.Container>
@@ -179,40 +185,13 @@ export default function TodaysWalks() {
                     </S.EmptyState>
                 ) : (
                     <>
-                        {optimizedRoute && optimizedRoute.route && (
-                            <S.RouteDisplayContainer>
-                                <S.RouteHeader>
-                                    <S.RouteHeaderLeft>
-                                        <S.RouteTitle>
-                                            <Sparkles size={18} />
-                                            Optimized Route
-                                        </S.RouteTitle>
-                                        <S.RouteSummary>
-                                            {optimizedRoute.route.length} stops
-                                        </S.RouteSummary>
-                                    </S.RouteHeaderLeft>
-                                    <S.CloseRouteButton
-                                        onClick={() => setOptimizedRoute(null)}
-                                        title="Close optimized route"
-                                    >
-                                        <X size={20} />
-                                    </S.CloseRouteButton>
-                                </S.RouteHeader>
-                                <S.RouteStops>
-                                    {optimizedRoute.route.map((stop, index) => (
-                                        <S.RouteStop key={index}>
-                                            <S.StopNumber $type={stop.stop_type}>{index + 1}</S.StopNumber>
-                                            <S.StopDetails>
-                                                <S.StopType $type={stop.stop_type}>
-                                                    {stop.stop_type === 'pickup' ? 'Pick up' : 'Drop off'}
-                                                </S.StopType>
-                                                <S.StopName>{stop.pet_name}</S.StopName>
-                                                <S.StopTime>{stop.time}</S.StopTime>
-                                            </S.StopDetails>
-                                        </S.RouteStop>
-                                    ))}
-                                </S.RouteStops>
-                            </S.RouteDisplayContainer>
+                        {routeWithTimes && (
+                            <RouteJourneyPanel
+                                routeWithTimes={routeWithTimes}
+                                onClose={() => setOptimizedRoute(null)}
+                                inline={true}
+                                mapStyle="dark"
+                            />
                         )}
 
                         <S.WalkList>
