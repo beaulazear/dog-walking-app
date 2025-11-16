@@ -18,3 +18,7 @@ bundle exec rails runner "Book.defaults.any? || load(Rails.root.join('db', 'seed
 # Geocode pets that don't have coordinates yet (idempotent - safe to run on every deploy)
 echo "Checking for pets that need geocoding..."
 bundle exec rake geocode:pets || echo "Geocoding completed with some warnings (this is normal if API rate limits are hit)"
+
+# Clean up old cancellations (idempotent - safe to run on every deploy)
+echo "Cleaning up old cancellations..."
+bundle exec rake cleanup:cancellations

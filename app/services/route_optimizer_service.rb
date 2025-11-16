@@ -628,7 +628,8 @@ class RouteOptimizerService
 
   # Calculate cost for dropping off a dog
   # Lower cost = better dropoff option
-  def self.calculate_dropoff_cost(appointment, current_location, current_time, pickup_start_times, currently_walking, remaining_appointments)
+  def self.calculate_dropoff_cost(appointment, current_location, current_time, pickup_start_times, currently_walking,
+                                  remaining_appointments)
     # Base cost: travel time to dropoff location
     travel_time = calculate_travel_time_between_locations(
       current_location,
@@ -667,7 +668,8 @@ class RouteOptimizerService
 
   # Calculate cost for picking up a dog
   # Lower cost = better pickup option
-  def self.calculate_pickup_cost(appointment, current_location, current_time, pickup_start_times, currently_walking, _remaining_appointments)
+  def self.calculate_pickup_cost(appointment, current_location, current_time, pickup_start_times, currently_walking,
+                                 _remaining_appointments)
     # Base cost: travel time to pickup location
     travel_time = calculate_travel_time_between_locations(
       current_location,
@@ -728,7 +730,8 @@ class RouteOptimizerService
   end
 
   # Find the best next dog to pick up based on current state
-  def self.find_best_next_pickup(current_location, remaining_appointments, currently_walking, pickup_times, current_time)
+  def self.find_best_next_pickup(current_location, remaining_appointments, currently_walking, pickup_times,
+                                 current_time)
     # Score each remaining appointment
     scores = remaining_appointments.map do |appt|
       # Distance score (closer is better)

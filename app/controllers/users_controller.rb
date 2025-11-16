@@ -86,12 +86,8 @@ class UsersController < ApplicationController
       end
     end
 
-    # Handle profile pic upload
-    user.profile_pic.attach(params[:profile_pic]) if params[:profile_pic].present?
-
-    user.update(profile_params)
-
-    if user.valid?
+    # Update profile (including profile pic if provided)
+    if user.update(profile_params)
       render json: UserSerializer.serialize(user), status: :ok
     else
       render json: { error: user.errors.full_messages.first || 'Failed to update profile' },

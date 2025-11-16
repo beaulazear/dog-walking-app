@@ -68,7 +68,9 @@ class AppointmentsController < ApplicationController
 
     Rails.logger.debug "🔍 for_date DEBUG - all_owned_appointments count: #{all_owned_appointments.count}"
     Rails.logger.debug "🔍 for_date DEBUG - all_owned_appointments recurring count: #{all_owned_appointments.where(recurring: true).count}"
-    Rails.logger.debug "🔍 for_date DEBUG - all_owned_appointments recurring friday count: #{all_owned_appointments.where(recurring: true, friday: true).count}"
+    Rails.logger.debug "🔍 for_date DEBUG - all_owned_appointments recurring friday count: #{all_owned_appointments.where(
+      recurring: true, friday: true
+    ).count}"
 
     # Filter to only appointments that occur on the requested date
     owned_appointments = all_owned_appointments.select do |apt|
@@ -275,9 +277,7 @@ class AppointmentsController < ApplicationController
   def destroy
     appointment = Appointment.find_by(id: params[:id])
 
-    unless appointment
-      return render json: { error: 'Appointment not found' }, status: :not_found
-    end
+    return render json: { error: 'Appointment not found' }, status: :not_found unless appointment
 
     # Check if user is the owner
     is_owner = appointment.user_id == @current_user.id

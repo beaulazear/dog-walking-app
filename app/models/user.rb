@@ -48,9 +48,11 @@ class User < ApplicationRecord
 
     # In production with S3, use service_url for direct S3 URLs to avoid redirect issues
     # In development/test, use rails_blob_url for local storage
-    if Rails.application.config.active_storage.service == :amazon
-      profile_pic.url
+    if Rails.env.production?
+      # service_url generates a direct S3 URL that doesn't require Rails to proxy
+      profile_pic.service_url(expires_in: 1.year, disposition: 'inline')
     else
+      # For development/test, use blob URL for local storage
       Rails.application.routes.url_helpers.rails_blob_url(profile_pic, only_path: true)
     end
   end
