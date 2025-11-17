@@ -32,41 +32,55 @@ export default function TodaysWalks() {
     const [showMap, setShowMap] = useState(false);
     const [optimizedRoute, setOptimizedRoute] = useState(null);
     const [isLoadingRoute, setIsLoadingRoute] = useState(false);
-    const [todaysWalks, setTodaysWalks] = useState({ owned: [], covering: [] });
-    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         window.scrollTo(0, 0);
     }, []);
 
-    // Fetch today's walks from the /for_date endpoint
-    useEffect(() => {
-        const fetchTodaysWalks = async () => {
-            try {
-                setIsLoading(true);
-                const token = localStorage.getItem("token");
-                const today = dayjs().format("YYYY-MM-DD");
-                const response = await fetch(`/appointments/for_date?date=${today}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    setTodaysWalks(data);
-                }
-            } catch (error) {
-                console.error('Error fetching today\'s walks:', error);
-            } finally {
-                setIsLoading(false);
-            }
+    // Helper function to check if recurring appointment occurs on a specific date
+    const isRecurringOnDate = useCallback((appointment, date) => {
+        const dayOfWeek = dayjs(date).day();
+        const recurringDays = {
+            0: appointment.sunday,
+            1: appointment.monday,
+            2: appointment.tuesday,
+            3: appointment.wednesday,
+            4: appointment.thursday,
+            5: appointment.friday,
+            6: appointment.saturday
         };
+        return recurringDays[dayOfWeek];
+    }, []);
 
-        if (user) {
-            fetchTodaysWalks();
-        }
-    }, [user]);
+    // Get appointments for a specific date (same logic as Dashboard)
+    const getAppointmentsForDate = useCallback((date) => {
+        return (user?.appointments
+            ?.filter(appointment => {
+                if (appointment.canceled) return false;
+
+                const formattedDate = dayjs(date).format("YYYY-MM-DD");
+                const hasCancellation = appointment.cancellations?.some(cancellation =>
+                    dayjs(cancellation.date).format("YYYY-MM-DD") === formattedDate
+                );
+                if (hasCancellation) return false;
+
+                if (appointment.recurring) {
+                    return isRecurringOnDate(appointment, date);
+                }
+                return dayjs(appointment.appointment_date).format("YYYY-MM-DD") === formattedDate;
+            })
+            ?.sort((a, b) => {
+                const startA = dayjs(a.start_time, "HH:mm");
+                const startB = dayjs(b.start_time, "HH:mm");
+                const endA = dayjs(a.end_time, "HH:mm");
+                const endB = dayjs(b.end_time, "HH:mm");
+
+                if (startA.isBefore(startB)) return -1;
+                if (startA.isAfter(startB)) return 1;
+
+                return endA.isBefore(endB) ? -1 : 1;
+            }) || []);
+    }, [user?.appointments, isRecurringOnDate]);
 
     const fetchOptimizedRoute = async () => {
         setIsLoadingRoute(true);
@@ -99,24 +113,10 @@ export default function TodaysWalks() {
         }
     };
 
-    // Combine and sort today's appointments
+    // Get today's appointments using the same logic as Dashboard
     const todaysAppointments = useMemo(() => {
-        // Combine owned and covering walks
-        const allWalks = [...todaysWalks.owned, ...todaysWalks.covering];
-
-        // Sort by start time
-        return allWalks.sort((a, b) => {
-            const startA = dayjs(a.start_time, "HH:mm");
-            const startB = dayjs(b.start_time, "HH:mm");
-            const endA = dayjs(a.end_time, "HH:mm");
-            const endB = dayjs(b.end_time, "HH:mm");
-
-            if (startA.isBefore(startB)) return -1;
-            if (startA.isAfter(startB)) return 1;
-
-            return endA.isBefore(endB) ? -1 : 1;
-        });
-    }, [todaysWalks]);
+        return getAppointmentsForDate(dayjs());
+    }, [getAppointmentsForDate]);
 
     // Calculate daily earnings from today's invoices
     const dailyEarnings = useMemo(() => {
@@ -197,11 +197,11 @@ export default function TodaysWalks() {
                         <S.WalkList>
                             {todaysAppointments.map(appointment => (
                                 <WalkCard
-                                    key={`${appointment.is_covering ? 'covering' : 'owned'}-${appointment.id}`}
+                                    key={appointment.id}
                                     appointment={appointment}
-                                    isCovering={appointment.is_covering || false}
-                                    coveredBy={appointment.covered_by || null}
-                                    myPercentage={appointment.my_percentage || null}
+                                    isCovering={false}
+                                    coveredBy={null}
+                                    myPercentage={null}
                                 />
                             ))}
                         </S.WalkList>
@@ -274,6 +274,10 @@ const WalkCard = React.memo(({ appointment, isCovering, coveredBy, myPercentage 
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showPetModal, setShowPetModal] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
+
+    // Helper to get walk type - supports both walk_type field and legacy solo field
+    const walkType = appointment.walk_type || (appointment.solo ? 'solo' : 'group');
+    const walkTypeDisplay = walkType === 'solo' ? 'Solo' : walkType === 'training' ? 'Training' : walkType === 'sibling' ? 'Sibling' : 'Group';
 
     // Update state when invoices change in context
     React.useEffect(() => {
@@ -350,7 +354,7 @@ const WalkCard = React.memo(({ appointment, isCovering, coveredBy, myPercentage 
                 date_completed: dayjs().toISOString(),
                 paid: false,
                 compensation: parseFloat(cancellationFee) || 0,
-                title: `Canceled ${appointment.duration} min ${appointment.solo ? 'training' : 'group'} walk`,
+                title: `Canceled ${appointment.duration} min ${walkType} walk`,
                 cancelled: true
             }),
         });
@@ -384,7 +388,7 @@ const WalkCard = React.memo(({ appointment, isCovering, coveredBy, myPercentage 
                         </S.InfoItem>
                         <S.InfoDivider>•</S.InfoDivider>
                         <S.InfoItem>
-                            {appointment.solo ? 'Solo' : 'Group'}
+                            {walkTypeDisplay}
                         </S.InfoItem>
                     </S.WalkInfo>
 
@@ -514,6 +518,8 @@ const CompletionModal = ({ appointment, user, onComplete, onClose }) => {
         : 0;
 
     const walkType = appointment.walk_type || (appointment.solo ? 'solo' : 'group');
+    const walkTypeDisplay = walkType === 'solo' ? 'Solo' : walkType === 'training' ? 'Training' : walkType === 'sibling' ? 'Sibling' : 'Group';
+    const isSoloWalk = walkType === 'solo';
     const walkUpcharge = walkType === 'solo' ? (rates.solo_rate || 0)
         : walkType === 'training' ? (rates.training_rate || 0)
         : walkType === 'sibling' ? (rates.sibling_rate || 0)
@@ -609,8 +615,8 @@ const CompletionModal = ({ appointment, user, onComplete, onClose }) => {
                                 <S.PetInfoBanner>
                                     <S.PetNameLarge>{appointment.pet?.name}</S.PetNameLarge>
                                     <S.WalkMetadata>
-                                        <S.WalkTypeChip $solo={appointment.solo}>
-                                            {appointment.solo ? 'Solo' : 'Group'}
+                                        <S.WalkTypeChip $solo={isSoloWalk}>
+                                            {walkTypeDisplay}
                                         </S.WalkTypeChip>
                                         <S.WalkTimeText>
                                             {dayjs(appointment.start_time, "HH:mm").format("h:mm A")}
@@ -793,6 +799,10 @@ const CancelModal = ({ appointment, onCancel, onClose }) => {
     const [cancellationFee, setCancellationFee] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const walkType = appointment.walk_type || (appointment.solo ? 'solo' : 'group');
+    const walkTypeDisplay = walkType === 'solo' ? 'Solo' : walkType === 'training' ? 'Training' : walkType === 'sibling' ? 'Sibling' : 'Group';
+    const isSoloWalk = walkType === 'solo';
+
     const handleSubmit = async () => {
         setIsSubmitting(true);
         await onCancel(cancellationFee);
@@ -863,8 +873,8 @@ const CancelModal = ({ appointment, onCancel, onClose }) => {
                                 <S.PetInfoBanner>
                                     <S.PetNameLarge>{appointment.pet?.name}</S.PetNameLarge>
                                     <S.WalkMetadata>
-                                        <S.WalkTypeChip $solo={appointment.solo}>
-                                            {appointment.solo ? 'Solo' : 'Group'}
+                                        <S.WalkTypeChip $solo={isSoloWalk}>
+                                            {walkTypeDisplay}
                                         </S.WalkTypeChip>
                                         <S.WalkTimeText>
                                             {dayjs(appointment.start_time, "HH:mm").format("h:mm A")}
