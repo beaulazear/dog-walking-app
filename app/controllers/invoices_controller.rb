@@ -120,6 +120,87 @@ class InvoicesController < ApplicationController
     }, status: :ok
   end
 
+  def update
+    # Find invoice through user's pets to ensure authorization
+    pet_ids = @current_user.pets.pluck(:id)
+    invoice = Invoice.where(pet_id: pet_ids).find_by(id: params[:id])
+
+    unless invoice
+      render json: { error: 'Invoice not found or unauthorized' }, status: :not_found
+      return
+    end
+
+    # Prevent editing paid invoices
+    if invoice.paid
+      render json: { error: 'Cannot edit paid invoices' }, status: :unprocessable_entity
+      return
+    end
+
+    # Prevent editing shared invoices
+    if invoice.is_shared
+      render json: { error: 'Cannot edit shared invoices' }, status: :unprocessable_entity
+      return
+    end
+
+    # If appointment is being changed, validate permissions
+    if params[:invoice][:appointment_id] && params[:invoice][:appointment_id] != invoice.appointment_id
+      appointment = Appointment.find_by(id: params[:invoice][:appointment_id])
+      date = params[:invoice][:date_completed] ? Date.parse(params[:invoice][:date_completed]) : invoice.date_completed.to_date
+
+      if appointment
+        can_complete = if appointment.user_id == @current_user.id
+                         !appointment.shared_out_on?(date, for_user: @current_user)
+                       else
+                         appointment.covered_by?(@current_user, on_date: date)
+                       end
+
+        unless can_complete
+          render json: { error: 'You cannot use this appointment on this date' }, status: :forbidden
+          return
+        end
+      end
+    end
+
+    # Track title changes for training session logic
+    old_title = invoice.title
+    old_was_training = invoice.training_walk?
+
+    # Update the invoice
+    if invoice.update(invoice_params.except(:pet_id)) # Don't allow changing pet_id
+      # Handle training session auto-update based on title changes
+      new_is_training = invoice.training_walk?
+      training_session = nil
+      removed_training_session = false
+
+      if !old_was_training && new_is_training
+        # Title changed to training - create training session
+        begin
+          training_session = invoice.create_training_session!
+          @current_user.check_and_create_milestones!
+        rescue StandardError => e
+          Rails.logger.error "Failed to create training session: #{e.message}"
+        end
+      elsif old_was_training && !new_is_training
+        # Title changed from training - remove training session
+        if invoice.training_session
+          invoice.training_session.destroy
+          removed_training_session = true
+        end
+      end
+
+      render json: {
+        invoice: invoice.as_json(only: %i[id appointment_id pet_id date_completed compensation paid pending title
+                                          cancelled training_session_id is_shared split_percentage owner_amount
+                                          walker_amount completed_by_user_id]),
+        training_session: training_session&.as_json(include: { pet: { only: %i[id name] } }),
+        removed_training_session: removed_training_session,
+        new_milestone: training_session ? @current_user.milestones.uncelebrated.last : nil
+      }, status: :ok
+    else
+      render json: { errors: invoice.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
   def destroy
     # Find invoice through user's pets to ensure authorization
     pet_ids = @current_user.pets.pluck(:id)

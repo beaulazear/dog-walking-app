@@ -4,7 +4,7 @@ import styled from "styled-components";
 import dayjs from "dayjs";
 import { UserContext } from "../context/user";
 import CopyableInvoicesModal from "./CopyableInvoiceModal";
-import { DollarSign, Calendar, Trash2, CreditCard, Receipt, Eye, Plus, X, Save } from "lucide-react";
+import { DollarSign, Calendar, Trash2, CreditCard, Receipt, Eye, Plus, X, Save, Pencil, Minus } from "lucide-react";
 import toast from 'react-hot-toast';
 import { useConfirm } from '../hooks/useConfirm';
 import ConfirmModal from './ConfirmModal';
@@ -16,6 +16,7 @@ const PetInvoices = ({ pet }) => {
     const [invoiceLimit, setInvoiceLimit] = useState(15);
     const [showModal, setShowModal] = useState(false);
     const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
+    const [editingInvoice, setEditingInvoice] = useState(null);
     const [isMarkingAsPaid, setIsMarkingAsPaid] = useState(false);
     const [deletingInvoiceId, setDeletingInvoiceId] = useState(null);
 
@@ -143,12 +144,23 @@ const PetInvoices = ({ pet }) => {
                                                 <Calendar size={14} />
                                                 {dayjs(invoice.date_completed).format("MMM D, YYYY")}
                                             </InvoiceDate>
-                                            <DeleteButton
-                                                onClick={() => deleteInvoice(invoice.id)}
-                                                disabled={deletingInvoiceId === invoice.id}
-                                            >
-                                                <Trash2 size={16} />
-                                            </DeleteButton>
+                                            <InvoiceActions>
+                                                {!invoice.is_shared && (
+                                                    <EditButton
+                                                        onClick={() => setEditingInvoice(invoice)}
+                                                        title="Edit invoice"
+                                                    >
+                                                        <Pencil size={16} />
+                                                    </EditButton>
+                                                )}
+                                                <DeleteButton
+                                                    onClick={() => deleteInvoice(invoice.id)}
+                                                    disabled={deletingInvoiceId === invoice.id}
+                                                    title="Delete invoice"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </DeleteButton>
+                                            </InvoiceActions>
                                         </InvoiceDetails>
                                     </InvoiceCard>
                                 ))}
@@ -228,16 +240,34 @@ const PetInvoices = ({ pet }) => {
             )}
             
             {showCreateInvoiceModal && (
-                <CreateInvoiceModal 
+                <CreateInvoiceModal
                     pet={pet}
                     user={user}
                     onClose={() => setShowCreateInvoiceModal(false)}
                     onInvoiceCreated={(newInvoice) => {
                         setUser(prevUser => ({
                             ...prevUser,
-                            invoices: [...prevUser.invoices, newInvoice]
+                            invoices: [...prevUser.invoices, newInvoice.invoice]
                         }));
                         setShowCreateInvoiceModal(false);
+                    }}
+                />
+            )}
+
+            {editingInvoice && (
+                <EditInvoiceModal
+                    pet={pet}
+                    user={user}
+                    invoice={editingInvoice}
+                    onClose={() => setEditingInvoice(null)}
+                    onInvoiceUpdated={(updatedInvoiceData) => {
+                        setUser(prevUser => ({
+                            ...prevUser,
+                            invoices: prevUser.invoices.map(inv =>
+                                inv.id === updatedInvoiceData.invoice.id ? updatedInvoiceData.invoice : inv
+                            )
+                        }));
+                        setEditingInvoice(null);
                     }}
                 />
             )}
@@ -261,10 +291,12 @@ const PetInvoices = ({ pet }) => {
 const CreateInvoiceModal = ({ pet, user, onClose, onInvoiceCreated }) => {
     const [formData, setFormData] = useState({
         appointment_id: '',
-        title: '',
-        compensation: '',
         date_completed: dayjs().format('YYYY-MM-DD')
     });
+    const [duration, setDuration] = useState(30);
+    const [walkType, setWalkType] = useState('group');
+    const [offset, setOffset] = useState(0);
+    const [offsetType, setOffsetType] = useState('upcharge');
     const [isCreating, setIsCreating] = useState(false);
 
     // Get appointments for this pet that could be associated with an invoice
@@ -272,11 +304,26 @@ const CreateInvoiceModal = ({ pet, user, onClose, onInvoiceCreated }) => {
         apt.pet_id === pet.id && !apt.canceled
     ) || [];
 
+    // Auto-calculate compensation based on duration, walk type, and offset
+    const baseCompensation = duration === 30 ? (user.thirty || 0)
+        : duration === 45 ? (user.fortyfive || 0)
+        : duration === 60 ? (user.sixty || 0)
+        : 0;
+
+    const walkTypeUpcharge = walkType === 'solo' ? (user.solo_rate || 0)
+        : walkType === 'training' ? (user.training_rate || 0)
+        : walkType === 'sibling' ? (user.sibling_rate || 0)
+        : 0;
+
+    const totalCompensation = baseCompensation + walkTypeUpcharge + (offsetType === 'upcharge' ? offset : -offset);
+
+    const title = `${duration} min ${walkType} walk`;
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!formData.appointment_id || !formData.title || !formData.compensation) {
-            toast.error('Please fill in all required fields');
+        if (!formData.appointment_id) {
+            toast.error('Please select an appointment');
             return;
         }
 
@@ -289,8 +336,8 @@ const CreateInvoiceModal = ({ pet, user, onClose, onInvoiceCreated }) => {
                     invoice: {
                         appointment_id: parseInt(formData.appointment_id),
                         pet_id: pet.id,
-                        title: formData.title,
-                        compensation: parseFloat(formData.compensation),
+                        title: title,
+                        compensation: totalCompensation,
                         date_completed: dayjs(formData.date_completed).toISOString(),
                         paid: false
                     }
@@ -374,35 +421,6 @@ const CreateInvoiceModal = ({ pet, user, onClose, onInvoiceCreated }) => {
                         </FormSection>
 
                         <FormSection>
-                            <FormLabel>Description *</FormLabel>
-                            <FormInput
-                                type="text"
-                                value={formData.title}
-                                onChange={(e) => setFormData({...formData, title: e.target.value})}
-                                placeholder="e.g., 30 min walk, Pet sitting"
-                                required
-                                disabled={isCreating}
-                            />
-                        </FormSection>
-
-                        <FormSection>
-                            <FormLabel>Amount *</FormLabel>
-                            <AmountInputContainer>
-                                <DollarSign size={18} />
-                                <FormInput
-                                    type="number"
-                                    value={formData.compensation}
-                                    onChange={(e) => setFormData({...formData, compensation: e.target.value})}
-                                    placeholder="0.00"
-                                    step="0.01"
-                                    min="0"
-                                    required
-                                    disabled={isCreating}
-                                />
-                            </AmountInputContainer>
-                        </FormSection>
-
-                        <FormSection>
                             <FormLabel>Service Date *</FormLabel>
                             <FormInput
                                 type="date"
@@ -411,6 +429,139 @@ const CreateInvoiceModal = ({ pet, user, onClose, onInvoiceCreated }) => {
                                 required
                                 disabled={isCreating}
                             />
+                        </FormSection>
+
+                        <FormSection>
+                            <FormLabel>Walk Duration *</FormLabel>
+                            <DurationSelector>
+                                <DurationOption
+                                    type="button"
+                                    $active={duration === 30}
+                                    onClick={() => setDuration(30)}
+                                    disabled={isCreating}
+                                >
+                                    <DurationTime>30</DurationTime>
+                                    <DurationUnit>min</DurationUnit>
+                                </DurationOption>
+                                <DurationOption
+                                    type="button"
+                                    $active={duration === 45}
+                                    onClick={() => setDuration(45)}
+                                    disabled={isCreating}
+                                >
+                                    <DurationTime>45</DurationTime>
+                                    <DurationUnit>min</DurationUnit>
+                                </DurationOption>
+                                <DurationOption
+                                    type="button"
+                                    $active={duration === 60}
+                                    onClick={() => setDuration(60)}
+                                    disabled={isCreating}
+                                >
+                                    <DurationTime>60</DurationTime>
+                                    <DurationUnit>min</DurationUnit>
+                                </DurationOption>
+                            </DurationSelector>
+                        </FormSection>
+
+                        <FormSection>
+                            <FormLabel>Walk Type *</FormLabel>
+                            <WalkTypeSelector>
+                                <WalkTypeOption
+                                    type="button"
+                                    $active={walkType === 'group'}
+                                    onClick={() => setWalkType('group')}
+                                    disabled={isCreating}
+                                >
+                                    Group
+                                </WalkTypeOption>
+                                <WalkTypeOption
+                                    type="button"
+                                    $active={walkType === 'solo'}
+                                    onClick={() => setWalkType('solo')}
+                                    disabled={isCreating}
+                                >
+                                    Solo
+                                </WalkTypeOption>
+                                <WalkTypeOption
+                                    type="button"
+                                    $active={walkType === 'training'}
+                                    onClick={() => setWalkType('training')}
+                                    disabled={isCreating}
+                                >
+                                    Training
+                                </WalkTypeOption>
+                                <WalkTypeOption
+                                    type="button"
+                                    $active={walkType === 'sibling'}
+                                    onClick={() => setWalkType('sibling')}
+                                    disabled={isCreating}
+                                >
+                                    Sibling
+                                </WalkTypeOption>
+                            </WalkTypeSelector>
+                        </FormSection>
+
+                        <CompensationBreakdownSection>
+                            <FormLabel>Price Breakdown</FormLabel>
+                            <CompensationCard>
+                                <CompensationRow>
+                                    <span>Base Rate ({duration} min)</span>
+                                    <span>${baseCompensation.toFixed(2)}</span>
+                                </CompensationRow>
+                                {walkTypeUpcharge > 0 && (
+                                    <CompensationRow>
+                                        <span>{walkType.charAt(0).toUpperCase() + walkType.slice(1)} Upcharge</span>
+                                        <span>+${walkTypeUpcharge.toFixed(2)}</span>
+                                    </CompensationRow>
+                                )}
+                                {offset > 0 && (
+                                    <CompensationRow>
+                                        <span>{offsetType === 'upcharge' ? 'Additional' : 'Discount'}</span>
+                                        <span>{offsetType === 'upcharge' ? '+' : '-'}${offset.toFixed(2)}</span>
+                                    </CompensationRow>
+                                )}
+                                <CompensationTotal>
+                                    <strong>Total</strong>
+                                    <strong>${totalCompensation.toFixed(2)}</strong>
+                                </CompensationTotal>
+                            </CompensationCard>
+                        </CompensationBreakdownSection>
+
+                        <FormSection>
+                            <FormLabel>Adjustment (Optional)</FormLabel>
+                            <AdjustmentTypeToggle>
+                                <AdjustmentTypeButton
+                                    type="button"
+                                    $active={offsetType === 'upcharge'}
+                                    onClick={() => setOffsetType('upcharge')}
+                                    disabled={isCreating}
+                                >
+                                    <Plus size={16} />
+                                    Add
+                                </AdjustmentTypeButton>
+                                <AdjustmentTypeButton
+                                    type="button"
+                                    $active={offsetType === 'discount'}
+                                    onClick={() => setOffsetType('discount')}
+                                    disabled={isCreating}
+                                >
+                                    <Minus size={16} />
+                                    Subtract
+                                </AdjustmentTypeButton>
+                            </AdjustmentTypeToggle>
+                            <AdjustmentInputContainer>
+                                <DollarSign size={18} />
+                                <FormInput
+                                    type="number"
+                                    value={offset}
+                                    onChange={(e) => setOffset(parseFloat(e.target.value) || 0)}
+                                    placeholder="0.00"
+                                    step="0.01"
+                                    min="0"
+                                    disabled={isCreating}
+                                />
+                            </AdjustmentInputContainer>
                         </FormSection>
 
                         <FormActions>
@@ -425,6 +576,319 @@ const CreateInvoiceModal = ({ pet, user, onClose, onInvoiceCreated }) => {
                                 )}
                             </FormSubmitButton>
                             <CancelFormButton type="button" onClick={onClose} disabled={isCreating}>
+                                Cancel
+                            </CancelFormButton>
+                        </FormActions>
+                    </CreateForm>
+                </CreateModalContent>
+            </CreateModalContainer>
+        </CreateModalOverlay>
+    );
+
+    return ReactDOM.createPortal(modalContent, document.body);
+};
+
+// Edit Invoice Modal Component
+const EditInvoiceModal = ({ pet, user, invoice, onClose, onInvoiceUpdated }) => {
+    // Parse existing invoice data to extract duration and walk type
+    const parseDurationFromTitle = (title) => {
+        const match = title?.match(/(\d+)\s*min/);
+        return match ? parseInt(match[1]) : 30;
+    };
+
+    const parseWalkTypeFromTitle = (title) => {
+        const titleLower = title?.toLowerCase() || '';
+        if (titleLower.includes('solo')) return 'solo';
+        if (titleLower.includes('training')) return 'training';
+        if (titleLower.includes('sibling')) return 'sibling';
+        return 'group';
+    };
+
+    const [formData, setFormData] = useState({
+        appointment_id: invoice.appointment_id || '',
+        date_completed: dayjs(invoice.date_completed).format('YYYY-MM-DD')
+    });
+    const [duration, setDuration] = useState(parseDurationFromTitle(invoice.title));
+    const [walkType, setWalkType] = useState(parseWalkTypeFromTitle(invoice.title));
+    const [offset, setOffset] = useState(0);
+    const [offsetType, setOffsetType] = useState('upcharge');
+    const [isUpdating, setIsUpdating] = useState(false);
+
+    // Get appointments for this pet that could be associated with an invoice
+    const availableAppointments = user.appointments?.filter(apt =>
+        apt.pet_id === pet.id && !apt.canceled
+    ) || [];
+
+    // Auto-calculate compensation based on duration, walk type, and offset
+    const baseCompensation = duration === 30 ? (user.thirty || 0)
+        : duration === 45 ? (user.fortyfive || 0)
+        : duration === 60 ? (user.sixty || 0)
+        : 0;
+
+    const walkTypeUpcharge = walkType === 'solo' ? (user.solo_rate || 0)
+        : walkType === 'training' ? (user.training_rate || 0)
+        : walkType === 'sibling' ? (user.sibling_rate || 0)
+        : 0;
+
+    const totalCompensation = baseCompensation + walkTypeUpcharge + (offsetType === 'upcharge' ? offset : -offset);
+
+    const title = `${duration} min ${walkType} walk`;
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (!formData.appointment_id) {
+            toast.error('Please select an appointment');
+            return;
+        }
+
+        setIsUpdating(true);
+        try {
+            const response = await fetch(`/invoices/${invoice.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    invoice: {
+                        appointment_id: parseInt(formData.appointment_id),
+                        title: title,
+                        compensation: totalCompensation,
+                        date_completed: dayjs(formData.date_completed).toISOString()
+                    }
+                })
+            });
+
+            if (response.ok) {
+                const updatedInvoice = await response.json();
+                onInvoiceUpdated(updatedInvoice);
+                toast.success('Invoice updated successfully!');
+            } else {
+                const errorData = await response.json();
+                toast.error(errorData.error || errorData.errors?.join(', ') || 'Failed to update invoice');
+            }
+        } catch (error) {
+            console.error('Error updating invoice:', error);
+            toast.error('Failed to update invoice. Please try again.');
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const handleOverlayClick = (e) => {
+        if (e.target === e.currentTarget && !isUpdating) {
+            onClose();
+        }
+    };
+
+    React.useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape' && !isUpdating) {
+                onClose();
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.body.style.overflow = 'unset';
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [onClose, isUpdating]);
+
+    const modalContent = (
+        <CreateModalOverlay onClick={handleOverlayClick}>
+            <CreateModalContainer>
+                <CreateModalDragHandle />
+
+                <CreateModalHeader>
+                    <CreateModalHeaderTop>
+                        <CreateModalTitle>Edit Invoice</CreateModalTitle>
+                        <CreateModalCloseButton onClick={onClose} disabled={isUpdating}>
+                            <X size={20} />
+                        </CreateModalCloseButton>
+                    </CreateModalHeaderTop>
+                    <CreateModalSubtitle>
+                        Editing invoice for {pet.name}
+                    </CreateModalSubtitle>
+                </CreateModalHeader>
+
+                <CreateModalContent>
+                    <CreateForm onSubmit={handleSubmit}>
+                        <FormSection>
+                            <FormLabel>Appointment *</FormLabel>
+                            <FormSelect
+                                value={formData.appointment_id}
+                                onChange={(e) => setFormData({...formData, appointment_id: e.target.value})}
+                                required
+                                disabled={isUpdating}
+                            >
+                                <option value="">Select appointment...</option>
+                                {availableAppointments.map(apt => (
+                                    <option key={apt.id} value={apt.id}>
+                                        {apt.recurring ? 'Recurring' : dayjs(apt.appointment_date).format('MMM D, YYYY')} -
+                                        {apt.duration} min walk
+                                    </option>
+                                ))}
+                            </FormSelect>
+                            <FormHint>
+                                Invoices must be linked to an existing appointment
+                            </FormHint>
+                        </FormSection>
+
+                        <FormSection>
+                            <FormLabel>Service Date *</FormLabel>
+                            <FormInput
+                                type="date"
+                                value={formData.date_completed}
+                                onChange={(e) => setFormData({...formData, date_completed: e.target.value})}
+                                required
+                                disabled={isUpdating}
+                            />
+                        </FormSection>
+
+                        <FormSection>
+                            <FormLabel>Walk Duration *</FormLabel>
+                            <DurationSelector>
+                                <DurationOption
+                                    type="button"
+                                    $active={duration === 30}
+                                    onClick={() => setDuration(30)}
+                                    disabled={isUpdating}
+                                >
+                                    <DurationTime>30</DurationTime>
+                                    <DurationUnit>min</DurationUnit>
+                                </DurationOption>
+                                <DurationOption
+                                    type="button"
+                                    $active={duration === 45}
+                                    onClick={() => setDuration(45)}
+                                    disabled={isUpdating}
+                                >
+                                    <DurationTime>45</DurationTime>
+                                    <DurationUnit>min</DurationUnit>
+                                </DurationOption>
+                                <DurationOption
+                                    type="button"
+                                    $active={duration === 60}
+                                    onClick={() => setDuration(60)}
+                                    disabled={isUpdating}
+                                >
+                                    <DurationTime>60</DurationTime>
+                                    <DurationUnit>min</DurationUnit>
+                                </DurationOption>
+                            </DurationSelector>
+                        </FormSection>
+
+                        <FormSection>
+                            <FormLabel>Walk Type *</FormLabel>
+                            <WalkTypeSelector>
+                                <WalkTypeOption
+                                    type="button"
+                                    $active={walkType === 'group'}
+                                    onClick={() => setWalkType('group')}
+                                    disabled={isUpdating}
+                                >
+                                    Group
+                                </WalkTypeOption>
+                                <WalkTypeOption
+                                    type="button"
+                                    $active={walkType === 'solo'}
+                                    onClick={() => setWalkType('solo')}
+                                    disabled={isUpdating}
+                                >
+                                    Solo
+                                </WalkTypeOption>
+                                <WalkTypeOption
+                                    type="button"
+                                    $active={walkType === 'training'}
+                                    onClick={() => setWalkType('training')}
+                                    disabled={isUpdating}
+                                >
+                                    Training
+                                </WalkTypeOption>
+                                <WalkTypeOption
+                                    type="button"
+                                    $active={walkType === 'sibling'}
+                                    onClick={() => setWalkType('sibling')}
+                                    disabled={isUpdating}
+                                >
+                                    Sibling
+                                </WalkTypeOption>
+                            </WalkTypeSelector>
+                        </FormSection>
+
+                        <CompensationBreakdownSection>
+                            <FormLabel>Price Breakdown</FormLabel>
+                            <CompensationCard>
+                                <CompensationRow>
+                                    <span>Base Rate ({duration} min)</span>
+                                    <span>${baseCompensation.toFixed(2)}</span>
+                                </CompensationRow>
+                                {walkTypeUpcharge > 0 && (
+                                    <CompensationRow>
+                                        <span>{walkType.charAt(0).toUpperCase() + walkType.slice(1)} Upcharge</span>
+                                        <span>+${walkTypeUpcharge.toFixed(2)}</span>
+                                    </CompensationRow>
+                                )}
+                                {offset > 0 && (
+                                    <CompensationRow>
+                                        <span>{offsetType === 'upcharge' ? 'Additional' : 'Discount'}</span>
+                                        <span>{offsetType === 'upcharge' ? '+' : '-'}${offset.toFixed(2)}</span>
+                                    </CompensationRow>
+                                )}
+                                <CompensationTotal>
+                                    <strong>Total</strong>
+                                    <strong>${totalCompensation.toFixed(2)}</strong>
+                                </CompensationTotal>
+                            </CompensationCard>
+                        </CompensationBreakdownSection>
+
+                        <FormSection>
+                            <FormLabel>Adjustment (Optional)</FormLabel>
+                            <AdjustmentTypeToggle>
+                                <AdjustmentTypeButton
+                                    type="button"
+                                    $active={offsetType === 'upcharge'}
+                                    onClick={() => setOffsetType('upcharge')}
+                                    disabled={isUpdating}
+                                >
+                                    <Plus size={16} />
+                                    Add
+                                </AdjustmentTypeButton>
+                                <AdjustmentTypeButton
+                                    type="button"
+                                    $active={offsetType === 'discount'}
+                                    onClick={() => setOffsetType('discount')}
+                                    disabled={isUpdating}
+                                >
+                                    <Minus size={16} />
+                                    Subtract
+                                </AdjustmentTypeButton>
+                            </AdjustmentTypeToggle>
+                            <AdjustmentInputContainer>
+                                <DollarSign size={18} />
+                                <FormInput
+                                    type="number"
+                                    value={offset}
+                                    onChange={(e) => setOffset(parseFloat(e.target.value) || 0)}
+                                    placeholder="0.00"
+                                    step="0.01"
+                                    min="0"
+                                    disabled={isUpdating}
+                                />
+                            </AdjustmentInputContainer>
+                        </FormSection>
+
+                        <FormActions>
+                            <FormSubmitButton type="submit" disabled={isUpdating}>
+                                {isUpdating ? (
+                                    <>Updating...</>
+                                ) : (
+                                    <>
+                                        <Save size={18} />
+                                        Update Invoice
+                                    </>
+                                )}
+                            </FormSubmitButton>
+                            <CancelFormButton type="button" onClick={onClose} disabled={isUpdating}>
                                 Cancel
                             </CancelFormButton>
                         </FormActions>
@@ -613,6 +1077,36 @@ const InvoiceDate = styled.span`
     display: flex;
     align-items: center;
     gap: 4px;
+`;
+
+const InvoiceActions = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+`;
+
+const EditButton = styled.button`
+    background: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    padding: 6px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+
+    &:hover:not(:disabled) {
+        background: rgba(59, 130, 246, 0.3);
+        border-color: rgba(59, 130, 246, 0.5);
+        transform: scale(1.05);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 `;
 
 const DeleteButton = styled.button`
@@ -1088,23 +1582,6 @@ const FormHint = styled.p`
     }
 `;
 
-const AmountInputContainer = styled.div`
-    position: relative;
-    display: flex;
-    align-items: center;
-
-    svg {
-        position: absolute;
-        left: 16px;
-        color: rgba(255, 255, 255, 0.6);
-        z-index: 1;
-    }
-
-    input {
-        padding-left: 46px;
-    }
-`;
-
 const FormActions = styled.div`
     display: flex;
     flex-direction: column;
@@ -1180,5 +1657,219 @@ const CancelFormButton = styled.button`
     @media (max-width: 767px) {
         padding: 12px 20px;
         font-size: 0.9rem;
+    }
+`;
+
+// Duration Selector Styles
+const DurationSelector = styled.div`
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 8px;
+`;
+
+const DurationOption = styled.button`
+    background: ${({ $active }) =>
+        $active ? 'linear-gradient(135deg, #8b5a8c, #a569a7)' : 'rgba(255, 255, 255, 0.1)'
+    };
+    border: 2px solid ${({ $active }) =>
+        $active ? 'rgba(165, 105, 167, 0.5)' : 'rgba(255, 255, 255, 0.2)'
+    };
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+
+    &:hover:not(:disabled) {
+        background: ${({ $active }) =>
+            $active ? 'linear-gradient(135deg, #a569a7, #8b5a8c)' : 'rgba(255, 255, 255, 0.15)'
+        };
+        transform: translateY(-2px);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+`;
+
+const DurationTime = styled.div`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1;
+`;
+
+const DurationUnit = styled.div`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+`;
+
+// Walk Type Selector Styles
+const WalkTypeSelector = styled.div`
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 8px;
+`;
+
+const WalkTypeOption = styled.button`
+    background: ${({ $active }) =>
+        $active ? 'linear-gradient(135deg, #8b5a8c, #a569a7)' : 'rgba(255, 255, 255, 0.1)'
+    };
+    border: 2px solid ${({ $active }) =>
+        $active ? 'rgba(165, 105, 167, 0.5)' : 'rgba(255, 255, 255, 0.2)'
+    };
+    border-radius: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #ffffff;
+
+    &:hover:not(:disabled) {
+        background: ${({ $active }) =>
+            $active ? 'linear-gradient(135deg, #a569a7, #8b5a8c)' : 'rgba(255, 255, 255, 0.15)'
+        };
+        transform: translateY(-1px);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+`;
+
+// Compensation Breakdown Styles
+const CompensationBreakdownSection = styled.div`
+    margin: 16px 0;
+`;
+
+const CompensationCard = styled.div`
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 8px;
+    backdrop-filter: blur(10px);
+`;
+
+const CompensationRow = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+
+    &:not(:last-child) {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    span:last-child {
+        font-weight: 600;
+        color: #ffffff;
+    }
+`;
+
+const CompensationTotal = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0 4px 0;
+    margin-top: 8px;
+    border-top: 2px solid rgba(255, 255, 255, 0.2);
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.1rem;
+    color: #ffffff;
+
+    strong {
+        font-weight: 700;
+    }
+
+    strong:last-child {
+        color: #86efac;
+        font-size: 1.3rem;
+    }
+`;
+
+// Adjustment Section Styles
+const AdjustmentTypeToggle = styled.div`
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 8px 0 12px 0;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px;
+    border-radius: 10px;
+`;
+
+const AdjustmentTypeButton = styled.button`
+    background: ${({ $active }) =>
+        $active ? 'linear-gradient(135deg, #8b5a8c, #a569a7)' : 'transparent'
+    };
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    &:hover:not(:disabled) {
+        background: ${({ $active }) =>
+            $active ? 'linear-gradient(135deg, #a569a7, #8b5a8c)' : 'rgba(255, 255, 255, 0.1)'
+        };
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+`;
+
+const AdjustmentInputContainer = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 12px 14px;
+    transition: all 0.3s ease;
+
+    &:focus-within {
+        border-color: rgba(165, 105, 167, 0.5);
+        background: rgba(255, 255, 255, 0.12);
+    }
+
+    svg {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    input {
+        background: none;
+        border: none;
+        outline: none;
+        flex: 1;
     }
 `;
