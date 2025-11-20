@@ -371,9 +371,9 @@ const WalkCard = React.memo(({ appointment, isCovering, coveredBy, myPercentage 
     return (
         <S.Card $completed={isCompleted} $cancelled={isCancelled}>
             <S.CardContent>
-                <S.WalkDetails>
+                <S.WalkDetails onClick={() => setShowPetModal(true)}>
                     <S.TopRow>
-                        <S.PetName onClick={() => setShowPetModal(true)}>{appointment.pet?.name}</S.PetName>
+                        <S.PetName>{appointment.pet?.name}</S.PetName>
                         <S.WalkTime>
                             {dayjs(appointment.start_time, "HH:mm").format("h:mm A")} - {dayjs(appointment.end_time, "HH:mm").format("h:mm A")}
                         </S.WalkTime>
@@ -389,6 +389,12 @@ const WalkCard = React.memo(({ appointment, isCovering, coveredBy, myPercentage 
                         <S.InfoDivider>•</S.InfoDivider>
                         <S.InfoItem>
                             {walkTypeDisplay}
+                        </S.InfoItem>
+                        <S.InfoDivider>•</S.InfoDivider>
+                        <S.InfoItem>
+                            <S.InfoIcon>
+                                <Info size={12} />
+                            </S.InfoIcon>
                         </S.InfoItem>
                     </S.WalkInfo>
 

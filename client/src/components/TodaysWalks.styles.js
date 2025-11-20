@@ -572,6 +572,16 @@ export const WalkDetails = styled.div`
     flex-direction: column;
     gap: 6px;
     text-align: left;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+        opacity: 0.9;
+    }
+
+    &:active {
+        opacity: 0.8;
+    }
 `;
 
 export const TopRow = styled.div`
@@ -588,16 +598,10 @@ export const PetName = styled.h3`
     font-size: 1.05rem;
     font-weight: 700;
     margin: 0;
-    cursor: pointer;
-    transition: color 0.2s ease;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     line-height: 1.3;
     word-wrap: break-word;
     overflow-wrap: break-word;
-
-    &:hover {
-        color: rgba(255, 255, 255, 0.9);
-    }
 
     @media (max-width: 768px) {
         font-size: 1.1rem;
@@ -661,6 +665,23 @@ export const InfoDivider = styled.span`
     color: rgba(255, 255, 255, 0.6);
     font-size: 0.75rem;
     font-weight: 700;
+`;
+
+export const InfoIcon = styled.span`
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.7);
+    transition: all 0.2s ease;
+
+    svg {
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+    }
+
+    ${WalkDetails}:hover & {
+        color: rgba(255, 255, 255, 0.95);
+        transform: scale(1.1);
+    }
 `;
 
 export const EarningsDisplay = styled.div`
