@@ -162,7 +162,7 @@ class InvoicesController < ApplicationController
     end
 
     # Track title changes for training session logic
-    old_title = invoice.title
+    invoice.title
     old_was_training = invoice.training_walk?
 
     # Update the invoice

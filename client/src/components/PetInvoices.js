@@ -46,9 +46,13 @@ const PetInvoices = ({ pet }) => {
 
         setIsMarkingAsPaid(true);
         try {
+            const token = localStorage.getItem("token");
             const response = await fetch(`/invoices/paid`, {
                 method: "PATCH",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify({ id_array: unpaidInvoices.map(i => i.id) })
             });
 
@@ -82,8 +86,12 @@ const PetInvoices = ({ pet }) => {
 
         setDeletingInvoiceId(invoiceId);
         try {
+            const token = localStorage.getItem("token");
             const response = await fetch(`/invoices/${invoiceId}`, {
                 method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
             });
 
             if (response.ok) {
