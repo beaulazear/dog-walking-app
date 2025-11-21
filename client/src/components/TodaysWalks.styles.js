@@ -1879,12 +1879,12 @@ export const PetModalOverlay = styled.div`
 
 export const PetModalContainer = styled.div`
     background: linear-gradient(145deg, rgba(74, 26, 74, 0.95), rgba(107, 43, 107, 0.9));
-    border-radius: 24px;
+    border-radius: 20px;
     border: 2px solid rgba(139, 90, 140, 0.5);
     backdrop-filter: blur(20px);
     box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3);
     width: 100%;
-    max-width: 500px;
+    max-width: 440px;
     max-height: 90vh;
     overflow-y: auto;
     position: relative;
@@ -1892,10 +1892,18 @@ export const PetModalContainer = styled.div`
 
 export const PetModalHeader = styled.div`
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 24px 24px 0;
-    margin-bottom: 20px;
+    gap: 16px;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+export const PetHeaderInfo = styled.div`
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 `;
 
 export const PetModalTitle = styled.h2`
@@ -1931,135 +1939,159 @@ export const PetModalCloseButton = styled.button`
 `;
 
 export const PetModalContent = styled.div`
-    padding: 0 24px 24px;
-`;
-
-export const PetMainInfo = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 24px;
     padding: 20px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 `;
 
 export const PetModalAvatar = styled.img`
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
     object-fit: cover;
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-`;
-
-export const PetNameContainer = styled.div`
-    flex: 1;
+    border: 2px solid rgba(165, 105, 167, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
 `;
 
 export const PetModalName = styled.h3`
     font-family: 'Poppins', sans-serif;
-    font-size: 1.8rem;
+    font-size: 1.4rem;
     font-weight: 700;
     color: #ffffff;
-    margin: 0 0 6px 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-`;
-
-export const PetBreed = styled.p`
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.1rem;
-    color: rgba(255, 255, 255, 0.8);
     margin: 0;
-    font-weight: 500;
-    font-style: italic;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 `;
 
-export const PetDetailsGrid = styled.div`
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
-    margin-bottom: 24px;
-`;
-
-export const PetDetailItem = styled.div`
+export const PetAddress = styled.div`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 16px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.3s ease;
+    gap: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 
-    &:hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.15);
+    svg {
+        flex-shrink: 0;
+        opacity: 0.8;
     }
 `;
 
-export const DetailIcon = styled.div`
+// Basic Info Row (Compact)
+export const BasicInfoRow = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    background: rgba(165, 105, 167, 0.3);
-    border-radius: 50%;
-    color: #ffffff;
-    flex-shrink: 0;
+    gap: 12px;
+    padding: 14px 20px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 `;
 
-export const DetailContent = styled.div`
-    flex: 1;
-    min-width: 0;
-`;
-
-export const DetailLabel = styled.div`
+export const BasicInfoItem = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-family: 'Poppins', sans-serif;
     font-size: 0.85rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.7);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
-`;
-
-export const DetailValue = styled.div`
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
     font-weight: 500;
-    color: #ffffff;
-    word-break: break-word;
-`;
+    color: rgba(255, 255, 255, 0.9);
 
-export const NotesSection = styled.div`
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    margin-bottom: 16px;
+    svg {
+        color: rgba(165, 105, 167, 0.9);
+        flex-shrink: 0;
+    }
 
-    &:last-child {
-        margin-bottom: 0;
+    span {
+        white-space: nowrap;
     }
 `;
 
-export const NotesTitle = styled.h4`
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #ffffff;
-    margin: 0 0 12px 0;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+export const BasicInfoDivider = styled.div`
+    width: 1px;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.15);
+    flex-shrink: 0;
 `;
 
-export const NotesText = styled.p`
+// Alert Sections (Highlighted Important Info)
+export const AlertSection = styled.div`
+    padding: 16px 18px;
+    border-radius: 14px;
+    background: ${({ $variant }) =>
+        $variant === 'danger' ? 'rgba(239, 68, 68, 0.12)' :
+        $variant === 'warning' ? 'rgba(245, 158, 11, 0.12)' :
+        'rgba(59, 130, 246, 0.12)'
+    };
+    border: 2px solid ${({ $variant }) =>
+        $variant === 'danger' ? 'rgba(239, 68, 68, 0.35)' :
+        $variant === 'warning' ? 'rgba(245, 158, 11, 0.35)' :
+        'rgba(59, 130, 246, 0.35)'
+    };
+    box-shadow: ${({ $variant }) =>
+        $variant === 'danger' ? '0 4px 16px rgba(239, 68, 68, 0.15)' :
+        $variant === 'warning' ? '0 4px 16px rgba(245, 158, 11, 0.15)' :
+        '0 4px 16px rgba(59, 130, 246, 0.15)'
+    };
+`;
+
+export const AlertHeader = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+`;
+
+export const AlertIcon = styled.div`
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    background: ${({ $variant }) =>
+        $variant === 'danger' ? 'rgba(239, 68, 68, 0.25)' :
+        $variant === 'warning' ? 'rgba(245, 158, 11, 0.25)' :
+        'rgba(59, 130, 246, 0.25)'
+    };
+    color: ${({ $variant }) =>
+        $variant === 'danger' ? '#fca5a5' :
+        $variant === 'warning' ? '#fcd34d' :
+        '#93c5fd'
+    };
+    box-shadow: ${({ $variant }) =>
+        $variant === 'danger' ? '0 2px 8px rgba(239, 68, 68, 0.2)' :
+        $variant === 'warning' ? '0 2px 8px rgba(245, 158, 11, 0.2)' :
+        '0 2px 8px rgba(59, 130, 246, 0.2)'
+    };
+`;
+
+export const AlertTitle = styled.h4`
     font-family: 'Poppins', sans-serif;
-    font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+    letter-spacing: -0.01em;
+`;
+
+export const AlertText = styled.p`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.95);
     margin: 0;
     line-height: 1.6;
     font-weight: 400;
+    padding-left: 44px;
 `;

@@ -975,7 +975,7 @@ const PetDetailsModal = ({ pet, onClose }) => {
         const birth = dayjs(birthdate);
         const years = today.diff(birth, 'year');
         const months = today.diff(birth.add(years, 'year'), 'month');
-        
+
         if (years === 0) {
             return months === 1 ? '1 month old' : `${months} months old`;
         }
@@ -986,89 +986,75 @@ const PetDetailsModal = ({ pet, onClose }) => {
         <S.PetModalOverlay onClick={handleOverlayClick}>
             <S.PetModalContainer>
                 <S.PetModalHeader>
-                    <S.PetModalTitle>
-                        <Info size={24} />
-                        Pet Details
-                    </S.PetModalTitle>
+                    <S.PetModalAvatar
+                        src={dogPlaceholder}
+                        alt={pet?.name}
+                        loading="lazy"
+                    />
+                    <S.PetHeaderInfo>
+                        <S.PetModalName>{pet?.name || 'Unknown'}</S.PetModalName>
+                        <S.PetAddress>
+                            <MapPin size={14} />
+                            {pet?.address || 'No address'}
+                        </S.PetAddress>
+                    </S.PetHeaderInfo>
                     <S.PetModalCloseButton onClick={onClose}>
                         <X size={18} />
                     </S.PetModalCloseButton>
                 </S.PetModalHeader>
-                
+
                 <S.PetModalContent>
-                    <S.PetMainInfo>
-                        <S.PetModalAvatar
-                            src={dogPlaceholder}
-                            alt={pet?.name}
-                            loading="lazy"
-                        />
-                        <S.PetNameContainer>
-                            <S.PetModalName>{pet?.name || 'Unknown'}</S.PetModalName>
-                            <S.PetBreed>Beloved Pet</S.PetBreed>
-                        </S.PetNameContainer>
-                    </S.PetMainInfo>
+                    {/* Compact Basic Info */}
+                    <S.BasicInfoRow>
+                        <S.BasicInfoItem>
+                            <Cake size={16} />
+                            <span>{calculateAge(pet?.birthdate)}</span>
+                        </S.BasicInfoItem>
+                        <S.BasicInfoDivider />
+                        <S.BasicInfoItem>
+                            <User size={16} />
+                            <span>{pet?.sex || 'Unknown'}</span>
+                        </S.BasicInfoItem>
+                        <S.BasicInfoDivider />
+                        <S.BasicInfoItem>
+                            <Heart size={16} />
+                            <span>{pet?.spayed_neutered ? 'Fixed' : 'Not Fixed'}</span>
+                        </S.BasicInfoItem>
+                    </S.BasicInfoRow>
 
-                    <S.PetDetailsGrid>
-                        <S.PetDetailItem>
-                            <S.DetailIcon>
-                                <Cake size={18} />
-                            </S.DetailIcon>
-                            <S.DetailContent>
-                                <S.DetailLabel>Age</S.DetailLabel>
-                                <S.DetailValue>{calculateAge(pet?.birthdate)}</S.DetailValue>
-                            </S.DetailContent>
-                        </S.PetDetailItem>
-
-                        <S.PetDetailItem>
-                            <S.DetailIcon>
-                                <User size={18} />
-                            </S.DetailIcon>
-                            <S.DetailContent>
-                                <S.DetailLabel>Sex</S.DetailLabel>
-                                <S.DetailValue>{pet?.sex || 'Not specified'}</S.DetailValue>
-                            </S.DetailContent>
-                        </S.PetDetailItem>
-
-                        <S.PetDetailItem>
-                            <S.DetailIcon>
-                                <MapPin size={18} />
-                            </S.DetailIcon>
-                            <S.DetailContent>
-                                <S.DetailLabel>Address</S.DetailLabel>
-                                <S.DetailValue>{pet?.address || 'Not specified'}</S.DetailValue>
-                            </S.DetailContent>
-                        </S.PetDetailItem>
-
-                        <S.PetDetailItem>
-                            <S.DetailIcon>
-                                <Heart size={18} />
-                            </S.DetailIcon>
-                            <S.DetailContent>
-                                <S.DetailLabel>Spayed/Neutered</S.DetailLabel>
-                                <S.DetailValue>{pet?.spayed_neutered ? 'Yes' : 'No'}</S.DetailValue>
-                            </S.DetailContent>
-                        </S.PetDetailItem>
-                    </S.PetDetailsGrid>
-
+                    {/* Highlighted Important Sections */}
                     {pet?.allergies && pet.allergies.trim() && pet.allergies.toLowerCase() !== 'none' && (
-                        <S.NotesSection>
-                            <S.NotesTitle>🚫 Allergies</S.NotesTitle>
-                            <S.NotesText>{pet.allergies}</S.NotesText>
-                        </S.NotesSection>
+                        <S.AlertSection $variant="danger">
+                            <S.AlertHeader>
+                                <S.AlertIcon $variant="danger">!</S.AlertIcon>
+                                <S.AlertTitle>Allergies</S.AlertTitle>
+                            </S.AlertHeader>
+                            <S.AlertText>{pet.allergies}</S.AlertText>
+                        </S.AlertSection>
                     )}
 
                     {pet?.behavioral_notes && pet.behavioral_notes.trim() && (
-                        <S.NotesSection>
-                            <S.NotesTitle>🐕 Behavioral Notes</S.NotesTitle>
-                            <S.NotesText>{pet.behavioral_notes}</S.NotesText>
-                        </S.NotesSection>
+                        <S.AlertSection $variant="warning">
+                            <S.AlertHeader>
+                                <S.AlertIcon $variant="warning">
+                                    <Dog size={18} />
+                                </S.AlertIcon>
+                                <S.AlertTitle>Behavioral Notes</S.AlertTitle>
+                            </S.AlertHeader>
+                            <S.AlertText>{pet.behavioral_notes}</S.AlertText>
+                        </S.AlertSection>
                     )}
 
                     {pet?.supplies_location && pet.supplies_location.trim() && (
-                        <S.NotesSection>
-                            <S.NotesTitle>🎒 Supplies Location</S.NotesTitle>
-                            <S.NotesText>{pet.supplies_location}</S.NotesText>
-                        </S.NotesSection>
+                        <S.AlertSection $variant="info">
+                            <S.AlertHeader>
+                                <S.AlertIcon $variant="info">
+                                    <MapPin size={18} />
+                                </S.AlertIcon>
+                                <S.AlertTitle>Supplies Location</S.AlertTitle>
+                            </S.AlertHeader>
+                            <S.AlertText>{pet.supplies_location}</S.AlertText>
+                        </S.AlertSection>
                     )}
                 </S.PetModalContent>
             </S.PetModalContainer>

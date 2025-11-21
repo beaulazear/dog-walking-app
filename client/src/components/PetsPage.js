@@ -91,7 +91,7 @@ const PetCard = memo(({ pet, appointmentCount, onPetClick }) => {
                     title="View and schedule appointments"
                 >
                     <CalendarDays size={16} />
-                    <span>Appointments {appointmentCount > 0 ? `(${appointmentCount})` : ''}</span>
+                    <span>Appointments</span>
                 </QuickActionButton>
                 <QuickActionButton
                     onClick={(e) => {
@@ -1556,17 +1556,17 @@ const StyledPetCard = styled.div`
         ? 'rgba(255, 255, 255, 0.5)'
         : 'rgba(255, 255, 255, 0.25)'
     };
-    border-radius: 20px;
-    padding: 1.25rem;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 16px;
+    padding: 0.875rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: ${props => props.$active
-        ? '0 8px 32px rgba(99, 102, 241, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1)'
-        : '0 4px 16px rgba(0, 0, 0, 0.1)'
+        ? '0 6px 24px rgba(99, 102, 241, 0.2), 0 2px 6px rgba(0, 0, 0, 0.1)'
+        : '0 3px 12px rgba(0, 0, 0, 0.1)'
     };
     opacity: ${props => props.$active ? 1 : 0.85};
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.625rem;
     position: relative;
     overflow: hidden;
 
@@ -1576,7 +1576,7 @@ const StyledPetCard = styled.div`
         top: 0;
         left: 0;
         right: 0;
-        height: 3px;
+        height: 2px;
         background: ${props => props.$active
             ? 'linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899)'
             : 'rgba(255, 255, 255, 0.3)'
@@ -1586,10 +1586,10 @@ const StyledPetCard = styled.div`
     }
 
     &:hover {
-        transform: translateY(-4px) scale(1.02);
+        transform: translateY(-2px);
         box-shadow: ${props => props.$active
-            ? '0 12px 40px rgba(99, 102, 241, 0.3), 0 4px 12px rgba(0, 0, 0, 0.15)'
-            : '0 8px 24px rgba(0, 0, 0, 0.15)'
+            ? '0 8px 32px rgba(99, 102, 241, 0.3), 0 4px 10px rgba(0, 0, 0, 0.15)'
+            : '0 6px 20px rgba(0, 0, 0, 0.15)'
         };
         border-color: ${props => props.$active
             ? 'rgba(255, 255, 255, 0.7)'
@@ -1602,37 +1602,37 @@ const StyledPetCard = styled.div`
     }
 
     @media (min-width: 768px) {
-        padding: 1.5rem;
-        gap: 1.125rem;
+        padding: 1rem;
+        gap: 0.75rem;
     }
 `;
 
 const PetIcon = styled.div`
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
-    border-radius: 16px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     flex-shrink: 0;
-    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4), 0 0 0 3px rgba(255, 255, 255, 0.2);
+    box-shadow: 0 3px 12px rgba(99, 102, 241, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.2);
     transition: all 0.3s ease;
 
     svg {
-        width: 24px;
-        height: 24px;
+        width: 20px;
+        height: 20px;
         filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
     }
 
     @media (min-width: 768px) {
-        width: 52px;
-        height: 52px;
+        width: 44px;
+        height: 44px;
 
         svg {
-            width: 26px;
-            height: 26px;
+            width: 22px;
+            height: 22px;
         }
     }
 `;
@@ -1653,11 +1653,11 @@ const ChevronIcon = styled.div`
 const PetCardHeader = styled.div`
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     cursor: pointer;
-    padding: 4px;
-    margin: -4px;
-    border-radius: 14px;
+    padding: 3px;
+    margin: -3px;
+    border-radius: 12px;
     transition: all 0.3s ease;
 
     &:hover {
@@ -1666,7 +1666,7 @@ const PetCardHeader = styled.div`
 
         ${PetIcon} {
             transform: scale(1.05) rotate(2deg);
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5), 0 0 0 4px rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.5), 0 0 0 3px rgba(255, 255, 255, 0.3);
         }
 
         ${ChevronIcon} {
@@ -1679,26 +1679,26 @@ const PetCardHeader = styled.div`
 const PetName = styled.h3`
     flex: 1;
     font-family: 'Poppins', sans-serif;
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     font-weight: 700;
     color: #ffffff;
     margin: 0;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    letter-spacing: 0.3px;
+    letter-spacing: 0.2px;
 
     @media (min-width: 768px) {
-        font-size: 1.25rem;
+        font-size: 1.15rem;
     }
 `;
 
 const StatusBadge = styled.span`
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 6px 12px;
-    border-radius: 20px;
+    gap: 3px;
+    padding: 4px 10px;
+    border-radius: 16px;
     font-family: 'Poppins', sans-serif;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 700;
     background: ${props => props.$active
         ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(22, 163, 74, 0.2))'
@@ -1712,15 +1712,15 @@ const StatusBadge = styled.span`
     flex-shrink: 0;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     box-shadow: ${props => props.$active
-        ? '0 2px 8px rgba(34, 197, 94, 0.3)'
-        : '0 2px 8px rgba(239, 68, 68, 0.3)'
+        ? '0 2px 6px rgba(34, 197, 94, 0.3)'
+        : '0 2px 6px rgba(239, 68, 68, 0.3)'
     };
     backdrop-filter: blur(10px);
     transition: all 0.3s ease;
 
     svg {
-        width: 14px;
-        height: 14px;
+        width: 12px;
+        height: 12px;
         filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
     }
 `;
@@ -1728,67 +1728,67 @@ const StatusBadge = styled.span`
 const PetCardInfo = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     cursor: pointer;
-    padding: 8px;
-    margin: -8px;
-    border-radius: 10px;
+    padding: 6px;
+    margin: -6px;
+    border-radius: 8px;
     transition: all 0.3s ease;
 
     &:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.08);
     }
 `;
 
 const QuickActionsRow = styled.div`
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    padding-top: 12px;
-    margin-top: 8px;
-    border-top: 2px solid rgba(255, 255, 255, 0.2);
+    gap: 6px;
+    padding-top: 8px;
+    margin-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
 `;
 
 const QuickActionButton = styled.button`
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 10px 12px;
+    gap: 5px;
+    padding: 8px 10px;
     background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(139, 92, 246, 0.9));
     color: white;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 12px;
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
     font-family: 'Poppins', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 700;
+    font-size: 0.75rem;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 3px 10px rgba(99, 102, 241, 0.3);
     backdrop-filter: blur(10px);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 
     svg {
-        width: 16px;
-        height: 16px;
+        width: 15px;
+        height: 15px;
         filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
     }
 
     @media (min-width: 768px) {
-        padding: 11px 14px;
-        font-size: 0.85rem;
+        padding: 9px 12px;
+        font-size: 0.8rem;
 
         svg {
-            width: 17px;
-            height: 17px;
+            width: 16px;
+            height: 16px;
         }
     }
 
     &:hover {
-        transform: translateY(-2px) scale(1.02);
-        box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+        transform: translateY(-1px);
+        box-shadow: 0 5px 14px rgba(99, 102, 241, 0.4);
         background: linear-gradient(135deg, #5b5fc7, #7c3aed);
-        border-color: rgba(255, 255, 255, 0.5);
+        border-color: rgba(255, 255, 255, 0.4);
     }
 
     &:active {
@@ -1799,17 +1799,17 @@ const QuickActionButton = styled.button`
 const InfoRow = styled.div`
     display: flex;
     align-items: center;
-    gap: 8px;
-    color: rgba(255, 255, 255, 0.95);
+    gap: 6px;
+    color: rgba(255, 255, 255, 0.9);
     font-family: 'Poppins', sans-serif;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 500;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 
     svg {
-        width: 16px;
-        height: 16px;
-        color: rgba(255, 255, 255, 0.8);
+        width: 14px;
+        height: 14px;
+        color: rgba(255, 255, 255, 0.75);
         flex-shrink: 0;
         filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
     }
