@@ -33,6 +33,7 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
         if (onClose) onClose(); // Call the external close handler
     }, [onClose]);
 
+    // Helper function for single cancellation - updates context immediately
     async function handleNewCancellation(appointmentId, date) {
         const today = new Date().toISOString().split("T")[0];
         if (new Date(date) < new Date(today)) {
@@ -67,6 +68,34 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
             console.error("Error adding cancellation:", error);
             toast.error("An error occurred while processing the cancellation.");
             return false;
+        }
+    }
+
+    // Helper function for bulk operations - returns cancellation without updating context
+    async function createCancellation(appointmentId, date) {
+        const today = new Date().toISOString().split("T")[0];
+        if (new Date(date) < new Date(today)) {
+            return { success: false, error: "Date must be in the future" };
+        }
+
+        try {
+            const response = await fetch("/cancellations", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ appointment_id: appointmentId, date }),
+                credentials: "include",
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                return { success: false, error: errorData.errors?.join(", ") || "Failed to create cancellation" };
+            }
+
+            const newCancellation = await response.json();
+            return { success: true, cancellation: newCancellation };
+        } catch (error) {
+            console.error("Error adding cancellation:", error);
+            return { success: false, error: "Network error" };
         }
     }
 
@@ -109,20 +138,27 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
             return false;
         }
 
-        let successCount = 0;
+        // Collect all cancellations first, then update context once
+        const newCancellations = [];
         let failCount = 0;
 
         for (const date of dates) {
-            const success = await handleNewCancellation(appointmentId, date);
-            if (success) {
-                successCount++;
+            const result = await createCancellation(appointmentId, date);
+            if (result.success) {
+                newCancellations.push(result.cancellation);
             } else {
                 failCount++;
             }
         }
 
-        if (successCount > 0) {
-            toast.success(`Successfully added ${successCount} cancellation${successCount > 1 ? 's' : ''}${failCount > 0 ? ` (${failCount} failed)` : ''}.`);
+        // Update context once with all new cancellations
+        if (newCancellations.length > 0) {
+            const updatedAppointment = {
+                ...appointment,
+                cancellations: [...(appointment.cancellations || []), ...newCancellations]
+            };
+            updateAppointment(updatedAppointment);
+            toast.success(`Successfully added ${newCancellations.length} cancellation${newCancellations.length > 1 ? 's' : ''}${failCount > 0 ? ` (${failCount} failed)` : ''}.`);
             setSelectedAppointment(null);
             return true;
         } else {
@@ -166,20 +202,27 @@ export default function CancellationModal({ appointment, setSelectedAppointment,
     }
 
     async function handleMultipleCancellations(appointmentId, dates) {
-        let successCount = 0;
+        // Collect all cancellations first, then update context once
+        const newCancellations = [];
         let failCount = 0;
 
         for (const date of dates) {
-            const success = await handleNewCancellation(appointmentId, date);
-            if (success) {
-                successCount++;
+            const result = await createCancellation(appointmentId, date);
+            if (result.success) {
+                newCancellations.push(result.cancellation);
             } else {
                 failCount++;
             }
         }
 
-        if (successCount > 0) {
-            toast.success(`Successfully added ${successCount} cancellation${successCount > 1 ? 's' : ''}${failCount > 0 ? ` (${failCount} failed)` : ''}.`);
+        // Update context once with all new cancellations
+        if (newCancellations.length > 0) {
+            const updatedAppointment = {
+                ...appointment,
+                cancellations: [...(appointment.cancellations || []), ...newCancellations]
+            };
+            updateAppointment(updatedAppointment);
+            toast.success(`Successfully added ${newCancellations.length} cancellation${newCancellations.length > 1 ? 's' : ''}${failCount > 0 ? ` (${failCount} failed)` : ''}.`);
             setSelectedAppointment(null);
             return true;
         } else {
