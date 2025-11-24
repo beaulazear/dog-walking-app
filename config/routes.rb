@@ -1,6 +1,11 @@
 Rails.application.routes.draw do
   resources :cancellations
   resources :additional_incomes
+
+  # Custom invoice routes (must come before resources :invoices to match first)
+  patch '/invoices/paid', to: 'invoices#paid'
+  patch '/invoices/pending', to: 'invoices#pending'
+
   resources :invoices
   resources :appointments do
     collection do
@@ -41,9 +46,6 @@ Rails.application.routes.draw do
 
   post '/login', to: 'sessions#create'
   delete '/logout', to: 'sessions#destroy'
-
-  patch '/invoices/paid', to: 'invoices#paid'
-  patch '/invoices/pending', to: 'invoices#pending'
 
   patch '/appointments/:id/canceled', to: 'appointments#canceled'
   get '/pets_appointments', to: 'appointments#pet_appointments'
