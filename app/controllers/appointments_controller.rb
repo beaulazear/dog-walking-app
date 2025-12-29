@@ -275,7 +275,7 @@ class AppointmentsController < ApplicationController
   end
 
   def destroy
-    appointment = Appointment.find_by(id: params[:id])
+    appointment = Appointment.includes(:appointment_shares).find_by(id: params[:id])
 
     return render json: { error: 'Appointment not found' }, status: :not_found unless appointment
 
