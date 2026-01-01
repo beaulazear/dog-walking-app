@@ -9,15 +9,16 @@ import {
     Calendar,
     PiggyBank,
     Receipt,
-    BarChart3
+    BarChart3,
+    ChevronLeft,
+    ChevronRight
 } from "lucide-react";
 
 dayjs.extend(weekOfYear);
 
-const currentYear = dayjs().year();
-
 export default function YearlyFinanceOverview() {
     const { user } = useContext(UserContext);
+    const [selectedYear, setSelectedYear] = useState(dayjs().year());
     const [taxPercentage, setTaxPercentage] = useState(15);
 
     useEffect(() => {
@@ -25,14 +26,14 @@ export default function YearlyFinanceOverview() {
     }, []);
 
     const invoicesFromCurrentYear = user?.invoices?.filter(inv =>
-        dayjs(inv.date_completed).year() === currentYear
+        dayjs(inv.date_completed).year() === selectedYear
     ) || [];
 
     const totalIncome = calculateTotalIncome(invoicesFromCurrentYear);
-    const dailyAverage = calculateDailyAverage(totalIncome);
+    const dailyAverage = calculateDailyAverage(totalIncome, selectedYear);
     const weeklyIncome = calculateWeeklyIncome(dailyAverage);
     const monthlyIncome = calculateMonthlyIncome(dailyAverage);
-    const estimatedYearlyTotal = calculateEstimatedYearlyTotal(dailyAverage);
+    const estimatedYearlyTotal = calculateEstimatedYearlyTotal(dailyAverage, selectedYear, totalIncome);
     const taxEstimate = Math.round((estimatedYearlyTotal * taxPercentage) / 100);
 
     // Calculate recurring revenue
@@ -46,12 +47,33 @@ export default function YearlyFinanceOverview() {
         setTaxPercentage(parseInt(e.target.value));
     }
 
+    function handlePreviousYear() {
+        setSelectedYear(prev => prev - 1);
+    }
+
+    function handleNextYear() {
+        setSelectedYear(prev => prev + 1);
+    }
+
+    const currentYear = dayjs().year();
+    const canGoForward = selectedYear < currentYear;
+
     return (
         <Container>
             <Header>
                 <TrendingUp size={24} />
-                Financial Overview ({currentYear})
+                Financial Overview
             </Header>
+
+            <YearSelector>
+                <YearButton onClick={handlePreviousYear}>
+                    <ChevronLeft size={20} />
+                </YearButton>
+                <YearDisplay>{selectedYear}</YearDisplay>
+                <YearButton onClick={handleNextYear} disabled={!canGoForward}>
+                    <ChevronRight size={20} />
+                </YearButton>
+            </YearSelector>
             
             {/* Recurring Revenue Section */}
             <RecurringSection>
@@ -145,7 +167,9 @@ export default function YearlyFinanceOverview() {
                         <DollarSign size={20} />
                     </StatIcon>
                     <StatContent>
-                        <StatLabel>Total Income This Year</StatLabel>
+                        <StatLabel>
+                            {selectedYear < currentYear ? `Total Income ${selectedYear}` : 'Total Income This Year'}
+                        </StatLabel>
                         <StatValue>${totalIncome.toLocaleString()}</StatValue>
                     </StatContent>
                 </StatCard>
@@ -155,7 +179,9 @@ export default function YearlyFinanceOverview() {
                         <TrendingUp size={20} />
                     </StatIcon>
                     <StatContent>
-                        <StatLabel>Estimated Yearly Total</StatLabel>
+                        <StatLabel>
+                            {selectedYear < currentYear ? 'Total Yearly Income' : 'Estimated Yearly Total'}
+                        </StatLabel>
                         <StatValue>${estimatedYearlyTotal.toLocaleString()}</StatValue>
                     </StatContent>
                 </StatCard>
@@ -214,7 +240,17 @@ function calculateTotalIncome(invoices) {
     return invoices.reduce((total, inv) => total + (inv.compensation || 0), 0);
 }
 
-function calculateDailyAverage(totalIncome) {
+function calculateDailyAverage(totalIncome, selectedYear) {
+    const currentYear = dayjs().year();
+
+    // For historical years, calculate based on full year
+    if (selectedYear < currentYear) {
+        const isLeapYear = dayjs(`${selectedYear}-01-01`).isLeapYear();
+        const daysInYear = isLeapYear ? 366 : 365;
+        return totalIncome / daysInYear;
+    }
+
+    // For current year, calculate based on days passed so far
     const today = dayjs();
     const startOfYear = dayjs().startOf("year");
     const daysPassed = today.diff(startOfYear, "day") + 1;
@@ -230,8 +266,18 @@ function calculateMonthlyIncome(dailyAverage) {
     return Math.round(dailyAverage * 30.44);
 }
 
-function calculateEstimatedYearlyTotal(dailyAverage) {
-    return Math.round(dailyAverage * 365);
+function calculateEstimatedYearlyTotal(dailyAverage, selectedYear, totalIncome) {
+    const currentYear = dayjs().year();
+
+    // For historical years, the total is final (not estimated)
+    if (selectedYear < currentYear) {
+        return totalIncome;
+    }
+
+    // For current year, project based on daily average
+    const isLeapYear = dayjs().isLeapYear();
+    const daysInYear = isLeapYear ? 366 : 365;
+    return Math.round(dailyAverage * daysInYear);
 }
 
 function calculateRecurringRevenue(user) {
@@ -343,11 +389,62 @@ const Header = styled.h2`
     font-size: 1.3rem;
     font-weight: 600;
     color: #ffffff;
-    margin: 0 0 20px 0;
+    margin: 0 0 12px 0;
     display: flex;
     align-items: center;
     gap: 8px;
     text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+`;
+
+const YearSelector = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+const YearButton = styled.button`
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.95);
+    }
+
+    &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+`;
+
+const YearDisplay = styled.div`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #ffffff;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    min-width: 100px;
+    text-align: center;
 `;
 
 // New Recurring Revenue Section Styles
