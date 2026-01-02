@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { UserContext } from "../context/user";
 import dayjs from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
+import isLeapYear from "dayjs/plugin/isLeapYear";
 import {
     TrendingUp,
     DollarSign,
@@ -15,6 +16,7 @@ import {
 } from "lucide-react";
 
 dayjs.extend(weekOfYear);
+dayjs.extend(isLeapYear);
 
 export default function YearlyFinanceOverview() {
     const { user } = useContext(UserContext);
