@@ -103,7 +103,7 @@ class UsersController < ApplicationController
   end
 
   def rates_params
-    params.permit(:thirty, :fortyfive, :sixty, :solo_rate, :training_rate, :sibling_rate)
+    params.permit(:thirty, :fortyfive, :sixty, :solo_rate, :training_rate, :sibling_rate, :pet_sitting_rate)
   end
 
   def profile_params

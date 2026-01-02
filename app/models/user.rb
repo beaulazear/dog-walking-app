@@ -5,6 +5,7 @@ class User < ApplicationRecord
 
   has_many :pets
   has_many :appointments, foreign_key: 'user_id'
+  has_many :pet_sits, dependent: :destroy
   has_many :invoices, through: :pets
   has_many :training_sessions, dependent: :destroy
   has_many :blogs, dependent: :destroy

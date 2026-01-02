@@ -1213,23 +1213,6 @@ const List = styled.div`
     }
 `;
 
-const Card = styled.div`
-    background: #f9f9f9;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 12px;
-    transition: all 0.2s;
-
-    &:hover {
-        border-color: #667eea;
-        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
-    }
-
-    @media (min-width: 768px) {
-        padding: 16px;
-    }
-`;
-
 const TeamMemberCard = styled.div`
     background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
     border: 2px solid transparent;
@@ -1384,21 +1367,6 @@ const TeamMemberUsername = styled.div`
     }
 `;
 
-const CardContent = styled.div`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-`;
-
-const UserInfo = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-    flex: 1;
-`;
-
 const UserName = styled.div`
     font-weight: 600;
     font-size: 15px;
@@ -1409,18 +1377,6 @@ const UserName = styled.div`
 
     @media (min-width: 768px) {
         font-size: 16px;
-    }
-`;
-
-const UserEmail = styled.div`
-    font-size: 13px;
-    color: #666;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-
-    @media (min-width: 768px) {
-        font-size: 14px;
     }
 `;
 

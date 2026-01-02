@@ -2,7 +2,6 @@ import React, { useContext, useState, useEffect, useMemo, memo, useCallback } fr
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import dayjs from "dayjs";
-import { motion, AnimatePresence } from "motion/react";
 import {
     Search,
     Dog,
@@ -34,6 +33,7 @@ import PetInvoices from "./PetInvoices";
 import NewAppointmentForm from "./NewAppointmentForm";
 import CancellationModal from "./CancellationModal";
 import ShareAppointmentModal from "./ShareAppointmentModal";
+import CreatePetSitModal from "./CreatePetSitModal";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import toast from 'react-hot-toast';
 import { useConfirm } from '../hooks/useConfirm';
@@ -445,21 +445,29 @@ export default function PetsPage() {
 
 // Memoized Pet Details Modal Component with Tabs
 const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
-    const { user, updatePet, updateAppointment, removeAppointment } = useContext(UserContext);
+    const { user, updatePet, updateAppointment, removeAppointment, updatePetSit, removePetSit } = useContext(UserContext);
     const { confirmState, confirm } = useConfirm();
     const [activeTab, setActiveTab] = useState(initialTab);
     const [formData, setFormData] = useState(pet);
     // Profile pic removed - using icons instead
     const [appointments, setAppointments] = useState([]);
+    const [petSits, setPetSits] = useState([]);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [selectedPetSit, setSelectedPetSit] = useState(null);
     const [showCancellationModal, setShowCancellationModal] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
+    const [showPetSitModal, setShowPetSitModal] = useState(false);
+    const [showAppointmentForm, setShowAppointmentForm] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [isEditingAppointment, setIsEditingAppointment] = useState(false);
     const [editingAppointmentData, setEditingAppointmentData] = useState(null);
     const [isUpdatingPet, setIsUpdatingPet] = useState(false);
     const [isUpdatingAppointment, setIsUpdatingAppointment] = useState(false);
     const [isDeletingAppointment, setIsDeletingAppointment] = useState(false);
+    const [isEditingPetSit, setIsEditingPetSit] = useState(false);
+    const [editingPetSitData, setEditingPetSitData] = useState(null);
+    const [isUpdatingPetSit, setIsUpdatingPetSit] = useState(false);
+    const [isDeletingPetSit, setIsDeletingPetSit] = useState(false);
     const [isTogglingActive, setIsTogglingActive] = useState(false);
 
 
@@ -476,6 +484,20 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
                 );
             });
             setAppointments(filteredAppointments);
+        }
+    }, [pet, user]);
+
+    useEffect(() => {
+        if (user?.pet_sits) {
+            const today = dayjs().format("YYYY-MM-DD");
+            const filteredPetSits = user.pet_sits.filter(sit => {
+                return (
+                    sit.pet_id === pet.id &&
+                    !sit.canceled &&
+                    dayjs(sit.end_date).format("YYYY-MM-DD") >= today
+                );
+            });
+            setPetSits(filteredPetSits);
         }
     }, [pet, user]);
 
@@ -717,6 +739,106 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
         setEditingAppointmentData(prev => ({ ...prev, [field]: value }));
     };
 
+    // Pet Sit handlers
+    const startEditingPetSit = () => {
+        setIsEditingPetSit(true);
+        setEditingPetSitData({
+            ...selectedPetSit
+        });
+    };
+
+    const handlePetSitFieldChange = (field, value) => {
+        setEditingPetSitData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleUpdatePetSit = async () => {
+        if (isUpdatingPetSit) return;
+
+        setIsUpdatingPetSit(true);
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch(`/pet_sits/${editingPetSitData.id}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    start_date: editingPetSitData.start_date,
+                    end_date: editingPetSitData.end_date,
+                    daily_rate: editingPetSitData.daily_rate,
+                    additional_charge: editingPetSitData.additional_charge || 0,
+                    description: editingPetSitData.description || ''
+                })
+            });
+
+            if (response.ok) {
+                const updatedPetSit = await response.json();
+
+                // Update context
+                updatePetSit(updatedPetSit);
+
+                // Update local state
+                setPetSits(prev => prev.map(sit =>
+                    sit.id === updatedPetSit.id ? updatedPetSit : sit
+                ));
+
+                setSelectedPetSit(updatedPetSit);
+                setIsEditingPetSit(false);
+                setEditingPetSitData(null);
+                toast.success("Pet sit updated successfully!");
+            } else {
+                const error = await response.json();
+                toast.error(`Error updating pet sit: ${error.errors?.join(", ") || "Unknown error"}`);
+            }
+        } finally {
+            setIsUpdatingPetSit(false);
+        }
+    };
+
+    const handleDeletePetSit = async (petSitId) => {
+        const confirmed = await confirm({
+            title: 'Delete Pet Sit?',
+            message: 'Are you sure you want to delete this pet sit? This action cannot be undone.',
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            variant: 'danger'
+        });
+
+        if (!confirmed) return;
+
+        setIsDeletingPetSit(true);
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch(`/pet_sits/${petSitId}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                },
+                credentials: "include"
+            });
+
+            if (response.ok) {
+                // Update context
+                removePetSit(petSitId);
+
+                // Update local state
+                setPetSits(prev => prev.filter(sit => sit.id !== petSitId));
+
+                setSelectedPetSit(null);
+                toast.success("Pet sit deleted successfully!");
+            } else {
+                toast.error("Failed to delete pet sit.");
+            }
+        } catch (error) {
+            console.error("Error deleting pet sit:", error);
+            toast.error("An error occurred while deleting the pet sit.");
+        } finally {
+            setIsDeletingPetSit(false);
+        }
+    };
+
     const modalContent = (
         <ModalOverlay onClick={(e) => e.target === e.currentTarget && onClose()}>
             <ModalContainer>
@@ -938,9 +1060,17 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
                     {activeTab === 'appointments' && (
                         <AppointmentsTab>
                             <AppointmentsHeader>
-                                <InfoTitle>Appointments</InfoTitle>
+                                <InfoTitle>Appointments & Pet Sits</InfoTitle>
                             </AppointmentsHeader>
-                            
+
+                            {/* Appointments Section */}
+                            <SectionHeader>
+                                <SectionTitle>Walks</SectionTitle>
+                                <AddPetSitButton onClick={() => setShowAppointmentForm(true)}>
+                                    <Plus size={18} />
+                                    Add Appointment
+                                </AddPetSitButton>
+                            </SectionHeader>
                             {appointments.length === 0 ? (
                                 <EmptyAppointments>
                                     <Calendar size={48} />
@@ -1013,8 +1143,75 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
                                     ))}
                                 </AppointmentsList>
                             )}
-                            
-                            <NewAppointmentForm pet={pet} />
+
+                            <NewAppointmentForm
+                                pet={pet}
+                                showForm={showAppointmentForm}
+                                setShowForm={setShowAppointmentForm}
+                            />
+
+                            {/* Pet Sits Section */}
+                            <SectionHeader style={{ marginTop: '32px' }}>
+                                <SectionTitle>Pet Sits</SectionTitle>
+                                <AddPetSitButton onClick={() => setShowPetSitModal(true)}>
+                                    <Plus size={18} />
+                                    Add Pet Sit
+                                </AddPetSitButton>
+                            </SectionHeader>
+
+                            {petSits.length === 0 ? (
+                                <EmptyAppointments>
+                                    <Calendar size={48} />
+                                    <EmptyTitle>No pet sits scheduled</EmptyTitle>
+                                    <EmptyText>Add a pet sit for multi-day care</EmptyText>
+                                </EmptyAppointments>
+                            ) : (
+                                <AppointmentsList>
+                                    {petSits.map((sit) => {
+                                        const totalDays = dayjs(sit.end_date).diff(sit.start_date, 'day') + 1;
+                                        const completedDays = sit.pet_sit_completions?.length || 0;
+                                        return (
+                                            <AppointmentCard
+                                                key={sit.id}
+                                                onClick={() => setSelectedPetSit(sit)}
+                                                style={{ borderLeft: '4px solid rgba(165, 105, 167, 0.8)' }}
+                                            >
+                                                <AppointmentHeader>
+                                                    <AppointmentType style={{ background: 'rgba(165, 105, 167, 0.2)', color: '#d8b4d8' }}>
+                                                        Pet Sit
+                                                    </AppointmentType>
+                                                    <AppointmentDuration>
+                                                        ${sit.daily_rate}/day
+                                                    </AppointmentDuration>
+                                                </AppointmentHeader>
+
+                                                <AppointmentDetails>
+                                                    <DetailRow>
+                                                        <Calendar size={16} />
+                                                        {dayjs(sit.start_date).format("MMM D")} - {dayjs(sit.end_date).format("MMM D, YYYY")}
+                                                    </DetailRow>
+                                                    <DetailRow>
+                                                        <CheckCircle size={16} />
+                                                        {completedDays}/{totalDays} days completed
+                                                    </DetailRow>
+                                                    {sit.additional_charge > 0 && (
+                                                        <DetailRow>
+                                                            <DollarSign size={16} />
+                                                            +${sit.additional_charge} additional charge
+                                                        </DetailRow>
+                                                    )}
+                                                </AppointmentDetails>
+
+                                                {sit.description && (
+                                                    <PetSitDescriptionPreview>
+                                                        {sit.description}
+                                                    </PetSitDescriptionPreview>
+                                                )}
+                                            </AppointmentCard>
+                                        );
+                                    })}
+                                </AppointmentsList>
+                            )}
 
                             {selectedAppointment && (
                                 <AppointmentModal onClick={(e) => e.target === e.currentTarget && setSelectedAppointment(null)}>
@@ -1219,6 +1416,171 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
                                 </AppointmentModal>
                             )}
 
+                            {selectedPetSit && (
+                                <AppointmentModal onClick={(e) => e.target === e.currentTarget && setSelectedPetSit(null)}>
+                                    <ModalContainer style={{ maxWidth: '600px' }}>
+                                        <ModalHeader>
+                                            <ModalHeaderLeft>
+                                                <BackButton onClick={() => {
+                                                    setSelectedPetSit(null);
+                                                    setIsEditingPetSit(false);
+                                                    setEditingPetSitData(null);
+                                                }}>
+                                                    <ArrowLeft size={24} />
+                                                </BackButton>
+                                                <ModalTitle>Pet Sit Details</ModalTitle>
+                                            </ModalHeaderLeft>
+                                            {!isEditingPetSit && (
+                                                <EditButton onClick={startEditingPetSit}>
+                                                    <Edit2 size={16} />
+                                                    Edit
+                                                </EditButton>
+                                            )}
+                                        </ModalHeader>
+                                        <ModalScrollContent>
+                                        <AppointmentModalContent>
+                                        {!isEditingPetSit ? (
+                                            <>
+                                                <InfoGrid>
+                                                    <InfoItem>
+                                                        <InfoLabel>Start Date</InfoLabel>
+                                                        <InfoValue>{dayjs(selectedPetSit.start_date).format("MMM D, YYYY")}</InfoValue>
+                                                    </InfoItem>
+                                                    <InfoItem>
+                                                        <InfoLabel>End Date</InfoLabel>
+                                                        <InfoValue>{dayjs(selectedPetSit.end_date).format("MMM D, YYYY")}</InfoValue>
+                                                    </InfoItem>
+                                                    <InfoItem>
+                                                        <InfoLabel>Total Days</InfoLabel>
+                                                        <InfoValue>{dayjs(selectedPetSit.end_date).diff(selectedPetSit.start_date, 'day') + 1} days</InfoValue>
+                                                    </InfoItem>
+                                                    <InfoItem>
+                                                        <InfoLabel>Daily Rate</InfoLabel>
+                                                        <InfoValue>${selectedPetSit.daily_rate}</InfoValue>
+                                                    </InfoItem>
+                                                    <InfoItem>
+                                                        <InfoLabel>Additional Charge</InfoLabel>
+                                                        <InfoValue>${selectedPetSit.additional_charge || 0}</InfoValue>
+                                                    </InfoItem>
+                                                    <InfoItem>
+                                                        <InfoLabel>Total Cost</InfoLabel>
+                                                        <InfoValue>
+                                                            ${(selectedPetSit.daily_rate * (dayjs(selectedPetSit.end_date).diff(selectedPetSit.start_date, 'day') + 1)) + (selectedPetSit.additional_charge || 0)}
+                                                        </InfoValue>
+                                                    </InfoItem>
+                                                    <InfoItem>
+                                                        <InfoLabel>Completed Days</InfoLabel>
+                                                        <InfoValue>
+                                                            {selectedPetSit.pet_sit_completions?.length || 0} / {dayjs(selectedPetSit.end_date).diff(selectedPetSit.start_date, 'day') + 1}
+                                                        </InfoValue>
+                                                    </InfoItem>
+                                                </InfoGrid>
+
+                                                {selectedPetSit.description && (
+                                                    <FormGroup style={{ marginTop: '16px' }}>
+                                                        <InfoLabel>Description / Instructions</InfoLabel>
+                                                        <InfoValue style={{
+                                                            whiteSpace: 'pre-wrap',
+                                                            padding: '12px',
+                                                            background: 'rgba(165, 105, 167, 0.1)',
+                                                            borderRadius: '8px',
+                                                            border: '1px solid rgba(165, 105, 167, 0.2)'
+                                                        }}>
+                                                            {selectedPetSit.description}
+                                                        </InfoValue>
+                                                    </FormGroup>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <EditForm>
+                                                <FormGrid>
+                                                    <FormGroup>
+                                                        <Label>Start Date</Label>
+                                                        <Input
+                                                            type="date"
+                                                            value={editingPetSitData.start_date}
+                                                            onChange={(e) => handlePetSitFieldChange('start_date', e.target.value)}
+                                                        />
+                                                    </FormGroup>
+
+                                                    <FormGroup>
+                                                        <Label>End Date</Label>
+                                                        <Input
+                                                            type="date"
+                                                            value={editingPetSitData.end_date}
+                                                            onChange={(e) => handlePetSitFieldChange('end_date', e.target.value)}
+                                                        />
+                                                    </FormGroup>
+
+                                                    <FormGroup>
+                                                        <Label>Daily Rate ($)</Label>
+                                                        <Input
+                                                            type="number"
+                                                            value={editingPetSitData.daily_rate}
+                                                            onChange={(e) => handlePetSitFieldChange('daily_rate', parseInt(e.target.value) || 0)}
+                                                            min="0"
+                                                        />
+                                                    </FormGroup>
+
+                                                    <FormGroup>
+                                                        <Label>Additional Charge ($)</Label>
+                                                        <Input
+                                                            type="number"
+                                                            value={editingPetSitData.additional_charge || 0}
+                                                            onChange={(e) => handlePetSitFieldChange('additional_charge', parseInt(e.target.value) || 0)}
+                                                            min="0"
+                                                        />
+                                                    </FormGroup>
+                                                </FormGrid>
+
+                                                <FormGroup>
+                                                    <Label>Description / Instructions</Label>
+                                                    <Textarea
+                                                        value={editingPetSitData.description || ''}
+                                                        onChange={(e) => handlePetSitFieldChange('description', e.target.value)}
+                                                        rows={3}
+                                                        placeholder="Feeding schedule, medication, special instructions, etc."
+                                                    />
+                                                </FormGroup>
+
+                                                {(() => {
+                                                    const totalDays = editingPetSitData.start_date && editingPetSitData.end_date
+                                                        ? dayjs(editingPetSitData.end_date).diff(editingPetSitData.start_date, 'day') + 1
+                                                        : 0;
+                                                    const totalCost = (editingPetSitData.daily_rate * totalDays) + (editingPetSitData.additional_charge || 0);
+
+                                                    return totalDays > 0 && (
+                                                        <TotalCost>
+                                                            <span>Total Cost ({totalDays} day{totalDays !== 1 ? 's' : ''}):</span>
+                                                            <span>${totalCost.toLocaleString()}</span>
+                                                        </TotalCost>
+                                                    );
+                                                })()}
+
+                                                <FormButtons>
+                                                    <SaveButton onClick={handleUpdatePetSit} disabled={isUpdatingPetSit}>
+                                                        <Save size={16} />
+                                                        {isUpdatingPetSit ? 'Saving...' : 'Save Changes'}
+                                                    </SaveButton>
+                                                    <CancelButton onClick={() => {
+                                                        setIsEditingPetSit(false);
+                                                        setEditingPetSitData(null);
+                                                    }} disabled={isUpdatingPetSit}>
+                                                        Cancel
+                                                    </CancelButton>
+                                                    <DeleteButton onClick={() => handleDeletePetSit(selectedPetSit.id)} disabled={isDeletingPetSit}>
+                                                        <Trash2 size={16} />
+                                                        {isDeletingPetSit ? 'Deleting...' : 'Delete'}
+                                                    </DeleteButton>
+                                                </FormButtons>
+                                            </EditForm>
+                                        )}
+                                        </AppointmentModalContent>
+                                        </ModalScrollContent>
+                                    </ModalContainer>
+                                </AppointmentModal>
+                            )}
+
                             {showCancellationModal && selectedAppointment && (
                                 <CancellationModal
                                     appointment={selectedAppointment}
@@ -1235,6 +1597,16 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
                                     onShareSuccess={() => {
                                         setShowShareModal(false);
                                         toast.success('Appointment shared successfully!');
+                                    }}
+                                />
+                            )}
+
+                            {showPetSitModal && (
+                                <CreatePetSitModal
+                                    pet={pet}
+                                    onClose={() => setShowPetSitModal(false)}
+                                    onCreated={(newPetSit) => {
+                                        setShowPetSitModal(false);
                                     }}
                                 />
                             )}
@@ -2267,23 +2639,6 @@ const TabContent = styled.div`
     }
 `;
 
-const TabDescription = styled.p`
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.85);
-    margin: 0 0 20px 0;
-    padding: 12px 16px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    border-left: 3px solid rgba(255, 255, 255, 0.4);
-    line-height: 1.5;
-
-    @media (max-width: 768px) {
-        font-size: 0.85rem;
-        padding: 10px 12px;
-    }
-`;
-
 const InfoTab = styled.div``;
 
 const InfoHeader = styled.div`
@@ -2539,6 +2894,60 @@ const AppointmentsHeader = styled.div`
     margin-bottom: 24px;
 `;
 
+const SectionHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+`;
+
+const SectionTitle = styled.h3`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+`;
+
+const AddPetSitButton = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #a569a7, #8b5cf6);
+    border: none;
+    border-radius: 8px;
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(165, 105, 167, 0.4);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+`;
+
+const PetSitDescriptionPreview = styled.div`
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: rgba(165, 105, 167, 0.15);
+    border: 1px solid rgba(165, 105, 167, 0.3);
+    border-left: 4px solid rgba(165, 105, 167, 0.7);
+    border-radius: 10px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.88rem;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.6;
+    font-weight: 400;
+`;
+
 const AppointmentsList = styled.div`
     display: flex;
     flex-direction: column;
@@ -2547,17 +2956,23 @@ const AppointmentsList = styled.div`
 `;
 
 const AppointmentCard = styled.div`
-    background: rgba(255, 255, 255, 0.15);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    padding: 16px;
+    background: linear-gradient(135deg, rgba(45, 27, 61, 0.95) 0%, rgba(74, 44, 75, 0.9) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 20px;
     cursor: pointer;
     transition: all 0.3s ease;
-    
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+
     &:hover {
-        border-color: rgba(255, 255, 255, 0.4);
-        background: rgba(255, 255, 255, 0.2);
-        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+        border-color: rgba(165, 105, 167, 0.4);
+        background: linear-gradient(135deg, rgba(45, 27, 61, 1) 0%, rgba(74, 44, 75, 0.95) 100%);
+        box-shadow: 0 8px 24px rgba(165, 105, 167, 0.3);
+        transform: translateY(-2px);
+    }
+
+    &:active {
+        transform: translateY(0);
     }
 `;
 
@@ -2569,20 +2984,25 @@ const AppointmentHeader = styled.div`
 `;
 
 const AppointmentType = styled.span`
-    padding: 4px 12px;
-    border-radius: 6px;
+    padding: 6px 14px;
+    border-radius: 8px;
     font-family: 'Poppins', sans-serif;
     font-size: 0.85rem;
-    font-weight: 600;
-    background: ${props => props.$recurring ? 'rgba(59, 130, 246, 0.1)' : 'rgba(168, 85, 247, 0.1)'};
-    color: ${props => props.$recurring ? '#2563eb' : '#7c3aed'};
+    font-weight: 700;
+    background: ${props => props.$recurring ? 'rgba(59, 130, 246, 0.2)' : 'rgba(168, 85, 247, 0.2)'};
+    color: ${props => props.$recurring ? '#60a5fa' : '#c084fc'};
+    border: 1px solid ${props => props.$recurring ? 'rgba(59, 130, 246, 0.3)' : 'rgba(168, 85, 247, 0.3)'};
+    letter-spacing: 0.3px;
 `;
 
 const AppointmentDuration = styled.span`
     font-family: 'Poppins', sans-serif;
     font-size: 0.95rem;
-    font-weight: 600;
-    color: white;
+    font-weight: 700;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 4px 12px;
+    border-radius: 6px;
 `;
 
 const AppointmentDetails = styled.div`
@@ -2652,7 +3072,7 @@ const EmptyAppointments = styled.div`
 const AppointmentModal = styled(ModalOverlay)``;
 
 const AppointmentModalContent = styled.div`
-    padding: 24px;
+    padding: 16px;
 `;
 
 const DayCheckboxes = styled.div`
@@ -2786,6 +3206,22 @@ const CreatePetForm = styled.form`
     }
 `;
 
+const TotalCost = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: rgba(165, 105, 167, 0.2);
+    border: 2px solid rgba(165, 105, 167, 0.4);
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-top: 12px;
+    box-shadow: 0 2px 8px rgba(165, 105, 167, 0.2);
+`;
+
 const FormButtons = styled.div`
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -2899,5 +3335,6 @@ export {
     DeleteButton,
     InvoicesTab,
     CreatePetForm,
+    TotalCost,
     FormButtons
 };

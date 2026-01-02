@@ -28,7 +28,7 @@ import { calculateRouteWithTimes } from "../utils/routeCalculations";
 import * as S from "./TodaysWalks.styles";
 
 export default function TodaysWalks() {
-    const { user, refreshUser, addInvoice } = useContext(UserContext);
+    const { user } = useContext(UserContext);
     const [showMap, setShowMap] = useState(false);
     const [optimizedRoute, setOptimizedRoute] = useState(null);
     const [isLoadingRoute, setIsLoadingRoute] = useState(false);
@@ -113,6 +113,17 @@ export default function TodaysWalks() {
         }
     };
 
+    // Get pet sits for today's date
+    const todaysPetSits = useMemo(() => {
+        const today = dayjs().format("YYYY-MM-DD");
+        return (user?.pet_sits || []).filter(petSit => {
+            if (petSit.canceled) return false;
+            const startDate = dayjs(petSit.start_date).format("YYYY-MM-DD");
+            const endDate = dayjs(petSit.end_date).format("YYYY-MM-DD");
+            return today >= startDate && today <= endDate;
+        });
+    }, [user?.pet_sits]);
+
     // Get today's appointments using the same logic as Dashboard
     const todaysAppointments = useMemo(() => {
         return getAppointmentsForDate(dayjs());
@@ -151,10 +162,10 @@ export default function TodaysWalks() {
                     <S.HeaderContent>
                         <S.PageTitle>
                             <Calendar size={24} />
-                            Today's Walks
+                            Today's Schedule
                         </S.PageTitle>
                         <S.PageSubtitle>
-                            {todaysAppointments.length} {todaysAppointments.length === 1 ? 'walk' : 'walks'} scheduled • {completedCount} completed
+                            {todaysAppointments.length} {todaysAppointments.length === 1 ? 'walk' : 'walks'}{todaysPetSits.length > 0 ? ` • ${todaysPetSits.length} pet ${todaysPetSits.length === 1 ? 'sit' : 'sits'}` : ''} • {completedCount} completed
                         </S.PageSubtitle>
                     </S.HeaderContent>
                     {todaysAppointments.length > 0 && (
@@ -175,12 +186,12 @@ export default function TodaysWalks() {
                     )}
                 </S.Header>
 
-                {todaysAppointments.length === 0 ? (
+                {todaysAppointments.length === 0 && todaysPetSits.length === 0 ? (
                     <S.EmptyState>
                         <S.EmptyIcon>
                             <Dog size={48} />
                         </S.EmptyIcon>
-                        <S.EmptyTitle>No walks scheduled</S.EmptyTitle>
+                        <S.EmptyTitle>Nothing scheduled</S.EmptyTitle>
                         <S.EmptyText>Enjoy your free day! Your furry friends are taking a rest.</S.EmptyText>
                     </S.EmptyState>
                 ) : (
@@ -197,11 +208,17 @@ export default function TodaysWalks() {
                         <S.WalkList>
                             {todaysAppointments.map(appointment => (
                                 <WalkCard
-                                    key={appointment.id}
+                                    key={`walk-${appointment.id}`}
                                     appointment={appointment}
                                     isCovering={false}
                                     coveredBy={null}
                                     myPercentage={null}
+                                />
+                            ))}
+                            {todaysPetSits.map(petSit => (
+                                <PetSitCard
+                                    key={`petsit-${petSit.id}`}
+                                    petSit={petSit}
                                 />
                             ))}
                         </S.WalkList>
@@ -511,7 +528,7 @@ const CompletionModal = ({ appointment, user, onComplete, onClose }) => {
     const [duration, setDuration] = useState(appointment.duration);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [splitPercentage, setSplitPercentage] = useState(100); // % going to walker
-    const [showSplitUI, setShowSplitUI] = useState(appointment.delegation_status === 'delegated');
+    const [showSplitUI] = useState(appointment.delegation_status === 'delegated');
 
     // Use original owner's rates if this is a covering appointment
     const rates = appointment.is_covering && appointment.original_owner_rates
@@ -1063,3 +1080,131 @@ const PetDetailsModal = ({ pet, onClose }) => {
 
     return ReactDOM.createPortal(modalContent, document.body);
 };
+
+// Pet Sit Card Component
+const PetSitCard = React.memo(({ petSit }) => {
+    const { addInvoice, updatePetSit } = useContext(UserContext);
+    const today = dayjs().format("YYYY-MM-DD");
+
+    // Check if today has been completed
+    const todayCompletion = petSit.pet_sit_completions?.find(
+        completion => dayjs(completion.completion_date).format("YYYY-MM-DD") === today
+    );
+
+    const [isCompleted, setIsCompleted] = useState(!!todayCompletion);
+    const [invoiceAmount, setInvoiceAmount] = useState(todayCompletion?.invoice?.compensation || petSit.daily_cost || 0);
+    const [showPetModal, setShowPetModal] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Update state when pet sit changes in context
+    React.useEffect(() => {
+        const completion = petSit.pet_sit_completions?.find(
+            c => dayjs(c.completion_date).format("YYYY-MM-DD") === today
+        );
+        setIsCompleted(!!completion);
+        setInvoiceAmount(completion?.invoice?.compensation || petSit.daily_cost || 0);
+    }, [petSit, today]);
+
+    const handleComplete = async () => {
+        setIsSubmitting(true);
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch(`/pet_sits/${petSit.id}/complete_day`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ completion_date: today }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // Update pet sit with new completion
+                updatePetSit(data.pet_sit);
+                // Add invoice to context
+                if (data.invoice) {
+                    addInvoice(data.invoice);
+                }
+            }
+        } catch (error) {
+            console.error('Error completing pet sit:', error);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // Calculate days info
+    const totalDays = dayjs(petSit.end_date).diff(petSit.start_date, 'day') + 1;
+    const completedDays = petSit.pet_sit_completions?.length || 0;
+
+    return (
+        <S.Card $completed={isCompleted} $petSit>
+            <S.CardContent>
+                <S.WalkDetails onClick={() => setShowPetModal(true)}>
+                    <S.TopRow>
+                        <S.PetName>{petSit.pet?.name}</S.PetName>
+                        <S.WalkTime>Pet Sit</S.WalkTime>
+                    </S.TopRow>
+                    <S.Address>
+                        <MapPin size={11} />
+                        {petSit.pet?.address || 'No address'}
+                    </S.Address>
+                    <S.WalkInfo>
+                        <S.InfoItem>
+                            {dayjs(petSit.start_date).format("MMM D")} - {dayjs(petSit.end_date).format("MMM D")}
+                        </S.InfoItem>
+                        <S.InfoDivider>•</S.InfoDivider>
+                        <S.InfoItem>
+                            {completedDays}/{totalDays} days
+                        </S.InfoItem>
+                        {petSit.description && (
+                            <>
+                                <S.InfoDivider>•</S.InfoDivider>
+                                <S.InfoItem>
+                                    <S.InfoIcon>
+                                        <Info size={12} />
+                                    </S.InfoIcon>
+                                </S.InfoItem>
+                            </>
+                        )}
+                    </S.WalkInfo>
+                    {petSit.description && (
+                        <S.PetSitDescription>{petSit.description}</S.PetSitDescription>
+                    )}
+                </S.WalkDetails>
+
+                {isCompleted && invoiceAmount > 0 && (
+                    <S.EarningsDisplay>
+                        <DollarSign size={16} />
+                        <S.EarningsAmount>${invoiceAmount.toFixed(2)}</S.EarningsAmount>
+                    </S.EarningsDisplay>
+                )}
+
+                {!isCompleted && (
+                    <S.ActionButtons>
+                        <S.CompleteButton
+                            onClick={handleComplete}
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? '...' : <CheckCircle size={18} />}
+                        </S.CompleteButton>
+                    </S.ActionButtons>
+                )}
+
+                {isCompleted && (
+                    <S.CompletedBadge>
+                        <CheckCircle size={14} />
+                    </S.CompletedBadge>
+                )}
+            </S.CardContent>
+
+            {showPetModal && petSit.pet && (
+                <PetDetailsModal
+                    pet={petSit.pet}
+                    onClose={() => setShowPetModal(false)}
+                />
+            )}
+        </S.Card>
+    );
+});

@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import dayjs from "dayjs";
-import { DollarSign, Calendar, CreditCard, Receipt, TrendingUp, Users } from "lucide-react";
+import { Calendar, CreditCard, Receipt, TrendingUp, Users } from "lucide-react";
 import toast from 'react-hot-toast';
 
 const MyEarnings = () => {
     const [activeTab, setActiveTab] = useState("unpaid");
     const [earningsData, setEarningsData] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [invoiceLimit, setInvoiceLimit] = useState(50);
+    const invoiceLimit = 50;
 
     useEffect(() => {
         window.scrollTo(0, 0);

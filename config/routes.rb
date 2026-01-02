@@ -16,6 +16,18 @@ Rails.application.routes.draw do
   end
   resources :pets
 
+  # Pet Sits
+  resources :pet_sits, only: %i[index show create update destroy] do
+    collection do
+      get :for_date      # GET /pet_sits/for_date?date=2026-01-15
+      get :upcoming      # GET /pet_sits/upcoming
+      get :current       # GET /pet_sits/current
+    end
+    member do
+      post :complete_day # POST /pet_sits/:id/complete_day
+    end
+  end
+
   # User routes - search must be before resources to avoid matching as :id
   get '/users/search', to: 'users#search'
   resources :users

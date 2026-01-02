@@ -81,6 +81,7 @@ export default function Profile() {
         solo_rate: user?.solo_rate || "",
         training_rate: user?.training_rate || "",
         sibling_rate: user?.sibling_rate || "",
+        pet_sitting_rate: user?.pet_sitting_rate || "",
     });
 
     // Profile editing states
@@ -147,7 +148,8 @@ export default function Profile() {
                     sixty: updatedUserData.sixty,
                     solo_rate: updatedUserData.solo_rate,
                     training_rate: updatedUserData.training_rate,
-                    sibling_rate: updatedUserData.sibling_rate
+                    sibling_rate: updatedUserData.sibling_rate,
+                    pet_sitting_rate: updatedUserData.pet_sitting_rate
                 }));
                 toast.success("Rates updated successfully!");
             } else {
@@ -674,6 +676,25 @@ export default function Profile() {
                                     />
                                 </ModernRateInput>
                             </ModernRateCard>
+
+                            <ModernRateCard $petsitting>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                    <RateDuration>Pet Sitting</RateDuration>
+                                    <RateMinutes>per day</RateMinutes>
+                                </div>
+                                <ModernRateInput>
+                                    <DollarSymbol>$</DollarSymbol>
+                                    <RateField
+                                        type="number"
+                                        name="pet_sitting_rate"
+                                        value={rates.pet_sitting_rate}
+                                        onChange={handleRateChange}
+                                        placeholder="0.00"
+                                        step="0.01"
+                                        required
+                                    />
+                                </ModernRateInput>
+                            </ModernRateCard>
                         </ModernRateGrid>
                         <ModernUpdateButton type="submit" disabled={isUpdatingRates}>
                             <Settings size={14} />
@@ -784,18 +805,6 @@ const ProfilePhotoWrapper = styled.div`
             opacity: 1;
         }
     }
-`;
-
-const ProfileIconWrapper = styled.div`
-    width: 64px;
-    height: 64px;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
 `;
 
 const ProfilePhoto = styled.img`

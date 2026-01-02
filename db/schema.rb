@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 20_251_113_212_407) do
+ActiveRecord::Schema[7.2].define(version: 20_260_102_152_928) do
   # These are extensions that must be enabled in order to support this database
   enable_extension 'plpgsql'
 
@@ -166,7 +166,7 @@ ActiveRecord::Schema[7.2].define(version: 20_251_113_212_407) do
   end
 
   create_table 'invoices', force: :cascade do |t|
-    t.bigint 'appointment_id', null: false
+    t.bigint 'appointment_id'
     t.bigint 'pet_id', null: false
     t.datetime 'date_completed', precision: nil
     t.integer 'compensation'
@@ -182,11 +182,13 @@ ActiveRecord::Schema[7.2].define(version: 20_251_113_212_407) do
     t.decimal 'owner_amount', precision: 10, scale: 2
     t.decimal 'walker_amount', precision: 10, scale: 2
     t.bigint 'completed_by_user_id'
+    t.bigint 'pet_sit_id'
     t.index ['appointment_id'], name: 'index_invoices_on_appointment_id'
     t.index ['completed_by_user_id'], name: 'index_invoices_on_completed_by_user_id'
     t.index ['is_shared'], name: 'index_invoices_on_is_shared'
     t.index %w[pet_id paid pending], name: 'index_invoices_on_pet_and_payment_status'
     t.index ['pet_id'], name: 'index_invoices_on_pet_id'
+    t.index ['pet_sit_id'], name: 'index_invoices_on_pet_sit_id'
     t.index ['training_session_id'], name: 'index_invoices_on_training_session_id'
   end
 
@@ -199,6 +201,36 @@ ActiveRecord::Schema[7.2].define(version: 20_251_113_212_407) do
     t.datetime 'updated_at', null: false
     t.index %w[user_id hours_reached], name: 'index_milestones_on_user_id_and_hours_reached', unique: true
     t.index ['user_id'], name: 'index_milestones_on_user_id'
+  end
+
+  create_table 'pet_sit_completions', force: :cascade do |t|
+    t.bigint 'pet_sit_id', null: false
+    t.date 'completion_date', null: false
+    t.bigint 'completed_by_user_id'
+    t.datetime 'completed_at', null: false
+    t.datetime 'created_at', null: false
+    t.datetime 'updated_at', null: false
+    t.index ['completion_date'], name: 'index_pet_sit_completions_on_completion_date'
+    t.index %w[pet_sit_id completion_date], name: 'index_completions_unique', unique: true
+    t.index ['pet_sit_id'], name: 'index_pet_sit_completions_on_pet_sit_id'
+  end
+
+  create_table 'pet_sits', force: :cascade do |t|
+    t.bigint 'user_id', null: false
+    t.bigint 'pet_id', null: false
+    t.date 'start_date', null: false
+    t.date 'end_date', null: false
+    t.integer 'daily_rate', null: false
+    t.integer 'additional_charge', default: 0
+    t.text 'description'
+    t.boolean 'canceled', default: false
+    t.bigint 'completed_by_user_id'
+    t.datetime 'created_at', null: false
+    t.datetime 'updated_at', null: false
+    t.index ['completed_by_user_id'], name: 'index_pet_sits_on_completed_by_user_id'
+    t.index ['pet_id'], name: 'index_pet_sits_on_pet_id'
+    t.index %w[start_date end_date], name: 'index_pet_sits_on_start_date_and_end_date'
+    t.index ['user_id'], name: 'index_pet_sits_on_user_id'
   end
 
   create_table 'pets', force: :cascade do |t|
@@ -261,6 +293,7 @@ ActiveRecord::Schema[7.2].define(version: 20_251_113_212_407) do
     t.integer 'solo_rate'
     t.integer 'training_rate'
     t.integer 'sibling_rate'
+    t.integer 'pet_sitting_rate'
   end
 
   create_table 'walk_groups', force: :cascade do |t|
@@ -324,10 +357,16 @@ ActiveRecord::Schema[7.2].define(version: 20_251_113_212_407) do
   add_foreign_key 'cancellations', 'appointments'
   add_foreign_key 'certification_goals', 'users'
   add_foreign_key 'invoices', 'appointments'
+  add_foreign_key 'invoices', 'pet_sits'
   add_foreign_key 'invoices', 'pets'
   add_foreign_key 'invoices', 'training_sessions'
   add_foreign_key 'invoices', 'users', column: 'completed_by_user_id'
   add_foreign_key 'milestones', 'users'
+  add_foreign_key 'pet_sit_completions', 'pet_sits'
+  add_foreign_key 'pet_sit_completions', 'users', column: 'completed_by_user_id'
+  add_foreign_key 'pet_sits', 'pets'
+  add_foreign_key 'pet_sits', 'users'
+  add_foreign_key 'pet_sits', 'users', column: 'completed_by_user_id'
   add_foreign_key 'pets', 'users'
   add_foreign_key 'share_dates', 'appointment_shares'
   add_foreign_key 'training_sessions', 'pets'

@@ -7,8 +7,7 @@ import {
     Cake,
     ChevronLeft,
     ChevronRight,
-    ArrowLeft,
-    X
+    ArrowLeft
 } from "lucide-react";
 
 const getUpcomingBirthday = (pets) => {
@@ -46,7 +45,6 @@ export default function Dashboard() {
     const [selectedDate, setSelectedDate] = useState(null);
     const [showDayDetail, setShowDayDetail] = useState(false);
     const [photoError, setPhotoError] = useState(false);
-    const dayDetailRef = React.useRef(null);
 
     useEffect(() => {
         window.scrollTo(0, 0);

@@ -1,5 +1,6 @@
 class Invoice < ApplicationRecord
-  belongs_to :appointment
+  belongs_to :appointment, optional: true
+  belongs_to :pet_sit, optional: true
   belongs_to :pet
   belongs_to :training_session, optional: true
   belongs_to :completed_by_user, class_name: 'User', optional: true
@@ -7,6 +8,7 @@ class Invoice < ApplicationRecord
   validates :date_completed, presence: true
   validates :compensation, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :title, presence: true
+  validate :must_have_appointment_or_pet_sit
 
   # Scopes
   scope :unpaid, -> { where(paid: false) }
@@ -86,5 +88,15 @@ class Invoice < ApplicationRecord
   # Check if this invoice involves a specific user (either as owner or completing walker)
   def involves_user?(user_id)
     pet.user_id == user_id || completed_by_user_id == user_id
+  end
+
+  private
+
+  def must_have_appointment_or_pet_sit
+    errors.add(:base, 'Must have either appointment or pet sit') if appointment_id.blank? && pet_sit_id.blank?
+
+    return unless appointment_id.present? && pet_sit_id.present?
+
+    errors.add(:base, 'Cannot have both appointment and pet sit')
   end
 end

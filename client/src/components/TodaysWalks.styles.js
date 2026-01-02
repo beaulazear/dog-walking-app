@@ -2095,3 +2095,24 @@ export const AlertText = styled.p`
     font-weight: 400;
     padding-left: 44px;
 `;
+
+// ======================
+// PET SIT SPECIFIC
+// ======================
+
+export const PetSitDescription = styled.div`
+    font-family: 'Poppins', sans-serif;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.8rem;
+    font-weight: 400;
+    margin-top: 4px;
+    line-height: 1.4;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border-left: 2px solid rgba(165, 105, 167, 0.5);
+
+    @media (max-width: 768px) {
+        font-size: 0.75rem;
+    }
+`;

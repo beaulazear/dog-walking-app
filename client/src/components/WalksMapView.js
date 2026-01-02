@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import styled from 'styled-components';
-import { X, MapPin, Clock, DollarSign, Moon, Sun, Mountain, Route, List } from 'lucide-react';
+import { MapPin, Clock, Moon, Sun, Mountain, Route, List } from 'lucide-react';
 import dayjs from 'dayjs';
 import RouteJourneyPanel from './RouteJourneyPanel';
 import { calculateRouteWithTimes } from '../utils/routeCalculations';
@@ -1004,20 +1004,6 @@ const MetaDuration = styled.span`
     $mapStyle === 'light' ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.7)'};
   font-size: 0.8rem;
   font-weight: 500;
-`;
-
-const PopupGroupBadge = styled.div`
-  margin-top: 8px;
-  padding: 6px 10px;
-  background: rgba(249, 115, 22, 0.2);
-  border: 1px solid rgba(249, 115, 22, 0.4);
-  border-radius: 8px;
-  color: #f97316;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 `;
 
 const LegendLabel = styled.span`

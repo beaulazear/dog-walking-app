@@ -3,6 +3,7 @@ class UserSerializer
     # Eager load all associations in a single optimized query
     pets = user.pets.includes(:appointments)
     appointments = user.appointments.includes(:cancellations, :pet)
+    pet_sits = user.pet_sits.includes(:pet, :pet_sit_completions)
     pet_ids = pets.pluck(:id)
     invoices = Invoice.where(pet_id: pet_ids)
 
@@ -18,11 +19,13 @@ class UserSerializer
       solo_rate: user.solo_rate,
       training_rate: user.training_rate,
       sibling_rate: user.sibling_rate,
+      pet_sitting_rate: user.pet_sitting_rate,
       profile_pic_url: user.profile_pic_url,
       created_at: user.created_at,
       pets: PetSerializer.serialize_collection(pets),
       appointments: AppointmentSerializer.serialize_collection(appointments),
-      invoices: invoices.as_json(only: %i[id appointment_id pet_id date_completed
+      pet_sits: pet_sits.as_json(include: { pet: {}, pet_sit_completions: {} }),
+      invoices: invoices.as_json(only: %i[id appointment_id pet_sit_id pet_id date_completed
                                           compensation paid pending title cancelled])
     }
   end
@@ -40,6 +43,7 @@ class UserSerializer
       solo_rate: user.solo_rate,
       training_rate: user.training_rate,
       sibling_rate: user.sibling_rate,
+      pet_sitting_rate: user.pet_sitting_rate,
       profile_pic_url: user.profile_pic_url,
       created_at: user.created_at
     }

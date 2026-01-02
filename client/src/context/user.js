@@ -112,6 +112,46 @@ function UserProvider({ children }) {
         });
     }, []);
 
+    // Add new pet sit without full state replacement
+    const addPetSit = useCallback((newPetSit) => {
+        setUser(prevUser => {
+            if (!prevUser) return prevUser;
+
+            return {
+                ...prevUser,
+                pet_sits: [...(prevUser.pet_sits || []), newPetSit]
+            };
+        });
+    }, []);
+
+    // Update pet sit without full state replacement
+    const updatePetSit = useCallback((updatedPetSit) => {
+        setUser(prevUser => {
+            if (!prevUser) return prevUser;
+
+            const updatedPetSits = (prevUser.pet_sits || []).map(sit =>
+                sit.id === updatedPetSit.id ? updatedPetSit : sit
+            );
+
+            return {
+                ...prevUser,
+                pet_sits: updatedPetSits
+            };
+        });
+    }, []);
+
+    // Remove pet sit without full state replacement
+    const removePetSit = useCallback((petSitId) => {
+        setUser(prevUser => {
+            if (!prevUser) return prevUser;
+
+            return {
+                ...prevUser,
+                pet_sits: (prevUser.pet_sits || []).filter(sit => sit.id !== petSitId)
+            };
+        });
+    }, []);
+
     // Refresh user data from the server
     const refreshUser = useCallback(async () => {
         try {
@@ -137,8 +177,11 @@ function UserProvider({ children }) {
         addPet,
         updatePet,
         removePet,
+        addPetSit,
+        updatePetSit,
+        removePetSit,
         refreshUser
-    }), [user, loading, updateAppointment, addAppointment, removeAppointment, addInvoice, addPet, updatePet, removePet, refreshUser]);
+    }), [user, loading, updateAppointment, addAppointment, removeAppointment, addInvoice, addPet, updatePet, removePet, addPetSit, updatePetSit, removePetSit, refreshUser]);
 
     return (
         <UserContext.Provider value={contextValue}>

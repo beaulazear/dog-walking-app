@@ -1,14 +1,18 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
 import dayjs from "dayjs";
 import { UserContext } from "../context/user";
 import { Calendar, Clock, Plus, X, Users, Repeat, CalendarDays, DollarSign } from "lucide-react";
 import toast from 'react-hot-toast';
 
-const NewAppointmentForm = ({ pet }) => {
+const NewAppointmentForm = ({ pet, showForm: externalShowForm, setShowForm: externalSetShowForm }) => {
     const { user, addAppointment } = useContext(UserContext);
-    const [showForm, setShowForm] = useState(false);
+    const [internalShowForm, setInternalShowForm] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
+
+    // Use external control if provided, otherwise use internal state
+    const showForm = externalShowForm !== undefined ? externalShowForm : internalShowForm;
+    const setShowForm = externalSetShowForm || setInternalShowForm;
     const [formData, setFormData] = useState({
         user_id: user.id,
         pet_id: pet.id,
@@ -29,7 +33,7 @@ const NewAppointmentForm = ({ pet }) => {
     });
 
     // Calculate default price based on duration and walk type
-    const calculateDefaultPrice = () => {
+    const calculateDefaultPrice = useCallback(() => {
         if (!user) return 0;
 
         const duration = formData.duration;
@@ -45,7 +49,7 @@ const NewAppointmentForm = ({ pet }) => {
         if (walkType === 'sibling') return user.sibling_rate || basePrice;
 
         return basePrice;
-    };
+    }, [user, formData.duration, formData.walk_type]);
 
     // Update price when duration or walk_type changes
     useEffect(() => {
@@ -54,7 +58,7 @@ const NewAppointmentForm = ({ pet }) => {
             ...prev,
             price: defaultPrice * 100 // Convert dollars to cents
         }));
-    }, [formData.duration, formData.walk_type]);
+    }, [calculateDefaultPrice]);
 
     const toggleForm = () => setShowForm((prev) => !prev);
 
@@ -132,22 +136,25 @@ const NewAppointmentForm = ({ pet }) => {
 
     return (
         <>
-            <ButtonContainer>
-                <ToggleButton onClick={toggleForm}>
-                    {showForm ? (
-                        <>
-                            <X size={16} />
-                            Close Form
-                        </>
-                    ) : (
-                        <>
-                            <Plus size={16} />
-                            Schedule Appointment
-                        </>
-                    )}
-                </ToggleButton>
-            </ButtonContainer>
-            
+            {/* Only show button if not externally controlled */}
+            {externalShowForm === undefined && (
+                <ButtonContainer>
+                    <ToggleButton onClick={toggleForm}>
+                        {showForm ? (
+                            <>
+                                <X size={16} />
+                                Close Form
+                            </>
+                        ) : (
+                            <>
+                                <Plus size={16} />
+                                Schedule Appointment
+                            </>
+                        )}
+                    </ToggleButton>
+                </ButtonContainer>
+            )}
+
             {showForm && (
                 <FormContainer>
                     <FormHeader>
