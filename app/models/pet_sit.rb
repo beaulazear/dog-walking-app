@@ -50,6 +50,20 @@ class PetSit < ApplicationRecord
     daily_rate + (additional_charge.to_f / days).round
   end
 
+  # Custom JSON serialization
+  def as_json(options = {})
+    super(options).merge(
+      'pet' => pet&.as_json(only: [:id, :name, :active, :address, :owner_name]),
+      'user' => user&.as_json(only: [:id, :name, :email]),
+      'completed_by_user' => completed_by_user&.as_json(only: [:id, :name, :email]),
+      'pet_sit_completions' => pet_sit_completions.as_json(only: [:id, :completion_date, :completed_at, :completed_by_user_id]),
+      'invoices' => invoices.as_json(only: [:id, :amount, :status, :date_completed]),
+      'total_cost' => total_cost,
+      'daily_cost' => daily_cost,
+      'fully_completed' => fully_completed?
+    )
+  end
+
   private
 
   def end_date_after_start_date
