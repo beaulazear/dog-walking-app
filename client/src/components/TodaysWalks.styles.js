@@ -2116,3 +2116,213 @@ export const PetSitDescription = styled.div`
         font-size: 0.75rem;
     }
 `;
+
+export const ViewAllDatesLink = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.75rem;
+    color: rgba(165, 105, 167, 1);
+    font-weight: 600;
+    margin-top: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: fit-content;
+
+    svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    &:hover {
+        color: rgba(165, 105, 167, 0.8);
+        text-decoration: underline;
+    }
+`;
+
+// ======================
+// ALL DATES MODAL
+// ======================
+
+export const AllDatesModal = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+`;
+
+export const AllDatesModalContent = styled.div`
+    background: linear-gradient(135deg, rgba(68, 35, 100, 0.95) 0%, rgba(45, 23, 66, 0.95) 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    padding: 24px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+
+    @media (max-width: 768px) {
+        padding: 20px;
+        max-height: 90vh;
+    }
+`;
+
+export const AllDatesHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+export const AllDatesTitle = styled.h3`
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+
+    @media (max-width: 768px) {
+        font-size: 1.1rem;
+    }
+`;
+
+export const CloseModalButton = styled.button`
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 6px;
+    cursor: pointer;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.05);
+    }
+`;
+
+export const AllDatesInfo = styled.div`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 16px;
+    text-align: center;
+`;
+
+export const AllDatesList = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    max-height: 400px;
+    padding-right: 8px;
+
+    /* Custom scrollbar */
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(165, 105, 167, 0.5);
+        border-radius: 3px;
+
+        &:hover {
+            background: rgba(165, 105, 167, 0.7);
+        }
+    }
+`;
+
+export const DateRow = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.2s ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(165, 105, 167, 0.3);
+    }
+`;
+
+export const DateLabel = styled.div`
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+`;
+
+export const DateCompletedBadge = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    color: rgba(16, 185, 129, 1);
+    font-weight: 600;
+
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+`;
+
+export const DateCompleteButton = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(165, 105, 167, 0.2);
+    border: 1px solid rgba(165, 105, 167, 0.4);
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    &:hover {
+        background: rgba(165, 105, 167, 0.3);
+        border-color: rgba(165, 105, 167, 0.6);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(165, 105, 167, 0.3);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+`;

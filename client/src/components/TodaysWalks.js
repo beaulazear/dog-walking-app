@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import dayjs from "dayjs";
 import { motion, AnimatePresence } from "motion/react";
 import { UserContext } from "../context/user";
+import toast from 'react-hot-toast';
 import dogPlaceholder from "../assets/dog.png";
 import {
     CheckCircle,
@@ -18,10 +19,10 @@ import {
     Heart,
     Share2,
     Calendar,
+    CalendarDays,
     Map,
     Route
 } from "lucide-react";
-import ShareAppointmentModal from "./ShareAppointmentModal";
 import WalksMapView from "./WalksMapView";
 import RouteJourneyPanel from "./RouteJourneyPanel";
 import { calculateRouteWithTimes } from "../utils/routeCalculations";
@@ -206,6 +207,12 @@ export default function TodaysWalks() {
                         )}
 
                         <S.WalkList>
+                            {todaysPetSits.map(petSit => (
+                                <PetSitCard
+                                    key={`petsit-${petSit.id}`}
+                                    petSit={petSit}
+                                />
+                            ))}
                             {todaysAppointments.map(appointment => (
                                 <WalkCard
                                     key={`walk-${appointment.id}`}
@@ -213,12 +220,6 @@ export default function TodaysWalks() {
                                     isCovering={false}
                                     coveredBy={null}
                                     myPercentage={null}
-                                />
-                            ))}
-                            {todaysPetSits.map(petSit => (
-                                <PetSitCard
-                                    key={`petsit-${petSit.id}`}
-                                    petSit={petSit}
                                 />
                             ))}
                         </S.WalkList>
@@ -290,7 +291,6 @@ const WalkCard = React.memo(({ appointment, isCovering, coveredBy, myPercentage 
     const [showCompletionModal, setShowCompletionModal] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showPetModal, setShowPetModal] = useState(false);
-    const [showShareModal, setShowShareModal] = useState(false);
 
     // Helper to get walk type - supports both walk_type field and legacy solo field
     const walkType = appointment.walk_type || (appointment.solo ? 'solo' : 'group');
@@ -441,12 +441,6 @@ const WalkCard = React.memo(({ appointment, isCovering, coveredBy, myPercentage 
 
                 {!isCompleted && !isCancelled && (
                     <S.ActionButtons>
-                        {/* Only show share button if this is owned appointment (not covering) */}
-                        {!isCovering && (
-                            <S.ShareButton onClick={() => setShowShareModal(true)} title="Share with team">
-                                <Share2 size={18} />
-                            </S.ShareButton>
-                        )}
                         {/* Only enable complete if covering OR not covered by someone else */}
                         <S.CompleteButton
                             onClick={() => setShowCompletionModal(true)}
@@ -507,14 +501,6 @@ const WalkCard = React.memo(({ appointment, isCovering, coveredBy, myPercentage 
                 <PetDetailsModal
                     pet={appointment.pet}
                     onClose={() => setShowPetModal(false)}
-                />
-            )}
-
-            {showShareModal && (
-                <ShareAppointmentModal
-                    isOpen={showShareModal}
-                    onClose={() => setShowShareModal(false)}
-                    appointment={appointment}
                 />
             )}
         </S.Card>
@@ -1095,6 +1081,7 @@ const PetSitCard = React.memo(({ petSit }) => {
     const [invoiceAmount, setInvoiceAmount] = useState(todayCompletion?.invoice?.compensation || petSit.daily_cost || 0);
     const [showPetModal, setShowPetModal] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showAllDatesModal, setShowAllDatesModal] = useState(false);
 
     // Update state when pet sit changes in context
     React.useEffect(() => {
@@ -1134,6 +1121,37 @@ const PetSitCard = React.memo(({ petSit }) => {
         }
     };
 
+    const handleCompleteDate = async (completionDate) => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch(`/pet_sits/${petSit.id}/complete_day`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ completion_date: completionDate }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // Update pet sit with new completion
+                updatePetSit(data.pet_sit);
+                // Add invoice to context
+                if (data.invoice) {
+                    addInvoice(data.invoice);
+                }
+                toast.success(`Completed ${dayjs(completionDate).format("MMM D, YYYY")}!`);
+            } else {
+                const errorData = await response.json();
+                toast.error(errorData.errors?.[0] || "Failed to complete date");
+            }
+        } catch (error) {
+            console.error('Error completing pet sit date:', error);
+            toast.error("An error occurred while completing the date");
+        }
+    };
+
     // Calculate days info
     const totalDays = dayjs(petSit.end_date).diff(petSit.start_date, 'day') + 1;
     const completedDays = petSit.pet_sit_completions?.length || 0;
@@ -1169,6 +1187,13 @@ const PetSitCard = React.memo(({ petSit }) => {
                             </>
                         )}
                     </S.WalkInfo>
+                    <S.ViewAllDatesLink onClick={(e) => {
+                        e.stopPropagation();
+                        setShowAllDatesModal(true);
+                    }}>
+                        <CalendarDays size={12} />
+                        View All Dates
+                    </S.ViewAllDatesLink>
                     {petSit.description && (
                         <S.PetSitDescription>{petSit.description}</S.PetSitDescription>
                     )}
@@ -1204,6 +1229,65 @@ const PetSitCard = React.memo(({ petSit }) => {
                     pet={petSit.pet}
                     onClose={() => setShowPetModal(false)}
                 />
+            )}
+
+            {showAllDatesModal && ReactDOM.createPortal(
+                <S.AllDatesModal onClick={() => setShowAllDatesModal(false)}>
+                    <S.AllDatesModalContent onClick={(e) => e.stopPropagation()}>
+                        <S.AllDatesHeader>
+                            <S.AllDatesTitle>
+                                Completion Status - {petSit.pet?.name}
+                            </S.AllDatesTitle>
+                            <S.CloseModalButton onClick={() => setShowAllDatesModal(false)}>
+                                <X size={20} />
+                            </S.CloseModalButton>
+                        </S.AllDatesHeader>
+                        <S.AllDatesInfo>
+                            {dayjs(petSit.start_date).format("MMM D, YYYY")} - {dayjs(petSit.end_date).format("MMM D, YYYY")}
+                        </S.AllDatesInfo>
+                        <S.AllDatesList>
+                            {(() => {
+                                // Generate all dates in the sit range
+                                const allDates = [];
+                                let current = dayjs(petSit.start_date);
+                                const end = dayjs(petSit.end_date);
+
+                                while (current.isBefore(end, 'day') || current.isSame(end, 'day')) {
+                                    allDates.push(current.format('YYYY-MM-DD'));
+                                    current = current.add(1, 'day');
+                                }
+
+                                return allDates.map(date => {
+                                    const isDateCompleted = petSit.pet_sit_completions?.some(
+                                        completion => dayjs(completion.completion_date).format('YYYY-MM-DD') === date
+                                    );
+
+                                    return (
+                                        <S.DateRow key={date}>
+                                            <S.DateLabel>
+                                                {dayjs(date).format('ddd, MMM D, YYYY')}
+                                            </S.DateLabel>
+                                            {isDateCompleted ? (
+                                                <S.DateCompletedBadge>
+                                                    <CheckCircle size={16} />
+                                                    Completed
+                                                </S.DateCompletedBadge>
+                                            ) : (
+                                                <S.DateCompleteButton
+                                                    onClick={() => handleCompleteDate(date)}
+                                                >
+                                                    <CheckCircle size={16} />
+                                                    Complete
+                                                </S.DateCompleteButton>
+                                            )}
+                                        </S.DateRow>
+                                    );
+                                });
+                            })()}
+                        </S.AllDatesList>
+                    </S.AllDatesModalContent>
+                </S.AllDatesModal>,
+                document.body
             )}
         </S.Card>
     );

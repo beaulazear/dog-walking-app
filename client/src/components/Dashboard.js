@@ -102,6 +102,23 @@ export default function Dashboard() {
             }) || []);
     }, [user?.appointments, isRecurringOnDate]);
 
+    const getPetSitsForDate = useCallback((date) => {
+        return (user?.pet_sits
+            ?.filter(petSit => {
+                if (petSit.canceled) return false;
+
+                const formattedDate = dayjs(date).format("YYYY-MM-DD");
+                const sitStart = dayjs(petSit.start_date).format("YYYY-MM-DD");
+                const sitEnd = dayjs(petSit.end_date).format("YYYY-MM-DD");
+
+                // Check if the date falls within the pet sit range
+                return formattedDate >= sitStart && formattedDate <= sitEnd;
+            })
+            ?.sort((a, b) => {
+                return dayjs(a.start_date).isBefore(dayjs(b.start_date)) ? -1 : 1;
+            }) || []);
+    }, [user?.pet_sits]);
+
     const getMonthDays = (date) => {
         const startOfMonth = date.startOf('month');
         const endOfMonth = date.endOf('month');
@@ -227,6 +244,7 @@ export default function Dashboard() {
                         <MonthGrid>
                             {getMonthDays(currentDate).map((day) => {
                                 const dayAppointments = getAppointmentsForDate(day.format("YYYY-MM-DD"));
+                                const dayPetSits = getPetSitsForDate(day.format("YYYY-MM-DD"));
                                 const isToday = day.isSame(dayjs(), 'day');
                                 const isCurrentMonth = day.isSame(currentDate, 'month');
                                 const displayedAppointments = dayAppointments.slice(0, 2);
@@ -238,6 +256,7 @@ export default function Dashboard() {
                                         $isToday={isToday}
                                         $isCurrentMonth={isCurrentMonth}
                                         $hasAppointments={dayAppointments.length > 0}
+                                        $hasPetSits={dayPetSits.length > 0}
                                         onClick={() => handleDayClick(day, dayAppointments)}
                                     >
                                         <DayNumber $isToday={isToday}>
@@ -256,6 +275,11 @@ export default function Dashboard() {
                                                     )}
                                                 </>
                                             )}
+                                            {dayPetSits.length > 0 && (
+                                                <PetSitIndicator>
+                                                    <PetSitBadge>Pet Sit</PetSitBadge>
+                                                </PetSitIndicator>
+                                            )}
                                         </AppointmentIndicators>
                                         <DesktopPreviewList>
                                             {displayedAppointments.map((apt, idx) => (
@@ -271,6 +295,14 @@ export default function Dashboard() {
                                                     +{remainingCount} more
                                                 </MoreWalks>
                                             )}
+                                            {dayPetSits.map((petSit, idx) => (
+                                                <PetSitPreview key={`${petSit.id}-${idx}`}>
+                                                    <PetSitPreviewDot />
+                                                    <PreviewText>
+                                                        Pet Sit: {petSit.pet?.name}
+                                                    </PreviewText>
+                                                </PetSitPreview>
+                                            ))}
                                         </DesktopPreviewList>
                                     </DayCell>
                                 );
@@ -302,6 +334,33 @@ export default function Dashboard() {
                     </DayDetailHeader>
 
                     <DayDetailContent>
+                        {/* Pet Sits Section */}
+                        {getPetSitsForDate(selectedDate.format("YYYY-MM-DD")).map((petSit, index) => (
+                            <PetSitDayCard key={`petsit-${petSit.id}-${index}`}>
+                                <PetSitLabel>Pet Sit</PetSitLabel>
+                                <WalkDivider />
+                                <WalkInfoColumn>
+                                    <WalkPetName>{petSit.pet?.name}</WalkPetName>
+                                    <WalkMeta>
+                                        <WalkMetaItem>
+                                            {dayjs(petSit.start_date).format("MMM D")} - {dayjs(petSit.end_date).format("MMM D, YYYY")}
+                                        </WalkMetaItem>
+                                        <WalkMetaDivider>•</WalkMetaDivider>
+                                        <WalkMetaItem>
+                                            ${petSit.daily_rate}/day
+                                        </WalkMetaItem>
+                                    </WalkMeta>
+                                    {petSit.pet?.address && (
+                                        <WalkAddress>{petSit.pet.address}</WalkAddress>
+                                    )}
+                                    {petSit.description && (
+                                        <WalkDescription>{petSit.description}</WalkDescription>
+                                    )}
+                                </WalkInfoColumn>
+                            </PetSitDayCard>
+                        ))}
+
+                        {/* Walks Section */}
                         {getAppointmentsForDate(selectedDate.format("YYYY-MM-DD")).length > 0 ? (
                             getAppointmentsForDate(selectedDate.format("YYYY-MM-DD")).map((appointment, index) => (
                                 <WalkCard key={`${appointment.id}-${index}`}>
@@ -328,9 +387,12 @@ export default function Dashboard() {
                                     </WalkInfoColumn>
                                 </WalkCard>
                             ))
-                        ) : (
+                        ) : null}
+
+                        {getAppointmentsForDate(selectedDate.format("YYYY-MM-DD")).length === 0 &&
+                         getPetSitsForDate(selectedDate.format("YYYY-MM-DD")).length === 0 && (
                             <EmptyState>
-                                <EmptyStateText>No walks scheduled for this day</EmptyStateText>
+                                <EmptyStateText>No walks or pet sits scheduled for this day</EmptyStateText>
                             </EmptyState>
                         )}
                     </DayDetailContent>
@@ -782,8 +844,10 @@ const MonthGrid = styled.div`
 const DayCell = styled.div`
     background: ${props => {
         if (props.$isToday) return 'rgba(59, 130, 246, 0.15)';
+        if (props.$hasPetSits) return 'rgba(165, 105, 167, 0.08)';
         return props.$isCurrentMonth ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.01)';
     }};
+    border: ${props => props.$hasPetSits ? '1px solid rgba(165, 105, 167, 0.3)' : 'none'};
     min-height: 100px;
     padding: 8px;
     display: flex;
@@ -791,7 +855,7 @@ const DayCell = styled.div`
     align-items: center;
     gap: 4px;
     opacity: ${props => props.$isCurrentMonth ? 1 : 0.4};
-    cursor: ${props => props.$hasAppointments ? 'pointer' : 'default'};
+    cursor: ${props => (props.$hasAppointments || props.$hasPetSits) ? 'pointer' : 'default'};
     transition: all 0.2s ease;
     position: relative;
     -webkit-tap-highlight-color: transparent;
@@ -799,16 +863,18 @@ const DayCell = styled.div`
 
     &:hover {
         background: ${props => {
-            if (props.$hasAppointments) {
-                return props.$isToday ? 'rgba(59, 130, 246, 0.25)' : 'rgba(255, 255, 255, 0.08)';
+            if (props.$hasAppointments || props.$hasPetSits) {
+                if (props.$isToday) return 'rgba(59, 130, 246, 0.25)';
+                if (props.$hasPetSits) return 'rgba(165, 105, 167, 0.15)';
+                return 'rgba(255, 255, 255, 0.08)';
             }
             return props.$isToday ? 'rgba(59, 130, 246, 0.15)' : 'rgba(255, 255, 255, 0.02)';
         }};
     }
 
     &:active {
-        ${props => props.$hasAppointments && `
-            background: ${props.$isToday ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255, 255, 255, 0.12)'};
+        ${props => (props.$hasAppointments || props.$hasPetSits) && `
+            background: ${props.$isToday ? 'rgba(59, 130, 246, 0.3)' : props.$hasPetSits ? 'rgba(165, 105, 167, 0.2)' : 'rgba(255, 255, 255, 0.12)'};
             transform: scale(0.98);
         `}
     }
@@ -1379,6 +1445,116 @@ const RecurringBadge = styled.div`
     @media (max-width: 768px) {
         font-size: 0.75rem;
         padding: 5px 10px;
+    }
+`;
+
+// Pet Sit Styled Components
+const PetSitIndicator = styled.div`
+    margin-top: 2px;
+`;
+
+const PetSitBadge = styled.div`
+    background: rgba(165, 105, 167, 0.3);
+    border: 1px solid rgba(165, 105, 167, 0.5);
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 0.65rem;
+    font-weight: 700;
+    font-family: 'Poppins', sans-serif;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    @media (max-width: 768px) {
+        font-size: 0.6rem;
+        padding: 2px 4px;
+    }
+`;
+
+const PetSitPreview = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    background: rgba(165, 105, 167, 0.1);
+    border-left: 2px solid rgba(165, 105, 167, 0.5);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background: rgba(165, 105, 167, 0.15);
+    }
+`;
+
+const PetSitPreviewDot = styled.div`
+    width: 6px;
+    height: 6px;
+    background: rgba(165, 105, 167, 0.9);
+    border-radius: 50%;
+    flex-shrink: 0;
+`;
+
+const PetSitDayCard = styled.div`
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 16px;
+    background: rgba(165, 105, 167, 0.08);
+    border: 1px solid rgba(165, 105, 167, 0.25);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 8px;
+
+    &:hover {
+        background: rgba(165, 105, 167, 0.12);
+        border-color: rgba(165, 105, 167, 0.35);
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: 768px) {
+        padding: 14px;
+        gap: 10px;
+    }
+`;
+
+const PetSitLabel = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 50px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.95);
+    background: rgba(165, 105, 167, 0.3);
+    border: 1px solid rgba(165, 105, 167, 0.5);
+    padding: 6px 8px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    @media (max-width: 768px) {
+        font-size: 0.6rem;
+        padding: 5px 6px;
+    }
+`;
+
+const WalkDescription = styled.div`
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.4;
+    margin-top: 4px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border-left: 2px solid rgba(165, 105, 167, 0.5);
+
+    @media (max-width: 768px) {
+        font-size: 0.75rem;
+        padding: 6px;
     }
 `;
 

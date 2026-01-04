@@ -839,6 +839,47 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
         }
     };
 
+    const handleCompletePetSitDay = async (petSitId, completionDate) => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch(`/pet_sits/${petSitId}/complete_day`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ completion_date: completionDate }),
+                credentials: "include"
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+
+                // Update context
+                updatePetSit(data.pet_sit);
+                if (data.invoice) {
+                    addInvoice(data.invoice);
+                }
+
+                // Update local state
+                setPetSits(prev => prev.map(sit =>
+                    sit.id === petSitId ? data.pet_sit : sit
+                ));
+
+                // Update selected pet sit to show new completion
+                setSelectedPetSit(data.pet_sit);
+
+                toast.success(`Completed ${dayjs(completionDate).format("MMM D, YYYY")}!`);
+            } else {
+                const errorData = await response.json();
+                toast.error(errorData.errors?.[0] || "Failed to complete pet sit day.");
+            }
+        } catch (error) {
+            console.error("Error completing pet sit day:", error);
+            toast.error("An error occurred while completing the pet sit day.");
+        }
+    };
+
     const modalContent = (
         <ModalOverlay onClick={(e) => e.target === e.currentTarget && onClose()}>
             <ModalContainer>
@@ -1490,6 +1531,53 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
                                                         </InfoValue>
                                                     </FormGroup>
                                                 )}
+
+                                                {/* Completion Status Section */}
+                                                <CompletionSection>
+                                                    <CompletionHeader>
+                                                        <InfoLabel>Completion Status</InfoLabel>
+                                                    </CompletionHeader>
+                                                    <CompletionList>
+                                                        {(() => {
+                                                            // Generate all dates in the sit range
+                                                            const allDates = [];
+                                                            let current = dayjs(selectedPetSit.start_date);
+                                                            const end = dayjs(selectedPetSit.end_date);
+
+                                                            while (current.isBefore(end, 'day') || current.isSame(end, 'day')) {
+                                                                allDates.push(current.format('YYYY-MM-DD'));
+                                                                current = current.add(1, 'day');
+                                                            }
+
+                                                            return allDates.map(date => {
+                                                                const isCompleted = selectedPetSit.pet_sit_completions?.some(
+                                                                    completion => dayjs(completion.completion_date).format('YYYY-MM-DD') === date
+                                                                );
+
+                                                                return (
+                                                                    <CompletionDateRow key={date}>
+                                                                        <CompletionDateLabel>
+                                                                            <span>{dayjs(date).format('ddd, MMM D, YYYY')}</span>
+                                                                        </CompletionDateLabel>
+                                                                        {isCompleted ? (
+                                                                            <CompletedBadge>
+                                                                                <CheckCircle size={16} />
+                                                                                Completed
+                                                                            </CompletedBadge>
+                                                                        ) : (
+                                                                            <CompleteButton
+                                                                                onClick={() => handleCompletePetSitDay(selectedPetSit.id, date)}
+                                                                            >
+                                                                                <CheckCircle size={16} />
+                                                                                Complete
+                                                                            </CompleteButton>
+                                                                        )}
+                                                                    </CompletionDateRow>
+                                                                );
+                                                            });
+                                                        })()}
+                                                    </CompletionList>
+                                                </CompletionSection>
                                             </>
                                         ) : (
                                             <EditForm>
@@ -3255,6 +3343,118 @@ const CreatePetModalContent = styled.div`
     max-width: 600px;
 `;
 
+const CompletionSection = styled.div`
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+const CompletionHeader = styled.div`
+    margin-bottom: 12px;
+`;
+
+const CompletionList = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 8px;
+
+    /* Custom scrollbar */
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(165, 105, 167, 0.5);
+        border-radius: 3px;
+
+        &:hover {
+            background: rgba(165, 105, 167, 0.7);
+        }
+    }
+`;
+
+const CompletionDateRow = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.2s ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(165, 105, 167, 0.3);
+    }
+`;
+
+const CompletionDateLabel = styled.div`
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+`;
+
+const CompletedBadge = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    color: rgba(16, 185, 129, 1);
+    font-weight: 600;
+
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+`;
+
+const CompleteButton = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(165, 105, 167, 0.2);
+    border: 1px solid rgba(165, 105, 167, 0.4);
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    &:hover {
+        background: rgba(165, 105, 167, 0.3);
+        border-color: rgba(165, 105, 167, 0.6);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(165, 105, 167, 0.3);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+`;
+
 export {
     Container,
     Header,
@@ -3336,5 +3536,12 @@ export {
     InvoicesTab,
     CreatePetForm,
     TotalCost,
-    FormButtons
+    FormButtons,
+    CompletionSection,
+    CompletionHeader,
+    CompletionList,
+    CompletionDateRow,
+    CompletionDateLabel,
+    CompletedBadge,
+    CompleteButton
 };

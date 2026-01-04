@@ -1,6 +1,6 @@
 # Dog Walking App - Claude Context
 
-**Last Updated:** January 2, 2026
+**Last Updated:** January 3, 2026
 **Purpose:** Comprehensive context document for AI assistants working on this codebase
 
 ---
@@ -28,6 +28,7 @@ A comprehensive dog walking business management application for professional dog
 
 ### Core Value Propositions
 - **Appointment Management**: Recurring and one-time walks with flexible scheduling
+- **Pet Sitting Management**: Multi-day pet sitting with daily completion tracking and automatic invoicing
 - **Team Collaboration**: Share appointments and coordinate with other walkers
 - **Financial Tracking**: Invoice generation, earnings reports, and payment tracking
 - **Route Optimization**: Geocoding, distance calculation, and intelligent route planning
@@ -49,10 +50,10 @@ A comprehensive dog walking business management application for professional dog
 ```ruby
 gem 'jwt'                    # Token-based authentication
 gem 'bcrypt'                 # Password hashing
-gem 'active_model_serializers' # JSON serialization
 gem 'rack-cors'              # CORS support
 gem 'kaminari'               # Pagination
 gem 'aws-sdk-s3'             # Cloud storage
+# Note: JSON serialization uses Rails built-in as_json pattern
 ```
 
 #### Testing Dependencies
@@ -202,6 +203,7 @@ dog-walking-app/
 User (Walker)
 ├─── has_many :pets
 ├─── has_many :appointments
+├─── has_many :pet_sits
 ├─── has_many :invoices (through appointments)
 ├─── has_many :training_sessions
 ├─── has_many :initiated_connections (WalkerConnection)
@@ -216,6 +218,7 @@ User (Walker)
 Pet
 ├─── belongs_to :user
 ├─── has_many :appointments
+├─── has_many :pet_sits
 ├─── has_many :invoices
 ├─── has_many :additional_incomes
 ├─── has_many :training_sessions
@@ -232,6 +235,17 @@ Appointment
 ├─── has_many :appointment_shares
 └─── has_many :walker_earnings
 
+PetSit
+├─── belongs_to :user
+├─── belongs_to :pet
+├─── belongs_to :completed_by_user (optional)
+├─── has_many :pet_sit_completions
+└─── has_many :invoices
+
+PetSitCompletion
+├─── belongs_to :pet_sit
+└─── belongs_to :completed_by_user (User)
+
 AppointmentShare
 ├─── belongs_to :appointment
 ├─── belongs_to :shared_by_user (User)
@@ -240,8 +254,9 @@ AppointmentShare
 └─── has_many :walker_earnings
 
 Invoice
-├─── belongs_to :appointment
+├─── belongs_to :appointment (optional)
 ├─── belongs_to :pet
+├─── belongs_to :pet_sit (optional)
 ├─── belongs_to :training_session (optional)
 └─── belongs_to :completed_by_user (optional)
 ```
@@ -264,12 +279,13 @@ Invoice
 | solo_rate | integer | Premium for solo walks ($) |
 | training_rate | integer | Premium for training walks ($) |
 | sibling_rate | integer | Premium for sibling walks ($) |
+| pet_sitting_rate | integer | Daily rate for pet sitting ($) |
 | created_at | datetime | Account creation |
 | updated_at | datetime | Last update |
 
 **Relationships**:
 - Has profile picture via ActiveStorage
-- Has many pets, appointments, invoices, training sessions
+- Has many pets, appointments, pet sits, invoices, training sessions
 - Has team connections (walker_connections)
 - Can share/receive appointment shares
 
@@ -365,19 +381,125 @@ Invoice
 
 ---
 
+#### pet_sits
+**Purpose**: Multi-day pet sitting job tracking
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | bigint | Primary key |
+| user_id | bigint | FK to users (owner) |
+| pet_id | bigint | FK to pets |
+| start_date | date | Sit start date |
+| end_date | date | Sit end date |
+| daily_rate | integer | Rate per day ($) |
+| additional_charge | integer | One-time additional fee ($) |
+| description | text | Notes about the sit |
+| canceled | boolean | Sit canceled? |
+| completed_by_user_id | bigint | FK to users (who completed) |
+| created_at | datetime | Record creation |
+| updated_at | datetime | Last update |
+
+**Indexes**:
+- `user_id` for efficient owner lookup
+- `(user_id, start_date, end_date)` for date range queries
+
+**Features**:
+- Multi-day pet sitting (vs single appointments)
+- Daily completion tracking via pet_sit_completions
+- Automatic invoice generation per completed day
+- Total cost = (daily_rate × number_of_days) + additional_charge
+- Can track which specific dates were completed
+
+**Custom Methods** (in model):
+```ruby
+def completed_on?(date)
+  # Check if specific date is completed
+end
+
+def dates
+  # Get all dates in sit range
+end
+
+def uncompleted_dates
+  # Get dates not yet completed
+end
+
+def fully_completed?
+  # Check if entire sit is completed
+end
+
+def total_cost
+  # Calculate total cost for entire sit
+end
+
+def daily_cost
+  # Cost per day (including prorated additional charge)
+end
+```
+
+**JSON Serialization**:
+- Uses custom `as_json` method (not ActiveModel::Serializer)
+- Includes associations: pet, user, completed_by_user, pet_sit_completions, invoices
+- Includes computed fields: total_cost, daily_cost, fully_completed
+
+---
+
+#### pet_sit_completions
+**Purpose**: Track completion of individual days within a pet sit
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | bigint | Primary key |
+| pet_sit_id | bigint | FK to pet_sits |
+| completion_date | date | Which date was completed |
+| completed_at | datetime | When marked complete |
+| completed_by_user_id | bigint | FK to users (who completed) |
+| created_at | datetime | Record creation |
+| updated_at | datetime | Last update |
+
+**Indexes**:
+- `(pet_sit_id, completion_date)` unique constraint
+- `pet_sit_id` for efficient lookup
+
+**Automatic Actions**:
+- After creation, automatically creates invoice for that day
+- Invoice amount = pet_sit.daily_cost
+- Prevents duplicate completions for same date (unique constraint)
+
+**Callback**:
+```ruby
+after_create :create_daily_invoice
+
+def create_daily_invoice
+  Invoice.create!(
+    pet_sit_id: pet_sit.id,
+    pet_id: pet_sit.pet_id,
+    date_completed: completion_date,
+    amount: pet_sit.daily_cost,
+    status: 'pending',
+    completed_by_user_id: completed_by_user_id
+  )
+end
+```
+
+---
+
 #### invoices
 **Purpose**: Payment records for completed walks
 
 | Column | Type | Notes |
 |--------|------|-------|
 | id | bigint | Primary key |
-| appointment_id | bigint | FK to appointments |
+| appointment_id | bigint | FK to appointments (optional) |
+| pet_sit_id | bigint | FK to pet_sits (optional) |
 | pet_id | bigint | FK to pets |
-| date_completed | datetime | When walk was done |
+| date_completed | datetime | When service was done |
 | compensation | integer | Total amount earned ($) |
+| amount | integer | Invoice amount ($) |
+| status | string | paid/pending/unpaid |
 | paid | boolean | Payment received? |
 | pending | boolean | Payment pending? |
-| cancelled | boolean | Walk was cancelled? |
+| cancelled | boolean | Service was cancelled? |
 | title | string | Invoice description |
 | training_session_id | bigint | FK to training_sessions |
 | is_shared | boolean | Shared with team? |
@@ -390,9 +512,15 @@ Invoice
 
 **Indexes**:
 - `appointment_id` for appointment lookup
+- `pet_sit_id` for pet sit lookup
 - `(pet_id, paid, pending)` for payment filtering
 - `is_shared` for team earnings
 - `completed_by_user_id` for delegation
+
+**Polymorphic Source**:
+- Can be linked to either appointment OR pet_sit (not both)
+- appointment_id set for walk invoices
+- pet_sit_id set for pet sitting day invoices
 
 **Payment States**:
 - `paid = true`: Payment received
@@ -940,6 +1068,109 @@ Invoice
 
 ---
 
+### Pet Sits
+
+#### GET /pet_sits
+**Purpose**: Get all pet sits for current user
+**Auth**: Required
+**Response**: Array of pet sits with completions and invoices
+
+#### GET /pet_sits/:id
+**Purpose**: Get specific pet sit
+**Auth**: Required
+**Response**: Pet sit object with details
+
+#### GET /pet_sits/for_date?date=2026-01-15
+**Purpose**: Get pet sits active on specific date
+**Auth**: Required
+**Response**: Array of pet sits where date falls within start_date..end_date
+
+#### GET /pet_sits/upcoming
+**Purpose**: Get upcoming pet sits (start_date > today)
+**Auth**: Required
+**Response**: Array of upcoming pet sits
+
+#### GET /pet_sits/current
+**Purpose**: Get currently active pet sits
+**Auth**: Required
+**Response**: Array of pet sits where today is between start_date and end_date
+
+#### POST /pet_sits
+**Purpose**: Create new pet sit
+**Request Body**:
+```json
+{
+  "pet_id": 1,
+  "start_date": "2026-01-15",
+  "end_date": "2026-01-20",
+  "daily_rate": 75,
+  "additional_charge": 25,
+  "description": "Feed twice daily, medications at bedtime"
+}
+```
+**Response**: Created pet sit
+**Note**: daily_rate defaults to user.pet_sitting_rate if not provided
+
+#### PATCH /pet_sits/:id
+**Purpose**: Update pet sit
+**Auth**: Required (owner only)
+**Response**: Updated pet sit
+
+#### DELETE /pet_sits/:id
+**Purpose**: Delete pet sit
+**Auth**: Required (owner only)
+**Response**: Success message
+
+#### POST /pet_sits/:id/complete_day
+**Purpose**: Mark specific day of pet sit as completed
+**Request Body**:
+```json
+{
+  "completion_date": "2026-01-15"
+}
+```
+**Response**:
+```json
+{
+  "pet_sit": {...},
+  "completion": {...},
+  "invoice": {...}
+}
+```
+**Side Effects**:
+- Creates PetSitCompletion record
+- Automatically generates invoice for that day
+- Prevents duplicate completions (unique constraint)
+
+---
+
+### Pet Sit Completions
+
+#### GET /pet_sit_completions
+**Purpose**: Get all pet sit completions for current user
+**Auth**: Required
+**Response**: Array of completions
+
+#### POST /pet_sit_completions
+**Purpose**: Create completion (usually done via /pet_sits/:id/complete_day)
+**Request Body**:
+```json
+{
+  "pet_sit_id": 1,
+  "completion_date": "2026-01-15",
+  "completed_by_user_id": 1
+}
+```
+**Response**: Created completion with invoice
+
+#### DELETE /pet_sit_completions/:id
+**Purpose**: Delete completion (un-complete a day)
+**Auth**: Required
+**Response**: Success message
+**Side Effects**: Associated invoice may need manual cleanup
+
+---
+
 ### Invoices
 
 #### GET /invoices
@@ -1403,6 +1634,51 @@ end
 - `team_financials`: Get team sharing financial data
 - `pet_appointments`: Get pets with their appointments
 
+---
+
+#### PetSitsController
+**Key Actions**:
+- `index`: List all user's pet sits
+- `show`: Get specific pet sit with completions and invoices
+- `for_date`: Get pet sits active on specific date
+- `upcoming`: Get future pet sits
+- `current`: Get currently active pet sits
+- `create`: Create new pet sit (auto-sets daily_rate from user.pet_sitting_rate)
+- `update`: Update pet sit details
+- `destroy`: Delete pet sit
+- `complete_day`: Mark specific day as completed (creates completion + invoice)
+
+**Auto-Rate Setting**:
+```ruby
+def create
+  pet_sit = current_user.pet_sits.build(pet_sit_params)
+  pet_sit.daily_rate ||= current_user.pet_sitting_rate || 0
+  # ...
+end
+```
+
+**Scopes Used**:
+```ruby
+scope :active, -> { where(canceled: false) }
+scope :for_date, ->(date) { where('start_date <= ? AND end_date >= ?', date, date) }
+scope :upcoming, -> { where('start_date > ?', Date.today) }
+scope :current, -> { where('start_date <= ? AND end_date >= ?', Date.today, Date.today) }
+scope :past, -> { where('end_date < ?', Date.today) }
+```
+
+---
+
+#### PetSitCompletionsController
+**Key Actions**:
+- `index`: List all completions for user's pet sits
+- `create`: Create completion (with automatic invoice generation)
+- `destroy`: Delete completion
+
+**Automatic Invoice Generation**:
+- After creating completion, callback creates invoice
+- Invoice amount = pet_sit.daily_cost
+- Links to pet_sit, pet, and completed_by_user
+
 **Price Calculation**:
 ```ruby
 def calculate_price(appointment)
@@ -1610,6 +1886,112 @@ scope :with_coordinates, -> { where.not(latitude: nil, longitude: nil) }
 
 ---
 
+#### PetSit
+**Associations**:
+```ruby
+belongs_to :user
+belongs_to :pet
+belongs_to :completed_by_user, class_name: 'User', optional: true
+has_many :pet_sit_completions, dependent: :destroy
+has_many :invoices, dependent: :destroy
+```
+
+**Validations**:
+```ruby
+validates :user_id, :pet_id, :start_date, :end_date, :daily_rate, presence: true
+validates :daily_rate, numericality: { greater_than: 0 }
+validates :additional_charge, numericality: { greater_than_or_equal_to: 0 }
+validate :end_date_after_start_date
+```
+
+**Instance Methods**:
+```ruby
+def completed_on?(date)
+  pet_sit_completions.exists?(completion_date: date)
+end
+
+def dates
+  (start_date..end_date).to_a
+end
+
+def uncompleted_dates
+  completed_dates = pet_sit_completions.pluck(:completion_date)
+  dates.reject { |date| completed_dates.include?(date) }
+end
+
+def fully_completed?
+  dates.length == pet_sit_completions.count
+end
+
+def total_cost
+  days = (end_date - start_date).to_i + 1
+  (daily_rate * days) + additional_charge
+end
+
+def daily_cost
+  days = (end_date - start_date).to_i + 1
+  daily_rate + (additional_charge.to_f / days).round
+end
+```
+
+**Custom JSON Serialization**:
+```ruby
+def as_json(options = {})
+  super(options).merge(
+    'pet' => pet&.as_json(only: [:id, :name, :active, :address, :owner_name]),
+    'user' => user&.as_json(only: [:id, :name, :email]),
+    'completed_by_user' => completed_by_user&.as_json(only: [:id, :name, :email]),
+    'pet_sit_completions' => pet_sit_completions.as_json(only: [:id, :completion_date, :completed_at, :completed_by_user_id]),
+    'invoices' => invoices.as_json(only: [:id, :amount, :status, :date_completed]),
+    'total_cost' => total_cost,
+    'daily_cost' => daily_cost,
+    'fully_completed' => fully_completed?
+  )
+end
+```
+
+**Scopes**:
+```ruby
+scope :active, -> { where(canceled: false) }
+scope :for_date, ->(date) { where('start_date <= ? AND end_date >= ?', date, date) }
+scope :upcoming, -> { where('start_date > ?', Date.today) }
+scope :current, -> { where('start_date <= ? AND end_date >= ?', Date.today, Date.today) }
+scope :past, -> { where('end_date < ?', Date.today) }
+```
+
+---
+
+#### PetSitCompletion
+**Associations**:
+```ruby
+belongs_to :pet_sit
+belongs_to :completed_by_user, class_name: 'User'
+```
+
+**Validations**:
+```ruby
+validates :pet_sit_id, :completion_date, :completed_by_user_id, presence: true
+validates :completion_date, uniqueness: { scope: :pet_sit_id }
+```
+
+**Callbacks**:
+```ruby
+after_create :create_daily_invoice
+
+def create_daily_invoice
+  Invoice.create!(
+    pet_sit_id: pet_sit.id,
+    pet_id: pet_sit.pet_id,
+    date_completed: completion_date,
+    amount: pet_sit.daily_cost,
+    status: 'pending',
+    completed_by_user_id: completed_by_user_id
+  )
+end
+```
+
+---
+
 #### Appointment
 **Validations**:
 ```ruby
@@ -1638,15 +2020,37 @@ end
 ---
 
 #### Invoice
+**Associations**:
+```ruby
+belongs_to :appointment, optional: true
+belongs_to :pet_sit, optional: true
+belongs_to :pet
+belongs_to :training_session, optional: true
+belongs_to :completed_by_user, optional: true
+```
+
 **Validations**:
 ```ruby
-validates :appointment_id, :pet_id, :date_completed, :compensation, presence: true
-validates :compensation, numericality: { greater_than: 0 }
+validates :pet_id, :date_completed, presence: true
+validates :compensation, numericality: { greater_than: 0 }, if: :compensation_present?
+validates :amount, numericality: { greater_than: 0 }, if: :amount_present?
+validate :has_source  # Must have appointment_id OR pet_sit_id
 ```
 
 **Callbacks**:
 ```ruby
 after_create :create_training_session, if: :training_related?
+```
+
+**Instance Methods**:
+```ruby
+def source
+  appointment || pet_sit
+end
+
+def source_type
+  appointment_id ? 'Appointment' : 'PetSit'
+end
 ```
 
 ---
@@ -1763,31 +2167,41 @@ end
 
 ---
 
-### Serializers
+### JSON Serialization
 
-#### UserSerializer
+**Note**: This app uses Rails built-in `as_json` pattern for JSON serialization, NOT the `active_model_serializers` gem. This approach:
+- Provides full control over JSON output
+- Avoids additional gem dependencies
+- Maintains consistency across the codebase
+- Allows custom methods and computed fields
+
+#### UserSerializer Pattern
 **Purpose**: Format user data for API responses
 
-**Includes**:
+**Implementation**:
 ```ruby
-attributes :id, :username, :name, :email_address,
-           :thirty, :fortyfive, :sixty,
-           :solo_rate, :training_rate, :sibling_rate
-
-has_many :pets
-has_many :appointments
-has_many :invoices
-has_many :training_sessions
-has_many :walker_connections
-has_many :appointment_shares
-has_one :certification_goal
-has_many :milestones
-
-def profile_pic_url
-  if object.profile_pic.attached?
-    Rails.application.routes.url_helpers.rails_blob_url(object.profile_pic)
-  else
-    nil
+class UserSerializer
+  def self.serialize(user)
+    {
+      id: user.id,
+      username: user.username,
+      name: user.name,
+      email_address: user.email_address,
+      thirty: user.thirty,
+      fortyfive: user.fortyfive,
+      sixty: user.sixty,
+      solo_rate: user.solo_rate,
+      training_rate: user.training_rate,
+      sibling_rate: user.sibling_rate,
+      pet_sitting_rate: user.pet_sitting_rate,
+      profile_pic_url: user.profile_pic.attached? ?
+        Rails.application.routes.url_helpers.rails_blob_url(user.profile_pic) : nil,
+      pets: user.pets,
+      appointments: user.appointments,
+      pet_sits: user.pet_sits,
+      invoices: user.invoices,
+      # ... other associations
+    }
   end
 end
 ```
@@ -1805,48 +2219,43 @@ end
   "solo_rate": 10,
   "training_rate": 15,
   "sibling_rate": 5,
+  "pet_sitting_rate": 75,
   "profile_pic_url": "https://s3.amazonaws.com/...",
   "pets": [...],
   "appointments": [...],
+  "pet_sits": [...],
   "invoices": [...]
 }
 ```
 
 ---
 
-#### PetSerializer
-**Attributes**:
-```ruby
-attributes :id, :user_id, :name, :birthdate, :sex,
-           :spayed_neutered, :address, :latitude, :longitude,
-           :behavioral_notes, :supplies_location, :allergies,
-           :active, :origin_trainer, :geocoded_at,
-           :geocoding_failed, :geocoding_error
+#### PetSit JSON Serialization
+**Implementation**: Uses custom `as_json` method in model
 
-def profile_pic_url
-  # S3 URL if attached
+**Example**:
+```ruby
+# app/models/pet_sit.rb
+def as_json(options = {})
+  super(options).merge(
+    'pet' => pet&.as_json(only: [:id, :name, :active, :address, :owner_name]),
+    'user' => user&.as_json(only: [:id, :name, :email]),
+    'completed_by_user' => completed_by_user&.as_json(only: [:id, :name, :email]),
+    'pet_sit_completions' => pet_sit_completions.as_json(only: [:id, :completion_date, :completed_at, :completed_by_user_id]),
+    'invoices' => invoices.as_json(only: [:id, :amount, :status, :date_completed]),
+    'total_cost' => total_cost,
+    'daily_cost' => daily_cost,
+    'fully_completed' => fully_completed?
+  )
 end
 ```
 
----
-
-#### AppointmentSerializer
-**Includes**:
-```ruby
-attributes :id, :user_id, :pet_id, :recurring,
-           :appointment_date, :start_time, :end_time,
-           :duration, :price, :monday, :tuesday, :wednesday,
-           :thursday, :friday, :saturday, :sunday,
-           :completed, :canceled, :walk_type,
-           :delegation_status, :completed_by_user_id,
-           :walk_group_id
-
-belongs_to :pet
-belongs_to :user
-belongs_to :completed_by_user, class_name: 'User'
-has_many :cancellations
-has_many :appointment_shares
-```
+**Why This Approach**:
+- No external gem dependency (production build safety)
+- Direct control over serialization logic
+- Easy to include computed fields (total_cost, daily_cost, fully_completed)
+- Clear and maintainable
+- Follows Rails conventions
 
 ---
 
@@ -1913,9 +2322,11 @@ App (Root)
   user: {
     id, username, name, email_address,
     thirty, fortyfive, sixty, solo_rate, training_rate, sibling_rate,
+    pet_sitting_rate,
     profile_pic_url,
     pets: [...],
     appointments: [...],
+    pet_sits: [...],
     invoices: [...],
     training_sessions: [...],
     walker_connections: [...],
@@ -1934,7 +2345,12 @@ updateAppointment(updatedAppointment)
 addAppointment(newAppointment)
 removeAppointment(appointmentId)
 
+updatePetSit(updatedPetSit)
+addPetSit(newPetSit)
+removePetSit(petSitId)
+
 addInvoice(newInvoice)
+updateInvoice(updatedInvoice)
 
 addPet(newPet)
 updatePet(updatedPet)
@@ -2049,17 +2465,40 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 ---
 
 #### PetsPage
-**Purpose**: Pet management
+**Purpose**: Pet management, appointments, and pet sits
 
 **Features**:
 - Pet list (active/inactive filter)
 - Create/edit pet profiles
 - View pet invoices
+- Create/edit/delete appointments (via NewAppointmentForm)
+- Create/edit/delete pet sits (via CreatePetSitModal)
 - Upload pet photos
+- Tab navigation: Appointments | Pet Sits | Invoices
 
 **Components**:
 - `CreatePetButton`: Modal form for new pet
+- `NewAppointmentForm`: Appointment creation (with external control)
+- `CreatePetSitModal`: Pet sit creation modal
 - `PetInvoices`: Invoice history per pet
+- `PetSitCard`: Display pet sit with completion info
+- `AppointmentModal`: Edit/view appointment or pet sit
+
+**State Management**:
+```javascript
+// Pet Sit State
+const [petSits, setPetSits] = useState([]);
+const [isCreatingPetSit, setIsCreatingPetSit] = useState(false);
+const [isEditingPetSit, setIsEditingPetSit] = useState(false);
+const [editingPetSitData, setEditingPetSitData] = useState(null);
+const [selectedPetSit, setSelectedPetSit] = useState(null);
+
+// Appointment State
+const [showAppointmentForm, setShowAppointmentForm] = useState(false);
+const [isEditing, setIsEditing] = useState(false);
+const [editingAppointment, setEditingAppointment] = useState(null);
+const [selectedAppointment, setSelectedAppointment] = useState(null);
+```
 
 **API Calls**:
 - GET `/pets`
@@ -2067,6 +2506,18 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 - PATCH `/pets/:id`
 - PATCH `/pets/:id/active`
 - DELETE `/pets/:id`
+- GET `/pet_sits`
+- POST `/pet_sits`
+- PATCH `/pet_sits/:id`
+- DELETE `/pet_sits/:id`
+
+**Pet Sit Edit Modal**:
+- Compact 2-column layout with FormGrid
+- Scrollable content (ModalScrollContent)
+- Real-time total cost calculation
+- Fields: start_date, end_date, daily_rate, additional_charge, description
+- View mode shows: dates, costs, completion status, invoices
+- Edit mode allows updating all fields
 
 **Photo Upload**:
 ```javascript
@@ -2078,6 +2529,12 @@ fetch('/pets', {
   method: 'POST',
   body: formData
 });
+```
+
+**Total Cost Calculation**:
+```javascript
+const totalDays = dayjs(end_date).diff(start_date, 'day') + 1;
+const totalCost = (daily_rate * totalDays) + (additional_charge || 0);
 ```
 
 ---
@@ -2128,8 +2585,25 @@ fetch('/pets', {
 **Features**:
 - Update profile info
 - Change rates (30/45/60 min, premiums)
+- Set pet sitting daily rate
 - Upload profile picture
 - Yearly finance overview
+
+**Rate Fields**:
+```javascript
+// Walk rates
+thirty: 30-minute walk rate
+fortyfive: 45-minute walk rate
+sixty: 60-minute walk rate
+
+// Premiums
+solo_rate: Solo walk premium
+training_rate: Training walk premium
+sibling_rate: Sibling walk premium
+
+// Pet sitting
+pet_sitting_rate: Daily pet sitting rate (NEW)
+```
 
 **Components**:
 - `YearlyFinanceOverview`: Annual financial stats with year selector
@@ -2137,6 +2611,11 @@ fetch('/pets', {
 **API Calls**:
 - PATCH `/change_rates`
 - PATCH `/update_profile`
+
+**Pet Sitting Rate**:
+- Used as default daily_rate when creating new pet sits
+- Displayed in profile settings
+- Editable alongside walk rates
 
 ---
 
@@ -3327,16 +3806,72 @@ AWS_BUCKET=dog-walking-app-dev
 
 ---
 
+### Recent Changes (January 3, 2026)
+
+#### Pet Sits Feature (Complete)
+**Backend**:
+- Added `pet_sits` table with fields: user_id, pet_id, start_date, end_date, daily_rate, additional_charge, description, canceled, completed_by_user_id
+- Added `pet_sit_completions` table to track daily completions
+- Created PetSit and PetSitCompletion models with validations, scopes, and custom methods
+- Created PetSitsController with actions: index, show, create, update, destroy, complete_day, for_date, upcoming, current
+- Created PetSitCompletionsController with automatic invoice generation callback
+- Added routes: `resources :pet_sits` and `resources :pet_sit_completions`
+- Added `pet_sitting_rate` field to users table
+- Updated Invoice model to support polymorphic source (appointment OR pet_sit)
+- Implemented custom JSON serialization using `as_json` (not ActiveModel::Serializer)
+
+**Frontend**:
+- Added `pet_sitting_rate` field to Profile component
+- Created CreatePetSitModal component for pet sit creation
+- Added PetSitCard component for displaying pet sits with completion status
+- Updated PetsPage with:
+  - Tab navigation (Appointments | Pet Sits | Invoices)
+  - Pet sit create/edit/delete functionality
+  - Edit modal with view and edit modes
+  - Real-time total cost calculation in edit form
+  - Compact 2-column FormGrid layout
+  - Scrollable modal content (ModalScrollContent)
+- Updated UserContext with pet sit CRUD methods:
+  - addPetSit, updatePetSit, removePetSit
+- Refactored NewAppointmentForm to support external control (for PetsPage integration)
+- Updated TodaysWalks to display pet sits alongside appointments
+
+**Production Build Fixes**:
+- Removed `active_model_serializers` gem reference from documentation
+- Deleted PetSitSerializer and PetSitCompletionSerializer files
+- Implemented custom `as_json` method in PetSit model for JSON serialization
+- Fixed all ESLint warnings across 8 frontend files:
+  - Dashboard.js: Removed unused imports (X, dayDetailRef)
+  - MyEarnings.js: Removed DollarSign, changed invoiceLimit to const
+  - NewAppointmentForm.js: Wrapped calculateDefaultPrice in useCallback
+  - PetsPage.js: Removed motion/AnimatePresence, TabDescription
+  - Profile.js: Removed ProfileIconWrapper
+  - TeamAndShares.js: Removed Card, CardContent, UserInfo, UserEmail
+  - TodaysWalks.js: Removed unused context imports
+  - WalksMapView.js: Removed X, DollarSign, PopupGroupBadge
+
+**UI/UX Improvements**:
+- Fixed double toast notifications (removed duplicate toast call in PetsPage)
+- Repositioned appointment button to section header (matching pet sits layout)
+- Made pet sit edit modal more compact (reduced padding, smaller textarea)
+- Added live-updating total cost display in pet sit edit form
+
+---
+
 ### Future Features
 
-1. **Mobile App**: React Native version
-2. **Payment Integration**: Stripe/PayPal for invoice payments
-3. **SMS Notifications**: Twilio for appointment reminders
-4. **Calendar Sync**: iCal/Google Calendar integration
-5. **Weather Integration**: Show weather for walk times
-6. **Advanced Analytics**: Business insights dashboard
-7. **Multi-Walker Routes**: Coordinate routes across team
-8. **Client Portal**: Allow pet owners to book/view appointments
+1. **Pet Sit Sharing**: Extend team sharing to pet sits (like appointment sharing)
+2. **Pet Sit Notifications**: Remind walker of upcoming pet sits
+3. **Partial Day Completion**: Allow marking AM/PM completions separately
+4. **Pet Sit Templates**: Save common pet sitting configurations
+5. **Mobile App**: React Native version
+6. **Payment Integration**: Stripe/PayPal for invoice payments
+7. **SMS Notifications**: Twilio for appointment reminders
+8. **Calendar Sync**: iCal/Google Calendar integration
+9. **Weather Integration**: Show weather for walk times
+10. **Advanced Analytics**: Business insights dashboard
+11. **Multi-Walker Routes**: Coordinate routes across team
+12. **Client Portal**: Allow pet owners to book/view appointments
 
 ---
 
