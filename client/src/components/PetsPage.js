@@ -445,7 +445,7 @@ export default function PetsPage() {
 
 // Memoized Pet Details Modal Component with Tabs
 const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
-    const { user, updatePet, updateAppointment, removeAppointment, updatePetSit, removePetSit } = useContext(UserContext);
+    const { user, updatePet, updateAppointment, removeAppointment, updatePetSit, removePetSit, addInvoice } = useContext(UserContext);
     const { confirmState, confirm } = useConfirm();
     const [activeTab, setActiveTab] = useState(initialTab);
     const [formData, setFormData] = useState(pet);
