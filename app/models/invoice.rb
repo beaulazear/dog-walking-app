@@ -93,10 +93,10 @@ class Invoice < ApplicationRecord
   private
 
   def must_have_appointment_or_pet_sit
-    errors.add(:base, 'Must have either appointment or pet sit') if appointment_id.blank? && pet_sit_id.blank?
-
-    return unless appointment_id.present? && pet_sit_id.present?
-
-    errors.add(:base, 'Cannot have both appointment and pet sit')
+    if appointment_id.blank? && pet_sit_id.blank?
+      errors.add(:base, 'Must have either appointment or pet sit')
+    elsif appointment_id.present? && pet_sit_id.present?
+      errors.add(:base, 'Cannot have both appointment and pet sit')
+    end
   end
 end

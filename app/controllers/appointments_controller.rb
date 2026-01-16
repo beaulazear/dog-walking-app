@@ -20,14 +20,13 @@ class AppointmentsController < ApplicationController
 
   def canceled
     appointment = @current_user.appointments.includes(:cancellations, :pet).find_by(id: params[:id])
-    if appointment
-      if appointment.update(params_for_cancel)
-        render json: AppointmentSerializer.serialize(appointment)
-      else
-        render json: { errors: appointment.errors.full_messages }, status: :unprocessable_entity
-      end
+
+    return render json: { error: 'Appointment not found' }, status: :not_found unless appointment
+
+    if appointment.update(params_for_cancel)
+      render json: AppointmentSerializer.serialize(appointment)
     else
-      render json: { error: 'Appointment not found' }, status: :not_found
+      render json: { errors: appointment.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
@@ -60,11 +59,11 @@ class AppointmentsController < ApplicationController
     Rails.logger.debug "🔍 for_date DEBUG - User ID: #{@current_user.id}"
     Rails.logger.debug "🔍 for_date DEBUG - Requested date: #{date}, day_of_week: #{day_of_week}"
 
-    # Appointments owned by current user
+    # Appointments owned by current user with eager loading to prevent N+1 queries
     all_owned_appointments = @current_user.appointments
                                           .where(canceled: false)
-                                          .includes(:pet, :user, :cancellations, appointment_shares: %i[shared_with_user
-                                                                                                        share_dates])
+                                          .includes(:pet, :user, :cancellations, :walk_group,
+                                                    appointment_shares: %i[shared_with_user shared_by_user share_dates])
 
     Rails.logger.debug "🔍 for_date DEBUG - all_owned_appointments count: #{all_owned_appointments.count}"
     Rails.logger.debug "🔍 for_date DEBUG - all_owned_appointments recurring count: #{all_owned_appointments.where(recurring: true).count}"
@@ -99,11 +98,12 @@ class AppointmentsController < ApplicationController
 
     Rails.logger.debug "🔍 for_date DEBUG - owned_appointments after filtering: #{owned_appointments.count}"
 
-    # Appointments where current user is covering (accepted shares)
+    # Appointments where current user is covering (accepted shares) with eager loading
     covering_shares = AppointmentShare
                       .accepted
                       .where(shared_with_user: @current_user)
-                      .includes(:appointment, :share_dates, shared_by_user: [:pets])
+                      .includes(:appointment, :share_dates, :shared_by_user,
+                                appointment: %i[pet user cancellations walk_group])
 
     # Format owned appointments
     owned_data = owned_appointments.map do |apt|
@@ -259,18 +259,17 @@ class AppointmentsController < ApplicationController
 
   def update
     appointment = @current_user.appointments.includes(:cancellations, :pet).find_by(id: params[:id])
-    if appointment
-      Rails.logger.info "Update params: #{appointment_params.inspect}"
-      Rails.logger.info "Appointment before update: price=#{appointment.price}, duration=#{appointment.duration}"
 
-      if appointment.update(appointment_params)
-        render json: AppointmentSerializer.serialize(appointment), status: :ok
-      else
-        Rails.logger.error "Update failed with errors: #{appointment.errors.full_messages.inspect}"
-        render json: { errors: appointment.errors.full_messages }, status: :unprocessable_entity
-      end
+    return render json: { error: 'Appointment not found' }, status: :not_found unless appointment
+
+    Rails.logger.info "Update params: #{appointment_params.inspect}"
+    Rails.logger.info "Appointment before update: price=#{appointment.price}, duration=#{appointment.duration}"
+
+    if appointment.update(appointment_params)
+      render json: AppointmentSerializer.serialize(appointment), status: :ok
     else
-      render json: { error: 'appointment not found' }, status: :not_found
+      Rails.logger.error "Update failed with errors: #{appointment.errors.full_messages.inspect}"
+      render json: { errors: appointment.errors.full_messages }, status: :unprocessable_entity
     end
   end
 

@@ -57,21 +57,43 @@ class PetSitsController < ApplicationController
     pet_sit = current_user.pet_sits.find(params[:id])
     completion_date = Date.parse(params[:completion_date])
 
-    completion = pet_sit.pet_sit_completions.build(
-      completion_date: completion_date,
-      completed_at: Time.current,
-      completed_by_user_id: current_user.id
-    )
+    completion = nil
+    invoice = nil
 
-    if completion.save
-      # Invoice created automatically via callback
-      invoice = Invoice.find_by(pet_sit_id: pet_sit.id, date_completed: completion_date)
+    # Wrap in transaction to ensure completion and invoice are created together
+    ActiveRecord::Base.transaction do
+      completion = pet_sit.pet_sit_completions.build(
+        completion_date: completion_date,
+        completed_at: Time.current,
+        completed_by_user_id: current_user.id
+      )
+
+      unless completion.save
+        render json: { errors: completion.errors.full_messages }, status: :unprocessable_entity
+        raise ActiveRecord::Rollback
+      end
+
+      # Invoice created automatically via callback - verify it exists
+      # Use date range to account for datetime vs date comparison
+      invoice = Invoice.where(pet_sit_id: pet_sit.id)
+                       .where('DATE(date_completed) = ?', completion_date)
+                       .first
+
+      unless invoice
+        Rails.logger.error "Invoice was not created for pet sit completion #{completion.id}"
+        render json: { errors: ['Failed to create invoice for completion'] }, status: :unprocessable_entity
+        raise ActiveRecord::Rollback
+      end
+
+      # Reload pet_sit to get updated associations
+      pet_sit.reload
+
       render json: { pet_sit: pet_sit, completion: completion, invoice: invoice }, status: :created
-    else
-      render json: { errors: completion.errors.full_messages }, status: :unprocessable_entity
     end
   rescue ArgumentError
     render json: { error: 'Invalid date format' }, status: :bad_request
+  rescue ActiveRecord::RecordNotFound => e
+    render json: { error: e.message }, status: :not_found
   end
 
   # GET /pet_sits/upcoming

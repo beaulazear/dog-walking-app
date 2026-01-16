@@ -191,9 +191,13 @@ export default function PetsPage() {
 
         setIsCreatingPet(true);
         try {
+            const token = localStorage.getItem('token');
             const response = await fetch("/pets", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify(newPetFormData),
                 credentials: "include"
             });
@@ -519,6 +523,7 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
 
         setIsUpdatingPet(true);
         try {
+            const token = localStorage.getItem('token');
             const formDataToSend = new FormData();
 
             Object.keys(formData).forEach(key => {
@@ -528,6 +533,9 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
             const response = await fetch(`/pets/${pet.id}`, {
                 method: "PATCH",
                 body: formDataToSend,
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 credentials: "include"
             });
 
@@ -550,12 +558,16 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
 
         setIsTogglingActive(true);
         try {
+            const token = localStorage.getItem('token');
             const formDataToSend = new FormData();
             formDataToSend.append('active', !pet.active);
 
-            const response = await fetch(`/pets/${pet.id}`, {
+            const response = await fetch(`/pets/${pet.id}/active`, {
                 method: "PATCH",
                 body: formDataToSend,
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 credentials: "include"
             });
 
@@ -587,8 +599,12 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
 
         setIsDeletingAppointment(true);
         try {
+            const token = localStorage.getItem('token');
             const response = await fetch(`/appointments/${appointmentId}`, {
                 method: "DELETE",
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 credentials: "include"
             });
 
@@ -855,19 +871,29 @@ const PetDetailsModal = memo(({ pet, initialTab = 'info', onClose }) => {
             if (response.ok) {
                 const data = await response.json();
 
-                // Update context
-                updatePetSit(data.pet_sit);
-                if (data.invoice) {
-                    addInvoice(data.invoice);
+                // Update pet sit in context first
+                if (data.pet_sit) {
+                    updatePetSit(data.pet_sit);
+
+                    // Update local state
+                    setPetSits(prev => prev.map(sit =>
+                        sit.id === petSitId ? data.pet_sit : sit
+                    ));
+
+                    // Update selected pet sit to show new completion
+                    setSelectedPetSit(data.pet_sit);
                 }
 
-                // Update local state
-                setPetSits(prev => prev.map(sit =>
-                    sit.id === petSitId ? data.pet_sit : sit
-                ));
-
-                // Update selected pet sit to show new completion
-                setSelectedPetSit(data.pet_sit);
+                // Add invoice to context - this triggers re-render for invoices section
+                if (data.invoice) {
+                    // Ensure the invoice has pet_id for proper filtering
+                    const invoiceWithPetId = {
+                        ...data.invoice,
+                        pet_id: data.invoice.pet_id || data.pet_sit?.pet_id,
+                        pet_sit: data.pet_sit
+                    };
+                    addInvoice(invoiceWithPetId);
+                }
 
                 toast.success(`Completed ${dayjs(completionDate).format("MMM D, YYYY")}!`);
             } else {

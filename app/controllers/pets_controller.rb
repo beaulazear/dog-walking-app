@@ -26,51 +26,47 @@ class PetsController < ApplicationController
 
     pet = @current_user.pets.find_by(id: params[:id])
 
-    if pet
-      # Profile pic upload removed - using frontend icons instead
+    return render json: { error: 'Pet not found' }, status: :not_found unless pet
 
-      if pet.update(pet_params_update)
-        render json: {
-          id: pet.id,
-          name: pet.name,
-          birthdate: pet.birthdate,
-          sex: pet.sex,
-          spayed_neutered: pet.spayed_neutered,
-          address: pet.address,
-          behavioral_notes: pet.behavioral_notes,
-          supplies_location: pet.supplies_location,
-          allergies: pet.allergies,
-          active: pet.active,
-          origin_trainer: pet.origin_trainer
-          # profile_pic removed - using frontend icons instead
-        }, status: :ok
-      else
-        render json: { errors: pet.errors.full_messages }, status: :unprocessable_entity
-      end
+    # Profile pic upload removed - using frontend icons instead
+
+    if pet.update(pet_params_update)
+      render json: {
+        id: pet.id,
+        name: pet.name,
+        birthdate: pet.birthdate,
+        sex: pet.sex,
+        spayed_neutered: pet.spayed_neutered,
+        address: pet.address,
+        behavioral_notes: pet.behavioral_notes,
+        supplies_location: pet.supplies_location,
+        allergies: pet.allergies,
+        active: pet.active,
+        origin_trainer: pet.origin_trainer
+        # profile_pic removed - using frontend icons instead
+      }, status: :ok
     else
-      render json: { error: 'Pet not found' }, status: :not_found
+      render json: { errors: pet.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
   def destroy
     pet = @current_user.pets.find_by(id: params[:id])
-    if pet
-      pet.destroy
-      render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active]), status: :ok
-    else
-      render json: { error: 'pet not found' }, status: :not_found
-    end
+
+    return render json: { error: 'Pet not found' }, status: :not_found unless pet
+
+    pet.destroy
+    render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active]), status: :ok
   end
 
   def update_active_status
     pet = @current_user.pets.find_by(id: params[:id])
-    if pet
-      pet.update(active: params[:active])
-      render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active address behavioral_notes supplies_location allergies origin_trainer]),
-             status: :ok
-    else
-      render json: { error: 'Pet not found' }, status: :not_found
-    end
+
+    return render json: { error: 'Pet not found' }, status: :not_found unless pet
+
+    pet.update(active: params[:active])
+    render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active address behavioral_notes supplies_location allergies origin_trainer]),
+           status: :ok
   end
 
   private

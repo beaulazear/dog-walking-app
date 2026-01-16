@@ -29,5 +29,11 @@ class PetSitCompletion < ApplicationRecord
       pending: false,
       completed_by_user_id: completed_by_user_id
     )
+  rescue ActiveRecord::RecordInvalid => e
+    # Log the error and add to errors
+    Rails.logger.error "Failed to create invoice for pet sit completion #{id}: #{e.message}"
+    errors.add(:base, "Failed to create invoice: #{e.message}")
+    # Raise Rollback to prevent the completion from being saved if invoice creation fails
+    raise ActiveRecord::Rollback
   end
 end

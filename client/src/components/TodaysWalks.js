@@ -1137,9 +1137,14 @@ const PetSitCard = React.memo(({ petSit }) => {
                 const data = await response.json();
                 // Update pet sit with new completion
                 updatePetSit(data.pet_sit);
-                // Add invoice to context
+                // Add invoice to context - ensure it has pet_id for proper filtering
                 if (data.invoice) {
-                    addInvoice(data.invoice);
+                    const invoiceWithPetId = {
+                        ...data.invoice,
+                        pet_id: data.invoice.pet_id || data.pet_sit?.pet_id,
+                        pet_sit: data.pet_sit
+                    };
+                    addInvoice(invoiceWithPetId);
                 }
                 toast.success(`Completed ${dayjs(completionDate).format("MMM D, YYYY")}!`);
             } else {

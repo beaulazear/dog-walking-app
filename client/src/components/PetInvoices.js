@@ -20,7 +20,12 @@ const PetInvoices = ({ pet }) => {
     const [isMarkingAsPaid, setIsMarkingAsPaid] = useState(false);
     const [deletingInvoiceId, setDeletingInvoiceId] = useState(null);
 
-    const petInvoices = user.invoices.filter(invoice => invoice.pet_id === pet.id);
+    const petInvoices = user.invoices.filter(invoice => {
+        // Match by direct pet_id or through pet_sit relationship
+        if (invoice.pet_id === pet.id) return true;
+        if (invoice.pet_sit?.pet_id === pet.id) return true;
+        return false;
+    });
 
     const sortByDateDesc = (a, b) => new Date(b.date_completed) - new Date(a.date_completed);
 
