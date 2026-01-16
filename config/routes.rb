@@ -120,6 +120,14 @@ Rails.application.routes.draw do
   post '/routes/reorder', to: 'routes#reorder'
   get '/routes/:date', to: 'routes#show'
 
+  # Client Routes (Pet Owner Portal)
+  post '/client/signup', to: 'clients#create'
+  post '/client/login', to: 'client_sessions#create'
+  delete '/client/logout', to: 'client_sessions#destroy'
+  get '/client/me', to: 'clients#show'
+  patch '/client/me', to: 'clients#update'
+  patch '/client/push_token', to: 'clients#update_push_token'
+
   # Routing logic: fallback requests for React Router.
   # Leave this here to help deploy your app later!
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 20_260_102_152_928) do
+ActiveRecord::Schema[7.2].define(version: 20_260_116_222_712) do
   # These are extensions that must be enabled in order to support this database
   enable_extension 'plpgsql'
 
@@ -165,6 +165,22 @@ ActiveRecord::Schema[7.2].define(version: 20_260_102_152_928) do
     t.index ['user_id'], name: 'index_certification_goals_on_user_id', unique: true
   end
 
+  create_table 'clients', force: :cascade do |t|
+    t.string 'first_name', null: false
+    t.string 'last_name', null: false
+    t.string 'email', null: false
+    t.string 'password_digest', null: false
+    t.string 'phone_number'
+    t.string 'push_token'
+    t.string 'notification_preferences', default: 'email'
+    t.datetime 'email_verified_at'
+    t.datetime 'phone_verified_at'
+    t.datetime 'created_at', null: false
+    t.datetime 'updated_at', null: false
+    t.index ['email'], name: 'index_clients_on_email', unique: true
+    t.index ['push_token'], name: 'index_clients_on_push_token'
+  end
+
   create_table 'invoices', force: :cascade do |t|
     t.bigint 'appointment_id'
     t.bigint 'pet_id', null: false
@@ -252,6 +268,8 @@ ActiveRecord::Schema[7.2].define(version: 20_260_102_152_928) do
     t.datetime 'geocoded_at'
     t.boolean 'geocoding_failed', default: false
     t.string 'geocoding_error'
+    t.bigint 'client_id'
+    t.index ['client_id'], name: 'index_pets_on_client_id'
     t.index %w[latitude longitude], name: 'index_pets_on_latitude_and_longitude'
     t.index ['user_id'], name: 'index_pets_on_user_id'
   end
@@ -367,6 +385,7 @@ ActiveRecord::Schema[7.2].define(version: 20_260_102_152_928) do
   add_foreign_key 'pet_sits', 'pets'
   add_foreign_key 'pet_sits', 'users'
   add_foreign_key 'pet_sits', 'users', column: 'completed_by_user_id'
+  add_foreign_key 'pets', 'clients'
   add_foreign_key 'pets', 'users'
   add_foreign_key 'share_dates', 'appointment_shares'
   add_foreign_key 'training_sessions', 'pets'
