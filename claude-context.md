@@ -1,6 +1,6 @@
 # Dog Walking App - Claude Context
 
-**Last Updated:** January 3, 2026
+**Last Updated:** January 16, 2026
 **Purpose:** Comprehensive context document for AI assistants working on this codebase
 
 ---
@@ -24,9 +24,11 @@
 
 ## Project Overview
 
-A comprehensive dog walking business management application for professional dog walkers. The app helps walkers manage appointments, track earnings, coordinate with team members, optimize routes, and track training certifications.
+A comprehensive dog walking business management application for professional dog walkers. The app helps walkers manage appointments, track earnings, coordinate with team members, optimize routes, and track training certifications. Now includes a pet owner portal API for React Native mobile app.
 
 ### Core Value Propositions
+
+**For Walkers (Web App)**:
 - **Appointment Management**: Recurring and one-time walks with flexible scheduling
 - **Pet Sitting Management**: Multi-day pet sitting with daily completion tracking and automatic invoicing
 - **Team Collaboration**: Share appointments and coordinate with other walkers
@@ -34,6 +36,12 @@ A comprehensive dog walking business management application for professional dog
 - **Route Optimization**: Geocoding, distance calculation, and intelligent route planning
 - **Training Certification**: Track training hours toward professional certifications (CPDT-KA, etc.)
 - **Pet Management**: Comprehensive pet profiles with behavioral notes and special requirements
+
+**For Pet Owners (Mobile App)** - NEW in Phase 1:
+- **Client Portal API**: Separate authentication for pet owners
+- **Dashboard Access**: View pets, upcoming appointments, and unpaid invoices
+- **Push Notifications**: Expo push notification support for walk updates (future)
+- **Mobile-First**: React Native app for iOS/Android (UI pending)
 
 ---
 
@@ -215,8 +223,14 @@ User (Walker)
 ├─── has_one :certification_goal
 └─── has_many :milestones
 
+Client (Pet Owner) **NEW in Phase 1**
+├─── has_many :pets
+├─── has_many :appointments (through pets)
+└─── has_many :invoices (through pets)
+
 Pet
-├─── belongs_to :user
+├─── belongs_to :user (walker)
+├─── belongs_to :client (optional, pet owner) **NEW in Phase 1**
 ├─── has_many :appointments
 ├─── has_many :pet_sits
 ├─── has_many :invoices
@@ -291,13 +305,66 @@ Invoice
 
 ---
 
+#### clients **NEW in Phase 1**
+**Purpose**: Pet owner accounts for mobile app (React Native)
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | bigint | Primary key |
+| first_name | string | Required, owner's first name |
+| last_name | string | Required, owner's last name |
+| email | string | Required, unique, login credential |
+| password_digest | string | Required, bcrypt hashed password |
+| phone_number | string | Optional, contact number |
+| push_token | string | Optional, Expo push notification token |
+| notification_preferences | string | email/sms/both/none (default: email) |
+| email_verified_at | datetime | Email verification timestamp |
+| phone_verified_at | datetime | Phone verification timestamp |
+| created_at | datetime | Account creation |
+| updated_at | datetime | Last update |
+
+**Indexes**:
+- `email` (unique) for authentication lookup
+- `push_token` for push notification queries
+
+**Authentication**:
+- Uses JWT tokens with `user_type: 'client'` in payload
+- Separate from walker authentication (users table)
+- Password encrypted via `has_secure_password` (bcrypt)
+
+**Relationships**:
+- Has many pets (optional relationship)
+- Has many appointments (through pets)
+- Has many invoices (through pets)
+
+**Helper Methods**:
+- `can_receive_push_notifications?` - checks push_token presence and preferences
+- `can_receive_email?` - checks notification preferences
+- `full_name` - returns "First Last"
+- `active_pets` - returns pets where active: true
+- `upcoming_appointments` - returns future appointments
+- `unpaid_invoices` - returns unpaid invoices
+- `total_unpaid_amount` - sum of unpaid invoices
+
+**API Endpoints**:
+- `POST /client/signup` - Create account
+- `POST /client/login` - Authenticate
+- `GET /client/me` - Dashboard data
+- `PATCH /client/me` - Update profile
+- `PATCH /client/push_token` - Register push token
+
+**Status**: Backend complete, mobile app UI pending
+
+---
+
 #### pets
 **Purpose**: Dog profiles managed by walkers
 
 | Column | Type | Notes |
 |--------|------|-------|
 | id | bigint | Primary key |
-| user_id | bigint | FK to users (owner) |
+| user_id | bigint | FK to users (walker who manages pet) |
+| client_id | bigint | FK to clients (pet owner) **NEW, optional** |
 | name | string | Pet name |
 | birthdate | datetime | Date of birth |
 | sex | string | M/F/Other |
@@ -317,7 +384,8 @@ Invoice
 | updated_at | datetime | Last update |
 
 **Indexes**:
-- `user_id` for efficient owner lookup
+- `user_id` for efficient walker lookup
+- `client_id` for efficient client lookup **NEW**
 - `(latitude, longitude)` for proximity searches
 
 **Attachments**:
@@ -2846,6 +2914,229 @@ end
 
 ---
 
+### Client API (Pet Owner Portal) **NEW in Phase 1**
+
+**Purpose**: Separate authentication and API for pet owners to access their data via React Native mobile app
+
+**Status**: Backend complete, mobile UI pending
+
+#### Client Authentication Flow
+
+**Separate from Walker Authentication**:
+- Clients authenticate via `/client/login` (not `/login`)
+- JWT tokens include `user_type: 'client'` to differentiate
+- Clients stored in `clients` table (not `users` table)
+- Complete isolation from walker credentials
+
+**JWT Token Payload**:
+```json
+{
+  "client_id": 1,
+  "user_type": "client"
+}
+```
+
+**Login Example**:
+```bash
+POST /client/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "password123"
+}
+
+# Response:
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9...",
+  "client": {
+    "id": 1,
+    "first_name": "John",
+    "last_name": "Doe",
+    "full_name": "John Doe",
+    "email": "john@example.com",
+    "phone_number": "555-1234",
+    "notification_preferences": "email"
+  }
+}
+```
+
+#### Client API Endpoints
+
+**Authentication**:
+- `POST /client/signup` - Create new client account
+- `POST /client/login` - Authenticate and get JWT token
+- `DELETE /client/logout` - Logout (client-side token removal)
+
+**Profile**:
+- `GET /client/me` - Get client dashboard (profile, pets, appointments, invoices)
+- `PATCH /client/me` - Update profile (name, phone, notification preferences)
+- `PATCH /client/push_token` - Register Expo push notification token
+
+**Authorization**:
+```ruby
+# ClientsController uses separate authorization
+def authorize_client
+  render json: { error: 'Not authorized' }, status: :unauthorized unless current_client
+end
+
+def current_client
+  header = request.headers['Authorization']
+  return nil unless header
+
+  token = header.split(' ').last
+  decoded = jwt_decode(token)
+  return nil unless decoded && decoded[:user_type] == 'client'
+
+  @current_client = Client.find_by(id: decoded[:client_id])
+end
+```
+
+#### Client Dashboard Response
+
+**GET /client/me returns**:
+```json
+{
+  "id": 1,
+  "first_name": "John",
+  "last_name": "Doe",
+  "full_name": "John Doe",
+  "email": "john@example.com",
+  "phone_number": "555-1234",
+  "notification_preferences": "email",
+  "pets": [
+    {
+      "id": 1,
+      "name": "Moose",
+      "birthdate": "2020-01-01",
+      "sex": "Male",
+      "active": true
+    }
+  ],
+  "upcoming_appointments": [
+    {
+      "id": 123,
+      "pet": { "id": 1, "name": "Moose" },
+      "appointment_date": "2026-01-17T00:00:00.000Z",
+      "start_time": "2000-01-01T10:00:00.000Z",
+      "duration": 30,
+      "recurring": true,
+      "walker": { "first_name": "Sarah" }
+    }
+  ],
+  "unpaid_invoices": [
+    {
+      "id": 456,
+      "pet": { "id": 1, "name": "Moose" },
+      "date_completed": "2026-01-15T00:00:00.000Z",
+      "compensation": 30,
+      "title": "30 Minute Walk - Moose",
+      "paid": false
+    }
+  ],
+  "total_unpaid_amount": 150
+}
+```
+
+**Privacy Controls**:
+- Clients only see their own pets/appointments/invoices
+- Walker info limited to first name only
+- No access to walker contact info or earnings data
+- Pet behavioral notes NOT exposed to clients (walker-only)
+
+#### Push Notifications (Expo)
+
+**Registration Flow**:
+1. Client logs in via React Native app
+2. App requests push notification permission
+3. App gets Expo push token
+4. App sends token to backend: `PATCH /client/push_token`
+5. Backend stores token in `clients.push_token`
+
+**Notification Preferences**:
+- `email` - Receive email notifications only
+- `sms` - Receive SMS notifications only (future)
+- `both` - Receive both email and push notifications
+- `none` - No notifications
+
+**Helper Methods**:
+```ruby
+client.can_receive_push_notifications?
+# Returns true if push_token present AND preferences allow (sms or both)
+
+client.can_receive_email?
+# Returns true if preferences allow (email or both)
+```
+
+#### Data Model Relationships
+
+**Client owns pets (optional)**:
+```ruby
+class Client < ApplicationRecord
+  has_many :pets
+  has_many :appointments, through: :pets
+  has_many :invoices, through: :pets
+end
+
+class Pet < ApplicationRecord
+  belongs_to :user               # Walker (required)
+  belongs_to :client, optional: true  # Pet owner (optional)
+end
+```
+
+**Backwards Compatibility**:
+- Existing pets without `client_id` continue working perfectly
+- Web app (walker interface) completely unaffected
+- Walker authentication unchanged
+- All existing API endpoints unchanged
+
+#### Future Client Features (Planned)
+
+**Phase 2**: Read-only portal
+- View pet details
+- View past appointments
+- View all invoices with filtering
+
+**Phase 3**: Walk sessions
+- Real-time walk tracking
+- Walk reports with photos/notes
+- Pee/poop tracking
+
+**Phase 4**: Notifications
+- "Walker arriving now" (check-in)
+- "Walk complete" with report
+- Weekly schedule emails
+
+**Phase 5**: Client requests
+- Request new appointments
+- Request cancellations/rescheduling
+- Walker approval workflow
+
+**Phase 6**: Payments
+- Stripe integration
+- Pay invoices via app
+- Payment history
+
+#### Implementation Files
+
+**Backend**:
+- `app/models/client.rb` - Client model with bcrypt authentication
+- `app/controllers/clients_controller.rb` - Profile endpoints
+- `app/controllers/client_sessions_controller.rb` - Login/logout
+- `app/serializers/client_serializer.rb` - JSON serialization
+- `db/migrate/*_create_clients.rb` - Clients table
+- `db/migrate/*_add_client_id_to_pets.rb` - Pet ownership
+
+**Documentation**:
+- `CLIENT_API_DOCUMENTATION.md` - Complete API reference for mobile team
+
+**Frontend** (Pending):
+- React Native screens for client login/dashboard
+- Expo push notification setup
+- Client context/state management
+
+---
+
 ## Key Features Deep Dive
 
 ### Appointment Management
@@ -3860,18 +4151,28 @@ AWS_BUCKET=dog-walking-app-dev
 
 ### Future Features
 
-1. **Pet Sit Sharing**: Extend team sharing to pet sits (like appointment sharing)
-2. **Pet Sit Notifications**: Remind walker of upcoming pet sits
-3. **Partial Day Completion**: Allow marking AM/PM completions separately
-4. **Pet Sit Templates**: Save common pet sitting configurations
-5. **Mobile App**: React Native version
-6. **Payment Integration**: Stripe/PayPal for invoice payments
-7. **SMS Notifications**: Twilio for appointment reminders
-8. **Calendar Sync**: iCal/Google Calendar integration
-9. **Weather Integration**: Show weather for walk times
-10. **Advanced Analytics**: Business insights dashboard
-11. **Multi-Walker Routes**: Coordinate routes across team
-12. **Client Portal**: Allow pet owners to book/view appointments
+**✅ Completed (Phase 1):**
+- **Client Portal (Backend)**: Pet owner authentication API complete, mobile UI pending
+
+**In Progress:**
+1. **Client Portal (Mobile UI)**: React Native screens for pet owners
+2. **Walk Check-In/Complete Flow**: Transform completion into check-in → complete with timer
+
+**Planned:**
+3. **Walk Reports**: Pee/poop/notes/photos after walk completion
+4. **Client Notifications**: Email (SendGrid) and push notifications for walk updates
+5. **Client Appointment Requests**: Allow clients to request new appointments/cancellations
+6. **Weekly Schedule Emails**: Automated weekly schedule summaries for clients
+7. **Pet Sit Sharing**: Extend team sharing to pet sits (like appointment sharing)
+8. **Pet Sit Notifications**: Remind walker of upcoming pet sits
+9. **Partial Day Completion**: Allow marking AM/PM completions separately
+10. **Pet Sit Templates**: Save common pet sitting configurations
+11. **Payment Integration**: Stripe/PayPal for invoice payments
+12. **SMS Notifications**: Twilio for appointment reminders
+13. **Calendar Sync**: iCal/Google Calendar integration
+14. **Weather Integration**: Show weather for walk times
+15. **Advanced Analytics**: Business insights dashboard
+16. **Multi-Walker Routes**: Coordinate routes across team
 
 ---
 
@@ -3897,5 +4198,6 @@ This document provides comprehensive context for understanding and working with 
 ---
 
 **Generated**: January 2, 2026
+**Last Major Update**: January 16, 2026 (Added Client API - Phase 1)
 **Author**: Claude (Anthropic AI Assistant)
 **For**: Dog Walking App Development Team

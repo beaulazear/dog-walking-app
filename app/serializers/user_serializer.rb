@@ -4,6 +4,7 @@ class UserSerializer
     pets = user.pets.includes(:appointments)
     appointments = user.appointments.includes(:cancellations, :pet)
     pet_sits = user.pet_sits.includes(:pet, :pet_sit_completions)
+    training_sessions = user.training_sessions.includes(:pet)
     pet_ids = pets.pluck(:id)
     invoices = Invoice.where(pet_id: pet_ids)
 
@@ -25,6 +26,7 @@ class UserSerializer
       pets: PetSerializer.serialize_collection(pets),
       appointments: AppointmentSerializer.serialize_collection(appointments),
       pet_sits: pet_sits.as_json(include: { pet: {}, pet_sit_completions: {} }),
+      training_sessions: training_sessions.as_json(include: { pet: { only: %i[id name] } }),
       invoices: invoices.as_json(only: %i[id appointment_id pet_sit_id pet_id date_completed
                                           compensation paid pending title cancelled])
     }
