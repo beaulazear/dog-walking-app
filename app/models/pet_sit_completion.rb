@@ -1,9 +1,9 @@
 class PetSitCompletion < ApplicationRecord
   belongs_to :pet_sit
-  belongs_to :completed_by_user, class_name: 'User', optional: true
+  belongs_to :completed_by_user, class_name: "User", optional: true
 
   validates :pet_sit_id, :completion_date, :completed_at, presence: true
-  validates :completion_date, uniqueness: { scope: :pet_sit_id, message: 'already completed for this sit' }
+  validates :completion_date, uniqueness: { scope: :pet_sit_id, message: "already completed for this sit" }
   validate :completion_date_within_sit_range
 
   # Automatically create invoice after completion
@@ -15,7 +15,7 @@ class PetSitCompletion < ApplicationRecord
     return unless completion_date.present? && pet_sit.present?
     return if pet_sit.dates.include?(completion_date)
 
-    errors.add(:completion_date, 'must be within pet sit date range')
+    errors.add(:completion_date, "must be within pet sit date range")
   end
 
   def create_invoice

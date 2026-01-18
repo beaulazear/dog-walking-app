@@ -1,7 +1,7 @@
 class Appointment < ApplicationRecord
   belongs_to :user
   belongs_to :pet
-  belongs_to :completed_by_user, class_name: 'User', optional: true
+  belongs_to :completed_by_user, class_name: "User", optional: true
   belongs_to :walk_group, optional: true
   has_many :invoices, dependent: :nullify
   has_many :cancellations, dependent: :destroy
@@ -48,6 +48,6 @@ class Appointment < ApplicationRecord
 
     return unless end_time <= start_time
 
-    errors.add(:end_time, 'must be after start time')
+    errors.add(:end_time, "must be after start time")
   end
 end

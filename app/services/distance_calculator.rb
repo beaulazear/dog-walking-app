@@ -13,7 +13,7 @@ class DistanceCalculator
   # Haversine formula - calculates "as the crow flies" distance
   # Returns distance in miles or kilometers
   def self.distance_between(lat1, lon1, lat2, lon2, unit: :miles)
-    return nil if [lat1, lon1, lat2, lon2].any?(&:nil?)
+    return nil if [ lat1, lon1, lat2, lon2 ].any?(&:nil?)
 
     # Convert to floats
     lat1 = lat1.to_f
@@ -54,12 +54,12 @@ class DistanceCalculator
 
     # Add buffer time based on mode
     buffer = case mode
-             when :walking then 1  # 1 min buffer for walking
-             when :biking then 2   # 2 min for bike parking
-             when :driving then 5  # 5 min for traffic/parking
-             when :transit then 3  # 3 min for transfers
-             else 2
-             end
+    when :walking then 1  # 1 min buffer for walking
+    when :biking then 2   # 2 min for bike parking
+    when :driving then 5  # 5 min for traffic/parking
+    when :transit then 3  # 3 min for transfers
+    else 2
+    end
 
     base_time + buffer
   end

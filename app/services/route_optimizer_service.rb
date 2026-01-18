@@ -95,34 +95,34 @@ class RouteOptimizerService
       end
     end
 
-    Rails.logger.info '=== Appointment Categorization ==='
+    Rails.logger.info "=== Appointment Categorization ==="
     Rails.logger.info "Manual groups: #{manual_groups.keys.length} groups, #{manual_groups.values.flatten.length} appointments"
     Rails.logger.info "True solo walks: #{true_solo_walks.length}"
     Rails.logger.info "Ungrouped group walks: #{ungrouped_group_walks.length}"
 
     # Auto-group the ungrouped group walks by proximity and time
     begin
-      Rails.logger.info 'Starting auto-grouping...'
+      Rails.logger.info "Starting auto-grouping..."
       auto_groups = auto_group_appointments(ungrouped_group_walks)
       Rails.logger.info "Created #{auto_groups.length} auto-groups from ungrouped appointments"
     rescue StandardError => e
       Rails.logger.error "FATAL ERROR in categorize_appointments auto-grouping: #{e.message}"
       Rails.logger.error e.backtrace.join("\n")
       # Fallback: treat each ungrouped walk as its own group
-      auto_groups = ungrouped_group_walks.map { |a| [a] }
+      auto_groups = ungrouped_group_walks.map { |a| [ a ] }
       Rails.logger.info "Fallback: created #{auto_groups.length} individual groups"
     end
 
     # Combine manual groups and auto-groups
     all_groups = manual_groups.values + auto_groups
 
-    [all_groups, true_solo_walks]
+    [ all_groups, true_solo_walks ]
   end
 
   # Check if an appointment is a true solo walk
   def self.is_solo_walk?(appointment)
     # Check walk_type field or solo boolean (if it exists)
-    return true if appointment.walk_type == 'solo'
+    return true if appointment.walk_type == "solo"
     return true if appointment.respond_to?(:solo) && appointment.solo == true
 
     false
@@ -141,7 +141,7 @@ class RouteOptimizerService
     while remaining.any?
       # Start a new group with the first remaining appointment
       seed = remaining.shift
-      current_group = [seed]
+      current_group = [ seed ]
 
       # Find all appointments that can be grouped with the seed
       candidates = remaining.dup
@@ -182,7 +182,7 @@ class RouteOptimizerService
         end.join(', ')}"
       else
         # Single appointment that couldn't be grouped - add as individual group
-        groups << [seed]
+        groups << [ seed ]
         Rails.logger.info "Couldn't group #{seed.pet.name} - adding as individual group"
       end
     end
@@ -192,7 +192,7 @@ class RouteOptimizerService
     Rails.logger.error "Error in auto_group_appointments: #{e.message}"
     Rails.logger.error e.backtrace.join("\n")
     # Return ungrouped appointments as individual groups
-    appointments.map { |a| [a] }
+    appointments.map { |a| [ a ] }
   end
 
   # Check if two appointments have overlapping time windows
@@ -237,7 +237,7 @@ class RouteOptimizerService
     solo_walks.each do |appt|
       walk_units << {
         type: :solo,
-        appointments: [appt],
+        appointments: [ appt ],
         earliest_pickup: parse_time(appt.start_time),
         latest_pickup: parse_time(appt.end_time)
       }
@@ -300,9 +300,9 @@ class RouteOptimizerService
                                 unit_location[:lng]
                               )
                               calculate_travel_time(distance || 0)
-                            else
+      else
                               0
-                            end
+      end
 
       # Arrival time at this unit
       arrival_time = current_time + travel_time_minutes.minutes
@@ -311,9 +311,9 @@ class RouteOptimizerService
       current_time = if unit[:earliest_pickup] && arrival_time < unit[:earliest_pickup]
                        # We're early - wait until window opens
                        unit[:earliest_pickup]
-                     else
+      else
                        arrival_time
-                     end
+      end
 
       # Check if we can still make the pickup within the window
       if unit[:latest_pickup] && current_time > unit[:latest_pickup]
@@ -414,10 +414,10 @@ class RouteOptimizerService
     # Otherwise, start from earliest window (planning the route)
     if earliest_window && latest_window && Time.current >= earliest_window && Time.current <= latest_window
       current_time = Time.current
-      Rails.logger.info '📍 Mid-day re-routing: starting from current time'
+      Rails.logger.info "📍 Mid-day re-routing: starting from current time"
     else
       current_time = earliest_window || Time.current
-      Rails.logger.info '📋 Route planning: starting from earliest window'
+      Rails.logger.info "📋 Route planning: starting from earliest window"
     end
 
     current_location = start_location || {
@@ -559,7 +559,7 @@ class RouteOptimizerService
           next
         else
           # No more events possible - we're done
-          Rails.logger.info '✅ All appointments completed or no more valid actions'
+          Rails.logger.info "✅ All appointments completed or no more valid actions"
           break
         end
       end
@@ -618,7 +618,7 @@ class RouteOptimizerService
       total_minutes = ((current_time - pickup_start_times.values.min) / 60.0).round
       Rails.logger.info "Total route time: #{total_minutes} minutes"
     else
-      Rails.logger.warn '⚠️ No pickups were made - all windows may be closed or invalid'
+      Rails.logger.warn "⚠️ No pickups were made - all windows may be closed or invalid"
     end
 
     Rails.logger.info "Stop sequence: #{stops.map { |s| "#{s[:pet_name]}-#{s[:stop_type]}" }.join(' → ')}"
@@ -716,7 +716,7 @@ class RouteOptimizerService
       avg_remaining_time = currently_walking.map do |walking_appt|
         elapsed = ((current_time - pickup_start_times[walking_appt.id]) / 60.0).round
         target = walking_appt.duration || 30
-        [target - elapsed, 0].max
+        [ target - elapsed, 0 ].max
       end.sum / currently_walking.length.to_f
 
       # Prefer dogs with similar remaining walk times
@@ -863,7 +863,7 @@ class RouteOptimizerService
       optimized: false,
       groups_count: 0,
       solo_count: 0,
-      message: 'No geocoded appointments to optimize'
+      message: "No geocoded appointments to optimize"
     }
   end
 

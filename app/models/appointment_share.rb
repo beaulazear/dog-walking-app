@@ -1,15 +1,15 @@
 class AppointmentShare < ApplicationRecord
   # Associations
   belongs_to :appointment
-  belongs_to :shared_by_user, class_name: 'User'
-  belongs_to :shared_with_user, class_name: 'User'
+  belongs_to :shared_by_user, class_name: "User"
+  belongs_to :shared_with_user, class_name: "User"
   has_many :share_dates, dependent: :destroy
   has_many :walker_earnings, dependent: :destroy
 
   # Validations
   validates :status, presence: true, inclusion: { in: %w[pending accepted declined] }
   validates :shared_with_user_id,
-            uniqueness: { scope: :appointment_id, message: 'Appointment already shared with this user' }
+            uniqueness: { scope: :appointment_id, message: "Appointment already shared with this user" }
   validates :covering_walker_percentage, presence: true,
                                          numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validate :users_must_be_connected
@@ -17,9 +17,9 @@ class AppointmentShare < ApplicationRecord
   validate :no_overlapping_share_dates
 
   # Scopes
-  scope :pending, -> { where(status: 'pending') }
-  scope :accepted, -> { where(status: 'accepted') }
-  scope :declined, -> { where(status: 'declined') }
+  scope :pending, -> { where(status: "pending") }
+  scope :accepted, -> { where(status: "accepted") }
+  scope :declined, -> { where(status: "declined") }
   scope :for_user, ->(user_id) { where(shared_with_user_id: user_id) }
   scope :by_user, ->(user_id) { where(shared_by_user_id: user_id) }
 
@@ -29,13 +29,13 @@ class AppointmentShare < ApplicationRecord
   # Instance methods
   def accept!
     transaction do
-      update!(status: 'accepted')
-      appointment.update!(delegation_status: 'shared')
+      update!(status: "accepted")
+      appointment.update!(delegation_status: "shared")
     end
   end
 
   def decline!
-    update(status: 'declined')
+    update(status: "declined")
   end
 
   # Check if this share covers a specific date
@@ -66,27 +66,27 @@ class AppointmentShare < ApplicationRecord
     return if shared_by_user_id.blank? || shared_with_user_id.blank?
 
     connection_exists = WalkerConnection.accepted.where(
-      '(user_id = ? AND connected_user_id = ?) OR (user_id = ? AND connected_user_id = ?)',
+      "(user_id = ? AND connected_user_id = ?) OR (user_id = ? AND connected_user_id = ?)",
       shared_by_user_id, shared_with_user_id, shared_with_user_id, shared_by_user_id
     ).exists?
 
     return if connection_exists
 
-    errors.add(:base, 'You must be connected with this user to share appointments')
+    errors.add(:base, "You must be connected with this user to share appointments")
   end
 
   def cannot_share_with_self
     return unless shared_by_user_id == shared_with_user_id
 
-    errors.add(:shared_with_user_id, 'Cannot share appointment with yourself')
+    errors.add(:shared_with_user_id, "Cannot share appointment with yourself")
   end
 
   def update_appointment_delegation_status
-    if status == 'accepted'
-      appointment.update(delegation_status: 'shared')
-    elsif status == 'declined' && !appointment.appointment_shares.accepted.exists?
+    if status == "accepted"
+      appointment.update(delegation_status: "shared")
+    elsif status == "declined" && !appointment.appointment_shares.accepted.exists?
       # Reset to 'none' if all shares are declined/pending
-      appointment.update(delegation_status: 'none')
+      appointment.update(delegation_status: "none")
     end
   end
 
@@ -103,7 +103,7 @@ class AppointmentShare < ApplicationRecord
 
     return unless existing_share
 
-    errors.add(:base, 'This appointment is already shared with someone else')
+    errors.add(:base, "This appointment is already shared with someone else")
 
     # NOTE: Recurring appointments are blocked by only_one_time_appointments validation,
     # so we don't need to check overlapping dates for recurring appointments

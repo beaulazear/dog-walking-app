@@ -20,12 +20,12 @@ class CertificationGoal < ApplicationRecord
 
     # Calculate based on last 4 weeks of actual training
     four_weeks_ago = 4.weeks.ago
-    recent_sessions = user.training_sessions.where('session_date >= ?', four_weeks_ago)
+    recent_sessions = user.training_sessions.where("session_date >= ?", four_weeks_ago)
     return nil if recent_sessions.empty?
 
     # Calculate hours per week (not per day spread across all days)
     total_hours = recent_sessions.sum(:duration_minutes) / 60.0
-    weeks_with_data = [(Date.current - four_weeks_ago.to_date) / 7.0, 1].max
+    weeks_with_data = [ (Date.current - four_weeks_ago.to_date) / 7.0, 1 ].max
     hours_per_week = total_hours / weeks_with_data
 
     return nil if hours_per_week.zero?

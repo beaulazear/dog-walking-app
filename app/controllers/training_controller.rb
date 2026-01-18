@@ -55,7 +55,7 @@ class TrainingController < ApplicationController
       hours = sessions.in_date_range(week_start, week_end).sum(:duration_minutes) / 60.0
 
       {
-        week: week_start.strftime('%b %d'),
+        week: week_start.strftime("%b %d"),
         hours: hours.round(1)
       }
     end.reverse

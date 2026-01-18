@@ -21,7 +21,7 @@ class Pet < ApplicationRecord
   def ensure_birthdate_is_valid
     return unless birthdate > Date.current
 
-    errors.add(:birthdate, 'Must be in the past')
+    errors.add(:birthdate, "Must be in the past")
   end
 
   def profile_pic_url
@@ -63,7 +63,7 @@ class Pet < ApplicationRecord
   def coordinates
     return nil unless latitude && longitude
 
-    [latitude, longitude]
+    [ latitude, longitude ]
   end
 
   def geocoded?

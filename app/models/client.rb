@@ -34,7 +34,7 @@ class Client < ApplicationRecord
 
   # Get upcoming appointments
   def upcoming_appointments
-    appointments.where('appointment_date >= ?', Date.today)
+    appointments.where("appointment_date >= ?", Date.today)
                 .where(canceled: false, completed: false)
                 .order(:appointment_date, :start_time)
   end
@@ -57,6 +57,6 @@ class Client < ApplicationRecord
   end
 
   def set_default_notification_preferences
-    self.notification_preferences ||= 'email'
+    self.notification_preferences ||= "email"
   end
 end

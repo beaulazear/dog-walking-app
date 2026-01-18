@@ -11,7 +11,7 @@ class ShareDate < ApplicationRecord
   def date_must_be_future
     return unless date.present? && date <= Date.today
 
-    errors.add(:date, 'must be in the future')
+    errors.add(:date, "must be in the future")
   end
 
   def date_must_match_appointment_schedule
@@ -20,7 +20,7 @@ class ShareDate < ApplicationRecord
     appointment = appointment_share.appointment
     return unless appointment.recurring
 
-    day_name = date.strftime('%A').downcase
+    day_name = date.strftime("%A").downcase
     return if appointment.send(day_name)
 
     errors.add(:date, "doesn't match appointment schedule")

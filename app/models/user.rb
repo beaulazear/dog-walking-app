@@ -4,7 +4,7 @@ class User < ApplicationRecord
   has_one_attached :profile_pic
 
   has_many :pets
-  has_many :appointments, foreign_key: 'user_id'
+  has_many :appointments, foreign_key: "user_id"
   has_many :pet_sits, dependent: :destroy
   has_many :invoices, through: :pets
   has_many :training_sessions, dependent: :destroy
@@ -15,17 +15,17 @@ class User < ApplicationRecord
   has_many :walk_groups, dependent: :destroy
 
   # Walker connections (team management)
-  has_many :initiated_connections, class_name: 'WalkerConnection', foreign_key: 'user_id', dependent: :destroy
-  has_many :received_connections, class_name: 'WalkerConnection', foreign_key: 'connected_user_id', dependent: :destroy
+  has_many :initiated_connections, class_name: "WalkerConnection", foreign_key: "user_id", dependent: :destroy
+  has_many :received_connections, class_name: "WalkerConnection", foreign_key: "connected_user_id", dependent: :destroy
 
   # Appointment shares
-  has_many :shared_appointments, class_name: 'AppointmentShare', foreign_key: 'shared_by_user_id', dependent: :destroy
-  has_many :received_appointment_shares, class_name: 'AppointmentShare', foreign_key: 'shared_with_user_id',
+  has_many :shared_appointments, class_name: "AppointmentShare", foreign_key: "shared_by_user_id", dependent: :destroy
+  has_many :received_appointment_shares, class_name: "AppointmentShare", foreign_key: "shared_with_user_id",
                                          dependent: :destroy
-  has_many :completed_appointments, class_name: 'Appointment', foreign_key: 'completed_by_user_id'
+  has_many :completed_appointments, class_name: "Appointment", foreign_key: "completed_by_user_id"
 
   # Walker earnings (for covering shared appointments)
-  has_many :walker_earnings, foreign_key: 'walker_id', dependent: :destroy
+  has_many :walker_earnings, foreign_key: "walker_id", dependent: :destroy
 
   # Helper method to get all connections (both initiated and received)
   def all_connections
@@ -52,7 +52,7 @@ class User < ApplicationRecord
     begin
       if Rails.env.production?
         # service_url generates a direct S3 URL that doesn't require Rails to proxy
-        profile_pic.service_url(expires_in: 1.year, disposition: 'inline')
+        profile_pic.service_url(expires_in: 1.year, disposition: "inline")
       else
         # For development/test, use blob URL for local storage
         Rails.application.routes.url_helpers.rails_blob_url(profile_pic, only_path: true)
@@ -100,12 +100,12 @@ class User < ApplicationRecord
       if curr.session_date.to_date == prev.session_date.to_date + 1.day
         current_streak += 1
       else
-        max_streak = [max_streak, current_streak].max
+        max_streak = [ max_streak, current_streak ].max
         current_streak = 1
       end
     end
 
-    [max_streak, current_streak].max
+    [ max_streak, current_streak ].max
   end
 
   def check_and_create_milestones!

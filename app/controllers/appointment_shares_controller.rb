@@ -17,7 +17,7 @@ class AppointmentSharesController < ApplicationController
 
     # Sent shares
     sent = @current_user.shared_appointments
-                        .includes(appointment: [:pet], shared_with_user: [])
+                        .includes(appointment: [ :pet ], shared_with_user: [])
                         .order(created_at: :desc)
 
     render json: {
@@ -35,22 +35,22 @@ class AppointmentSharesController < ApplicationController
 
     shared_with_user = User.find_by(id: share_params[:shared_with_user_id])
 
-    return render json: { error: 'User not found' }, status: :not_found if shared_with_user.nil?
+    return render json: { error: "User not found" }, status: :not_found if shared_with_user.nil?
 
     # Check if users are connected
     unless users_connected?(@current_user.id, shared_with_user.id)
-      return render json: { error: 'You must be connected with this user to share appointments' },
+      return render json: { error: "You must be connected with this user to share appointments" },
                     status: :forbidden
     end
 
-    appointment_ids = share_params[:appointment_ids] || [share_params[:appointment_id]].compact
+    appointment_ids = share_params[:appointment_ids] || [ share_params[:appointment_id] ].compact
 
-    return render json: { error: 'No appointments specified' }, status: :bad_request if appointment_ids.empty?
+    return render json: { error: "No appointments specified" }, status: :bad_request if appointment_ids.empty?
 
     # Validate covering_walker_percentage is provided
     covering_percentage = share_params[:covering_walker_percentage]
     if covering_percentage.nil? || covering_percentage.to_i.negative? || covering_percentage.to_i > 100
-      return render json: { error: 'Invalid covering_walker_percentage. Must be between 0 and 100.' },
+      return render json: { error: "Invalid covering_walker_percentage. Must be between 0 and 100." },
                     status: :bad_request
     end
 
@@ -59,7 +59,7 @@ class AppointmentSharesController < ApplicationController
                               .where(pets: { user_id: @current_user.id })
                               .where(id: appointment_ids)
 
-    return render json: { error: 'No valid appointments found' }, status: :not_found if appointments.empty?
+    return render json: { error: "No valid appointments found" }, status: :not_found if appointments.empty?
 
     shares_created = []
     errors = []
@@ -100,7 +100,7 @@ class AppointmentSharesController < ApplicationController
             cloned_appointment.destroy # Clean up if share creation fails
           end
         rescue StandardError => e
-          errors << { appointment_id: appointment.id, date: date_str, errors: ["Error: #{e.message}"] }
+          errors << { appointment_id: appointment.id, date: date_str, errors: [ "Error: #{e.message}" ] }
         end
       else
         # Handle non-recurring appointments normally
@@ -129,11 +129,11 @@ class AppointmentSharesController < ApplicationController
 
   # PATCH /appointment_shares/:id/accept
   def accept
-    return render json: { error: 'Not authorized' }, status: :forbidden unless authorized_to_respond?
+    return render json: { error: "Not authorized" }, status: :forbidden unless authorized_to_respond?
 
     if @share.accept!
       render json: {
-        message: 'Appointment share accepted',
+        message: "Appointment share accepted",
         share: format_share(@share, :received)
       }
     else
@@ -143,10 +143,10 @@ class AppointmentSharesController < ApplicationController
 
   # PATCH /appointment_shares/:id/decline
   def decline
-    return render json: { error: 'Not authorized' }, status: :forbidden unless authorized_to_respond?
+    return render json: { error: "Not authorized" }, status: :forbidden unless authorized_to_respond?
 
     if @share.decline!
-      render json: { message: 'Appointment share declined' }
+      render json: { message: "Appointment share declined" }
     else
       render json: { errors: @share.errors.full_messages }, status: :unprocessable_entity
     end
@@ -154,15 +154,15 @@ class AppointmentSharesController < ApplicationController
 
   # DELETE /appointment_shares/:id
   def destroy
-    return render json: { error: 'Not authorized' }, status: :forbidden unless authorized_to_manage?
+    return render json: { error: "Not authorized" }, status: :forbidden unless authorized_to_manage?
 
     appointment = @share.appointment
     @share.destroy
 
     # Reset appointment delegation status if no more accepted shares exist
-    appointment.update(delegation_status: 'none') if appointment.appointment_shares.accepted.none?
+    appointment.update(delegation_status: "none") if appointment.appointment_shares.accepted.none?
 
-    render json: { message: 'Appointment unshared successfully' }
+    render json: { message: "Appointment unshared successfully" }
   end
 
   # GET /appointment_shares/my_shared_appointments
@@ -171,7 +171,7 @@ class AppointmentSharesController < ApplicationController
     accepted_shares = @current_user.received_appointment_shares
                                    .accepted
                                    .includes(appointment: %i[pet user])
-                                   .order('appointments.appointment_date ASC')
+                                   .order("appointments.appointment_date ASC")
 
     appointments = accepted_shares.map do |share|
       appointment = share.appointment
@@ -216,11 +216,11 @@ class AppointmentSharesController < ApplicationController
 
     return if @share && (@share.shared_by_user_id == @current_user.id || @share.shared_with_user_id == @current_user.id)
 
-    render json: { error: 'Share not found' }, status: :not_found
+    render json: { error: "Share not found" }, status: :not_found
   end
 
   def authorized_to_respond?
-    @share.shared_with_user_id == @current_user.id && @share.status == 'pending'
+    @share.shared_with_user_id == @current_user.id && @share.status == "pending"
   end
 
   def authorized_to_manage?
@@ -229,7 +229,7 @@ class AppointmentSharesController < ApplicationController
 
   def users_connected?(user1_id, user2_id)
     WalkerConnection.accepted.where(
-      '(user_id = ? AND connected_user_id = ?) OR (user_id = ? AND connected_user_id = ?)',
+      "(user_id = ? AND connected_user_id = ?) OR (user_id = ? AND connected_user_id = ?)",
       user1_id, user2_id, user2_id, user1_id
     ).exists?
   end

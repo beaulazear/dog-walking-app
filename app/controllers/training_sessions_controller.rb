@@ -1,4 +1,4 @@
-require 'csv'
+require "csv"
 
 class TrainingSessionsController < ApplicationController
   before_action :current_user
@@ -96,14 +96,14 @@ class TrainingSessionsController < ApplicationController
     # Generate CSV for CPDT-KA application
     csv_data = generate_cpdt_export(sessions)
 
-    send_data csv_data, filename: "cpdt_training_hours_#{Date.current}.csv", type: 'text/csv'
+    send_data csv_data, filename: "cpdt_training_hours_#{Date.current}.csv", type: "text/csv"
   end
 
   # POST /training_sessions/sync_from_invoices
   def sync_from_invoices
     pet_ids = @current_user.pets.pluck(:id)
     training_invoices = Invoice.where(pet_id: pet_ids)
-                               .where('title ILIKE ?', '%training%')
+                               .where("title ILIKE ?", "%training%")
                                .where(training_session_id: nil)
 
     synced = []
@@ -131,7 +131,7 @@ class TrainingSessionsController < ApplicationController
 
   def set_training_session
     @training_session = @current_user.training_sessions.find_by(id: params[:id])
-    render json: { error: 'Training session not found' }, status: :not_found unless @training_session
+    render json: { error: "Training session not found" }, status: :not_found unless @training_session
   end
 
   def training_session_params
@@ -147,20 +147,20 @@ class TrainingSessionsController < ApplicationController
 
   def generate_cpdt_export(sessions)
     CSV.generate(headers: true) do |csv|
-      csv << ['Date', 'Duration (hours)', 'Session Type', 'Dog Name', 'Training Focus']
+      csv << [ "Date", "Duration (hours)", "Session Type", "Dog Name", "Training Focus" ]
 
       sessions.each do |session|
         csv << [
-          session.session_date.strftime('%Y-%m-%d'),
+          session.session_date.strftime("%Y-%m-%d"),
           session.duration_hours,
           session.session_type&.humanize,
-          session.pet&.name || 'Group/Multiple',
-          session.training_focus.join(', ')
+          session.pet&.name || "Group/Multiple",
+          session.training_focus.join(", ")
         ]
       end
 
       csv << []
-      csv << ['Total Hours', (sessions.sum(:duration_minutes) / 60.0).round(2)]
+      csv << [ "Total Hours", (sessions.sum(:duration_minutes) / 60.0).round(2) ]
     end
   end
 end

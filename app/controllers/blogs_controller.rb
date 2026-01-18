@@ -41,7 +41,7 @@ class BlogsController < ApplicationController
 
   def set_blog
     @blog = @current_user.blogs.find_by(id: params[:id])
-    render json: { error: 'Blog not found' }, status: :not_found unless @blog
+    render json: { error: "Blog not found" }, status: :not_found unless @blog
   end
 
   def blog_params

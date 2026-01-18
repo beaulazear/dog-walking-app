@@ -17,7 +17,7 @@ class PetsController < ApplicationController
       render json: pets.as_json(only: %i[id name birthdate sex spayed_neutered active address behavioral_notes supplies_location allergies origin_trainer]),
              status: :ok
     else
-      render json: { error: 'Not found' }, status: :not_found
+      render json: { error: "Not found" }, status: :not_found
     end
   end
 
@@ -26,7 +26,7 @@ class PetsController < ApplicationController
 
     pet = @current_user.pets.find_by(id: params[:id])
 
-    return render json: { error: 'Pet not found' }, status: :not_found unless pet
+    return render json: { error: "Pet not found" }, status: :not_found unless pet
 
     # Profile pic upload removed - using frontend icons instead
 
@@ -53,7 +53,7 @@ class PetsController < ApplicationController
   def destroy
     pet = @current_user.pets.find_by(id: params[:id])
 
-    return render json: { error: 'Pet not found' }, status: :not_found unless pet
+    return render json: { error: "Pet not found" }, status: :not_found unless pet
 
     pet.destroy
     render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active]), status: :ok
@@ -62,7 +62,7 @@ class PetsController < ApplicationController
   def update_active_status
     pet = @current_user.pets.find_by(id: params[:id])
 
-    return render json: { error: 'Pet not found' }, status: :not_found unless pet
+    return render json: { error: "Pet not found" }, status: :not_found unless pet
 
     pet.update(active: params[:active])
     render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active address behavioral_notes supplies_location allergies origin_trainer]),

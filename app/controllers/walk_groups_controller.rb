@@ -9,7 +9,7 @@ class WalkGroupsController < ApplicationController
     max_distance = params[:max_distance]&.to_f || 0.5
 
     # Get day of week for the date
-    day_of_week = date.strftime('%A').downcase # 'monday', 'tuesday', etc.
+    day_of_week = date.strftime("%A").downcase # 'monday', 'tuesday', etc.
 
     # Get all appointments (recurring and non-recurring) for the date
     recurring_appointments = @current_user.appointments
@@ -20,14 +20,14 @@ class WalkGroupsController < ApplicationController
     non_recurring_appointments = @current_user.appointments
                                               .includes(:pet)
                                               .where(recurring: false)
-                                              .where('DATE(appointment_date) = ?', date)
+                                              .where("DATE(appointment_date) = ?", date)
 
     # Combine and sort by start time
     appointments = (recurring_appointments + non_recurring_appointments).sort_by(&:start_time)
 
     if appointments.empty?
       return render json: {
-        message: 'No appointments found for this date',
+        message: "No appointments found for this date",
         date: date,
         suggestions: []
       }
@@ -56,7 +56,7 @@ class WalkGroupsController < ApplicationController
     date = params[:date] ? Date.parse(params[:date]) : Date.today
 
     # Get day of week for the date
-    day_of_week = date.strftime('%A').downcase # 'monday', 'tuesday', etc.
+    day_of_week = date.strftime("%A").downcase # 'monday', 'tuesday', etc.
 
     # Get all appointments (recurring and non-recurring) for the date
     recurring_appointments = @current_user.appointments
@@ -66,7 +66,7 @@ class WalkGroupsController < ApplicationController
 
     non_recurring_appointments = @current_user.appointments
                                               .where(recurring: false)
-                                              .where('DATE(appointment_date) = ?', date)
+                                              .where("DATE(appointment_date) = ?", date)
                                               .where.not(walk_group_id: nil)
 
     # Get all appointment IDs that are scheduled for today and have a walk_group_id
@@ -95,10 +95,10 @@ class WalkGroupsController < ApplicationController
     # Validate appointments exist and belong to current user
     appointments = @current_user.appointments.where(id: appointment_ids)
 
-    return render json: { error: 'No valid appointments found' }, status: :unprocessable_entity if appointments.empty?
+    return render json: { error: "No valid appointments found" }, status: :unprocessable_entity if appointments.empty?
 
     if appointments.length != appointment_ids.length
-      return render json: { error: 'Some appointments not found or do not belong to you' },
+      return render json: { error: "Some appointments not found or do not belong to you" },
                     status: :unprocessable_entity
     end
 
@@ -112,7 +112,7 @@ class WalkGroupsController < ApplicationController
     appointments.update_all(walk_group_id: walk_group.id)
 
     render json: {
-      message: 'Walk group created successfully',
+      message: "Walk group created successfully",
       walk_group: walk_group.as_json(include: { appointments: { include: :pet } })
     }, status: :created
   rescue ArgumentError => e
@@ -129,8 +129,8 @@ class WalkGroupsController < ApplicationController
     # This will nullify walk_group_id on appointments due to dependent: :nullify
     walk_group.destroy!
 
-    render json: { message: 'Walk group deleted successfully' }
+    render json: { message: "Walk group deleted successfully" }
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Walk group not found' }, status: :not_found
+    render json: { error: "Walk group not found" }, status: :not_found
   end
 end

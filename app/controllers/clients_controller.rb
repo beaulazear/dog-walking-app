@@ -1,6 +1,6 @@
 class ClientsController < ApplicationController
-  skip_before_action :authorized, only: [:create]
-  before_action :authorize_client, except: [:create]
+  skip_before_action :authorized, only: [ :create ]
+  before_action :authorize_client, except: [ :create ]
   before_action :set_client, only: %i[show update update_push_token]
 
   # GET /client/me
@@ -13,7 +13,7 @@ class ClientsController < ApplicationController
     client = Client.new(client_params)
 
     if client.save
-      token = jwt_encode(client_id: client.id, user_type: 'client')
+      token = jwt_encode(client_id: client.id, user_type: "client")
 
       render json: {
         token: token,
@@ -36,7 +36,7 @@ class ClientsController < ApplicationController
   # PATCH /client/push_token
   def update_push_token
     if @client.update(push_token: params[:push_token])
-      render json: { message: 'Push token updated successfully' }, status: :ok
+      render json: { message: "Push token updated successfully" }, status: :ok
     else
       render json: { errors: @client.errors.full_messages }, status: :unprocessable_entity
     end
@@ -49,18 +49,18 @@ class ClientsController < ApplicationController
   end
 
   def authorize_client
-    render json: { error: 'Not authorized' }, status: :unauthorized unless current_client
+    render json: { error: "Not authorized" }, status: :unauthorized unless current_client
   end
 
   def current_client
     return @current_client if @current_client
 
-    header = request.headers['Authorization']
+    header = request.headers["Authorization"]
     return nil unless header
 
-    token = header.split(' ').last
+    token = header.split(" ").last
     decoded = jwt_decode(token)
-    return nil unless decoded && decoded[:user_type] == 'client'
+    return nil unless decoded && decoded[:user_type] == "client"
 
     @current_client = Client.find_by(id: decoded[:client_id])
   end

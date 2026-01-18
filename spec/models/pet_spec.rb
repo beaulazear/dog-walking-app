@@ -94,7 +94,7 @@ RSpec.describe Pet, type: :model do
     context 'when profile pic is attached' do
       before do
         # Create a simple test file
-        file = Tempfile.new(['test', '.jpg'])
+        file = Tempfile.new([ 'test', '.jpg' ])
         pet.profile_pic.attach(io: file, filename: 'test.jpg', content_type: 'image/jpeg')
         file.close
       end

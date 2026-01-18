@@ -68,7 +68,7 @@ class ClientSerializer
         saturday: appointment.saturday,
         sunday: appointment.sunday,
         walker: {
-          first_name: appointment.user.name.split(' ').first
+          first_name: appointment.user.name.split(" ").first
         }
       }
     end

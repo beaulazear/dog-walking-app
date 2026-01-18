@@ -18,7 +18,7 @@ class Book < ApplicationRecord
   scope :for_user, ->(user_id) { where(user_id: user_id) }
   scope :by_status, ->(status) { where(status: status) }
   scope :by_category, ->(category) { where(category: category) }
-  scope :user_recommendations, -> { where(category: 'User Recommendation') }
+  scope :user_recommendations, -> { where(category: "User Recommendation") }
 
   # Instance methods
   def default_book?

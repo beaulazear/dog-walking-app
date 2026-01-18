@@ -1,7 +1,7 @@
 class PetSit < ApplicationRecord
   belongs_to :user
   belongs_to :pet
-  belongs_to :completed_by_user, class_name: 'User', optional: true
+  belongs_to :completed_by_user, class_name: "User", optional: true
 
   has_many :pet_sit_completions, dependent: :destroy
   has_many :invoices, dependent: :destroy
@@ -12,10 +12,10 @@ class PetSit < ApplicationRecord
   validate :end_date_after_start_date
 
   scope :active, -> { where(canceled: false) }
-  scope :for_date, ->(date) { where('start_date <= ? AND end_date >= ?', date, date) }
-  scope :upcoming, -> { where('start_date > ?', Date.today) }
-  scope :current, -> { where('start_date <= ? AND end_date >= ?', Date.today, Date.today) }
-  scope :past, -> { where('end_date < ?', Date.today) }
+  scope :for_date, ->(date) { where("start_date <= ? AND end_date >= ?", date, date) }
+  scope :upcoming, -> { where("start_date > ?", Date.today) }
+  scope :current, -> { where("start_date <= ? AND end_date >= ?", Date.today, Date.today) }
+  scope :past, -> { where("end_date < ?", Date.today) }
 
   # Check if a specific date is completed
   def completed_on?(date)
@@ -53,15 +53,15 @@ class PetSit < ApplicationRecord
   # Custom JSON serialization
   def as_json(options = {})
     super(options).merge(
-      'pet' => pet&.as_json(only: %i[id name active address owner_name]),
-      'user' => user&.as_json(only: %i[id name email]),
-      'completed_by_user' => completed_by_user&.as_json(only: %i[id name email]),
-      'pet_sit_completions' => pet_sit_completions.as_json(only: %i[id completion_date completed_at
+      "pet" => pet&.as_json(only: %i[id name active address owner_name]),
+      "user" => user&.as_json(only: %i[id name email]),
+      "completed_by_user" => completed_by_user&.as_json(only: %i[id name email]),
+      "pet_sit_completions" => pet_sit_completions.as_json(only: %i[id completion_date completed_at
                                                                     completed_by_user_id]),
-      'invoices' => invoices.as_json(only: %i[id amount status date_completed]),
-      'total_cost' => total_cost,
-      'daily_cost' => daily_cost,
-      'fully_completed' => fully_completed?
+      "invoices" => invoices.as_json(only: %i[id amount status date_completed]),
+      "total_cost" => total_cost,
+      "daily_cost" => daily_cost,
+      "fully_completed" => fully_completed?
     )
   end
 
@@ -70,6 +70,6 @@ class PetSit < ApplicationRecord
   def end_date_after_start_date
     return unless end_date.present? && start_date.present? && end_date < start_date
 
-    errors.add(:end_date, 'must be after start date')
+    errors.add(:end_date, "must be after start date")
   end
 end

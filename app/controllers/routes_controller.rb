@@ -17,9 +17,9 @@ class RoutesController < ApplicationController
                      @current_user.appointments
                                   .includes(:pet)
                                   .where(id: params[:appointment_ids])
-                   else
+    else
                      # Get day of week for the date
-                     day_of_week = date.strftime('%A').downcase # 'monday', 'tuesday', etc.
+                     day_of_week = date.strftime("%A").downcase # 'monday', 'tuesday', etc.
 
                      # Get all appointments (recurring and non-recurring) for the date
                      # Use Arel or safe column reference instead of string interpolation
@@ -27,19 +27,19 @@ class RoutesController < ApplicationController
                                                            .includes(:pet)
                                                            .where(recurring: true)
                                                            .where(day_of_week => true)
-                                                           .where(canceled: [false, nil])
-                                                           .where(completed: [false, nil])
+                                                           .where(canceled: [ false, nil ])
+                                                           .where(completed: [ false, nil ])
 
                      non_recurring_appointments = @current_user.appointments
                                                                .includes(:pet)
                                                                .where(recurring: false)
-                                                               .where('DATE(appointment_date) = ?', date)
-                                                               .where(canceled: [false, nil])
-                                                               .where(completed: [false, nil])
+                                                               .where("DATE(appointment_date) = ?", date)
+                                                               .where(canceled: [ false, nil ])
+                                                               .where(completed: [ false, nil ])
 
                      # Combine and sort by start time
                      (recurring_appointments + non_recurring_appointments).sort_by(&:start_time)
-                   end
+    end
 
     # Filter out appointments that are shared out on this date
     appointments = appointments.reject { |apt| apt.shared_out_on?(date, for_user: @current_user) }
@@ -58,7 +58,7 @@ class RoutesController < ApplicationController
 
     if appointments.empty?
       return render json: {
-        error: 'No appointments found',
+        error: "No appointments found",
         date: date,
         route: []
       }, status: :not_found
@@ -70,14 +70,14 @@ class RoutesController < ApplicationController
                          lat: params[:start_location][:lat].to_f,
                          lng: params[:start_location][:lng].to_f
                        }
-                     end
+    end
 
     # Optimize the route
-    result = if [true, 'true'].include?(params[:compare])
+    result = if [ true, "true" ].include?(params[:compare])
                RouteOptimizerService.optimize_and_compare(appointments, start_location: start_location)
-             else
+    else
                RouteOptimizerService.optimize_route(appointments, start_location: start_location)
-             end
+    end
 
     render json: result.merge({
                                 date: date,
@@ -97,22 +97,22 @@ class RoutesController < ApplicationController
     date = Date.parse(params[:date])
 
     # Get day of week for the date
-    day_of_week = date.strftime('%A').downcase # 'monday', 'tuesday', etc.
+    day_of_week = date.strftime("%A").downcase # 'monday', 'tuesday', etc.
 
     # Get all appointments (recurring and non-recurring) for the date
     recurring_appointments = @current_user.appointments
                                           .includes(:pet)
                                           .where(recurring: true)
                                           .where(day_of_week => true)
-                                          .where(canceled: [false, nil])
-                                          .where(completed: [false, nil])
+                                          .where(canceled: [ false, nil ])
+                                          .where(completed: [ false, nil ])
 
     non_recurring_appointments = @current_user.appointments
                                               .includes(:pet)
                                               .where(recurring: false)
-                                              .where('DATE(appointment_date) = ?', date)
-                                              .where(canceled: [false, nil])
-                                              .where(completed: [false, nil])
+                                              .where("DATE(appointment_date) = ?", date)
+                                              .where(canceled: [ false, nil ])
+                                              .where(completed: [ false, nil ])
 
     # Combine and sort by start time
     appointments = (recurring_appointments + non_recurring_appointments).sort_by(&:start_time)
@@ -134,7 +134,7 @@ class RoutesController < ApplicationController
 
     if appointments.empty?
       return render json: {
-        message: 'No appointments found for this date',
+        message: "No appointments found for this date",
         date: date,
         route: []
       }
@@ -155,7 +155,7 @@ class RoutesController < ApplicationController
   def reorder
     appointment_ids = params[:appointment_ids]
 
-    return render json: { error: 'appointment_ids required' }, status: :bad_request if appointment_ids.blank?
+    return render json: { error: "appointment_ids required" }, status: :bad_request if appointment_ids.blank?
 
     # Validate appointments exist and belong to user
     appointments = @current_user.appointments
@@ -164,7 +164,7 @@ class RoutesController < ApplicationController
 
     if appointments.length != appointment_ids.length
       return render json: {
-        error: 'Some appointments not found or do not belong to you'
+        error: "Some appointments not found or do not belong to you"
       }, status: :unprocessable_entity
     end
 

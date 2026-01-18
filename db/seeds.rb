@@ -157,7 +157,7 @@ appointments.first(5).each do |appointment|
       appointment_id: appointment.id,
       pet_id: appointment.pet_id,
       date_completed: Faker::Date.between(from: 7.days.ago, to: 1.day.ago),
-      paid: [true, false].sample,
+      paid: [ true, false ].sample,
       pending: false,
       compensation: if appointment.duration === 30
                       22

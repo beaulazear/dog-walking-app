@@ -28,7 +28,7 @@ class CertificationGoalsController < ApplicationController
     goal = @current_user.certification_goal
 
     if goal.nil?
-      return render json: { error: 'Certification goal not found. Please create one first.' }, status: :not_found
+      return render json: { error: "Certification goal not found. Please create one first." }, status: :not_found
     end
 
     if goal.update(goal_params)

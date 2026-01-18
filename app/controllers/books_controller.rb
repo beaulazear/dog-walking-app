@@ -18,7 +18,7 @@ class BooksController < ApplicationController
     default_book = Book.find_by(id: params[:id], is_default: true, user_id: nil)
 
     if default_book.nil?
-      render json: { error: 'Default book not found' }, status: :not_found
+      render json: { error: "Default book not found" }, status: :not_found
       return
     end
 
@@ -29,7 +29,7 @@ class BooksController < ApplicationController
     )
 
     if existing_book
-      render json: { error: 'Book already in your list' }, status: :unprocessable_entity
+      render json: { error: "Book already in your list" }, status: :unprocessable_entity
       return
     end
 
@@ -48,7 +48,7 @@ class BooksController < ApplicationController
       why_you_need_it: default_book.why_you_need_it,
       best_for: default_book.best_for,
       is_default: false,
-      status: 'not_started',
+      status: "not_started",
       progress_percentage: 0
     )
 
@@ -64,11 +64,11 @@ class BooksController < ApplicationController
     user_book = @current_user.books.create(
       title: params[:title],
       author: params[:author],
-      category: 'User Recommendation',
+      category: "User Recommendation",
       description: params[:description],
       notes: params[:notes],
       is_default: false,
-      status: params[:status] || 'not_started',
+      status: params[:status] || "not_started",
       progress_percentage: params[:progress_percentage] || 0
     )
 
@@ -84,7 +84,7 @@ class BooksController < ApplicationController
     book = @current_user.books.find_by(id: params[:id])
 
     if book.nil?
-      render json: { error: 'Book not found' }, status: :not_found
+      render json: { error: "Book not found" }, status: :not_found
       return
     end
 
@@ -108,11 +108,11 @@ class BooksController < ApplicationController
     book = @current_user.books.find_by(id: params[:id])
 
     if book.nil?
-      render json: { error: 'Book not found' }, status: :not_found
+      render json: { error: "Book not found" }, status: :not_found
       return
     end
 
     book.destroy
-    render json: { message: 'Book deleted successfully' }, status: :ok
+    render json: { message: "Book deleted successfully" }, status: :ok
   end
 end

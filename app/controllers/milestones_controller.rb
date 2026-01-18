@@ -17,7 +17,7 @@ class MilestonesController < ApplicationController
   def mark_celebrated
     milestone = @current_user.milestones.find_by(id: params[:id])
 
-    return render json: { error: 'Milestone not found' }, status: :not_found if milestone.nil?
+    return render json: { error: "Milestone not found" }, status: :not_found if milestone.nil?
 
     if milestone.update(celebrated: true)
       render json: milestone.as_json.merge(celebration_message: milestone.celebration_message)

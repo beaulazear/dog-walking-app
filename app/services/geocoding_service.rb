@@ -1,13 +1,13 @@
 class GeocodingService
-  require 'net/http'
-  require 'json'
-  require 'uri'
+  require "net/http"
+  require "json"
+  require "uri"
 
   # Using Nominatim (OpenStreetMap) - FREE
   # Rate limit: 1 request per second
   # User-Agent required
   def self.geocode(address)
-    return { success: false, error: 'Address is blank' } if address.blank?
+    return { success: false, error: "Address is blank" } if address.blank?
 
     begin
       # Normalize address for NYC context
@@ -18,7 +18,7 @@ class GeocodingService
 
       # Nominatim requires a User-Agent header
       request = Net::HTTP::Get.new(uri)
-      request['User-Agent'] = 'DogWalkingApp/1.0'
+      request["User-Agent"] = "DogWalkingApp/1.0"
 
       response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
         http.request(request)
@@ -35,14 +35,14 @@ class GeocodingService
 
       if results.any?
         {
-          latitude: results.first['lat'].to_f,
-          longitude: results.first['lon'].to_f,
+          latitude: results.first["lat"].to_f,
+          longitude: results.first["lon"].to_f,
           success: true
         }
       else
         {
           success: false,
-          error: 'Address not found'
+          error: "Address not found"
         }
       end
     rescue JSON::ParserError => e
@@ -61,11 +61,11 @@ class GeocodingService
   # Alternative: Using Mapbox (requires API key in ENV)
   # Uncomment and use this if you upgrade to Mapbox
   def self.geocode_with_mapbox(address)
-    return { success: false, error: 'Address is blank' } if address.blank?
-    return { success: false, error: 'Mapbox API key not configured' } unless ENV['MAPBOX_API_KEY']
+    return { success: false, error: "Address is blank" } if address.blank?
+    return { success: false, error: "Mapbox API key not configured" } unless ENV["MAPBOX_API_KEY"]
 
     begin
-      api_key = ENV['MAPBOX_API_KEY']
+      api_key = ENV["MAPBOX_API_KEY"]
       encoded_address = URI.encode_www_form_component(address)
       url = "https://api.mapbox.com/geocoding/v5/mapbox.places/#{encoded_address}.json?access_token=#{api_key}"
       uri = URI(url)
@@ -81,8 +81,8 @@ class GeocodingService
 
       data = JSON.parse(response.body)
 
-      if data['features']&.any?
-        coordinates = data['features'].first['geometry']['coordinates']
+      if data["features"]&.any?
+        coordinates = data["features"].first["geometry"]["coordinates"]
         {
           longitude: coordinates[0].to_f,
           latitude: coordinates[1].to_f,
@@ -91,7 +91,7 @@ class GeocodingService
       else
         {
           success: false,
-          error: 'Address not found'
+          error: "Address not found"
         }
       end
     rescue StandardError => e
@@ -105,11 +105,11 @@ class GeocodingService
   # Alternative: Using Google Maps (requires API key in ENV)
   # Uncomment and use this if you upgrade to Google Maps
   def self.geocode_with_google(address)
-    return { success: false, error: 'Address is blank' } if address.blank?
-    return { success: false, error: 'Google Maps API key not configured' } unless ENV['GOOGLE_MAPS_API_KEY']
+    return { success: false, error: "Address is blank" } if address.blank?
+    return { success: false, error: "Google Maps API key not configured" } unless ENV["GOOGLE_MAPS_API_KEY"]
 
     begin
-      api_key = ENV['GOOGLE_MAPS_API_KEY']
+      api_key = ENV["GOOGLE_MAPS_API_KEY"]
       encoded_address = URI.encode_www_form_component(address)
       url = "https://maps.googleapis.com/maps/api/geocode/json?address=#{encoded_address}&key=#{api_key}"
       uri = URI(url)
@@ -125,17 +125,17 @@ class GeocodingService
 
       data = JSON.parse(response.body)
 
-      if data['status'] == 'OK' && data['results'].any?
-        location = data['results'].first['geometry']['location']
+      if data["status"] == "OK" && data["results"].any?
+        location = data["results"].first["geometry"]["location"]
         {
-          latitude: location['lat'].to_f,
-          longitude: location['lng'].to_f,
+          latitude: location["lat"].to_f,
+          longitude: location["lng"].to_f,
           success: true
         }
       else
         {
           success: false,
-          error: data['status'] || 'Address not found'
+          error: data["status"] || "Address not found"
         }
       end
     rescue StandardError => e

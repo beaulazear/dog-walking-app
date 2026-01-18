@@ -5,7 +5,7 @@ class AppointmentsController < ApplicationController
   def create
     pet = @current_user.pets.find_by(id: params[:pet_id])
 
-    return render json: { error: 'Pet not found' }, status: :not_found if pet.nil?
+    return render json: { error: "Pet not found" }, status: :not_found if pet.nil?
 
     appointment = pet.appointments.create(appointment_params)
 
@@ -21,7 +21,7 @@ class AppointmentsController < ApplicationController
   def canceled
     appointment = @current_user.appointments.includes(:cancellations, :pet).find_by(id: params[:id])
 
-    return render json: { error: 'Appointment not found' }, status: :not_found unless appointment
+    return render json: { error: "Appointment not found" }, status: :not_found unless appointment
 
     if appointment.update(params_for_cancel)
       render json: AppointmentSerializer.serialize(appointment)
@@ -54,7 +54,7 @@ class AppointmentsController < ApplicationController
   # Returns appointments for a specific date including both owned and covering
   def for_date
     date = params[:date] ? Date.parse(params[:date]) : Date.today
-    day_of_week = date.strftime('%A').downcase # "monday", "tuesday", etc.
+    day_of_week = date.strftime("%A").downcase # "monday", "tuesday", etc.
 
     Rails.logger.debug "🔍 for_date DEBUG - User ID: #{@current_user.id}"
     Rails.logger.debug "🔍 for_date DEBUG - Requested date: #{date}, day_of_week: #{day_of_week}"
@@ -241,7 +241,7 @@ class AppointmentsController < ApplicationController
     # Filter at database level for much better performance
     appointments = @current_user.appointments
                                 .where(canceled: false, completed: false)
-                                .where('recurring = ? OR appointment_date >= ?', true, Date.today)
+                                .where("recurring = ? OR appointment_date >= ?", true, Date.today)
                                 .order(appointment_date: :asc)
                                 .page(page)
                                 .per(per_page)
@@ -260,7 +260,7 @@ class AppointmentsController < ApplicationController
   def update
     appointment = @current_user.appointments.includes(:cancellations, :pet).find_by(id: params[:id])
 
-    return render json: { error: 'Appointment not found' }, status: :not_found unless appointment
+    return render json: { error: "Appointment not found" }, status: :not_found unless appointment
 
     Rails.logger.info "Update params: #{appointment_params.inspect}"
     Rails.logger.info "Appointment before update: price=#{appointment.price}, duration=#{appointment.duration}"
@@ -276,7 +276,7 @@ class AppointmentsController < ApplicationController
   def destroy
     appointment = Appointment.includes(:appointment_shares).find_by(id: params[:id])
 
-    return render json: { error: 'Appointment not found' }, status: :not_found unless appointment
+    return render json: { error: "Appointment not found" }, status: :not_found unless appointment
 
     # Check if user is the owner
     is_owner = appointment.user_id == @current_user.id
@@ -288,11 +288,11 @@ class AppointmentsController < ApplicationController
 
     # Only allow deletion if user owns it OR is covering it
     unless is_owner || is_covering
-      return render json: { error: 'Not authorized to delete this appointment' }, status: :forbidden
+      return render json: { error: "Not authorized to delete this appointment" }, status: :forbidden
     end
 
     if appointment.destroy
-      render json: { message: 'Appointment deleted successfully' }, status: :ok
+      render json: { message: "Appointment deleted successfully" }, status: :ok
     else
       render json: { errors: appointment.errors.full_messages }, status: :unprocessable_entity
     end

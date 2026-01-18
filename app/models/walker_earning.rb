@@ -1,7 +1,7 @@
 class WalkerEarning < ApplicationRecord
   # Associations
   belongs_to :appointment
-  belongs_to :walker, class_name: 'User'
+  belongs_to :walker, class_name: "User"
   belongs_to :appointment_share
   belongs_to :pet
   belongs_to :training_session, optional: true
@@ -23,7 +23,7 @@ class WalkerEarning < ApplicationRecord
 
   # Check if this is a training walk (based on title)
   def training_walk?
-    title&.downcase&.include?('training')
+    title&.downcase&.include?("training")
   end
 
   # Convert this walker earning to a training session for the walker
@@ -37,7 +37,7 @@ class WalkerEarning < ApplicationRecord
       pet_id: pet_id,
       session_date: date_completed,
       duration_minutes: duration,
-      session_type: 'solo_walk',
+      session_type: "solo_walk",
       notes: "Shared walk - covering: #{title}",
       training_focus: []
     )

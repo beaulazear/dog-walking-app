@@ -16,7 +16,7 @@ class WalkGroupingService
     groupable.each_with_index do |base_appt, idx|
       next if processed.include?(base_appt.id)
 
-      group = [base_appt]
+      group = [ base_appt ]
       processed.add(base_appt.id)
 
       # Find nearby compatible walks

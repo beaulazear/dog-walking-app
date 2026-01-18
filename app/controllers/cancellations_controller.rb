@@ -5,7 +5,7 @@ class CancellationsController < ApplicationController
     # Find appointment and ensure it belongs to current user
     appointment = @current_user.appointments.find_by(id: cancellation_params[:appointment_id])
 
-    return render json: { error: 'Appointment not found or unauthorized' }, status: :not_found if appointment.nil?
+    return render json: { error: "Appointment not found or unauthorized" }, status: :not_found if appointment.nil?
 
     cancellation = appointment.cancellations.build(cancellation_params)
 
@@ -26,7 +26,7 @@ class CancellationsController < ApplicationController
       cancellation.destroy
       render json: cancellation.as_json(only: %i[id appointment_id date]), status: :ok
     else
-      render json: { error: 'Cancellation not found or unauthorized' }, status: :not_found
+      render json: { error: "Cancellation not found or unauthorized" }, status: :not_found
     end
   end
 

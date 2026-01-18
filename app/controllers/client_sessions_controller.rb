@@ -1,19 +1,19 @@
 class ClientSessionsController < ApplicationController
-  skip_before_action :authorized, only: [:create]
+  skip_before_action :authorized, only: [ :create ]
 
   # POST /client/login
   def create
     client = Client.find_by(email: params[:email]&.downcase)
 
     if client&.authenticate(params[:password])
-      token = jwt_encode(client_id: client.id, user_type: 'client')
+      token = jwt_encode(client_id: client.id, user_type: "client")
 
       render json: {
         token: token,
         client: ClientSerializer.serialize(client)
       }, status: :ok
     else
-      render json: { error: 'Invalid email or password' }, status: :unauthorized
+      render json: { error: "Invalid email or password" }, status: :unauthorized
     end
   end
 

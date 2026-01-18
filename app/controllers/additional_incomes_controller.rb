@@ -13,7 +13,7 @@ class AdditionalIncomesController < ApplicationController
     # Verify the pet belongs to the current user
     pet = @current_user.pets.find_by(id: additional_income_params[:pet_id])
 
-    return render json: { error: 'Pet not found or unauthorized' }, status: :not_found unless pet
+    return render json: { error: "Pet not found or unauthorized" }, status: :not_found unless pet
 
     additional_income = AdditionalIncome.create(additional_income_params)
 
@@ -35,7 +35,7 @@ class AdditionalIncomesController < ApplicationController
       render json: income.as_json(only: %i[id pet_id date_added description compensation]),
              status: :ok
     else
-      render json: { error: 'Income not found or unauthorized' }, status: :not_found
+      render json: { error: "Income not found or unauthorized" }, status: :not_found
     end
   end
 

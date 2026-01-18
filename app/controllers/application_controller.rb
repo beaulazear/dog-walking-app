@@ -6,16 +6,16 @@ class ApplicationController < ActionController::API
   before_action :block_direct_requests
 
   def authorized
-    render json: { error: 'Not authorized' }, status: :unauthorized unless current_user
+    render json: { error: "Not authorized" }, status: :unauthorized unless current_user
   end
 
   def current_user
     return @current_user if @current_user
 
     # Try JWT authentication first (for mobile app and future web app)
-    header = request.headers['Authorization']
+    header = request.headers["Authorization"]
     if header
-      token = header.split(' ').last
+      token = header.split(" ").last
       Rails.logger.debug "🔑 JWT Auth: Token received (length: #{token&.length || 0})"
 
       decoded = jwt_decode(token)
@@ -30,7 +30,7 @@ class ApplicationController < ActionController::API
           Rails.logger.debug "❌ JWT Auth: User not found for id: #{decoded[:user_id]}"
         end
       else
-        Rails.logger.debug '❌ JWT Auth: Token decode failed'
+        Rails.logger.debug "❌ JWT Auth: Token decode failed"
       end
     end
 
@@ -45,7 +45,7 @@ class ApplicationController < ActionController::API
         Rails.logger.debug "❌ Session Auth: User not found for id: #{session[:user_id]}"
       end
     else
-      Rails.logger.debug '❌ No JWT token or session found'
+      Rails.logger.debug "❌ No JWT token or session found"
     end
 
     @current_user
@@ -57,6 +57,6 @@ class ApplicationController < ActionController::API
     # If the request is NOT an AJAX (fetch) request and expects HTML, serve React app
     return unless request.format.html? && !request.xhr?
 
-    render file: Rails.public_path.join('index.html'), layout: false, status: :ok
+    render file: Rails.public_path.join("index.html"), layout: false, status: :ok
   end
 end

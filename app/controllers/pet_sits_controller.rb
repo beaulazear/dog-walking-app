@@ -19,7 +19,7 @@ class PetSitsController < ApplicationController
     pet_sits = current_user.pet_sits.active.for_date(date).includes(:pet, :pet_sit_completions)
     render json: pet_sits
   rescue ArgumentError
-    render json: { error: 'Invalid date format' }, status: :bad_request
+    render json: { error: "Invalid date format" }, status: :bad_request
   end
 
   # POST /pet_sits
@@ -76,12 +76,12 @@ class PetSitsController < ApplicationController
       # Invoice created automatically via callback - verify it exists
       # Use date range to account for datetime vs date comparison
       invoice = Invoice.where(pet_sit_id: pet_sit.id)
-                       .where('DATE(date_completed) = ?', completion_date)
+                       .where("DATE(date_completed) = ?", completion_date)
                        .first
 
       unless invoice
         Rails.logger.error "Invoice was not created for pet sit completion #{completion.id}"
-        render json: { errors: ['Failed to create invoice for completion'] }, status: :unprocessable_entity
+        render json: { errors: [ "Failed to create invoice for completion" ] }, status: :unprocessable_entity
         raise ActiveRecord::Rollback
       end
 
@@ -91,7 +91,7 @@ class PetSitsController < ApplicationController
       render json: { pet_sit: pet_sit, completion: completion, invoice: invoice }, status: :created
     end
   rescue ArgumentError
-    render json: { error: 'Invalid date format' }, status: :bad_request
+    render json: { error: "Invalid date format" }, status: :bad_request
   rescue ActiveRecord::RecordNotFound => e
     render json: { error: e.message }, status: :not_found
   end
@@ -113,7 +113,7 @@ class PetSitsController < ApplicationController
   def set_pet_sit
     @pet_sit = current_user.pet_sits.find(params[:id])
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Pet sit not found' }, status: :not_found
+    render json: { error: "Pet sit not found" }, status: :not_found
   end
 
   def pet_sit_params

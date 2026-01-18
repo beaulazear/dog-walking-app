@@ -3,7 +3,7 @@ class Invoice < ApplicationRecord
   belongs_to :pet_sit, optional: true
   belongs_to :pet
   belongs_to :training_session, optional: true
-  belongs_to :completed_by_user, class_name: 'User', optional: true
+  belongs_to :completed_by_user, class_name: "User", optional: true
 
   validates :date_completed, presence: true
   validates :compensation, presence: true, numericality: { greater_than_or_equal_to: 0 }
@@ -32,11 +32,11 @@ class Invoice < ApplicationRecord
 
   # Determine session type from title
   def determine_session_type
-    return 'solo_walk' if title.downcase.include?('solo')
-    return 'pack_walk' if title.downcase.include?('pack') || title.downcase.include?('group')
-    return 'private_lesson' if title.downcase.include?('private') || title.downcase.include?('lesson')
+    return "solo_walk" if title.downcase.include?("solo")
+    return "pack_walk" if title.downcase.include?("pack") || title.downcase.include?("group")
+    return "private_lesson" if title.downcase.include?("private") || title.downcase.include?("lesson")
 
-    'solo_walk' # default for training walks
+    "solo_walk" # default for training walks
   end
 
   # Convert this invoice to a training session
@@ -94,9 +94,9 @@ class Invoice < ApplicationRecord
 
   def must_have_appointment_or_pet_sit
     if appointment_id.blank? && pet_sit_id.blank?
-      errors.add(:base, 'Must have either appointment or pet sit')
+      errors.add(:base, "Must have either appointment or pet sit")
     elsif appointment_id.present? && pet_sit_id.present?
-      errors.add(:base, 'Cannot have both appointment and pet sit')
+      errors.add(:base, "Cannot have both appointment and pet sit")
     end
   end
 end

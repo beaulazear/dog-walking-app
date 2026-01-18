@@ -30,20 +30,20 @@ class WalkerConnectionsController < ApplicationController
   def create
     other_user = User.find_by(id: params[:connected_user_id])
 
-    return render json: { error: 'User not found' }, status: :not_found if other_user.nil?
+    return render json: { error: "User not found" }, status: :not_found if other_user.nil?
 
     # Check if connection already exists (in either direction)
     existing = WalkerConnection.where(
-      '(user_id = ? AND connected_user_id = ?) OR (user_id = ? AND connected_user_id = ?)',
+      "(user_id = ? AND connected_user_id = ?) OR (user_id = ? AND connected_user_id = ?)",
       @current_user.id, other_user.id, other_user.id, @current_user.id
     ).first
 
-    return render json: { error: 'Connection already exists' }, status: :unprocessable_entity if existing
+    return render json: { error: "Connection already exists" }, status: :unprocessable_entity if existing
 
     connection = WalkerConnection.new(
       user_id: @current_user.id,
       connected_user_id: other_user.id,
-      status: 'pending'
+      status: "pending"
     )
 
     if connection.save
@@ -66,10 +66,10 @@ class WalkerConnectionsController < ApplicationController
 
   # PATCH /walker_connections/:id/accept
   def accept
-    return render json: { error: 'Not authorized' }, status: :forbidden unless authorized_to_respond?
+    return render json: { error: "Not authorized" }, status: :forbidden unless authorized_to_respond?
 
     if @connection.accept!
-      render json: { message: 'Connection accepted', connection: format_connection(@connection) }
+      render json: { message: "Connection accepted", connection: format_connection(@connection) }
     else
       render json: { errors: @connection.errors.full_messages }, status: :unprocessable_entity
     end
@@ -77,10 +77,10 @@ class WalkerConnectionsController < ApplicationController
 
   # PATCH /walker_connections/:id/decline
   def decline
-    return render json: { error: 'Not authorized' }, status: :forbidden unless authorized_to_respond?
+    return render json: { error: "Not authorized" }, status: :forbidden unless authorized_to_respond?
 
     if @connection.decline!
-      render json: { message: 'Connection declined' }
+      render json: { message: "Connection declined" }
     else
       render json: { errors: @connection.errors.full_messages }, status: :unprocessable_entity
     end
@@ -89,7 +89,7 @@ class WalkerConnectionsController < ApplicationController
   # PATCH /walker_connections/:id/block
   def block
     if @connection.block!
-      render json: { message: 'User blocked' }
+      render json: { message: "User blocked" }
     else
       render json: { errors: @connection.errors.full_messages }, status: :unprocessable_entity
     end
@@ -97,10 +97,10 @@ class WalkerConnectionsController < ApplicationController
 
   # DELETE /walker_connections/:id
   def destroy
-    return render json: { error: 'Not authorized' }, status: :forbidden unless authorized_to_manage?
+    return render json: { error: "Not authorized" }, status: :forbidden unless authorized_to_manage?
 
     @connection.destroy
-    render json: { message: 'Connection removed' }
+    render json: { message: "Connection removed" }
   end
 
   private
@@ -109,13 +109,13 @@ class WalkerConnectionsController < ApplicationController
     @connection = WalkerConnection.find_by(id: params[:id])
 
     unless @connection && (@connection.user_id == @current_user.id || @connection.connected_user_id == @current_user.id)
-      render json: { error: 'Connection not found' }, status: :not_found
+      render json: { error: "Connection not found" }, status: :not_found
     end
   end
 
   def authorized_to_respond?
     # Only the recipient can accept/decline
-    @connection.connected_user_id == @current_user.id && @connection.status == 'pending'
+    @connection.connected_user_id == @current_user.id && @connection.status == "pending"
   end
 
   def authorized_to_manage?

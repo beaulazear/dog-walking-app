@@ -11,8 +11,8 @@ class DistanceController < ApplicationController
     lon2 = params[:lon2]&.to_f
     unit = params[:unit]&.to_sym || :miles
 
-    if [lat1, lon1, lat2, lon2].any?(&:nil?)
-      return render json: { error: 'Missing required coordinates' }, status: :bad_request
+    if [ lat1, lon1, lat2, lon2 ].any?(&:nil?)
+      return render json: { error: "Missing required coordinates" }, status: :bad_request
     end
 
     distance = DistanceCalculator.distance_between(lat1, lon1, lat2, lon2, unit: unit)
@@ -32,13 +32,13 @@ class DistanceController < ApplicationController
     coordinates = params[:coordinates]
     unit = params[:unit]&.to_sym || :miles
 
-    return render json: { error: 'coordinates must be an array' }, status: :bad_request unless coordinates.is_a?(Array)
+    return render json: { error: "coordinates must be an array" }, status: :bad_request unless coordinates.is_a?(Array)
 
     # Validate coordinate format
     valid = coordinates.all? { |c| c[:lat].present? && c[:lng].present? }
     unless valid
       return render json: {
-        error: 'Each coordinate must have lat and lng'
+        error: "Each coordinate must have lat and lng"
       }, status: :bad_request
     end
 
@@ -58,9 +58,9 @@ class DistanceController < ApplicationController
     coordinates = params[:coordinates]
     unit = params[:unit]&.to_sym || :miles
 
-    return render json: { error: 'coordinates must be an array' }, status: :bad_request unless coordinates.is_a?(Array)
+    return render json: { error: "coordinates must be an array" }, status: :bad_request unless coordinates.is_a?(Array)
 
-    return render json: { error: 'Need at least 2 points for a route' }, status: :bad_request if coordinates.length < 2
+    return render json: { error: "Need at least 2 points for a route" }, status: :bad_request if coordinates.length < 2
 
     total_distance = DistanceCalculator.total_route_distance(coordinates, unit: unit)
     total_time = DistanceCalculator.total_route_time(coordinates)
@@ -82,10 +82,10 @@ class DistanceController < ApplicationController
     radius = params[:radius_miles]&.to_f || 1.0
 
     unless center && center[:lat] && center[:lng]
-      return render json: { error: 'center must have lat and lng' }, status: :bad_request
+      return render json: { error: "center must have lat and lng" }, status: :bad_request
     end
 
-    return render json: { error: 'locations must be an array' }, status: :bad_request unless locations.is_a?(Array)
+    return render json: { error: "locations must be an array" }, status: :bad_request unless locations.is_a?(Array)
 
     nearby_locations = DistanceCalculator.locations_within_radius(
       center,
@@ -120,7 +120,7 @@ class DistanceController < ApplicationController
 
     appointments = @current_user.appointments
                                 .includes(:pet)
-                                .where('DATE(start_time) = ?', date)
+                                .where("DATE(start_time) = ?", date)
                                 .order(:start_time)
 
     # Filter out appointments without geocoded pets
@@ -128,7 +128,7 @@ class DistanceController < ApplicationController
 
     if geocoded_appointments.empty?
       return render json: {
-        message: 'No geocoded appointments found for this date',
+        message: "No geocoded appointments found for this date",
         date: date,
         total_appointments: appointments.length,
         geocoded_appointments: 0

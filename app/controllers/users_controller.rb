@@ -30,7 +30,7 @@ class UsersController < ApplicationController
     if users.any?
       render json: users.map { |user| UserSerializer.serialize_basic(user) }, status: :ok
     else
-      render json: { error: 'Not found' }, status: :not_found
+      render json: { error: "Not found" }, status: :not_found
     end
   end
 
@@ -39,21 +39,21 @@ class UsersController < ApplicationController
     if user
       render json: UserSerializer.serialize(user), status: :ok
     else
-      render json: { error: 'Not authorized' }, status: :unauthorized
+      render json: { error: "Not authorized" }, status: :unauthorized
     end
   end
 
   def search
     email = params[:email]&.downcase&.strip
 
-    return render json: { error: 'Email parameter is required' }, status: :bad_request if email.blank?
+    return render json: { error: "Email parameter is required" }, status: :bad_request if email.blank?
 
-    user = User.find_by('LOWER(email_address) = ?', email)
+    user = User.find_by("LOWER(email_address) = ?", email)
 
-    return render json: { error: 'User not found' }, status: :not_found if user.nil?
+    return render json: { error: "User not found" }, status: :not_found if user.nil?
 
     # Don't allow searching for yourself
-    return render json: { error: 'Cannot search for yourself' }, status: :bad_request if user.id == @current_user.id
+    return render json: { error: "Cannot search for yourself" }, status: :bad_request if user.id == @current_user.id
 
     render json: {
       id: user.id,
@@ -82,7 +82,7 @@ class UsersController < ApplicationController
     if params[:username].present? && params[:username] != user.username
       existing_user = User.find_by(username: params[:username])
       if existing_user && existing_user.id != user.id
-        return render json: { error: 'Username is already taken' }, status: :unprocessable_entity
+        return render json: { error: "Username is already taken" }, status: :unprocessable_entity
       end
     end
 
@@ -90,7 +90,7 @@ class UsersController < ApplicationController
     if user.update(profile_params)
       render json: UserSerializer.serialize(user), status: :ok
     else
-      render json: { error: user.errors.full_messages.first || 'Failed to update profile' },
+      render json: { error: user.errors.full_messages.first || "Failed to update profile" },
              status: :unprocessable_entity
     end
   end

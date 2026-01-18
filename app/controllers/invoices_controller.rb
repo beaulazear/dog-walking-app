@@ -5,7 +5,7 @@ class InvoicesController < ApplicationController
     pet = @current_user.pets.find_by(id: invoice_params[:pet_id])
 
     unless pet
-      render json: { errors: ['Pet not found'] }, status: :not_found
+      render json: { errors: [ "Pet not found" ] }, status: :not_found
       return
     end
 
@@ -19,13 +19,13 @@ class InvoicesController < ApplicationController
       can_complete = if appointment.user_id == @current_user.id
                        # Original owner can complete if NOT shared out on this date
                        !appointment.shared_out_on?(date, for_user: @current_user)
-                     else
+      else
                        # Covering walker can complete if they're assigned to this date
                        appointment.covered_by?(@current_user, on_date: date)
-                     end
+      end
 
       unless can_complete
-        return render json: { error: 'You cannot complete this appointment on this date' }, status: :forbidden
+        return render json: { error: "You cannot complete this appointment on this date" }, status: :forbidden
       end
 
       # Check if this is a shared appointment
@@ -126,19 +126,19 @@ class InvoicesController < ApplicationController
     invoice = Invoice.where(pet_id: pet_ids).find_by(id: params[:id])
 
     unless invoice
-      render json: { error: 'Invoice not found or unauthorized' }, status: :not_found
+      render json: { error: "Invoice not found or unauthorized" }, status: :not_found
       return
     end
 
     # Prevent editing paid invoices
     if invoice.paid
-      render json: { error: 'Cannot edit paid invoices' }, status: :unprocessable_entity
+      render json: { error: "Cannot edit paid invoices" }, status: :unprocessable_entity
       return
     end
 
     # Prevent editing shared invoices
     if invoice.is_shared
-      render json: { error: 'Cannot edit shared invoices' }, status: :unprocessable_entity
+      render json: { error: "Cannot edit shared invoices" }, status: :unprocessable_entity
       return
     end
 
@@ -150,12 +150,12 @@ class InvoicesController < ApplicationController
       if appointment
         can_complete = if appointment.user_id == @current_user.id
                          !appointment.shared_out_on?(date, for_user: @current_user)
-                       else
+        else
                          appointment.covered_by?(@current_user, on_date: date)
-                       end
+        end
 
         unless can_complete
-          render json: { error: 'You cannot use this appointment on this date' }, status: :forbidden
+          render json: { error: "You cannot use this appointment on this date" }, status: :forbidden
           return
         end
       end
@@ -211,7 +211,7 @@ class InvoicesController < ApplicationController
       render json: invoice.as_json(only: %i[id appointment_id pet_id date_completed compensation paid pending title cancelled]),
              status: :ok
     else
-      render json: { error: 'Invoice not found or unauthorized' }, status: :not_found
+      render json: { error: "Invoice not found or unauthorized" }, status: :not_found
     end
   end
 
@@ -229,23 +229,23 @@ class InvoicesController < ApplicationController
     # Calculate compensation based on ORIGINAL OWNER's rates, not covering walker's rates
     # Use the duration and walk_type from params
     duration = base_params[:walk_duration].to_i
-    walk_type = appointment.walk_type || (appointment.solo ? 'solo' : 'group')
+    walk_type = appointment.walk_type || (appointment.solo ? "solo" : "group")
 
     # Base rate from original owner
     base_rate = case duration
-                when 30 then original_owner.thirty
-                when 45 then original_owner.fortyfive
-                when 60 then original_owner.sixty
-                else 0
-                end
+    when 30 then original_owner.thirty
+    when 45 then original_owner.fortyfive
+    when 60 then original_owner.sixty
+    else 0
+    end
 
     # Add walk type upcharge from original owner
     upcharge = case walk_type
-               when 'solo' then original_owner.solo_rate || 0
-               when 'training' then original_owner.training_rate || 0
-               when 'sibling' then original_owner.sibling_rate || 0
-               else 0
-               end
+    when "solo" then original_owner.solo_rate || 0
+    when "training" then original_owner.training_rate || 0
+    when "sibling" then original_owner.sibling_rate || 0
+    else 0
+    end
 
     total_compensation = base_rate + upcharge
     split = share.calculate_split(total_compensation)
@@ -309,8 +309,8 @@ class InvoicesController < ApplicationController
       }, status: :created
     end
   rescue ActiveRecord::RecordInvalid => e
-    render json: { errors: [e.record.errors.full_messages] }, status: :unprocessable_entity
+    render json: { errors: [ e.record.errors.full_messages ] }, status: :unprocessable_entity
   rescue ActiveRecord::RecordNotFound => e
-    render json: { errors: ["Record not found: #{e.message}"] }, status: :not_found
+    render json: { errors: [ "Record not found: #{e.message}" ] }, status: :not_found
   end
 end
