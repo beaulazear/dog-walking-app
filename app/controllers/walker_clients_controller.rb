@@ -4,9 +4,8 @@ class WalkerClientsController < ApplicationController
 
   # GET /walker/clients
   def index
-    # Get all unique clients from walker's pets
-    client_ids = @current_user.pets.where.not(client_id: nil).pluck(:client_id).uniq
-    clients = Client.where(id: client_ids).order(:first_name, :last_name)
+    # Get all clients (they might not have pets assigned yet)
+    clients = Client.all.order(:first_name, :last_name)
 
     render json: clients.map { |c| serialize_client_with_pets(c) }, status: :ok
   end
@@ -56,11 +55,10 @@ class WalkerClientsController < ApplicationController
   private
 
   def set_client
-    # Only allow access to clients that have at least one pet managed by this walker
-    client_ids = @current_user.pets.where.not(client_id: nil).pluck(:client_id).uniq
+    # Allow access to any client (they might not have pets yet)
     @client = Client.find_by(id: params[:id])
 
-    unless @client && client_ids.include?(@client.id)
+    unless @client
       render json: { error: "Client not found" }, status: :not_found
       nil
     end
