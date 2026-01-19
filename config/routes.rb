@@ -128,6 +128,13 @@ Rails.application.routes.draw do
   patch "/client/me", to: "clients#update"
   patch "/client/push_token", to: "clients#update_push_token"
 
+  # Walker Client Management Routes
+  get "/walker/clients", to: "walker_clients#index"
+  get "/walker/clients/:id", to: "walker_clients#show"
+  post "/walker/clients", to: "walker_clients#create"
+  patch "/walker/clients/:id", to: "walker_clients#update"
+  delete "/walker/clients/:id", to: "walker_clients#destroy"
+
   # Routing logic: fallback requests for React Router.
   # Leave this here to help deploy your app later!
 

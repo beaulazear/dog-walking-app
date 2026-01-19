@@ -1,7 +1,7 @@
 class UserSerializer
   def self.serialize(user)
     # Eager load all associations in a single optimized query
-    pets = user.pets.includes(:appointments)
+    pets = user.pets.includes(:appointments, :client)
     appointments = user.appointments.includes(:cancellations, :pet)
     pet_sits = user.pet_sits.includes(:pet, :pet_sit_completions)
     training_sessions = user.training_sessions.includes(:pet)

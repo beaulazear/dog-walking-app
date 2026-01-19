@@ -4,7 +4,7 @@ class PetsController < ApplicationController
   def create
     pet = @current_user.pets.create(pet_params)
     if pet.valid?
-      render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active address behavioral_notes supplies_location allergies origin_trainer]),
+      render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active address behavioral_notes supplies_location allergies origin_trainer client_id]),
              status: :created
     else
       render json: { errors: pet.errors.full_messages }, status: :unprocessable_entity
@@ -14,7 +14,7 @@ class PetsController < ApplicationController
   def index
     pets = @current_user.pets
     if pets
-      render json: pets.as_json(only: %i[id name birthdate sex spayed_neutered active address behavioral_notes supplies_location allergies origin_trainer]),
+      render json: pets.as_json(only: %i[id name birthdate sex spayed_neutered active address behavioral_notes supplies_location allergies origin_trainer client_id]),
              status: :ok
     else
       render json: { error: "Not found" }, status: :not_found
@@ -42,7 +42,8 @@ class PetsController < ApplicationController
         supplies_location: pet.supplies_location,
         allergies: pet.allergies,
         active: pet.active,
-        origin_trainer: pet.origin_trainer
+        origin_trainer: pet.origin_trainer,
+        client_id: pet.client_id
         # profile_pic removed - using frontend icons instead
       }, status: :ok
     else
@@ -65,7 +66,7 @@ class PetsController < ApplicationController
     return render json: { error: "Pet not found" }, status: :not_found unless pet
 
     pet.update(active: params[:active])
-    render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active address behavioral_notes supplies_location allergies origin_trainer]),
+    render json: pet.as_json(only: %i[id name birthdate sex spayed_neutered active address behavioral_notes supplies_location allergies origin_trainer client_id]),
            status: :ok
   end
 
@@ -73,11 +74,11 @@ class PetsController < ApplicationController
 
   def pet_params
     params.require(:pet).permit(:user_id, :name, :spayed_neutered, :supplies_location, :behavioral_notes,
-                                :birthdate, :sex, :allergies, :address, :id, :active, :origin_trainer)
+                                :birthdate, :sex, :allergies, :address, :id, :active, :origin_trainer, :client_id)
   end
 
   def pet_params_update
     params.permit(:name, :spayed_neutered, :supplies_location, :behavioral_notes,
-                  :birthdate, :sex, :allergies, :address, :active, :origin_trainer)
+                  :birthdate, :sex, :allergies, :address, :active, :origin_trainer, :client_id)
   end
 end

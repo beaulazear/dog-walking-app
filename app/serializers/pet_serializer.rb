@@ -1,6 +1,6 @@
 class PetSerializer
   def self.serialize(pet)
-    {
+    result = {
       id: pet.id,
       name: pet.name,
       birthdate: pet.birthdate,
@@ -16,8 +16,23 @@ class PetSerializer
       geocoded: pet.geocoded?,
       geocoded_at: pet.geocoded_at,
       geocoding_failed: pet.geocoding_failed,
-      geocoding_error: pet.geocoding_error
+      geocoding_error: pet.geocoding_error,
+      client_id: pet.client_id
     }
+
+    # Include client information if pet has a client
+    if pet.client.present?
+      result[:client] = {
+        id: pet.client.id,
+        first_name: pet.client.first_name,
+        last_name: pet.client.last_name,
+        full_name: pet.client.full_name,
+        email: pet.client.email,
+        phone_number: pet.client.phone_number
+      }
+    end
+
+    result
   end
 
   def self.serialize_collection(pets)
