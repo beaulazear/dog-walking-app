@@ -5,9 +5,7 @@ class CreatePoopReports < ActiveRecord::Migration[7.2]
       t.references :block, null: false, foreign_key: true
 
       # GPS location
-      unless Rails.env.development?
-        t.geometry :location, geographic: true, srid: 4326, null: false
-      end
+      # TODO: Add after PostGIS enabled: t.geometry :location, geographic: true, srid: 4326
       t.decimal :latitude, precision: 10, scale: 7, null: false
       t.decimal :longitude, precision: 10, scale: 7, null: false
 
@@ -25,8 +23,8 @@ class CreatePoopReports < ActiveRecord::Migration[7.2]
       t.timestamps
     end
 
-    # Spatial index
-    add_index :poop_reports, :location, using: :gist unless Rails.env.development?
+    # Spatial index (will add after PostGIS enabled)
+    # TODO: add_index :poop_reports, :location, using: :gist
 
     # Regular indexes
     add_index :poop_reports, :status

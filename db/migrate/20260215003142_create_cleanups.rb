@@ -5,9 +5,7 @@ class CreateCleanups < ActiveRecord::Migration[7.2]
       t.references :user, null: false, foreign_key: true # The scooper who performed cleanup
 
       # GPS location (point geometry)
-      unless Rails.env.development?
-        t.geometry :location, geographic: true, srid: 4326, null: false
-      end
+      # TODO: Add after PostGIS enabled: t.geometry :location, geographic: true, srid: 4326
       t.decimal :latitude, precision: 10, scale: 7, null: false
       t.decimal :longitude, precision: 10, scale: 7, null: false
 
@@ -26,8 +24,8 @@ class CreateCleanups < ActiveRecord::Migration[7.2]
       t.timestamps
     end
 
-    # Spatial index for location queries
-    add_index :cleanups, :location, using: :gist unless Rails.env.development?
+    # Spatial index for location queries (will add after PostGIS enabled)
+    # TODO: add_index :cleanups, :location, using: :gist
 
     # Regular indexes
     add_index :cleanups, :cleanup_date

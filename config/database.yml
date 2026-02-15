@@ -83,5 +83,4 @@ test:
 #
 production:
   <<: *default
-  adapter: postgis
   url: <%= ENV['DATABASE_URL'] %>

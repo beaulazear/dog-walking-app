@@ -2,10 +2,8 @@ class CreateBlocks < ActiveRecord::Migration[7.2]
   def change
     create_table :blocks do |t|
       # Geographic data
-      unless Rails.env.development?
-        t.geometry :geom, geographic: true, srid: 4326, null: false
-      end
-      t.jsonb :geojson, null: false # GeoJSON representation for mobile app
+      # TODO: Add geometry column after PostGIS is enabled: t.geometry :geom, geographic: true, srid: 4326
+      t.jsonb :geojson # GeoJSON representation for mobile app
 
       # Block identification
       t.string :block_id, null: false # NYC block ID or unique identifier
@@ -33,8 +31,8 @@ class CreateBlocks < ActiveRecord::Migration[7.2]
       t.timestamps
     end
 
-    # Spatial index for geom field (critical for performance)
-    add_index :blocks, :geom, using: :gist unless Rails.env.development?
+    # Spatial index for geom field (will add after PostGIS enabled)
+    # TODO: add_index :blocks, :geom, using: :gist
 
     # Regular indexes
     add_index :blocks, :block_id, unique: true
