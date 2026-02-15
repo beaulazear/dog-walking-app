@@ -33,6 +33,14 @@ gem "rack-cors", require: "rack/cors"
 # AWS SDK for Active Storage
 gem "aws-sdk-s3"
 
+# PostGIS support for geospatial queries
+gem "activerecord-postgis-adapter"
+gem "rgeo"
+gem "rgeo-geojson"
+
+# Stripe for payment processing
+gem "stripe"
+
 # Environment variables management
 gem "dotenv-rails", groups: %i[development test]
 

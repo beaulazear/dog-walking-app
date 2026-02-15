@@ -5,6 +5,13 @@ class Client < ApplicationRecord
   has_many :appointments, through: :pets
   has_many :invoices, through: :pets
 
+  # Scoop associations (resident role)
+  has_many :pledges, dependent: :destroy
+  has_many :pledged_blocks, through: :pledges, source: :block
+  belongs_to :current_block, class_name: "Block", optional: true
+  belongs_to :current_pledge, class_name: "Pledge", optional: true
+  has_many :poop_reports, dependent: :destroy
+
   validates :first_name, :last_name, :email, presence: true
   validates :email, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :notification_preferences, inclusion: { in: %w[email sms both none] }, allow_nil: true

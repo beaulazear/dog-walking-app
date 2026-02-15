@@ -135,6 +135,58 @@ Rails.application.routes.draw do
   patch "/walker/clients/:id", to: "walker_clients#update"
   delete "/walker/clients/:id", to: "walker_clients#destroy"
 
+  # ===== SCOOP ROUTES =====
+  # Hyperlocal dog waste cleanup marketplace
+
+  # Stripe Connect - Scooper onboarding and payment setup
+  post '/stripe_connect/onboard', to: 'stripe_connect#onboard'
+  get '/stripe_connect/status', to: 'stripe_connect#status'
+  get '/stripe_connect/dashboard', to: 'stripe_connect#dashboard'
+
+  # Stripe Webhooks - Handle payment events
+  post '/stripe/webhooks', to: 'stripe_webhooks#create'
+
+  # Blocks - Geographic blocks for cleanup
+  resources :blocks, only: %i[index show] do
+    collection do
+      get :nearby          # GET /blocks/nearby?latitude=40.7&longitude=-74.0&radius=1000
+    end
+    member do
+      get :stats           # GET /blocks/:id/stats
+    end
+  end
+
+  # Coverage Regions - Scoopers claim blocks with monthly rates
+  resources :coverage_regions, only: %i[index show create update destroy]
+
+  # Pledges - Residents pledge money toward blocks
+  resources :pledges, only: %i[index show create update destroy] do
+    member do
+      post :switch_scooper # POST /pledges/:id/switch_scooper
+    end
+  end
+
+  # Cleanups - GPS-verified cleanup logs
+  resources :cleanups, only: %i[index show create update destroy]
+
+  # Poop Reports - Resident-submitted reports
+  resources :poop_reports, only: %i[index show create update destroy] do
+    collection do
+      get :nearby          # GET /poop_reports/nearby?latitude=40.7&longitude=-74.0&radius=500
+    end
+  end
+
+  # Scooper Milestones - Achievement tracking
+  resources :scooper_milestones, only: %i[index show] do
+    collection do
+      get :available       # GET /scooper_milestones/available
+      post :celebrate_all  # POST /scooper_milestones/celebrate_all
+    end
+    member do
+      patch :celebrate     # PATCH /scooper_milestones/:id/celebrate
+    end
+  end
+
   # Routing logic: fallback requests for React Router.
   # Leave this here to help deploy your app later!
 
