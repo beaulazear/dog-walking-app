@@ -1,6 +1,5 @@
 class StripeWebhooksController < ApplicationController
   skip_before_action :authorized # Webhooks don't use JWT auth
-  skip_before_action :verify_authenticity_token, if: -> { Rails.env.production? }
 
   def create
     payload = request.body.read
