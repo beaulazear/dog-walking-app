@@ -67,17 +67,17 @@ class Pledge < ApplicationRecord
     # Create subscription
     subscription = Stripe::Subscription.create({
       customer: customer.id,
-      items: [{
+      items: [ {
         price_data: {
-          currency: 'usd',
+          currency: "usd",
           product_data: {
             name: "Block Cleanup - #{block.neighborhood}",
             description: "Monthly pledge for #{block.block_id} cleanup"
           },
-          recurring: { interval: 'month' },
+          recurring: { interval: "month" },
           unit_amount: (amount * 100).to_i # Convert to cents
         }
-      }],
+      } ],
       application_fee_percent: 15, # 15% platform fee
       transfer_data: {
         destination: coverage_region.user.stripe_connect_account_id
@@ -92,7 +92,7 @@ class Pledge < ApplicationRecord
     update!(
       stripe_subscription_id: subscription.id,
       stripe_customer_id: customer.id,
-      status: 'active',
+      status: "active",
       activated_at: Time.current
     )
 
@@ -103,7 +103,7 @@ class Pledge < ApplicationRecord
     return unless stripe_subscription_id
 
     Stripe::Subscription.delete(stripe_subscription_id)
-    update!(status: 'cancelled', cancelled_at: Time.current)
+    update!(status: "cancelled", cancelled_at: Time.current)
   end
 
   private
@@ -115,7 +115,7 @@ class Pledge < ApplicationRecord
       customer = Stripe::Customer.create({
         email: client.user.email,
         name: client.name,
-        metadata: { client_id: client.id, app: 'scoop' }
+        metadata: { client_id: client.id, app: "scoop" }
       })
       client.update!(stripe_customer_id: customer.id)
       customer

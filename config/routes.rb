@@ -139,12 +139,12 @@ Rails.application.routes.draw do
   # Hyperlocal dog waste cleanup marketplace
 
   # Stripe Connect - Scooper onboarding and payment setup
-  post '/stripe_connect/onboard', to: 'stripe_connect#onboard'
-  get '/stripe_connect/status', to: 'stripe_connect#status'
-  get '/stripe_connect/dashboard', to: 'stripe_connect#dashboard'
+  post "/stripe_connect/onboard", to: "stripe_connect#onboard"
+  get "/stripe_connect/status", to: "stripe_connect#status"
+  get "/stripe_connect/dashboard", to: "stripe_connect#dashboard"
 
   # Stripe Webhooks - Handle payment events
-  post '/stripe/webhooks', to: 'stripe_webhooks#create'
+  post "/stripe/webhooks", to: "stripe_webhooks#create"
 
   # Blocks - Geographic blocks for cleanup
   resources :blocks, only: %i[index show] do

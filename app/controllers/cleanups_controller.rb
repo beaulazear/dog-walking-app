@@ -1,6 +1,6 @@
 class CleanupsController < ApplicationController
-  before_action :set_cleanup, only: [:show, :update, :destroy]
-  before_action :require_scooper, only: [:create, :update, :destroy]
+  before_action :set_cleanup, only: [ :show, :update, :destroy ]
+  before_action :require_scooper, only: [ :create, :update, :destroy ]
 
   # GET /cleanups
   # Returns cleanups - optionally filtered by scooper, block, or date range
@@ -16,12 +16,12 @@ class CleanupsController < ApplicationController
     # Filter by date range
     if params[:start_date].present?
       start_date = Date.parse(params[:start_date])
-      cleanups = cleanups.where('cleanup_date >= ?', start_date)
+      cleanups = cleanups.where("cleanup_date >= ?", start_date)
     end
 
     if params[:end_date].present?
       end_date = Date.parse(params[:end_date])
-      cleanups = cleanups.where('cleanup_date <= ?', end_date)
+      cleanups = cleanups.where("cleanup_date <= ?", end_date)
     end
 
     # Order by most recent first
@@ -42,7 +42,7 @@ class CleanupsController < ApplicationController
       }
     }
   rescue Date::Error
-    render json: { error: 'Invalid date format' }, status: :bad_request
+    render json: { error: "Invalid date format" }, status: :bad_request
   end
 
   # GET /cleanups/:id
@@ -60,7 +60,7 @@ class CleanupsController < ApplicationController
     # Verify scooper has active coverage on this block
     unless block.active_scooper_id == current_user.id
       return render json: {
-        error: 'You must be the active scooper for this block to log cleanups'
+        error: "You must be the active scooper for this block to log cleanups"
       }, status: :forbidden
     end
 
@@ -73,7 +73,7 @@ class CleanupsController < ApplicationController
 
     if existing_cleanup
       return render json: {
-        error: 'You have already logged a cleanup for this block today',
+        error: "You have already logged a cleanup for this block today",
         existing_cleanup: serialize_cleanup(existing_cleanup)
       }, status: :unprocessable_entity
     end
@@ -103,26 +103,26 @@ class CleanupsController < ApplicationController
 
       render json: {
         cleanup: serialize_cleanup_detail(cleanup.reload),
-        message: 'Cleanup logged successfully!',
+        message: "Cleanup logged successfully!",
         new_milestones: cleanup.user.scooper_milestones.where(celebrated: false).map { |m| serialize_milestone(m) }
       }, status: :created
     else
       render json: { errors: cleanup.errors.full_messages }, status: :unprocessable_entity
     end
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Block not found' }, status: :not_found
+    render json: { error: "Block not found" }, status: :not_found
   end
 
   # PATCH /cleanups/:id
   # Update pickup count or add photo
   def update
     unless @cleanup.user_id == current_user.id
-      return render json: { error: 'Unauthorized' }, status: :forbidden
+      return render json: { error: "Unauthorized" }, status: :forbidden
     end
 
     # Can only update today's cleanup
     unless @cleanup.cleanup_date == Date.today
-      return render json: { error: 'Can only update today\'s cleanup' }, status: :unprocessable_entity
+      return render json: { error: "Can only update today's cleanup" }, status: :unprocessable_entity
     end
 
     old_pickup_count = @cleanup.pickup_count
@@ -148,7 +148,7 @@ class CleanupsController < ApplicationController
 
       render json: {
         cleanup: serialize_cleanup_detail(@cleanup.reload),
-        message: 'Cleanup updated successfully'
+        message: "Cleanup updated successfully"
       }
     else
       render json: { errors: @cleanup.errors.full_messages }, status: :unprocessable_entity
@@ -159,12 +159,12 @@ class CleanupsController < ApplicationController
   # Delete a cleanup (only allowed for today's cleanups)
   def destroy
     unless @cleanup.user_id == current_user.id
-      return render json: { error: 'Unauthorized' }, status: :forbidden
+      return render json: { error: "Unauthorized" }, status: :forbidden
     end
 
     # Can only delete today's cleanup
     unless @cleanup.cleanup_date == Date.today
-      return render json: { error: 'Can only delete today\'s cleanup' }, status: :unprocessable_entity
+      return render json: { error: "Can only delete today's cleanup" }, status: :unprocessable_entity
     end
 
     # Reverse stat updates before deletion
@@ -173,7 +173,7 @@ class CleanupsController < ApplicationController
     @cleanup.user.decrement!(:total_lifetime_pickups, @cleanup.pickup_count)
 
     @cleanup.destroy
-    render json: { message: 'Cleanup deleted successfully' }
+    render json: { message: "Cleanup deleted successfully" }
   end
 
   private
@@ -181,12 +181,12 @@ class CleanupsController < ApplicationController
   def set_cleanup
     @cleanup = Cleanup.find(params[:id])
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Cleanup not found' }, status: :not_found
+    render json: { error: "Cleanup not found" }, status: :not_found
   end
 
   def require_scooper
     unless current_user&.is_scooper
-      render json: { error: 'You must be a scooper to perform this action' }, status: :forbidden
+      render json: { error: "You must be a scooper to perform this action" }, status: :forbidden
     end
   end
 

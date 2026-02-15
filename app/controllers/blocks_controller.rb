@@ -1,6 +1,6 @@
 class BlocksController < ApplicationController
-  before_action :set_block, only: [:show, :stats]
-  skip_before_action :authorized, only: [:index, :show, :nearby, :stats]
+  before_action :set_block, only: [ :show, :stats ]
+  skip_before_action :authorized, only: [ :index, :show, :nearby, :stats ]
 
   # GET /blocks
   # Returns all blocks with optional filters
@@ -48,7 +48,7 @@ class BlocksController < ApplicationController
     radius = params[:radius]&.to_i || 1000 # Default 1km radius
 
     unless latitude && longitude
-      return render json: { error: 'Latitude and longitude required' }, status: :bad_request
+      return render json: { error: "Latitude and longitude required" }, status: :bad_request
     end
 
     blocks = Block.nearby(latitude, longitude, radius)
@@ -84,7 +84,7 @@ class BlocksController < ApplicationController
   def set_block
     @block = Block.find(params[:id])
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Block not found' }, status: :not_found
+    render json: { error: "Block not found" }, status: :not_found
   end
 
   def serialize_block(block)

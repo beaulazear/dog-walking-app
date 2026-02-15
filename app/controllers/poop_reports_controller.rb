@@ -1,6 +1,6 @@
 class PoopReportsController < ApplicationController
-  before_action :set_poop_report, only: [:show, :update, :destroy]
-  before_action :require_client, only: [:create]
+  before_action :set_poop_report, only: [ :show, :update, :destroy ]
+  before_action :require_client, only: [ :create ]
 
   # GET /poop_reports
   # Returns poop reports - optionally filtered by block, status, or reporter
@@ -50,7 +50,7 @@ class PoopReportsController < ApplicationController
     radius = params[:radius]&.to_i || 500 # Default 500m radius
 
     unless latitude && longitude
-      return render json: { error: 'Latitude and longitude required' }, status: :bad_request
+      return render json: { error: "Latitude and longitude required" }, status: :bad_request
     end
 
     # In production with PostGIS, use spatial query
@@ -73,7 +73,7 @@ class PoopReportsController < ApplicationController
     end
 
     # Filter to open reports only by default
-    status = params[:status] || 'open'
+    status = params[:status] || "open"
     poop_reports = poop_reports.where(status: status) if status.present?
 
     render json: {
@@ -92,7 +92,7 @@ class PoopReportsController < ApplicationController
   def create
     client = current_user.client
     unless client
-      return render json: { error: 'Client profile not found' }, status: :unprocessable_entity
+      return render json: { error: "Client profile not found" }, status: :unprocessable_entity
     end
 
     # Find nearest block
@@ -103,7 +103,7 @@ class PoopReportsController < ApplicationController
 
     unless block
       return render json: {
-        error: 'No block found at this location. Please report closer to a block boundary.'
+        error: "No block found at this location. Please report closer to a block boundary."
       }, status: :unprocessable_entity
     end
 
@@ -114,7 +114,7 @@ class PoopReportsController < ApplicationController
       longitude: longitude,
       notes: params[:poop_report][:notes],
       reported_at: Time.current,
-      status: 'open'
+      status: "open"
     )
 
     if poop_report.save
@@ -126,7 +126,7 @@ class PoopReportsController < ApplicationController
 
       render json: {
         poop_report: serialize_poop_report_detail(poop_report),
-        message: 'Poop report submitted successfully!'
+        message: "Poop report submitted successfully!"
       }, status: :created
     else
       render json: { errors: poop_report.errors.full_messages }, status: :unprocessable_entity
@@ -137,14 +137,14 @@ class PoopReportsController < ApplicationController
   # Update report status (acknowledge or resolve)
   def update
     # Only block's active scooper can acknowledge/resolve
-    if params[:status].present? && !['acknowledged', 'resolved'].include?(params[:status])
-      return render json: { error: 'Invalid status' }, status: :bad_request
+    if params[:status].present? && ![ "acknowledged", "resolved" ].include?(params[:status])
+      return render json: { error: "Invalid status" }, status: :bad_request
     end
 
     if params[:status].present?
       unless @poop_report.block.active_scooper_id == current_user&.id
         return render json: {
-          error: 'Only the active scooper can update report status'
+          error: "Only the active scooper can update report status"
         }, status: :forbidden
       end
     end
@@ -152,7 +152,7 @@ class PoopReportsController < ApplicationController
     if @poop_report.update(status: params[:status])
       render json: {
         poop_report: serialize_poop_report_detail(@poop_report),
-        message: 'Report status updated successfully'
+        message: "Report status updated successfully"
       }
     else
       render json: { errors: @poop_report.errors.full_messages }, status: :unprocessable_entity
@@ -163,17 +163,17 @@ class PoopReportsController < ApplicationController
   # Delete a report (only reporter can delete, and only if open)
   def destroy
     unless @poop_report.client.user_id == current_user&.id
-      return render json: { error: 'Unauthorized' }, status: :forbidden
+      return render json: { error: "Unauthorized" }, status: :forbidden
     end
 
-    unless @poop_report.status == 'open'
+    unless @poop_report.status == "open"
       return render json: {
-        error: 'Can only delete open reports'
+        error: "Can only delete open reports"
       }, status: :unprocessable_entity
     end
 
     @poop_report.destroy
-    render json: { message: 'Report deleted successfully' }
+    render json: { message: "Report deleted successfully" }
   end
 
   private
@@ -181,12 +181,12 @@ class PoopReportsController < ApplicationController
   def set_poop_report
     @poop_report = PoopReport.find(params[:id])
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Poop report not found' }, status: :not_found
+    render json: { error: "Poop report not found" }, status: :not_found
   end
 
   def require_client
     unless current_user&.client
-      render json: { error: 'You must have a client profile to create reports' }, status: :forbidden
+      render json: { error: "You must have a client profile to create reports" }, status: :forbidden
     end
   end
 

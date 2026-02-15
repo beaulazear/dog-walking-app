@@ -1,6 +1,6 @@
 class PledgesController < ApplicationController
-  before_action :set_pledge, only: [:show, :update, :destroy]
-  before_action :require_client, only: [:create, :switch_scooper]
+  before_action :set_pledge, only: [ :show, :update, :destroy ]
+  before_action :require_client, only: [ :create, :switch_scooper ]
 
   # GET /pledges
   # Returns pledges - optionally filtered by client or block
@@ -31,7 +31,7 @@ class PledgesController < ApplicationController
   def show
     # Only allow viewing own pledges unless admin
     if @pledge.client.user_id != current_user&.id
-      return render json: { error: 'Unauthorized' }, status: :forbidden
+      return render json: { error: "Unauthorized" }, status: :forbidden
     end
 
     render json: {
@@ -44,7 +44,7 @@ class PledgesController < ApplicationController
   def create
     client = current_user.client
     unless client
-      return render json: { error: 'Client profile not found' }, status: :unprocessable_entity
+      return render json: { error: "Client profile not found" }, status: :unprocessable_entity
     end
 
     coverage_region = CoverageRegion.find(params[:coverage_region_id])
@@ -54,7 +54,7 @@ class PledgesController < ApplicationController
     existing_pledge = Pledge.find_by(client_id: client.id, block_id: block.id)
     if existing_pledge
       return render json: {
-        error: 'You already have a pledge on this block',
+        error: "You already have a pledge on this block",
         existing_pledge: serialize_pledge(existing_pledge)
       }, status: :unprocessable_entity
     end
@@ -62,7 +62,7 @@ class PledgesController < ApplicationController
     # Validate amount
     amount = params[:pledge][:amount].to_f
     if amount < 5
-      return render json: { error: 'Minimum pledge amount is $5.00' }, status: :unprocessable_entity
+      return render json: { error: "Minimum pledge amount is $5.00" }, status: :unprocessable_entity
     end
 
     pledge = Pledge.new(
@@ -71,39 +71,39 @@ class PledgesController < ApplicationController
       coverage_region: coverage_region,
       amount: amount,
       anonymous: params[:pledge][:anonymous] || true,
-      status: 'pending'
+      status: "pending"
     )
 
     if pledge.save
       # If this pledge causes block to reach funding threshold, it will auto-activate via callback
       render json: {
         pledge: serialize_pledge_detail(pledge),
-        message: 'Pledge created successfully!',
-        block_activated: pledge.reload.status == 'active'
+        message: "Pledge created successfully!",
+        block_activated: pledge.reload.status == "active"
       }, status: :created
     else
       render json: { errors: pledge.errors.full_messages }, status: :unprocessable_entity
     end
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Coverage region not found' }, status: :not_found
+    render json: { error: "Coverage region not found" }, status: :not_found
   end
 
   # PATCH /pledges/:id
   # Update pledge amount or privacy settings
   def update
     unless @pledge.client.user_id == current_user.id
-      return render json: { error: 'Unauthorized' }, status: :forbidden
+      return render json: { error: "Unauthorized" }, status: :forbidden
     end
 
     # Can only update amount if pledge is still pending or active
-    unless ['pending', 'active'].include?(@pledge.status)
-      return render json: { error: 'Cannot update cancelled or dissolved pledge' }, status: :unprocessable_entity
+    unless [ "pending", "active" ].include?(@pledge.status)
+      return render json: { error: "Cannot update cancelled or dissolved pledge" }, status: :unprocessable_entity
     end
 
     if @pledge.update(pledge_update_params)
       render json: {
         pledge: serialize_pledge_detail(@pledge),
-        message: 'Pledge updated successfully'
+        message: "Pledge updated successfully"
       }
     else
       render json: { errors: @pledge.errors.full_messages }, status: :unprocessable_entity
@@ -114,22 +114,22 @@ class PledgesController < ApplicationController
   # Cancel a pledge (this will trigger Stripe subscription cancellation)
   def destroy
     unless @pledge.client.user_id == current_user.id
-      return render json: { error: 'Unauthorized' }, status: :forbidden
+      return render json: { error: "Unauthorized" }, status: :forbidden
     end
 
-    if @pledge.status == 'cancelled'
-      return render json: { error: 'Pledge already cancelled' }, status: :unprocessable_entity
+    if @pledge.status == "cancelled"
+      return render json: { error: "Pledge already cancelled" }, status: :unprocessable_entity
     end
 
     # TODO: Cancel Stripe subscription here
     # Stripe::Subscription.delete(@pledge.stripe_subscription_id) if @pledge.stripe_subscription_id
 
     @pledge.update(
-      status: 'cancelled',
+      status: "cancelled",
       cancelled_at: Time.current
     )
 
-    render json: { message: 'Pledge cancelled successfully' }
+    render json: { message: "Pledge cancelled successfully" }
   end
 
   # POST /pledges/:id/switch_scooper
@@ -138,27 +138,27 @@ class PledgesController < ApplicationController
     pledge = Pledge.find(params[:id])
 
     unless pledge.client.user_id == current_user.id
-      return render json: { error: 'Unauthorized' }, status: :forbidden
+      return render json: { error: "Unauthorized" }, status: :forbidden
     end
 
     new_coverage_region = CoverageRegion.find(params[:new_coverage_region_id])
 
     # Verify new coverage region is for the same block
     unless new_coverage_region.block_id == pledge.block_id
-      return render json: { error: 'Coverage region must be for the same block' }, status: :unprocessable_entity
+      return render json: { error: "Coverage region must be for the same block" }, status: :unprocessable_entity
     end
 
     # Can't switch if block is already active (locked in)
-    if pledge.block.status == 'active' && pledge.block.active_scooper_id != new_coverage_region.user_id
+    if pledge.block.status == "active" && pledge.block.active_scooper_id != new_coverage_region.user_id
       return render json: {
-        error: 'Cannot switch scoopers once block is active'
+        error: "Cannot switch scoopers once block is active"
       }, status: :unprocessable_entity
     end
 
     if pledge.switch_to_coverage_region!(new_coverage_region)
       render json: {
         pledge: serialize_pledge_detail(pledge.reload),
-        message: 'Successfully switched to new scooper'
+        message: "Successfully switched to new scooper"
       }
     else
       render json: { errors: pledge.errors.full_messages }, status: :unprocessable_entity
@@ -172,12 +172,12 @@ class PledgesController < ApplicationController
   def set_pledge
     @pledge = Pledge.find(params[:id])
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Pledge not found' }, status: :not_found
+    render json: { error: "Pledge not found" }, status: :not_found
   end
 
   def require_client
     unless current_user&.client
-      render json: { error: 'You must have a client profile to create pledges' }, status: :forbidden
+      render json: { error: "You must have a client profile to create pledges" }, status: :forbidden
     end
   end
 

@@ -17,7 +17,7 @@ class StripeConnectController < ApplicationController
 
     render json: {
       url: account_link.url,
-      message: 'Redirecting to Stripe onboarding...'
+      message: "Redirecting to Stripe onboarding..."
     }
   rescue Stripe::StripeError => e
     render json: { error: e.message }, status: :unprocessable_entity
@@ -51,7 +51,7 @@ class StripeConnectController < ApplicationController
   # Create Express Dashboard link for scooper to view earnings
   def dashboard
     unless current_user.stripe_connect_account_id
-      return render json: { error: 'No Stripe account connected' }, status: :bad_request
+      return render json: { error: "No Stripe account connected" }, status: :bad_request
     end
 
     login_link = Stripe::Account.create_login_link(
@@ -68,31 +68,31 @@ class StripeConnectController < ApplicationController
   def check_stripe_connect_configured
     unless Rails.configuration.stripe[:connect_client_id].present?
       render json: {
-        error: 'Stripe Connect not configured',
-        message: 'Please enable Stripe Connect to use payment features. See STRIPE_SETUP_INSTRUCTIONS.md'
+        error: "Stripe Connect not configured",
+        message: "Please enable Stripe Connect to use payment features. See STRIPE_SETUP_INSTRUCTIONS.md"
       }, status: :service_unavailable
     end
   end
 
   def require_scooper
     unless current_user&.is_scooper
-      render json: { error: 'You must be a scooper to use Stripe Connect' }, status: :forbidden
+      render json: { error: "You must be a scooper to use Stripe Connect" }, status: :forbidden
     end
   end
 
   def create_connect_account
     Stripe::Account.create({
-      type: 'express',
-      country: 'US',
+      type: "express",
+      country: "US",
       email: current_user.email,
       capabilities: {
         card_payments: { requested: true },
         transfers: { requested: true }
       },
-      business_type: 'individual',
+      business_type: "individual",
       metadata: {
         user_id: current_user.id,
-        app: 'scoop'
+        app: "scoop"
       }
     })
   end
@@ -102,7 +102,7 @@ class StripeConnectController < ApplicationController
       account: account_id,
       refresh_url: "#{ENV['FRONTEND_URL']}/scooper/stripe/refresh",
       return_url: "#{ENV['FRONTEND_URL']}/scooper/stripe/success",
-      type: 'account_onboarding'
+      type: "account_onboarding"
     })
   end
 
@@ -111,7 +111,7 @@ class StripeConnectController < ApplicationController
       account: current_user.stripe_connect_account_id,
       refresh_url: "#{ENV['FRONTEND_URL']}/scooper/stripe/refresh",
       return_url: "#{ENV['FRONTEND_URL']}/scooper/stripe/success",
-      type: 'account_onboarding'
+      type: "account_onboarding"
     })
   end
 end

@@ -3,7 +3,7 @@ class StripeWebhooksController < ApplicationController
 
   def create
     payload = request.body.read
-    sig_header = request.env['HTTP_STRIPE_SIGNATURE']
+    sig_header = request.env["HTTP_STRIPE_SIGNATURE"]
     endpoint_secret = Rails.application.credentials.dig(:stripe, :webhook_secret)
 
     begin
@@ -16,19 +16,19 @@ class StripeWebhooksController < ApplicationController
 
     # Handle the event
     case event.type
-    when 'customer.subscription.deleted'
+    when "customer.subscription.deleted"
       handle_subscription_deleted(event.data.object)
-    when 'customer.subscription.updated'
+    when "customer.subscription.updated"
       handle_subscription_updated(event.data.object)
-    when 'invoice.payment_failed'
+    when "invoice.payment_failed"
       handle_payment_failed(event.data.object)
-    when 'invoice.payment_succeeded'
+    when "invoice.payment_succeeded"
       handle_payment_succeeded(event.data.object)
-    when 'account.updated'
+    when "account.updated"
       handle_account_updated(event.data.object)
     end
 
-    render json: { status: 'success' }
+    render json: { status: "success" }
   end
 
   private
@@ -37,7 +37,7 @@ class StripeWebhooksController < ApplicationController
     pledge = Pledge.find_by(stripe_subscription_id: subscription.id)
     return unless pledge
 
-    pledge.update!(status: 'cancelled', cancelled_at: Time.current)
+    pledge.update!(status: "cancelled", cancelled_at: Time.current)
 
     # TODO: Notify client and scooper
     # TODO: Check if block needs to enter warning state
@@ -48,10 +48,10 @@ class StripeWebhooksController < ApplicationController
     return unless pledge
 
     # Update pledge status based on subscription status
-    if subscription.status == 'active'
-      pledge.update!(status: 'active')
-    elsif subscription.status == 'canceled'
-      pledge.update!(status: 'cancelled', cancelled_at: Time.current)
+    if subscription.status == "active"
+      pledge.update!(status: "active")
+    elsif subscription.status == "canceled"
+      pledge.update!(status: "cancelled", cancelled_at: Time.current)
     end
   end
 

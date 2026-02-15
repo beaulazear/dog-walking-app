@@ -1,6 +1,6 @@
 class CoverageRegionsController < ApplicationController
-  before_action :set_coverage_region, only: [:show, :update, :destroy]
-  before_action :require_scooper, only: [:create, :update, :destroy]
+  before_action :set_coverage_region, only: [ :show, :update, :destroy ]
+  before_action :require_scooper, only: [ :create, :update, :destroy ]
 
   # GET /coverage_regions
   # Returns coverage regions - optionally filtered by scooper or block
@@ -38,7 +38,7 @@ class CoverageRegionsController < ApplicationController
     # Check if scooper already has a claim on this block
     existing_claim = CoverageRegion.find_by(user_id: current_user.id, block_id: block.id)
     if existing_claim
-      return render json: { error: 'You already have a claim on this block' }, status: :unprocessable_entity
+      return render json: { error: "You already have a claim on this block" }, status: :unprocessable_entity
     end
 
     coverage_region = CoverageRegion.new(coverage_region_params)
@@ -48,31 +48,31 @@ class CoverageRegionsController < ApplicationController
     if coverage_region.save
       render json: {
         coverage_region: serialize_coverage_region_detail(coverage_region),
-        message: 'Block claimed successfully!'
+        message: "Block claimed successfully!"
       }, status: :created
     else
       render json: { errors: coverage_region.errors.full_messages }, status: :unprocessable_entity
     end
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Block not found' }, status: :not_found
+    render json: { error: "Block not found" }, status: :not_found
   end
 
   # PATCH /coverage_regions/:id
   # Update monthly rate or service days
   def update
     unless @coverage_region.user_id == current_user.id
-      return render json: { error: 'Unauthorized' }, status: :forbidden
+      return render json: { error: "Unauthorized" }, status: :forbidden
     end
 
     # Can't update if block is already active with another scooper
-    if @coverage_region.status == 'lost'
-      return render json: { error: 'Cannot update - block was won by another scooper' }, status: :unprocessable_entity
+    if @coverage_region.status == "lost"
+      return render json: { error: "Cannot update - block was won by another scooper" }, status: :unprocessable_entity
     end
 
     if @coverage_region.update(coverage_region_params)
       render json: {
         coverage_region: serialize_coverage_region_detail(@coverage_region),
-        message: 'Coverage region updated successfully'
+        message: "Coverage region updated successfully"
       }
     else
       render json: { errors: @coverage_region.errors.full_messages }, status: :unprocessable_entity
@@ -83,18 +83,18 @@ class CoverageRegionsController < ApplicationController
   # Unclaim a block
   def destroy
     unless @coverage_region.user_id == current_user.id
-      return render json: { error: 'Unauthorized' }, status: :forbidden
+      return render json: { error: "Unauthorized" }, status: :forbidden
     end
 
     # Can't unclaim if block is active with this scooper
     if @coverage_region.block.active_scooper_id == current_user.id
       return render json: {
-        error: 'Cannot unclaim active block. Please contact support to deactivate.'
+        error: "Cannot unclaim active block. Please contact support to deactivate."
       }, status: :unprocessable_entity
     end
 
     @coverage_region.destroy
-    render json: { message: 'Block unclaimed successfully' }
+    render json: { message: "Block unclaimed successfully" }
   end
 
   private
@@ -102,12 +102,12 @@ class CoverageRegionsController < ApplicationController
   def set_coverage_region
     @coverage_region = CoverageRegion.find(params[:id])
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Coverage region not found' }, status: :not_found
+    render json: { error: "Coverage region not found" }, status: :not_found
   end
 
   def require_scooper
     unless current_user&.is_scooper
-      render json: { error: 'You must be a scooper to perform this action' }, status: :forbidden
+      render json: { error: "You must be a scooper to perform this action" }, status: :forbidden
     end
   end
 
@@ -154,7 +154,7 @@ class CoverageRegionsController < ApplicationController
     serialize_coverage_region(coverage_region).merge(
       pledges_count: coverage_region.pledges.active.count,
       fully_funded: coverage_region.fully_funded?,
-      amount_remaining: [(coverage_region.monthly_rate - coverage_region.total_pledges), 0].max
+      amount_remaining: [ (coverage_region.monthly_rate - coverage_region.total_pledges), 0 ].max
     )
   end
 end

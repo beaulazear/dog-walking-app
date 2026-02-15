@@ -1,5 +1,5 @@
 class ScooperMilestonesController < ApplicationController
-  before_action :require_scooper, except: [:index, :show]
+  before_action :require_scooper, except: [ :index, :show ]
 
   # GET /scooper_milestones
   # Returns milestones - optionally filtered by scooper
@@ -13,9 +13,9 @@ class ScooperMilestonesController < ApplicationController
     end
 
     # Filter by celebrated status
-    if params[:celebrated] == 'false'
+    if params[:celebrated] == "false"
       milestones = milestones.where(celebrated: false)
-    elsif params[:celebrated] == 'true'
+    elsif params[:celebrated] == "true"
       milestones = milestones.where(celebrated: true)
     end
 
@@ -39,7 +39,7 @@ class ScooperMilestonesController < ApplicationController
       milestone: serialize_milestone_detail(milestone)
     }
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Milestone not found' }, status: :not_found
+    render json: { error: "Milestone not found" }, status: :not_found
   end
 
   # PATCH /scooper_milestones/:id/celebrate
@@ -48,19 +48,19 @@ class ScooperMilestonesController < ApplicationController
     milestone = ScooperMilestone.find(params[:id])
 
     unless milestone.user_id == current_user.id
-      return render json: { error: 'Unauthorized' }, status: :forbidden
+      return render json: { error: "Unauthorized" }, status: :forbidden
     end
 
     if milestone.update(celebrated: true)
       render json: {
         milestone: serialize_milestone(milestone),
-        message: 'Milestone celebrated!'
+        message: "Milestone celebrated!"
       }
     else
       render json: { errors: milestone.errors.full_messages }, status: :unprocessable_entity
     end
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Milestone not found' }, status: :not_found
+    render json: { error: "Milestone not found" }, status: :not_found
   end
 
   # POST /scooper_milestones/celebrate_all
@@ -71,7 +71,7 @@ class ScooperMilestonesController < ApplicationController
     uncelebrated_milestones.update_all(celebrated: true)
 
     render json: {
-      message: 'All milestones celebrated!',
+      message: "All milestones celebrated!",
       count: uncelebrated_milestones.count
     }
   end
@@ -80,7 +80,7 @@ class ScooperMilestonesController < ApplicationController
   # Get list of all possible milestone tiers and which ones user has achieved
   def available
     unless current_user&.is_scooper
-      return render json: { error: 'You must be a scooper to view milestones' }, status: :forbidden
+      return render json: { error: "You must be a scooper to view milestones" }, status: :forbidden
     end
 
     milestone_config = ScooperMilestone.milestone_titles
@@ -90,7 +90,7 @@ class ScooperMilestonesController < ApplicationController
       {
         milestone_type: type,
         tiers: tiers.map do |threshold, data|
-          achieved = achieved_milestones.include?([type.to_s, threshold])
+          achieved = achieved_milestones.include?([ type.to_s, threshold ])
           {
             threshold: threshold,
             title: data[:title],
@@ -121,7 +121,7 @@ class ScooperMilestonesController < ApplicationController
 
   def require_scooper
     unless current_user&.is_scooper
-      render json: { error: 'You must be a scooper to perform this action' }, status: :forbidden
+      render json: { error: "You must be a scooper to perform this action" }, status: :forbidden
     end
   end
 
