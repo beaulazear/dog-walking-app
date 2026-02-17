@@ -64,26 +64,30 @@ class CleanupsController < ApplicationController
       }, status: :forbidden
     end
 
-    # Check for duplicate cleanup (one per scooper per block per day)
-    existing_cleanup = Cleanup.find_by(
-      user_id: current_user.id,
-      block_id: block.id,
-      cleanup_date: Date.today
-    )
+    # Validate GPS coordinates
+    latitude = params[:cleanup][:latitude]&.to_f
+    longitude = params[:cleanup][:longitude]&.to_f
 
-    if existing_cleanup
+    unless validate_coordinates(latitude, longitude)
       return render json: {
-        error: "You have already logged a cleanup for this block today",
-        existing_cleanup: serialize_cleanup(existing_cleanup)
+        error: "Invalid GPS coordinates. Latitude must be between -90 and 90, longitude between -180 and 180."
+      }, status: :unprocessable_entity
+    end
+
+    # Validate pickup count
+    pickup_count = params[:cleanup][:pickup_count]&.to_i || 0
+    if pickup_count < 0 || pickup_count > 10000
+      return render json: {
+        error: "Invalid pickup count. Must be between 0 and 10,000."
       }, status: :unprocessable_entity
     end
 
     cleanup = Cleanup.new(
       user: current_user,
       block: block,
-      latitude: params[:cleanup][:latitude],
-      longitude: params[:cleanup][:longitude],
-      pickup_count: params[:cleanup][:pickup_count] || 0,
+      latitude: latitude,
+      longitude: longitude,
+      pickup_count: pickup_count,
       cleanup_date: Date.today,
       cleanup_timestamp: Time.current,
       gps_verified: true
@@ -111,6 +115,19 @@ class CleanupsController < ApplicationController
     end
   rescue ActiveRecord::RecordNotFound
     render json: { error: "Block not found" }, status: :not_found
+  rescue ActiveRecord::RecordNotUnique
+    # Database-level unique constraint violation (race condition caught!)
+    # Find the existing cleanup and return it
+    existing_cleanup = Cleanup.find_by(
+      user_id: current_user.id,
+      block_id: block.id,
+      cleanup_date: Date.today
+    )
+
+    render json: {
+      error: "You have already logged a cleanup for this block today",
+      existing_cleanup: serialize_cleanup(existing_cleanup)
+    }, status: :unprocessable_entity
   end
 
   # PATCH /cleanups/:id
@@ -192,6 +209,13 @@ class CleanupsController < ApplicationController
 
   def cleanup_update_params
     params.require(:cleanup).permit(:pickup_count)
+  end
+
+  def validate_coordinates(latitude, longitude)
+    return false if latitude.nil? || longitude.nil?
+    return false if latitude < -90 || latitude > 90
+    return false if longitude < -180 || longitude > 180
+    true
   end
 
   def serialize_cleanup(cleanup)

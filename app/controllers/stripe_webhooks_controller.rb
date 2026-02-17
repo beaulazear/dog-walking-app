@@ -10,11 +10,42 @@ class StripeWebhooksController < ApplicationController
       event = Stripe::Webhook.construct_event(
         payload, sig_header, endpoint_secret
       )
-    rescue JSON::ParserError, Stripe::SignatureVerificationError => e
-      return render json: { error: e.message }, status: :bad_request
+    rescue JSON::ParserError => e
+      Rails.logger.error("Webhook parsing error: #{e.message}")
+      return render json: { error: "Invalid payload" }, status: :bad_request
+    rescue Stripe::SignatureVerificationError => e
+      Rails.logger.error("Webhook signature verification failed: #{e.message}")
+      return render json: { error: "Invalid signature" }, status: :unauthorized
     end
 
-    # Handle the event
+    # Check for duplicate processing (idempotency)
+    if WebhookEvent.exists?(stripe_event_id: event.id)
+      Rails.logger.info("Webhook #{event.id} already processed, skipping")
+      return render json: { status: "already_processed" }
+    end
+
+    # Process the event
+    result = process_webhook_event(event)
+
+    # Record that we processed this event
+    WebhookEvent.create!(
+      stripe_event_id: event.id,
+      event_type: event.type,
+      payload: payload,
+      processed_at: Time.current
+    )
+
+    render json: { status: "success", result: result }
+  rescue StandardError => e
+    # Log unexpected errors but still return 200 to Stripe
+    Rails.logger.error("Unexpected webhook processing error: #{e.message}")
+    Rails.logger.error(e.backtrace.join("\n"))
+    render json: { status: "error", message: e.message }, status: :ok
+  end
+
+  private
+
+  def process_webhook_event(event)
     case event.type
     when "customer.subscription.deleted"
       handle_subscription_deleted(event.data.object)
@@ -26,12 +57,11 @@ class StripeWebhooksController < ApplicationController
       handle_payment_succeeded(event.data.object)
     when "account.updated"
       handle_account_updated(event.data.object)
+    else
+      Rails.logger.info("Unhandled webhook event type: #{event.type}")
+      { handled: false, event_type: event.type }
     end
-
-    render json: { status: "success" }
   end
-
-  private
 
   def handle_subscription_deleted(subscription)
     pledge = Pledge.find_by(stripe_subscription_id: subscription.id)

@@ -65,27 +65,55 @@ class PledgesController < ApplicationController
       return render json: { error: "Minimum pledge amount is $5.00" }, status: :unprocessable_entity
     end
 
+    # CRITICAL: Payment method ID is required
+    payment_method_id = params[:pledge][:payment_method_id]
+    if payment_method_id.blank?
+      return render json: {
+        error: "Payment method is required. Please provide a valid payment method."
+      }, status: :unprocessable_entity
+    end
+
     pledge = Pledge.new(
       client: client,
       block: block,
       coverage_region: coverage_region,
       amount: amount,
       anonymous: params[:pledge][:anonymous] || true,
+      stripe_payment_method_id: payment_method_id,
       status: "pending"
     )
 
     if pledge.save
       # If this pledge causes block to reach funding threshold, it will auto-activate via callback
-      render json: {
+      # The callback will use the stored payment_method_id to create Stripe subscriptions
+      pledge.reload
+
+      response_data = {
         pledge: serialize_pledge_detail(pledge),
         message: "Pledge created successfully!",
-        block_activated: pledge.reload.status == "active"
-      }, status: :created
+        block_activated: pledge.status == "active"
+      }
+
+      # If payment requires additional action (3D Secure)
+      if pledge.requires_action && pledge.client_secret.present?
+        response_data[:requires_action] = true
+        response_data[:client_secret] = pledge.client_secret
+        response_data[:message] = "Payment requires additional authentication"
+      end
+
+      render json: response_data, status: :created
     else
       render json: { errors: pledge.errors.full_messages }, status: :unprocessable_entity
     end
   rescue ActiveRecord::RecordNotFound
     render json: { error: "Coverage region not found" }, status: :not_found
+  rescue Stripe::StripeError => e
+    # Handle Stripe errors gracefully
+    Rails.logger.error("Stripe error during pledge creation: #{e.message}")
+    render json: {
+      error: "Payment processing error: #{e.message}",
+      type: "stripe_error"
+    }, status: :unprocessable_entity
   end
 
   # PATCH /pledges/:id
