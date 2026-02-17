@@ -153,6 +153,7 @@ Rails.application.routes.draw do
     end
     member do
       get :stats           # GET /blocks/:id/stats
+      post :claim          # POST /blocks/:id/claim
     end
   end
 

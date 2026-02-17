@@ -1,5 +1,5 @@
 class BlocksController < ApplicationController
-  before_action :set_block, only: [ :show, :stats ]
+  before_action :set_block, only: [ :show, :stats, :claim ]
   skip_before_action :authorized, only: [ :index, :show, :nearby, :stats ]
 
   # GET /blocks
@@ -77,6 +77,47 @@ class BlocksController < ApplicationController
       recent_cleanups: recent_cleanups.map { |cleanup| serialize_cleanup(cleanup) },
       average_daily_pickups: calculate_average_daily_pickups(@block)
     }
+  end
+
+  # POST /blocks/:id/claim
+  # Claims a block for the current scooper
+  def claim
+    unless current_user.is_scooper?
+      return render json: { error: "Only scoopers can claim blocks" }, status: :forbidden
+    end
+
+    monthly_rate = params[:monthly_rate]&.to_f
+
+    unless monthly_rate && monthly_rate > 0
+      return render json: { error: "Monthly rate is required and must be greater than 0" }, status: :bad_request
+    end
+
+    # Check if block already has active coverage
+    if @block.active_coverage_region.present?
+      return render json: { error: "Block already has an active scooper" }, status: :conflict
+    end
+
+    # Check if scooper already claimed this block
+    existing_claim = @block.coverage_regions.find_by(user: current_user, status: [ "active", "pledging" ])
+    if existing_claim.present?
+      return render json: { error: "You have already claimed this block" }, status: :conflict
+    end
+
+    # Create coverage region
+    coverage_region = CoverageRegion.new(
+      user: current_user,
+      block: @block,
+      monthly_rate: monthly_rate
+    )
+
+    if coverage_region.save
+      render json: {
+        coverage_region: serialize_coverage_region(coverage_region),
+        message: "Block claimed successfully"
+      }, status: :created
+    else
+      render json: { errors: coverage_region.errors.full_messages }, status: :unprocessable_entity
+    end
   end
 
   private
