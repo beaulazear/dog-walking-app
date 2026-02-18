@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_15_014013) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_15_193502) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -204,6 +204,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_15_014013) do
     t.index ["block_id"], name: "index_cleanups_on_block_id"
     t.index ["cleanup_date"], name: "index_cleanups_on_cleanup_date"
     t.index ["user_id", "block_id", "cleanup_date"], name: "index_cleanups_on_user_id_and_block_id_and_cleanup_date", unique: true
+    t.index ["user_id", "block_id", "cleanup_date"], name: "index_cleanups_unique_daily", unique: true
     t.index ["user_id", "cleanup_date"], name: "index_cleanups_on_user_id_and_cleanup_date"
     t.index ["user_id"], name: "index_cleanups_on_user_id"
   end
@@ -355,8 +356,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_15_014013) do
     t.datetime "cancelled_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "stripe_payment_method_id"
+    t.boolean "requires_action"
+    t.string "client_secret"
     t.index ["block_id"], name: "index_pledges_on_block_id"
     t.index ["client_id", "block_id"], name: "index_pledges_on_client_id_and_block_id"
+    t.index ["client_id", "block_id"], name: "index_pledges_unique_client_block", unique: true
     t.index ["client_id"], name: "index_pledges_on_client_id"
     t.index ["coverage_region_id"], name: "index_pledges_on_coverage_region_id"
     t.index ["status"], name: "index_pledges_on_status"
@@ -488,6 +493,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_15_014013) do
     t.index ["training_session_id"], name: "index_walker_earnings_on_training_session_id"
     t.index ["walker_id", "paid", "pending"], name: "index_walker_earnings_on_walker_and_payment_status"
     t.index ["walker_id"], name: "index_walker_earnings_on_walker_id"
+  end
+
+  create_table "webhook_events", force: :cascade do |t|
+    t.string "stripe_event_id"
+    t.string "event_type"
+    t.text "payload"
+    t.datetime "processed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["stripe_event_id"], name: "index_webhook_events_on_stripe_event_id", unique: true
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
