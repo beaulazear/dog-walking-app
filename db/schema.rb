@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_19_063604) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_19_072837) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -497,6 +497,15 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_19_063604) do
     t.integer "longest_streak_days", default: 0
     t.index ["is_scooper"], name: "index_users_on_is_scooper"
     t.index ["stripe_connect_account_id"], name: "index_users_on_stripe_connect_account_id"
+  end
+
+  create_table "waitlist_signups", force: :cascade do |t|
+    t.string "email", null: false
+    t.string "ip_address"
+    t.string "user_agent"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_waitlist_signups_on_email", unique: true
   end
 
   create_table "walk_groups", force: :cascade do |t|
