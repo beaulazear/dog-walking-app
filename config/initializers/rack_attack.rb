@@ -49,6 +49,14 @@ class Rack::Attack
     end
   end
 
+  # Throttle waitlist signups
+  # 5 signups per hour per IP (prevents spam while allowing legitimate retries)
+  throttle("waitlist/ip", limit: 5, period: 1.hour) do |req|
+    if req.path == "/waitlist_signups" && req.post?
+      req.ip
+    end
+  end
+
   # Throttle pledge creation
   # 10 pledges per hour per IP (prevents spam)
   throttle("pledges/ip", limit: 10, period: 1.hour) do |req|
