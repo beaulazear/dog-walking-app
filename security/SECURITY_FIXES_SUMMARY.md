@@ -146,6 +146,23 @@ end
 
 ## Security Infrastructure Added
 
+### HTTPS/SSL Enforcement (CRITICAL)
+**File:** `config/environments/production.rb`
+
+- Forces all HTTP requests to redirect to HTTPS
+- Adds Strict-Transport-Security header
+- Protects data in transit from interception
+- Production only (development uses HTTP)
+
+### Security Headers
+**File:** `config/initializers/security_headers.rb`
+
+- `X-Frame-Options: SAMEORIGIN` - Prevents clickjacking
+- `X-Content-Type-Options: nosniff` - Prevents MIME sniffing
+- `X-XSS-Protection: 1; mode=block` - Legacy XSS protection
+- `Referrer-Policy: strict-origin-when-cross-origin` - Privacy protection
+- `Permissions-Policy` - Restricts browser features (geolocation, camera, etc.)
+
 ### Rate Limiting (Rack::Attack)
 **File:** `config/initializers/rack_attack.rb`
 
