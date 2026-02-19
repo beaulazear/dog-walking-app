@@ -1,5 +1,4 @@
 class CleanupJobsController < ApplicationController
-  before_action :authenticate_user!
   before_action :set_cleanup_job, only: [ :show, :claim, :start, :complete, :confirm, :dispute, :cancel, :upload_before_photo, :upload_after_photo ]
 
   # GET /cleanup_jobs
