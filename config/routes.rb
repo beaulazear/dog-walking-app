@@ -135,6 +135,9 @@ Rails.application.routes.draw do
   patch "/walker/clients/:id", to: "walker_clients#update"
   delete "/walker/clients/:id", to: "walker_clients#destroy"
 
+  # Waitlist Signups
+  post "/waitlist_signups", to: "waitlist_signups#create"
+
   # ===== SCOOP ROUTES =====
   # Hyperlocal dog waste cleanup marketplace
 
