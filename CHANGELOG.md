@@ -14,7 +14,16 @@ All notable changes to this project will be documented in this file.
   - Moved: `test/security_test.rb` → `security/security_test.rb`
   - Moved: `test/manual_security_tests.md` → `security/manual_security_tests.md`
 
+- **Archived old security docs** from Feb 14-15 review to `docs/archive/`
+  - Moved: `docs/FINAL_SECURITY_REVIEW.md` → `docs/archive/`
+  - Moved: `docs/SECURITY_FIXES_APPLIED.md` → `docs/archive/`
+  - Moved: `docs/STRIPE_SECURITY_AND_INTEGRATION.md` → `docs/archive/`
+  - Moved: `docs/QUICK_REFERENCE_STRIPE_SECURITY.md` → `docs/archive/`
+  - Moved: `docs/STRIPE_INTEGRATION_GUIDE.md` → `docs/archive/`
+  - **Kept:** `docs/SCOOP_STRIPE_CONNECT_SETUP.md` (has unique Scoop-specific info)
+
 - **Created `security/README.md`** - Security documentation index with quick reference
+- **Created `docs/archive/README.md`** - Explains archived docs and what supersedes them
 
 #### Documentation Updates (Made More Concise)
 - **security/SECURITY_QUICK_START.md** - Reduced from 275 → 130 lines (52% shorter)
@@ -34,6 +43,8 @@ All notable changes to this project will be documented in this file.
   - Security status summary
   - Links to all security docs
   - Monitoring & emergency contacts
+
+- **docs/archive/README.md** - Documents archived files and what supersedes them
 
 ---
 
