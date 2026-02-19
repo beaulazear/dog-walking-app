@@ -2,27 +2,61 @@ class CleanupJobsController < ApplicationController
   before_action :set_cleanup_job, only: [ :show, :claim, :start, :complete, :confirm, :dispute, :cancel, :upload_before_photo, :upload_after_photo ]
 
   # GET /cleanup_jobs
-  # List jobs - optionally filtered by status
+  # List jobs - supports comprehensive filtering per MVP spec
   def index
     jobs = CleanupJob.includes(:poster, :scooper)
 
-    # Filter by status
+    # Filter by status (default to open jobs only)
     if params[:status].present?
       jobs = jobs.where(status: params[:status])
+    else
+      jobs = jobs.open # Default to open jobs only (available to claim)
     end
 
-    # Filter by location if provided
+    # Filter by job_type (poop, litter, both)
+    if params[:job_type].present?
+      jobs = jobs.by_job_type(params[:job_type])
+    end
+
+    # Filter by location if provided (Nearby filter)
     if params[:latitude].present? && params[:longitude].present?
       lat = params[:latitude].to_f
       lng = params[:longitude].to_f
-      radius = params[:radius]&.to_f || 5.0
+      radius = params[:radius]&.to_f || 0.5 # Default 0.5 miles per MVP
       jobs = jobs.nearby(lat, lng, radius)
     end
 
-    # Order by created_at descending (newest first)
-    jobs = jobs.order(created_at: :desc)
+    # Just Posted filter (last hour)
+    if params[:just_posted] == "true"
+      jobs = jobs.just_posted
+    end
 
-    render json: { jobs: jobs.map { |job| job_json(job) } }, status: :ok
+    # Sorting
+    case params[:sort]
+    when "highest_pay"
+      jobs = jobs.highest_pay
+    when "newest"
+      jobs = jobs.recent
+    else
+      jobs = jobs.recent # Default sort by newest
+    end
+
+    # Pagination
+    page = params[:page]&.to_i || 1
+    per_page = params[:per_page]&.to_i || 50
+    jobs = jobs.offset((page - 1) * per_page).limit(per_page)
+
+    total_count = jobs.count(:all)
+
+    render json: {
+      jobs: jobs.map { |job| job_json(job) },
+      pagination: {
+        current_page: page,
+        per_page: per_page,
+        total_count: total_count,
+        total_pages: (total_count.to_f / per_page).ceil
+      }
+    }, status: :ok
   end
 
   # GET /cleanup_jobs/my_posted
@@ -54,6 +88,12 @@ class CleanupJobsController < ApplicationController
     @cleanup_job.job_expires_at = 24.hours.from_now
 
     if @cleanup_job.save
+      # Enqueue job expiration timer (24 hours)
+      JobExpirationJob.set(wait: 24.hours).perform_later(@cleanup_job.id)
+
+      # Broadcast to job board
+      broadcast_job_update(@cleanup_job, "job_created")
+
       render json: { job: job_json(@cleanup_job) }, status: :created
     else
       render json: { error: @cleanup_job.errors.full_messages.join(", ") }, status: :unprocessable_entity
@@ -88,6 +128,15 @@ class CleanupJobsController < ApplicationController
       claimed_at: Time.current
     )
 
+    # Enqueue arrival timer (60 minutes - scooper must arrive or job auto-releases)
+    ArrivalTimerJob.set(wait: 1.hour).perform_later(@cleanup_job.id)
+
+    # Notify poster that job was claimed
+    PushNotificationService.notify_job_claimed(@cleanup_job)
+
+    # Broadcast status change
+    broadcast_job_update(@cleanup_job, "job_claimed")
+
     render json: { job: job_json(@cleanup_job) }, status: :ok
   end
 
@@ -106,6 +155,12 @@ class CleanupJobsController < ApplicationController
       status: "in_progress",
       scooper_arrived_at: Time.current
     )
+
+    # Notify poster that scooper has arrived
+    PushNotificationService.notify_job_started(@cleanup_job)
+
+    # Broadcast status change
+    broadcast_job_update(@cleanup_job, "job_started")
 
     render json: { job: job_json(@cleanup_job) }, status: :ok
   end
@@ -127,6 +182,15 @@ class CleanupJobsController < ApplicationController
       pickup_count: params[:pickup_count]&.to_i,
       expires_at: 2.hours.from_now  # Auto-confirm in 2 hours if poster doesn't respond
     )
+
+    # Enqueue confirmation timeout (2 hours - auto-confirm if poster doesn't respond)
+    ConfirmationTimeoutJob.set(wait: 2.hours).perform_later(@cleanup_job.id)
+
+    # Notify poster that job is completed and needs confirmation
+    PushNotificationService.notify_job_completed(@cleanup_job)
+
+    # Broadcast status change
+    broadcast_job_update(@cleanup_job, "job_completed")
 
     render json: { job: job_json(@cleanup_job) }, status: :ok
   end
@@ -162,6 +226,12 @@ class CleanupJobsController < ApplicationController
       confirmed_at: Time.current
     )
 
+    # Notify scooper that job was confirmed
+    PushNotificationService.notify_job_confirmed(@cleanup_job)
+
+    # Broadcast status change
+    broadcast_job_update(@cleanup_job, "job_confirmed")
+
     # TODO: Process payment to scooper via Stripe
 
     render json: { job: job_json(@cleanup_job) }, status: :ok
@@ -181,6 +251,12 @@ class CleanupJobsController < ApplicationController
       dispute_notes: params[:dispute_notes]
     )
 
+    # Notify scooper that job was disputed
+    PushNotificationService.notify_job_disputed(@cleanup_job)
+
+    # Broadcast status change
+    broadcast_job_update(@cleanup_job, "job_disputed")
+
     # TODO: Notify admin for manual review
 
     render json: { job: job_json(@cleanup_job) }, status: :ok
@@ -197,14 +273,29 @@ class CleanupJobsController < ApplicationController
       return render json: { error: "You cannot cancel this job" }, status: :forbidden
     end
 
+    # Calculate cancellation fee (20% if poster cancels after scooper claimed)
+    cancellation_fee = @cleanup_job.calculate_cancellation_fee(current_user)
+
     @cleanup_job.update!(
       status: "cancelled",
+      cancelled_by_id: current_user.id,
+      cancelled_at: Time.current,
+      cancellation_fee_amount: cancellation_fee,
+      cancellation_reason: params[:cancellation_reason],
       scooper_id: nil  # Release scooper if they cancelled
     )
 
+    # Broadcast status change (job may be available again if scooper cancelled)
+    broadcast_job_update(@cleanup_job, "job_cancelled")
+
+    # TODO: Charge cancellation fee via Stripe if amount > 0
     # TODO: Release Stripe payment hold if exists
 
-    render json: { job: job_json(@cleanup_job) }, status: :ok
+    render json: {
+      job: job_json(@cleanup_job),
+      cancellation_fee: cancellation_fee,
+      message: cancellation_fee > 0 ? "Job cancelled. A #{(cancellation_fee / @cleanup_job.price * 100).to_i}% cancellation fee of $#{cancellation_fee} will be charged." : "Job cancelled successfully."
+    }, status: :ok
   end
 
   private
@@ -216,7 +307,18 @@ class CleanupJobsController < ApplicationController
   end
 
   def cleanup_job_params
-    params.permit(:latitude, :longitude, :address, :price, :note, :stripe_payment_intent_id)
+    params.permit(
+      :latitude,
+      :longitude,
+      :address,
+      :price,
+      :note,
+      :stripe_payment_intent_id,
+      :job_type,
+      :poop_itemization,
+      :litter_itemization,
+      segments_selected: []
+    )
   end
 
   def job_json(job)
@@ -233,12 +335,50 @@ class CleanupJobsController < ApplicationController
       note: job.note,
       status: job.status,
       pickup_count: job.pickup_count,
+      # Job type and itemization (MVP)
+      job_type: job.job_type,
+      poop_itemization: job.poop_itemization,
+      litter_itemization: job.litter_itemization,
+      segments_selected: job.segments_selected || [],
+      # Cancellation
+      cancelled_by_id: job.cancelled_by_id,
+      cancelled_at: job.cancelled_at,
+      cancellation_fee_amount: job.cancellation_fee_amount,
+      cancellation_reason: job.cancellation_reason,
+      # Timestamps
       claimed_at: job.claimed_at,
       completed_at: job.completed_at,
       confirmed_at: job.confirmed_at,
       created_at: job.created_at,
+      updated_at: job.updated_at,
+      # Photos
       before_photos: job.before_photos.attached? ? job.before_photos.map { |photo| rails_blob_url(photo) } : [],
       after_photos: job.after_photos.attached? ? job.after_photos.map { |photo| rails_blob_url(photo) } : []
     }
+  end
+
+  # Broadcast job updates via Action Cable
+  def broadcast_job_update(job, event_type)
+    # Broadcast to specific job channel (for poster and scooper)
+    ActionCable.server.broadcast(
+      "cleanup_job_#{job.id}",
+      {
+        type: event_type,
+        job: job_json(job),
+        timestamp: Time.current
+      }
+    )
+
+    # Broadcast to job board if it's a new or available job
+    if event_type.in?([ "job_created", "job_available" ])
+      ActionCable.server.broadcast(
+        "job_board_updates",
+        {
+          type: event_type,
+          job: job_json(job),
+          timestamp: Time.current
+        }
+      )
+    end
   end
 end

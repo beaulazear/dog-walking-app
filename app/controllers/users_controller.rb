@@ -112,6 +112,21 @@ class UsersController < ApplicationController
     end
   end
 
+  # POST /users/register_device
+  # Register device token for push notifications
+  def register_device
+    user = @current_user
+
+    if user.update(device_params)
+      render json: {
+        message: "Device registered successfully",
+        device_platform: user.device_platform
+      }, status: :ok
+    else
+      render json: { error: "Failed to register device" }, status: :unprocessable_entity
+    end
+  end
+
   private
 
   def user_params
@@ -126,5 +141,9 @@ class UsersController < ApplicationController
 
   def profile_params
     params.permit(:name, :username, :profile_pic)
+  end
+
+  def device_params
+    params.permit(:device_token, :device_platform)
   end
 end

@@ -263,6 +263,9 @@ GEM
     rdoc (6.14.2)
       erb
       psych (>= 4.0.0)
+    redis (4.8.1)
+    redis-client (0.26.1)
+      connection_pool
     regexp_parser (2.10.0)
     reline (0.6.2)
       io-console (~> 0.5)
@@ -330,6 +333,12 @@ GEM
       websocket (~> 1.0)
     shoulda-matchers (4.5.1)
       activesupport (>= 4.2.0)
+    sidekiq (7.3.9)
+      base64
+      connection_pool (>= 2.3.0)
+      logger
+      rack (>= 2.2.4)
+      redis-client (>= 0.22.2)
     spring (4.2.1)
     sprockets (4.2.1)
       concurrent-ruby (~> 1.0)
@@ -392,6 +401,7 @@ DEPENDENCIES
   rack-attack
   rack-cors
   rails (~> 7.2.2)
+  redis
   rgeo
   rgeo-geojson
   rspec-json_expectations
@@ -399,6 +409,7 @@ DEPENDENCIES
   rubocop-rails-omakase
   selenium-webdriver
   shoulda-matchers (~> 4.0)
+  sidekiq
   spring
   sprockets-rails
   stimulus-rails

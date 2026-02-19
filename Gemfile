@@ -44,6 +44,10 @@ gem "rgeo-geojson"
 # Stripe for payment processing
 gem "stripe"
 
+# Background job processing
+gem "sidekiq"
+gem "redis"
+
 # Environment variables management
 gem "dotenv-rails", groups: %i[development test]
 

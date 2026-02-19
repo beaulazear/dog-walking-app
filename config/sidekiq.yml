@@ -1,0 +1,19 @@
+---
+:concurrency: 5
+
+:queues:
+  - critical
+  - default
+  - low
+
+# Production settings
+production:
+  :concurrency: 10
+
+# Development settings
+development:
+  :concurrency: 2
+
+# Test settings
+test:
+  :concurrency: 1

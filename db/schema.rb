@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_19_135024) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_19_225328) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -214,7 +214,17 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_19_135024) do
     t.datetime "job_expires_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "job_type", default: "poop", null: false
+    t.string "poop_itemization"
+    t.string "litter_itemization"
+    t.jsonb "segments_selected", default: []
+    t.bigint "cancelled_by_id"
+    t.datetime "cancelled_at"
+    t.decimal "cancellation_fee_amount", precision: 10, scale: 2
+    t.text "cancellation_reason"
     t.index ["block_id"], name: "index_cleanup_jobs_on_block_id"
+    t.index ["cancelled_by_id"], name: "index_cleanup_jobs_on_cancelled_by_id"
+    t.index ["job_type"], name: "index_cleanup_jobs_on_job_type"
     t.index ["latitude", "longitude"], name: "index_cleanup_jobs_on_latitude_and_longitude"
     t.index ["poster_id"], name: "index_cleanup_jobs_on_poster_id"
     t.index ["scooper_id"], name: "index_cleanup_jobs_on_scooper_id"
@@ -496,6 +506,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_19_135024) do
     t.integer "current_streak_days", default: 0
     t.integer "longest_streak_days", default: 0
     t.boolean "admin", default: false, null: false
+    t.string "device_token"
+    t.string "device_platform"
+    t.index ["device_token"], name: "index_users_on_device_token"
     t.index ["is_scooper"], name: "index_users_on_is_scooper"
     t.index ["stripe_connect_account_id"], name: "index_users_on_stripe_connect_account_id"
   end
@@ -578,6 +591,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_19_135024) do
   add_foreign_key "books", "users"
   add_foreign_key "cancellations", "appointments"
   add_foreign_key "certification_goals", "users"
+  add_foreign_key "cleanup_jobs", "users", column: "cancelled_by_id"
   add_foreign_key "cleanup_jobs", "users", column: "poster_id"
   add_foreign_key "cleanup_jobs", "users", column: "scooper_id"
   add_foreign_key "cleanups", "blocks"
