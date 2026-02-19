@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_15_193502) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_19_063604) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -186,6 +186,40 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_15_193502) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_certification_goals_on_user_id", unique: true
+  end
+
+  create_table "cleanup_jobs", force: :cascade do |t|
+    t.bigint "poster_id", null: false
+    t.decimal "latitude", precision: 10, scale: 7, null: false
+    t.decimal "longitude", precision: 10, scale: 7, null: false
+    t.string "address"
+    t.bigint "block_id"
+    t.decimal "price", precision: 10, scale: 2, null: false
+    t.text "note"
+    t.string "status", default: "open", null: false
+    t.bigint "scooper_id"
+    t.datetime "claimed_at"
+    t.datetime "scooper_arrived_at"
+    t.integer "pickup_count"
+    t.datetime "completed_at"
+    t.datetime "confirmed_at"
+    t.datetime "expires_at"
+    t.string "stripe_payment_intent_id"
+    t.decimal "platform_fee", precision: 10, scale: 2
+    t.decimal "scooper_payout", precision: 10, scale: 2
+    t.string "dispute_reason"
+    t.text "dispute_notes"
+    t.datetime "disputed_at"
+    t.string "dispute_resolution"
+    t.datetime "job_expires_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["block_id"], name: "index_cleanup_jobs_on_block_id"
+    t.index ["latitude", "longitude"], name: "index_cleanup_jobs_on_latitude_and_longitude"
+    t.index ["poster_id"], name: "index_cleanup_jobs_on_poster_id"
+    t.index ["scooper_id"], name: "index_cleanup_jobs_on_scooper_id"
+    t.index ["status", "created_at"], name: "index_cleanup_jobs_on_status_and_created_at"
+    t.index ["status"], name: "index_cleanup_jobs_on_status"
   end
 
   create_table "cleanups", force: :cascade do |t|
@@ -386,6 +420,20 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_15_193502) do
     t.index ["status"], name: "index_poop_reports_on_status"
   end
 
+  create_table "reviews", force: :cascade do |t|
+    t.bigint "cleanup_job_id", null: false
+    t.bigint "reviewer_id", null: false
+    t.bigint "scooper_id", null: false
+    t.integer "rating", null: false
+    t.text "comment"
+    t.decimal "tip_amount", precision: 10, scale: 2
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cleanup_job_id"], name: "index_reviews_on_cleanup_job_id"
+    t.index ["reviewer_id"], name: "index_reviews_on_reviewer_id"
+    t.index ["scooper_id"], name: "index_reviews_on_scooper_id"
+  end
+
   create_table "scooper_milestones", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "milestone_type", null: false
@@ -520,6 +568,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_15_193502) do
   add_foreign_key "books", "users"
   add_foreign_key "cancellations", "appointments"
   add_foreign_key "certification_goals", "users"
+  add_foreign_key "cleanup_jobs", "users", column: "poster_id"
+  add_foreign_key "cleanup_jobs", "users", column: "scooper_id"
   add_foreign_key "cleanups", "blocks"
   add_foreign_key "cleanups", "users"
   add_foreign_key "coverage_regions", "blocks"
@@ -542,6 +592,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_15_193502) do
   add_foreign_key "pledges", "coverage_regions"
   add_foreign_key "poop_reports", "blocks"
   add_foreign_key "poop_reports", "clients"
+  add_foreign_key "reviews", "cleanup_jobs"
+  add_foreign_key "reviews", "users", column: "reviewer_id"
+  add_foreign_key "reviews", "users", column: "scooper_id"
   add_foreign_key "scooper_milestones", "users"
   add_foreign_key "share_dates", "appointment_shares"
   add_foreign_key "training_sessions", "pets"

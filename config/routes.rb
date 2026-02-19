@@ -177,6 +177,24 @@ Rails.application.routes.draw do
     end
   end
 
+  # Cleanup Jobs - On-demand job board (new model)
+  resources :cleanup_jobs, only: %i[index show create] do
+    collection do
+      get :my_posted         # GET /cleanup_jobs/my_posted
+      get :my_claimed        # GET /cleanup_jobs/my_claimed
+    end
+    member do
+      post :claim            # POST /cleanup_jobs/:id/claim
+      post :start            # POST /cleanup_jobs/:id/start
+      post :complete         # POST /cleanup_jobs/:id/complete
+      post :confirm          # POST /cleanup_jobs/:id/confirm
+      post :dispute          # POST /cleanup_jobs/:id/dispute
+      post :cancel           # POST /cleanup_jobs/:id/cancel
+      post :upload_before_photo  # POST /cleanup_jobs/:id/upload_before_photo
+      post :upload_after_photo   # POST /cleanup_jobs/:id/upload_after_photo
+    end
+  end
+
   # Scooper Milestones - Achievement tracking
   resources :scooper_milestones, only: %i[index show] do
     collection do

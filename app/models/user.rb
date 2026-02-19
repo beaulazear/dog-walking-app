@@ -27,12 +27,18 @@ class User < ApplicationRecord
   # Walker earnings (for covering shared appointments)
   has_many :walker_earnings, foreign_key: "walker_id", dependent: :destroy
 
-  # Scoop associations (scooper role)
+  # Scoop associations (scooper role - old block-based model)
   has_many :coverage_regions, dependent: :destroy
   has_many :claimed_blocks, through: :coverage_regions, source: :block
   has_many :active_blocks, class_name: "Block", foreign_key: "active_scooper_id"
   has_many :cleanups, dependent: :destroy
   has_many :scooper_milestones, dependent: :destroy
+
+  # Scoop associations (job board model)
+  has_many :cleanup_jobs_as_poster, class_name: "CleanupJob", foreign_key: "poster_id", dependent: :destroy
+  has_many :cleanup_jobs_as_scooper, class_name: "CleanupJob", foreign_key: "scooper_id", dependent: :nullify
+  has_many :reviews_given, class_name: "Review", foreign_key: "reviewer_id", dependent: :destroy
+  has_many :reviews_received, class_name: "Review", foreign_key: "scooper_id", dependent: :destroy
 
   # Helper method to get all connections (both initiated and received)
   def all_connections
