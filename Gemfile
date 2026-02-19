@@ -30,6 +30,9 @@ gem "stimulus-rails"
 # Enable Cross-Origin Resource Sharing (CORS)
 gem "rack-cors", require: "rack/cors"
 
+# Rate limiting and throttling protection
+gem "rack-attack"
+
 # AWS SDK for Active Storage
 gem "aws-sdk-s3"
 

@@ -23,11 +23,11 @@ namespace :scoop do
         borough: "Manhattan",
         # West Village block coordinates (polygon)
         coordinates: [
-          [-74.0060, 40.7350],
-          [-74.0050, 40.7350],
-          [-74.0050, 40.7340],
-          [-74.0060, 40.7340],
-          [-74.0060, 40.7350]
+          [ -74.0060, 40.7350 ],
+          [ -74.0050, 40.7350 ],
+          [ -74.0050, 40.7340 ],
+          [ -74.0060, 40.7340 ],
+          [ -74.0060, 40.7350 ]
         ]
       },
       {
@@ -35,11 +35,11 @@ namespace :scoop do
         neighborhood: "Chelsea",
         borough: "Manhattan",
         coordinates: [
-          [-74.0020, 40.7470],
-          [-74.0010, 40.7470],
-          [-74.0010, 40.7460],
-          [-74.0020, 40.7460],
-          [-74.0020, 40.7470]
+          [ -74.0020, 40.7470 ],
+          [ -74.0010, 40.7470 ],
+          [ -74.0010, 40.7460 ],
+          [ -74.0020, 40.7460 ],
+          [ -74.0020, 40.7470 ]
         ]
       },
       {
@@ -47,11 +47,11 @@ namespace :scoop do
         neighborhood: "SoHo",
         borough: "Manhattan",
         coordinates: [
-          [-74.0030, 40.7230],
-          [-74.0020, 40.7230],
-          [-74.0020, 40.7220],
-          [-74.0030, 40.7220],
-          [-74.0030, 40.7230]
+          [ -74.0030, 40.7230 ],
+          [ -74.0020, 40.7230 ],
+          [ -74.0020, 40.7220 ],
+          [ -74.0030, 40.7220 ],
+          [ -74.0030, 40.7230 ]
         ]
       }
     ]
@@ -62,7 +62,7 @@ namespace :scoop do
       # Create GeoJSON polygon
       geojson = {
         type: "Polygon",
-        coordinates: [data[:coordinates]]
+        coordinates: [ data[:coordinates] ]
       }
 
       block.assign_attributes(

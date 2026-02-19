@@ -2,9 +2,21 @@ class StripeWebhooksController < ApplicationController
   skip_before_action :authorized # Webhooks don't use JWT auth
 
   def create
+    # CRITICAL: Ensure webhook secret is configured
+    endpoint_secret = Rails.application.credentials.dig(:stripe, :webhook_secret)
+
+    if endpoint_secret.blank?
+      Rails.logger.error("🚨 CRITICAL: Stripe webhook secret not configured!")
+      StripeErrorMonitor.track_error(
+        StandardError.new("Webhook secret not configured"),
+        context: { action: "webhook_processing" },
+        severity: :critical
+      )
+      return render json: { error: "Webhook processing unavailable" }, status: :service_unavailable
+    end
+
     payload = request.body.read
     sig_header = request.env["HTTP_STRIPE_SIGNATURE"]
-    endpoint_secret = Rails.application.credentials.dig(:stripe, :webhook_secret)
 
     begin
       event = Stripe::Webhook.construct_event(
@@ -12,9 +24,17 @@ class StripeWebhooksController < ApplicationController
       )
     rescue JSON::ParserError => e
       Rails.logger.error("Webhook parsing error: #{e.message}")
+      StripeErrorMonitor.track_error(e,
+        context: { action: "webhook_parsing", payload_size: payload.size },
+        severity: :high
+      )
       return render json: { error: "Invalid payload" }, status: :bad_request
     rescue Stripe::SignatureVerificationError => e
       Rails.logger.error("Webhook signature verification failed: #{e.message}")
+      StripeErrorMonitor.track_error(e,
+        context: { action: "webhook_verification", ip: request.remote_ip },
+        severity: :critical
+      )
       return render json: { error: "Invalid signature" }, status: :unauthorized
     end
 
@@ -92,6 +112,20 @@ class StripeWebhooksController < ApplicationController
 
     pledge = Pledge.find_by(stripe_subscription_id: subscription.id)
     return unless pledge
+
+    # CRITICAL: Track payment failure
+    StripeErrorMonitor.track_error(
+      StandardError.new("Payment failed for pledge"),
+      context: {
+        pledge_id: pledge.id,
+        invoice_id: invoice.id,
+        subscription_id: subscription.id,
+        client_id: pledge.client_id,
+        amount: invoice.amount_due,
+        attempt_count: invoice.attempt_count
+      },
+      severity: :high
+    )
 
     # TODO: Notify client and scooper
     # TODO: Potentially mark pledge as at-risk

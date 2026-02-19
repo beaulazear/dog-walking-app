@@ -1,355 +1,433 @@
-# Project Template: React/Rails API
+# Dog Walking App - Multi-Product Platform
 
-update image from here:
+**A professional Rails + React application for dog care professionals**
 
-<a href="https://www.vecteezy.com/free-vector/update-icon">Update Icon Vectors by Vecteezy</a>
+**Last Updated:** February 18, 2026
+**Status:** ✅ Production-Ready with Security Hardening Complete
 
-## Description
+---
 
-This project is scaffolded so that you can build a React frontend and Rails
-backend together, and easily deploy them to Render.
+## 🎯 Overview
 
-**Note**: if you are not planning to deploy your app to Render and prefer to use
-SQLite, you will need to make the following changes in the project files:
+This is a **three-product platform** sharing a single Rails backend with PostgreSQL database:
 
-1. In the `Gemfile`, replace `gem 'pg', '~> 1.1'` with `gem 'sqlite3', '~>
-   1.4'`.
-2. In the `database.yml` file, change the line `adapter: postgresql` to
-   `adapter: sqlite3`.
+1. **Pocket Walks** - Dog walking business management (✅ Deployed)
+2. **Client Portal** - Pet owner interface (✅ Backend complete, ⚠️ Frontend needed)
+3. **Scoop** - Dog waste cleanup marketplace (✅ Backend deployed, 🚧 Frontend in progress)
 
-## Requirements
+**Key Features:**
+- ✅ Enterprise-grade security (all vulnerabilities fixed)
+- ✅ Stripe payment integration (test mode)
+- ✅ AWS S3 file storage
+- ✅ JWT authentication
+- ✅ Rate limiting & monitoring
+- ✅ 100+ API endpoints
+- ✅ Comprehensive documentation
 
+---
+
+## 📚 Documentation
+
+### **START HERE:**
+1. **[PROJECT_STATUS.md](PROJECT_STATUS.md)** - Complete project overview
+2. **[SECURITY_QUICK_START.md](SECURITY_QUICK_START.md)** - Get running in 5 minutes
+3. **[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** - Navigate all docs
+
+### Quick Links:
+- **Security:** [SECURITY_FIXES_SUMMARY.md](SECURITY_FIXES_SUMMARY.md)
+- **Scoop API:** [docs/SCOOP_BACKEND_SUMMARY.md](docs/SCOOP_BACKEND_SUMMARY.md)
+- **Client API:** [CLIENT_API_DOCUMENTATION.md](CLIENT_API_DOCUMENTATION.md)
+- **Architecture:** [ARCHITECTURE_REPORT.md](ARCHITECTURE_REPORT.md)
+- **Next Steps:** [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
 - Ruby 2.7.4
-- NodeJS (v16), and npm
-- Render account
-- Postgresql
+- PostgreSQL
+- Node.js 16+
+- Stripe account (for payments)
+- AWS S3 bucket (for file storage)
 
-See Environment Setup below for instructions on installing these tools if you
-don't already have them.
+### Installation
 
-## Setup
+```bash
+# Clone repository
+git clone <your-repo-url>
+cd dog-walking-app
 
-Start by **cloning** (not forking) the project template repository and removing
-the remote:
-
-```console
-$ git clone git@github.com:learn-co-curriculum/project-template-react-rails-api.git your-project-name
-$ cd your-project-name
-$ git remote rm origin
-```
-
-Then, [create a new remote repository][create repo] on GitHub. Head to
-[github.com](https://github.com) and click the **+** icon in the top-right
-corner and follow the steps to create a new repository. **Important**: don't
-check any of the options such as 'Add a README file', 'Add a .gitignore file',
-etc. — since you're importing an existing repository, creating any of those
-files on GitHub will cause issues.
-
-[create repo]: https://docs.github.com/en/github/importing-your-projects-to-github/importing-source-code-to-github/adding-an-existing-project-to-github-using-the-command-line#adding-a-project-to-github-without-github-cli
-
-If you're working with a partner,
-[add them as a collaborator][add collaborator] on GitHub. From your repo on
-GitHub, go to Settings > Manage Access > Invite a collaborator and enter your
-partner's username. Once your partner has access, they should git **clone** (not
-fork) the repository.
-
-[add collaborator]: https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-github-user-account/managing-access-to-your-personal-repositories/inviting-collaborators-to-a-personal-repository
-
-Finally, connect the GitHub remote repository to your local repository and push
-up your code:
-
-```console
-$ git remote add origin git@github.com:your-username/your-project-name.git
-$ git push -u origin main
-```
-
-When you're ready to start building your project, run:
-
-```sh
+# Install dependencies
 bundle install
-rails db:create
 npm install --prefix client
+
+# Set up database
+rails db:create
+rails db:migrate
+rails db:seed
+
+# Configure credentials (see SECURITY_QUICK_START.md)
+EDITOR="code --wait" rails credentials:edit
+# Add your Stripe keys, AWS credentials, etc.
+
+# Start servers
+rails server                    # Backend on port 3000
+npm start --prefix client       # Frontend on port 4000
 ```
 
-You can use the following commands to run the application:
+### Verify Setup
 
-- `rails s`: run the backend on [http://localhost:3000](http://localhost:3000)
-- `npm start --prefix client`: run the frontend on
-  [http://localhost:4000](http://localhost:4000)
+```bash
+# Check Stripe configuration
+./bin/check_stripe_config
 
-Make sure to also update this README to include documentation about
-your project. Here's a list of some [awesome readmes][] for inspiration.
+# Run security tests
+ruby test/security_test.rb
 
-[awesome readmes]: https://github.com/matiassingers/awesome-readme
-
-## Deploying
-
-This application has all the starter code needed to help you deploy your
-application to Render. It's recommended to deploy your project early and push up
-changes often to ensure that your code works equally well in production and
-development environments.
-
-The instructions in this section assume that you've already set up a Render
-account, created a PostgreSQL instance in your account, and set up your
-environment to deploy to Render. If you have not yet completed these steps, see
-the Environment Setup section below.
-
-### Create a Master Key File
-
-In the project files, delete the `config/credentials.yml.enc` file. Then, in the
-terminal, run the following:
-
-```sh
-$ EDITOR="code --wait" bin/rails credentials:edit
+# Check Stripe health
+rails stripe:monitor:health
 ```
 
-**Note**: if you use a different text editor than VS Code, you will need to replace
-`code` with the appropriate command.
+---
 
-The command above will open a file in VS Code and wait for you to close it
-before completing the process of creating the credential files. Once you've done
-that, you should see both the `credentials.yml.enc` and `master.key` files in
-the `config` folder. You will need the value in the `master.key` file to set up
-the web service in Render.
+## 🔒 Security (Updated Feb 18, 2026)
 
-Commit your changes and push them to GitHub.
+**All critical vulnerabilities have been fixed:**
 
-### Create the App Database
+✅ SQL Injection Protection
+✅ Stripe Subscription Security
+✅ Authorization Enforcement
+✅ GPS Fraud Prevention
+✅ File Upload Validation
+✅ Rate Limiting
+✅ Error Monitoring
+✅ Comprehensive Testing
 
-Render allows users to create [multiple databases within a single PostgreSQL
-instance][multiple dbs] using the PostgreSQL interactive terminal,
-[`psql`][psql].
+**See:** [SECURITY_FIXES_SUMMARY.md](SECURITY_FIXES_SUMMARY.md) for details
 
-Navigate to your PostgreSQL instance from the Render dashboard, click the
-"Connect" dropdown, then the External Connection tab, and copy the PSQL command.
-Paste it into your terminal and press enter. This command connects you to the
-remote PostgreSQL instance.
-
-To create the database, run this SQL command:
-
-```sql
-CREATE DATABASE new_db_name;
+**Security Commands:**
+```bash
+./bin/check_stripe_config           # Verify configuration
+ruby test/security_test.rb          # Run tests
+rails stripe:monitor:health         # Monitor Stripe
 ```
 
-Now if you run `\l` from the PSQL prompt, you should see a table that includes
-your main PostgreSQL instance as well as the database you just created.
+---
 
-Run the `\q` command to exit PSQL.
+## 💻 Tech Stack
 
-[multiple dbs]: https://render.com/docs/databases#multiple-databases-in-a-single-postgresql-instance
-[psql]: https://www.postgresql.org/docs/current/app-psql.html
+### Backend
+- **Framework:** Rails 7.2.2
+- **Database:** PostgreSQL with lat/lng support
+- **Authentication:** JWT + bcrypt
+- **Payments:** Stripe + Stripe Connect
+- **Storage:** AWS S3 (Active Storage)
+- **Security:** Rack::Attack, custom monitoring
 
-### Create the Render Web Service
+### Frontend
+- **Framework:** React 18.3.1
+- **Routing:** React Router v6
+- **Styling:** styled-components
+- **Charts:** Chart.js
+- **Build:** react-scripts 5.0.1
 
-To deploy, click the "New +" button in Render and select "Web Service". You'll
-see a list of all the repositories in your GitHub account. Find the repo you
-want to deploy and click the "Select" button.
+---
 
-In the page that opens, enter a name for your app and make sure the Environment
-is set to Ruby.
+## 📊 API Endpoints
 
-Scroll down and set the Build Command to `./bin/render-build.sh` and the Start
-Command to `bundle exec puma -C config/puma.rb`.
+### Pocket Walks (Dog Walking)
+- Appointments, Pets, Invoices
+- Training sessions, Pet sitting
+- Team sharing, Earnings tracking
 
-Open a separate tab in your browser, navigate to the Render dashboard, and click
-on your PostgreSQL instance. Scroll down to the "Connection" section, find the
-"Internal Database URL", and copy it.
+### Client Portal (Pet Owners)
+- Pet management, Booking
+- Invoice viewing, Notifications
 
-Return to the other tab. Scroll down and click the "Advanced" button, then click
-"Add Environment Variable." Enter `DATABASE_URL` as the key, then paste in the
-URL you just copied. Note that the URL will end with the name you gave your
-PostgreSQL instance when you initially created it; be sure to remove that name
-and replace it with the name of the database you created in the last section.
+### Scoop (Marketplace)
+- Block management, Pledges
+- GPS-verified cleanups, Poop reports
+- Gamification, Stripe Connect
 
-Click "Add Environment Variable" again. Add `RAILS_MASTER_KEY` as the key, and
-paste the value in the `config/master.key` file you created earlier.
+**Total:** 100+ RESTful JSON API endpoints
 
-The completed page should look like this:
+**See:** [docs/SCOOP_BACKEND_SUMMARY.md](docs/SCOOP_BACKEND_SUMMARY.md) for complete API docs
 
-![Web service settings](https://curriculum-content.s3.amazonaws.com/phase-4/project-template/web-service-settings.png)
+---
 
-Scroll down to the bottom of the page and click "Create Web Service". The deploy
-process will begin automatically.
+## 🗄️ Database
 
-## Environment Setup
+**Single PostgreSQL database with 30+ tables:**
 
-### Install the Latest Ruby Version
+**Core Tables:**
+- `users` (walkers + scoopers)
+- `clients` (pet owners + residents)
+- `pets`, `appointments`, `invoices`
 
-Verify which version of Ruby you're running by entering this in the terminal:
+**Scoop Tables:**
+- `blocks`, `coverage_regions`, `pledges`
+- `cleanups`, `poop_reports`, `scooper_milestones`
 
-```console
-$ ruby -v
+**Shared Infrastructure:**
+- JWT authentication across all products
+- S3 file storage for all photos
+- Unified error monitoring
+
+---
+
+## 🚢 Deployment
+
+### Current Deployment
+- **Platform:** Render
+- **Database:** PostgreSQL on Render
+- **Storage:** AWS S3
+- **Status:** ✅ Production-ready
+
+### Environment Variables
+Set these on Render (or in local `.env`):
+```
+DATABASE_URL=postgresql://...
+RAILS_MASTER_KEY=<from config/master.key>
+AWS_ACCESS_KEY_ID=<your-key>
+AWS_SECRET_ACCESS_KEY=<your-secret>
+AWS_REGION=us-east-1
+AWS_BUCKET=beaubucketone
+FRONTEND_URL=https://your-frontend.com
 ```
 
-We recommend version 2.7.4. If you need to upgrade you can install it using rvm:
-
-```console
-$ rvm install 2.7.4 --default
+### Deploy
+```bash
+git push origin main
+# Render auto-deploys from main branch
 ```
 
-You should also install the latest versions of `bundler` and `rails`:
+**See:** [DEPLOYMENT_SUCCESS.md](DEPLOYMENT_SUCCESS.md) for details
 
-```console
-$ gem install bundler
-$ gem install rails
+---
+
+## 🧪 Testing
+
+### Run Tests
+```bash
+# RSpec tests
+bundle exec rspec
+
+# Security tests
+ruby test/security_test.rb
+
+# Manual testing
+# See test/manual_security_tests.md
 ```
 
-### Install NodeJS
+### Monitoring
+```bash
+# Stripe health check
+rails stripe:monitor:health
 
-Verify you are running a recent version of Node with:
+# Check for errors
+rails stripe:monitor:errors
 
-```sh
-node -v
+# Validate scoopers
+rails stripe:monitor:validate_scoopers
+
+# Check subscriptions
+rails stripe:monitor:check_cancelled_subscriptions
 ```
 
-If your Node version is not 16.x.x, install it and set it as the current and
-default version with:
+---
 
-```sh
-nvm install 16
-nvm use 16
-nvm alias default 16
+## 📱 Frontend Development
+
+### Pocket Walks (React - Deployed)
+```bash
+cd client
+npm start
+# Runs on http://localhost:4000
 ```
 
-You can also update your npm version with:
+### Scoop (React Native - In Progress)
+- Mobile app for scoopers and residents
+- Map view with block markers
+- GPS-verified cleanup logging
+- See: [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)
 
-```sh
-npm i -g npm
+### Client Portal (Not Yet Built)
+- Web interface for pet owners
+- Backend ready for integration
+- See: [CLIENT_API_DOCUMENTATION.md](CLIENT_API_DOCUMENTATION.md)
+
+---
+
+## 🔧 Development Workflow
+
+### Local Development
+```bash
+# Terminal 1: Rails backend
+rails server
+
+# Terminal 2: React frontend (Pocket Walks)
+cd client && npm start
+
+# Terminal 3: Stripe webhooks (optional)
+stripe listen --forward-to localhost:3000/stripe/webhooks
+
+# Terminal 4: Monitor logs
+tail -f log/development.log | grep -E "Stripe|Rack::Attack"
 ```
 
-### Install Postgresql
+### Common Commands
+```bash
+# Database
+rails db:migrate              # Run migrations
+rails db:seed                 # Seed data
+rails db:reset                # Reset database
 
-Render requires that you use PostgreSQL for your database instead of SQLite.
-PostgreSQL (or just Postgres for short) is an advanced database management
-system with more features than SQLite. If you don't already have it installed,
-you'll need to set it up.
+# Rails console
+rails console                 # REPL
 
-#### PostgreSQL Installation for WSL
+# Routes
+rails routes                  # View all routes
 
-To install Postgres for WSL, run the following commands from your Ubuntu terminal:
+# Security
+./bin/check_stripe_config     # Verify Stripe
+ruby test/security_test.rb    # Security tests
 
-```sh
-sudo apt update
-sudo apt install postgresql postgresql-contrib libpq-dev
+# Monitoring
+rails stripe:monitor:health   # Stripe health
 ```
 
-Then confirm that Postgres was installed successfully:
+---
 
-```sh
-psql --version
+## 📋 Project Structure
+
+```
+dog-walking-app/
+├── app/                      # Rails backend
+│   ├── controllers/          # 33 controllers
+│   ├── models/               # 28 models
+│   ├── serializers/          # API formatters
+│   ├── services/             # Business logic
+│   └── jobs/                 # Background jobs
+├── client/                   # React frontend
+│   └── src/
+│       ├── components/       # React components
+│       ├── context/          # Global state
+│       └── App.js            # Main app
+├── config/
+│   ├── initializers/
+│   │   ├── rack_attack.rb   # Rate limiting
+│   │   ├── stripe.rb        # Stripe config
+│   │   └── cors.rb          # CORS setup
+│   └── routes.rb            # API routes
+├── db/
+│   ├── schema.rb            # Database schema
+│   └── migrate/             # Migrations
+├── docs/                    # Documentation
+│   ├── SCOOP_BACKEND_SUMMARY.md
+│   ├── CURRENT_STATUS.md
+│   └── NEXT_STEPS.md
+├── lib/tasks/
+│   └── stripe_monitoring.rake
+├── test/
+│   ├── security_test.rb
+│   └── manual_security_tests.md
+├── PROJECT_STATUS.md        # Master status
+├── SECURITY_FIXES_SUMMARY.md
+├── STRIPE_SECURITY_SETUP.md
+└── README.md                # This file
 ```
 
-Run this command to start the Postgres service:
+---
 
-```sh
-sudo service postgresql start
+## 🎯 Current Status
+
+### ✅ Complete
+- Backend for all 3 products
+- Security hardening (8 vulnerabilities fixed)
+- Rate limiting & monitoring
+- Stripe integration (test mode)
+- Pocket Walks frontend
+- Comprehensive documentation
+- Production deployment
+
+### ⚠️ In Progress
+- Scoop mobile app
+- Client Portal web app
+- Stripe Connect configuration
+
+### 📝 TODO
+- Enable Stripe Connect
+- Build remaining frontends
+- Configure S3 lifecycle
+- Set up error tracking
+- Production launch
+
+**See:** [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md) for detailed roadmap
+
+---
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+**"Stripe webhook secret not configured"**
+```bash
+EDITOR="code --wait" rails credentials:edit
+# Add webhook_secret under stripe section
 ```
 
-Finally, you'll also need to create a database user so that you are able to
-connect to the database from Rails. First, check what your operating system
-username is:
-
-```sh
-whoami
+**"Master key not found"**
+```bash
+# Create new credentials
+rm config/credentials.yml.enc
+EDITOR="code --wait" rails credentials:edit
 ```
 
-If your username is "ian", for example, you'd need to create a Postgres user
-with that same name. To do so, run this command to open the Postgres CLI:
-
-```sh
-sudo -u postgres -i
+**"Rate limiting not working"**
+```bash
+# Restart server after rack_attack.rb changes
+rails server
 ```
 
-From the Postgres CLI, run this command (replacing "ian" with your username):
+**More help:** See [SECURITY_QUICK_START.md](SECURITY_QUICK_START.md)
 
-```sh
-createuser -sr ian
-```
+---
 
-Then enter `control + d` or type `logout` to exit.
+## 📞 Support
 
-[This guide][postgresql wsl] has more info on setting up Postgres on WSL if you
-get stuck.
+### Documentation
+- **Overview:** [PROJECT_STATUS.md](PROJECT_STATUS.md)
+- **Security:** [SECURITY_FIXES_SUMMARY.md](SECURITY_FIXES_SUMMARY.md)
+- **Scoop:** [docs/SCOOP_BACKEND_SUMMARY.md](docs/SCOOP_BACKEND_SUMMARY.md)
+- **All Docs:** [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)
 
-[postgresql wsl]: https://docs.microsoft.com/en-us/windows/wsl/tutorials/wsl-database#install-postgresql
+### Resources
+- **Stripe Dashboard:** https://dashboard.stripe.com/
+- **Render Dashboard:** https://dashboard.render.com/
+- **AWS Console:** https://console.aws.amazon.com/
 
-#### Postgresql Installation for OSX
+---
 
-To install Postgres for OSX, you can use Homebrew:
+## 📄 License
 
-```sh
-brew install postgresql
-```
+See [LICENSE.md](LICENSE.md)
 
-Once Postgres has been installed, run this command to start the Postgres
-service:
+---
 
-```sh
-brew services start postgresql
-```
+## 🎉 Getting Started Checklist
 
-### Set Up a Render Account
+- [ ] Clone repository
+- [ ] Install dependencies (`bundle install`, `npm install --prefix client`)
+- [ ] Set up database (`rails db:create db:migrate`)
+- [ ] Configure credentials (`rails credentials:edit`)
+- [ ] Run security check (`./bin/check_stripe_config`)
+- [ ] Start servers (`rails server`, `npm start --prefix client`)
+- [ ] Run tests (`ruby test/security_test.rb`)
+- [ ] Read [PROJECT_STATUS.md](PROJECT_STATUS.md)
+- [ ] Read [SECURITY_QUICK_START.md](SECURITY_QUICK_START.md)
+- [ ] Review [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)
 
-You can sign up for a free account at
-[https://dashboard.render.com/register][Render signup]. We recommend that you
-sign up using GitHub as that will make it a little easier for you to connect
-Render to your GitHub account. The instructions below assume you've done that.
+---
 
-[Render signup]: https://dashboard.render.com/register
-
-Once you've completed the signup process, you will be taken to the Render
-dashboard. In order to connect Render to your GitHub account, you'll need to
-click the "New Web Service" button in the "Web Services" box. On the next page,
-you will see a GitHub heading on the right side and below that a link labeled
-"Connect account". (If you didn't sign up using GitHub, it will say "Connect
-account" instead.) Click that link, then in the modal that appears click
-"Install." You should then be taken back to the "Create a New Web Service" page,
-which should now show a list of your GitHub repos. We won't actually create a
-web service just yet so you are free to navigate away from the page at this
-point.
-
-Next, we'll set up a PostgreSQL instance. Click the "New +" button at the top of
-the page and select "PostgreSQL". Enter a name for your PostgreSQL instance. The
-remaining fields can be left as is. Click "Create Database" at the bottom of the
-page. You should now be all set to follow the steps in the "Deploying" section.
-
-## Troubleshooting
-
-If you ran into any errors along the way, here are some things you can try to
-troubleshoot:
-
-- If you're on a Mac and got a server connection error when you tried to run
-  `rails db:create`, one option for solving this problem for Mac users is to
-  install the Postgres app. To do this, first uninstall `postgresql` by running
-  `brew remove postgresql`. Next, download the app from the
-  [Postgres downloads page][] and install it. Launch the app and click
-  "Initialize" to create a new server. You should now be able to run
-  `rails db:create`.
-
-- If you're using WSL and got the following error running `rails db:create`:
-
-  ```txt
-  PG::ConnectionBad: FATAL:  role "yourusername" does not exist
-  ```
-
-  The issue is that you did not create a role in Postgres for the default user
-  account. Check [this video](https://www.youtube.com/watch?v=bQC5izDzOgE) for
-  one possible fix.
-
-- If your app failed to deploy at the build stage, make sure your local
-  environment is set up correctly by following the steps at the beginning of
-  this lesson. Check that you have the latest versions of Ruby and Bundler, and
-  ensure that PostgreSQL was installed successfully.
-
-- If you deployed successfully, but you ran into issues when you visited the
-  site, make sure you migrated and seeded the database. Also, make sure that
-  your application works locally and try to debug any issues on your local
-  machine before re-deploying. You can also check the deployment log on the
-  app's page in the Render dashboard.
-
-[postgres downloads page]: https://postgresapp.com/downloads.html
-
-## Resources
-
-- [Getting Started with Ruby on Rails on Render](https://render.com/docs/deploy-rails)
-- [Render Databases Guide](https://render.com/docs/databases)
+**Ready to build?** Start with [SECURITY_QUICK_START.md](SECURITY_QUICK_START.md) then dive into [PROJECT_STATUS.md](PROJECT_STATUS.md)!

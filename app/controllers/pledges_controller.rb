@@ -5,18 +5,25 @@ class PledgesController < ApplicationController
   # GET /pledges
   # Returns pledges - optionally filtered by client or block
   def index
-    if params[:client_id].present?
-      # Get all pledges by a specific client
-      pledges = Pledge.where(client_id: params[:client_id])
-    elsif params[:block_id].present?
-      # Get all pledges for a specific block
-      pledges = Pledge.where(block_id: params[:block_id])
+    # Authorization: Users can only see their own pledges or public block statistics
+    if current_user&.client
+      # Clients can only view their own pledges
+      pledges = current_user.client.pledges
+    elsif current_user&.is_scooper && params[:block_id].present?
+      # Scoopers can view pledges for blocks they've claimed
+      block = Block.find_by(id: params[:block_id])
+      if block && block.coverage_regions.exists?(user_id: current_user.id)
+        pledges = block.pledges
+      else
+        return render json: { error: "Unauthorized: You can only view pledges for blocks you've claimed" }, status: :forbidden
+      end
     elsif current_user
-      # If logged in as user, show their client's pledges
+      # Regular users (walkers) can see their client's pledges if they have a client profile
       client = current_user.client
       pledges = client ? client.pledges : Pledge.none
     else
-      pledges = Pledge.all
+      # Unauthenticated users cannot access pledges
+      return render json: { error: "Unauthorized: Please log in to view pledges" }, status: :forbidden
     end
 
     # Filter by status
@@ -25,6 +32,8 @@ class PledgesController < ApplicationController
     render json: {
       pledges: pledges.map { |pledge| serialize_pledge(pledge) }
     }
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "Block not found" }, status: :not_found
   end
 
   # GET /pledges/:id
@@ -123,12 +132,29 @@ class PledgesController < ApplicationController
       return render json: { error: "Unauthorized" }, status: :forbidden
     end
 
-    # Can only update amount if pledge is still pending or active
-    unless [ "pending", "active" ].include?(@pledge.status)
-      return render json: { error: "Cannot update cancelled or dissolved pledge" }, status: :unprocessable_entity
+    # Can only update if pledge is still pending, active, or dissolved
+    unless [ "pending", "active", "dissolved" ].include?(@pledge.status)
+      return render json: { error: "Cannot update cancelled pledge" }, status: :unprocessable_entity
     end
 
-    if @pledge.update(pledge_update_params)
+    # CRITICAL: Prevent amount changes for active pledges with Stripe subscriptions
+    if @pledge.status == "active" && @pledge.stripe_subscription_id.present?
+      if params[:pledge][:amount].present? && params[:pledge][:amount].to_f != @pledge.amount
+        return render json: {
+          error: "Cannot change pledge amount for active subscriptions. Please cancel this pledge and create a new one with the desired amount.",
+          current_amount: @pledge.amount
+        }, status: :unprocessable_entity
+      end
+    end
+
+    # Only allow changing anonymous flag for active pledges, allow both for pending
+    allowed_params = if @pledge.status == "active"
+                       { anonymous: params[:pledge][:anonymous] }
+    else
+                       pledge_update_params
+    end
+
+    if @pledge.update(allowed_params)
       render json: {
         pledge: serialize_pledge_detail(@pledge),
         message: "Pledge updated successfully"
@@ -149,8 +175,37 @@ class PledgesController < ApplicationController
       return render json: { error: "Pledge already cancelled" }, status: :unprocessable_entity
     end
 
-    # TODO: Cancel Stripe subscription here
-    # Stripe::Subscription.delete(@pledge.stripe_subscription_id) if @pledge.stripe_subscription_id
+    # CRITICAL: Cancel Stripe subscription BEFORE updating database
+    if @pledge.stripe_subscription_id.present?
+      begin
+        Stripe::Subscription.cancel(@pledge.stripe_subscription_id)
+
+        # Track successful cancellation
+        StripeErrorMonitor.track_success("subscription_cancellation", context: {
+          pledge_id: @pledge.id,
+          subscription_id: @pledge.stripe_subscription_id,
+          user_id: current_user.id
+        })
+
+        Rails.logger.info("Successfully cancelled Stripe subscription: #{@pledge.stripe_subscription_id}")
+      rescue Stripe::StripeError => e
+        # Track error with monitoring service
+        StripeErrorMonitor.track_error(e,
+          context: {
+            pledge_id: @pledge.id,
+            subscription_id: @pledge.stripe_subscription_id,
+            user_id: current_user.id,
+            action: "cancel_subscription"
+          },
+          severity: :critical
+        )
+
+        return render json: {
+          error: "Failed to cancel subscription. Please contact support.",
+          type: "stripe_error"
+        }, status: :unprocessable_entity
+      end
+    end
 
     @pledge.update(
       status: "cancelled",

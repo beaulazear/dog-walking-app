@@ -90,13 +90,44 @@ class CleanupsController < ApplicationController
       pickup_count: pickup_count,
       cleanup_date: Date.today,
       cleanup_timestamp: Time.current,
-      gps_verified: true
+      gps_verified: false  # Set to false initially
     )
 
+    # CRITICAL: Verify GPS coordinates are within block boundary (fraud prevention)
+    unless cleanup.within_block_boundary?
+      return render json: {
+        error: "GPS coordinates are not within the block boundary. Please ensure you are at the correct location.",
+        latitude: latitude,
+        longitude: longitude,
+        block_id: block.block_id
+      }, status: :unprocessable_entity
+    end
+
+    # Mark as GPS verified after boundary check passes
+    cleanup.gps_verified = true
+
     if cleanup.save
-      # Attach photo if provided
+      # Attach photo if provided with validation
       if params[:cleanup][:photo].present?
-        cleanup.photo.attach(params[:cleanup][:photo])
+        photo = params[:cleanup][:photo]
+
+        # Validate file type
+        unless photo.content_type.in?(%w[image/png image/jpg image/jpeg image/heic image/heif])
+          cleanup.destroy  # Rollback cleanup creation
+          return render json: {
+            error: "Invalid file type. Only PNG, JPEG, and HEIC images are allowed."
+          }, status: :unprocessable_entity
+        end
+
+        # Validate file size (max 10MB)
+        if photo.size > 10.megabytes
+          cleanup.destroy  # Rollback cleanup creation
+          return render json: {
+            error: "File too large. Maximum size is 10MB."
+          }, status: :unprocessable_entity
+        end
+
+        cleanup.photo.attach(photo)
         cleanup.update(has_photo: true)
       end
 
@@ -145,9 +176,25 @@ class CleanupsController < ApplicationController
     old_pickup_count = @cleanup.pickup_count
 
     if @cleanup.update(cleanup_update_params)
-      # Attach photo if provided
+      # Attach photo if provided with validation
       if params[:cleanup][:photo].present?
-        @cleanup.photo.attach(params[:cleanup][:photo])
+        photo = params[:cleanup][:photo]
+
+        # Validate file type
+        unless photo.content_type.in?(%w[image/png image/jpg image/jpeg image/heic image/heif])
+          return render json: {
+            error: "Invalid file type. Only PNG, JPEG, and HEIC images are allowed."
+          }, status: :unprocessable_entity
+        end
+
+        # Validate file size (max 10MB)
+        if photo.size > 10.megabytes
+          return render json: {
+            error: "File too large. Maximum size is 10MB."
+          }, status: :unprocessable_entity
+        end
+
+        @cleanup.photo.attach(photo)
         @cleanup.update(has_photo: true)
       end
 

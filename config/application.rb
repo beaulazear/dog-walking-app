@@ -31,6 +31,9 @@ module ReactRailsApiProjectTemplate
       same_site: :none
     }
 
+    # Add Rack::Attack for rate limiting and security
+    config.middleware.use Rack::Attack
+
     # Use SameSite=None for cross-origin cookies (GitHub Pages frontend)
     # Required for session cookies to work with frontend hosted on different domain
     config.action_dispatch.cookies_same_site_protection = :none

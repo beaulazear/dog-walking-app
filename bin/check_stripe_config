@@ -1,0 +1,236 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Stripe Configuration Checker
+# Verifies that all Stripe credentials are properly configured
+# Usage: ./bin/check_stripe_config
+
+require_relative '../config/environment'
+
+class StripeConfigChecker
+  REQUIRED_KEYS = %i[publishable_key secret_key webhook_secret].freeze
+  OPTIONAL_KEYS = %i[connect_client_id].freeze
+
+  def run
+    puts "🔐 Stripe Configuration Checker"
+    puts "=" * 70
+    puts "Environment: #{Rails.env}"
+    puts "=" * 70
+    puts
+
+    @all_passed = true
+
+    check_credentials_file
+    check_api_keys
+    check_webhook_secret
+    check_connect_configuration
+    test_api_connection
+    check_rate_limiting
+    check_error_monitoring
+
+    puts
+    puts "=" * 70
+    if @all_passed
+      puts "✅ All checks passed! Stripe is properly configured."
+      exit 0
+    else
+      puts "❌ Some checks failed. Please review the errors above."
+      exit 1
+    end
+  end
+
+  private
+
+  def check_credentials_file
+    section "Credentials File"
+
+    if File.exist?(Rails.root.join('config', 'credentials.yml.enc'))
+      pass "Encrypted credentials file exists"
+    else
+      fail_check "Encrypted credentials file NOT found"
+      return
+    end
+
+    master_key_path = Rails.root.join('config', 'master.key')
+    if File.exist?(master_key_path)
+      pass "Master key file exists"
+    else
+      fail_check "Master key file NOT found"
+    end
+  end
+
+  def check_api_keys
+    section "API Keys"
+
+    config = Rails.configuration.stripe
+
+    # Check secret key
+    if config[:secret_key].present?
+      key_type = config[:secret_key].start_with?('sk_live') ? 'LIVE' : 'TEST'
+      expected_type = Rails.env.production? ? 'LIVE' : 'TEST'
+
+      if key_type == expected_type
+        pass "Secret key configured (#{key_type} mode)"
+      else
+        fail_check "Secret key mode mismatch: #{key_type} in #{Rails.env} environment"
+      end
+    else
+      fail_check "Secret key NOT configured"
+    end
+
+    # Check publishable key
+    if config[:publishable_key].present?
+      key_type = config[:publishable_key].start_with?('pk_live') ? 'LIVE' : 'TEST'
+      expected_type = Rails.env.production? ? 'LIVE' : 'TEST'
+
+      if key_type == expected_type
+        pass "Publishable key configured (#{key_type} mode)"
+      else
+        fail_check "Publishable key mode mismatch: #{key_type} in #{Rails.env} environment"
+      end
+    else
+      fail_check "Publishable key NOT configured"
+    end
+
+    # Verify keys match (both test or both live)
+    if config[:secret_key].present? && config[:publishable_key].present?
+      secret_mode = config[:secret_key][3..6]  # "test" or "live"
+      pub_mode = config[:publishable_key][3..6]
+
+      if secret_mode == pub_mode
+        pass "API keys are in matching modes"
+      else
+        fail_check "API key mode mismatch: secret is #{secret_mode}, publishable is #{pub_mode}"
+      end
+    end
+  end
+
+  def check_webhook_secret
+    section "Webhook Configuration"
+
+    webhook_secret = Rails.application.credentials.dig(:stripe, :webhook_secret)
+
+    if webhook_secret.present?
+      if webhook_secret.start_with?('whsec_')
+        pass "Webhook secret configured"
+      else
+        warn_check "Webhook secret doesn't start with 'whsec_' (may be invalid)"
+      end
+    else
+      if Rails.env.production?
+        fail_check "Webhook secret NOT configured (CRITICAL in production!)"
+      else
+        warn_check "Webhook secret not configured (webhooks won't work)"
+      end
+    end
+  end
+
+  def check_connect_configuration
+    section "Stripe Connect"
+
+    config = Rails.configuration.stripe
+
+    if config[:connect_client_id].present?
+      if config[:connect_client_id].start_with?('ca_')
+        pass "Connect client ID configured"
+      else
+        warn_check "Connect client ID doesn't start with 'ca_' (may be invalid)"
+      end
+    else
+      if Rails.env.production?
+        warn_check "Connect client ID not configured (Scoop features won't work)"
+      else
+        info "Connect client ID not configured (optional for development)"
+      end
+    end
+  end
+
+  def test_api_connection
+    section "API Connection Test"
+
+    begin
+      account = Stripe::Account.retrieve
+      pass "Successfully connected to Stripe API"
+      info "Account ID: #{account.id}"
+      info "Account type: #{account.type}"
+
+      if account.charges_enabled
+        pass "Charges enabled on account"
+      else
+        warn_check "Charges NOT enabled (may need business verification)"
+      end
+    rescue Stripe::AuthenticationError => e
+      fail_check "Authentication failed: #{e.message}"
+      info "Check that your secret key is correct"
+    rescue Stripe::StripeError => e
+      fail_check "API connection failed: #{e.message}"
+    rescue StandardError => e
+      fail_check "Unexpected error: #{e.message}"
+    end
+  end
+
+  def check_rate_limiting
+    section "Security Features"
+
+    # Check if Rack::Attack is configured
+    if defined?(Rack::Attack)
+      pass "Rack::Attack rate limiting configured"
+    else
+      warn_check "Rack::Attack not found (rate limiting disabled)"
+    end
+
+    # Check if initializer exists
+    rack_attack_config = Rails.root.join('config', 'initializers', 'rack_attack.rb')
+    if File.exist?(rack_attack_config)
+      pass "Rack::Attack configuration file exists"
+    else
+      warn_check "Rack::Attack configuration not found"
+    end
+  end
+
+  def check_error_monitoring
+    section "Error Monitoring"
+
+    # Check if StripeErrorMonitor service exists
+    if defined?(StripeErrorMonitor)
+      pass "StripeErrorMonitor service loaded"
+    else
+      fail_check "StripeErrorMonitor service not found"
+    end
+
+    # Check for monitoring rake tasks
+    monitoring_tasks = Rails.root.join('lib', 'tasks', 'stripe_monitoring.rake')
+    if File.exist?(monitoring_tasks)
+      pass "Stripe monitoring rake tasks configured"
+    else
+      warn_check "Stripe monitoring rake tasks not found"
+    end
+  end
+
+  def section(title)
+    puts
+    puts "📋 #{title}"
+    puts "-" * 70
+  end
+
+  def pass(message)
+    puts "  ✅ #{message}"
+  end
+
+  def fail_check(message)
+    puts "  ❌ #{message}"
+    @all_passed = false
+  end
+
+  def warn_check(message)
+    puts "  ⚠️  #{message}"
+  end
+
+  def info(message)
+    puts "     #{message}"
+  end
+end
+
+# Run checker
+checker = StripeConfigChecker.new
+checker.run

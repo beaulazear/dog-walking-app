@@ -16,36 +16,42 @@ class ApplicationController < ActionController::API
     header = request.headers["Authorization"]
     if header
       token = header.split(" ").last
-      Rails.logger.debug "🔑 JWT Auth: Token received (length: #{token&.length || 0})"
+      Rails.logger.debug "🔑 JWT Auth: Token received (length: #{token&.length || 0})" if Rails.env.development?
 
       decoded = jwt_decode(token)
       if decoded
-        Rails.logger.debug "✅ JWT Auth: Token decoded successfully, user_id: #{decoded[:user_id]}"
+        # CRITICAL SECURITY: Reject client tokens on user endpoints
+        if decoded[:user_type] == "client"
+          Rails.logger.warn "🚫 Security: Client token rejected on User endpoint (#{request.path})"
+          return nil
+        end
+
+        Rails.logger.debug "✅ JWT Auth: Token decoded successfully, user_id: #{decoded[:user_id]}" if Rails.env.development?
         @current_user = User.find_by(id: decoded[:user_id])
 
         if @current_user
-          Rails.logger.debug "✅ JWT Auth: User found - #{@current_user.username}"
+          Rails.logger.debug "✅ JWT Auth: User found - #{@current_user.username}" if Rails.env.development?
           return @current_user
         else
-          Rails.logger.debug "❌ JWT Auth: User not found for id: #{decoded[:user_id]}"
+          Rails.logger.debug "❌ JWT Auth: User not found for id: #{decoded[:user_id]}" if Rails.env.development?
         end
       else
-        Rails.logger.debug "❌ JWT Auth: Token decode failed"
+        Rails.logger.debug "❌ JWT Auth: Token decode failed" if Rails.env.development?
       end
     end
 
     # Fall back to session authentication (for web app compatibility)
     if session[:user_id]
-      Rails.logger.debug "🔄 Session Auth: Checking session user_id: #{session[:user_id]}"
+      Rails.logger.debug "🔄 Session Auth: Checking session user_id: #{session[:user_id]}" if Rails.env.development?
       @current_user = User.find_by(id: session[:user_id])
 
       if @current_user
-        Rails.logger.debug "✅ Session Auth: User found - #{@current_user.username}"
+        Rails.logger.debug "✅ Session Auth: User found - #{@current_user.username}" if Rails.env.development?
       else
-        Rails.logger.debug "❌ Session Auth: User not found for id: #{session[:user_id]}"
+        Rails.logger.debug "❌ Session Auth: User not found for id: #{session[:user_id]}" if Rails.env.development?
       end
     else
-      Rails.logger.debug "❌ No JWT token or session found"
+      Rails.logger.debug "❌ No JWT token or session found" if Rails.env.development?
     end
 
     @current_user

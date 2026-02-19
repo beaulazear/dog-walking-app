@@ -4,6 +4,35 @@
 
 ---
 
+## 🔒 Phase 0: Security Verification (NEW - 10 mins)
+
+### ✅ Run Security Checks
+
+**1. Check Stripe Configuration**
+```bash
+./bin/check_stripe_config
+```
+
+**2. Run Security Tests**
+```bash
+ruby test/security_test.rb
+```
+
+**3. Monitor Stripe Health**
+```bash
+rails stripe:monitor:health
+rails stripe:monitor:errors
+```
+
+**4. Check for Subscription Mismatches**
+```bash
+rails stripe:monitor:check_cancelled_subscriptions
+```
+
+**See:** `SECURITY_QUICK_START.md` for complete security setup
+
+---
+
 ## 🎯 Phase 1: Testing & Verification (30 mins)
 
 ### ✅ Verify Deployment

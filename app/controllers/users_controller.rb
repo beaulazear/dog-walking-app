@@ -7,8 +7,27 @@ class UsersController < ApplicationController
   skip_before_action :authorized, only: :create
 
   def create
-    user = User.create(user_params)
-    if user.valid?
+    # SECURITY: Separate signup params from rate params to prevent mass assignment
+    user = User.new(
+      username: params[:username],
+      password: params[:password],
+      password_confirmation: params[:password_confirmation],
+      name: params[:name],
+      email_address: params[:email_address]
+    )
+
+    if user.save
+      # Set default rates for new users
+      user.update(
+        thirty: 30,
+        fortyfive: 40,
+        sixty: 50,
+        solo_rate: 15,
+        training_rate: 25,
+        sibling_rate: 10,
+        pet_sitting_rate: 50
+      )
+
       # Set session for web app compatibility
       session[:user_id] = user.id
 
@@ -25,13 +44,11 @@ class UsersController < ApplicationController
   end
 
   def index
-    # WARNING: This endpoint returns ALL users - should probably be removed or restricted
-    users = User.all
-    if users.any?
-      render json: users.map { |user| UserSerializer.serialize_basic(user) }, status: :ok
-    else
-      render json: { error: "Not found" }, status: :not_found
-    end
+    # SECURITY: User enumeration endpoint has been disabled for security reasons.
+    # Use the /users/search endpoint with an email address to find specific users.
+    render json: {
+      error: "This endpoint is no longer available. Use /users/search with an email address to find specific users."
+    }, status: :forbidden
   end
 
   def show
@@ -98,8 +115,9 @@ class UsersController < ApplicationController
   private
 
   def user_params
-    params.permit(:username, :password, :password_confirmation, :name, :email_address, :pets, :thirty, :fortyfive,
-                  :sixty, :solo_rate, :training_rate, :sibling_rate)
+    # NOTE: This method is kept for backwards compatibility but is no longer used in create action
+    # Rates are now set via default values or through the change_rates endpoint
+    params.permit(:username, :password, :password_confirmation, :name, :email_address)
   end
 
   def rates_params

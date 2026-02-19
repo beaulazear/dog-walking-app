@@ -56,10 +56,10 @@ class PoopReportsController < ApplicationController
     # In production with PostGIS, use spatial query
     # In development, use simple lat/lng distance approximation
     if Rails.env.production?
-      point = "POINT(#{longitude} #{latitude})"
+      # Use parameterized query to prevent SQL injection
       poop_reports = PoopReport.where(
-        "ST_DWithin(location, ST_GeographyFromText('SRID=4326;#{point}'), ?)",
-        radius
+        "ST_DWithin(location, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography, ?)",
+        longitude, latitude, radius
       )
     else
       # Simple bounding box approximation for development
@@ -118,9 +118,27 @@ class PoopReportsController < ApplicationController
     )
 
     if poop_report.save
-      # Attach photo if provided
+      # Attach photo if provided with validation
       if params[:poop_report][:photo].present?
-        poop_report.photo.attach(params[:poop_report][:photo])
+        photo = params[:poop_report][:photo]
+
+        # Validate file type
+        unless photo.content_type.in?(%w[image/png image/jpg image/jpeg image/heic image/heif])
+          poop_report.destroy  # Rollback report creation
+          return render json: {
+            error: "Invalid file type. Only PNG, JPEG, and HEIC images are allowed."
+          }, status: :unprocessable_entity
+        end
+
+        # Validate file size (max 10MB)
+        if photo.size > 10.megabytes
+          poop_report.destroy  # Rollback report creation
+          return render json: {
+            error: "File too large. Maximum size is 10MB."
+          }, status: :unprocessable_entity
+        end
+
+        poop_report.photo.attach(photo)
         poop_report.update(has_photo: true)
       end
 
