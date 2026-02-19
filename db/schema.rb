@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_19_072837) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_19_135024) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -495,6 +495,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_19_072837) do
     t.integer "total_lifetime_pickups", default: 0
     t.integer "current_streak_days", default: 0
     t.integer "longest_streak_days", default: 0
+    t.boolean "admin", default: false, null: false
     t.index ["is_scooper"], name: "index_users_on_is_scooper"
     t.index ["stripe_connect_account_id"], name: "index_users_on_stripe_connect_account_id"
   end

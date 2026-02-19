@@ -136,6 +136,7 @@ Rails.application.routes.draw do
   delete "/walker/clients/:id", to: "walker_clients#destroy"
 
   # Waitlist Signups
+  get "/waitlist_signups", to: "waitlist_signups#index"
   post "/waitlist_signups", to: "waitlist_signups#create"
 
   # ===== SCOOP ROUTES =====

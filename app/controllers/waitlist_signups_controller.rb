@@ -1,6 +1,20 @@
 class WaitlistSignupsController < ApplicationController
   skip_before_action :authorized, only: [ :create ]
-  skip_before_action :block_direct_requests, only: [ :create ]
+  skip_before_action :block_direct_requests, only: [ :create, :index ]
+  before_action :admin_only, only: [ :index ]
+
+  def index
+    signups = WaitlistSignup.order(created_at: :desc)
+    render json: signups.map { |s|
+      {
+        id: s.id,
+        email: s.email,
+        ip_address: s.ip_address,
+        user_agent: s.user_agent,
+        created_at: s.created_at
+      }
+    }, status: :ok
+  end
 
   def create
     signup = WaitlistSignup.new(waitlist_params)

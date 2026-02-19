@@ -9,6 +9,10 @@ class ApplicationController < ActionController::API
     render json: { error: "Not authorized" }, status: :unauthorized unless current_user
   end
 
+  def admin_only
+    render json: { error: "Admin access required" }, status: :forbidden unless current_user&.admin?
+  end
+
   def current_user
     return @current_user if @current_user
 
