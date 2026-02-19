@@ -1,5 +1,6 @@
 class WaitlistSignupsController < ApplicationController
-  skip_before_action :authorize, only: [ :create ]
+  skip_before_action :authorized, only: [ :create ]
+  skip_before_action :block_direct_requests, only: [ :create ]
 
   def create
     signup = WaitlistSignup.new(waitlist_params)
