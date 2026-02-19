@@ -11,7 +11,7 @@ Last Updated: February 18, 2026
 **New to the project?** Read these in order:
 
 1. **[PROJECT_STATUS.md](PROJECT_STATUS.md)** - **START HERE!** Complete project overview
-2. **[SECURITY_QUICK_START.md](SECURITY_QUICK_START.md)** - Get running in 5 minutes
+2. **[security/SECURITY_QUICK_START.md](security/SECURITY_QUICK_START.md)** - Get running in 5 minutes
 3. **[ARCHITECTURE_REPORT.md](ARCHITECTURE_REPORT.md)** - System architecture
 
 ---
@@ -20,17 +20,18 @@ Last Updated: February 18, 2026
 
 **Essential for all developers:**
 
-- **[SECURITY_FIXES_SUMMARY.md](SECURITY_FIXES_SUMMARY.md)** - All 8 security fixes explained
-- **[STRIPE_SECURITY_SETUP.md](STRIPE_SECURITY_SETUP.md)** - Stripe configuration guide
-- **[SECURITY_QUICK_START.md](SECURITY_QUICK_START.md)** - Quick start guide
-- **[test/manual_security_tests.md](test/manual_security_tests.md)** - Manual testing guide
-- **[test/security_test.rb](test/security_test.rb)** - Automated tests
+- **[security/README.md](security/README.md)** - Security documentation index
+- **[security/SECURITY_QUICK_START.md](security/SECURITY_QUICK_START.md)** - Get running in 5 minutes
+- **[security/SECURITY_FIXES_SUMMARY.md](security/SECURITY_FIXES_SUMMARY.md)** - All 8 security fixes
+- **[security/STRIPE_SECURITY_SETUP.md](security/STRIPE_SECURITY_SETUP.md)** - Stripe setup guide
+- **[security/manual_security_tests.md](security/manual_security_tests.md)** - Manual testing
+- **[security/security_test.rb](security/security_test.rb)** - Automated tests
 
 **Security Commands:**
 ```bash
-./bin/check_stripe_config           # Verify Stripe setup
-ruby test/security_test.rb          # Run security tests
-rails stripe:monitor:health         # Check Stripe health
+./bin/check_stripe_config             # Verify Stripe setup
+ruby security/security_test.rb        # Run security tests
+rails stripe:monitor:health           # Check Stripe health
 ```
 
 ---
@@ -91,8 +92,8 @@ rails stripe:monitor:health         # Check Stripe health
 
 ## 🧪 Testing
 
-- **[test/security_test.rb](test/security_test.rb)** - Automated security tests
-- **[test/manual_security_tests.md](test/manual_security_tests.md)** - Manual testing guide
+- **[security/security_test.rb](security/security_test.rb)** - Automated security tests
+- **[security/manual_security_tests.md](security/manual_security_tests.md)** - Manual testing guide
 
 ---
 
@@ -107,13 +108,13 @@ rails stripe:monitor:health         # Check Stripe health
 ## 🗂️ By Topic
 
 ### Security
-1. SECURITY_FIXES_SUMMARY.md
-2. STRIPE_SECURITY_SETUP.md
-3. SECURITY_QUICK_START.md
-4. test/manual_security_tests.md
+1. security/README.md
+2. security/SECURITY_QUICK_START.md
+3. security/SECURITY_FIXES_SUMMARY.md
+4. security/manual_security_tests.md
 
 ### Stripe Integration
-1. STRIPE_SECURITY_SETUP.md
+1. security/STRIPE_SECURITY_SETUP.md
 2. docs/SCOOP_STRIPE_CONNECT_SETUP.md
 3. STRIPE_SETUP_COMPLETE.md
 4. STRIPE_SETUP_INSTRUCTIONS.md
@@ -139,7 +140,7 @@ rails stripe:monitor:health         # Check Stripe health
 
 ### Setting Up Development Environment
 1. Read [README.md](README.md)
-2. Read [SECURITY_QUICK_START.md](SECURITY_QUICK_START.md)
+2. Read [security/SECURITY_QUICK_START.md](security/SECURITY_QUICK_START.md)
 3. Run `./bin/check_stripe_config`
 
 ### Understanding the Codebase
@@ -148,12 +149,12 @@ rails stripe:monitor:health         # Check Stripe health
 3. Read [docs/SCOOP_BACKEND_SUMMARY.md](docs/SCOOP_BACKEND_SUMMARY.md)
 
 ### Security Review
-1. Read [SECURITY_FIXES_SUMMARY.md](SECURITY_FIXES_SUMMARY.md)
-2. Run `ruby test/security_test.rb`
-3. Follow [test/manual_security_tests.md](test/manual_security_tests.md)
+1. Read [security/SECURITY_FIXES_SUMMARY.md](security/SECURITY_FIXES_SUMMARY.md)
+2. Run `ruby security/security_test.rb`
+3. Follow [security/manual_security_tests.md](security/manual_security_tests.md)
 
 ### Setting Up Payments
-1. Read [STRIPE_SECURITY_SETUP.md](STRIPE_SECURITY_SETUP.md)
+1. Read [security/STRIPE_SECURITY_SETUP.md](security/STRIPE_SECURITY_SETUP.md)
 2. Read [docs/SCOOP_STRIPE_CONNECT_SETUP.md](docs/SCOOP_STRIPE_CONNECT_SETUP.md)
 3. Run `./bin/check_stripe_config`
 
@@ -195,9 +196,9 @@ rails stripe:monitor:check_cancelled_subscriptions # Check integrity
 
 | Question | Document |
 |----------|----------|
-| How do I set up Stripe? | STRIPE_SECURITY_SETUP.md |
-| What security fixes were made? | SECURITY_FIXES_SUMMARY.md |
-| How do I test security? | test/manual_security_tests.md |
+| How do I set up Stripe? | security/STRIPE_SECURITY_SETUP.md |
+| What security fixes were made? | security/SECURITY_FIXES_SUMMARY.md |
+| How do I test security? | security/manual_security_tests.md |
 | What's the Scoop API? | docs/SCOOP_BACKEND_SUMMARY.md |
 | What's deployed? | docs/CURRENT_STATUS.md |
 | What's next? | docs/NEXT_STEPS.md |

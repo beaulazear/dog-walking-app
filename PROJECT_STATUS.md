@@ -126,9 +126,9 @@ This is a **multi-product platform** sharing infrastructure:
 - `test/security_test.rb` - Automated tests
 - `test/manual_security_tests.md` - Manual testing guide
 - `bin/check_stripe_config` - Configuration validator
-- `SECURITY_FIXES_SUMMARY.md` - Complete documentation
-- `STRIPE_SECURITY_SETUP.md` - Stripe configuration guide
-- `SECURITY_QUICK_START.md` - Quick start guide
+- `security/SECURITY_FIXES_SUMMARY.md` - Complete documentation
+- `security/STRIPE_SECURITY_SETUP.md` - Stripe configuration guide
+- `security/SECURITY_QUICK_START.md` - Quick start guide
 
 ### 🔐 Security Commands
 
@@ -177,7 +177,7 @@ rails stripe:monitor:check_cancelled_subscriptions
 2. Add Connect Client ID to credentials
 3. Configure webhooks
 4. Test payment flow
-5. See: `STRIPE_SECURITY_SETUP.md`
+5. See: `security/STRIPE_SECURITY_SETUP.md`
 
 ---
 
@@ -222,9 +222,13 @@ dog-walking-app/
 ├── bin/
 │   └── check_stripe_config      # Config validator
 ├── ARCHITECTURE_REPORT.md       # System architecture
-├── SECURITY_FIXES_SUMMARY.md    # Security documentation
-├── STRIPE_SECURITY_SETUP.md     # Stripe setup guide
-├── SECURITY_QUICK_START.md      # Quick start guide
+├── security/                     # Security documentation
+│   ├── README.md                # Security index
+│   ├── SECURITY_QUICK_START.md  # Quick start guide
+│   ├── SECURITY_FIXES_SUMMARY.md # All security fixes
+│   ├── STRIPE_SECURITY_SETUP.md  # Stripe setup guide
+│   ├── manual_security_tests.md  # Manual testing
+│   └── security_test.rb         # Automated tests
 ├── PROJECT_STATUS.md            # THIS FILE
 └── README.md                    # Main readme
 ```
@@ -385,7 +389,7 @@ dog-walking-app/
 ### Medium Priority (This Month)
 
 5. **Enable Stripe Connect**
-   - See: `STRIPE_SECURITY_SETUP.md`
+   - See: `security/STRIPE_SECURITY_SETUP.md`
    - Enable in dashboard
    - Add Client ID to credentials
    - Configure webhooks
@@ -460,12 +464,12 @@ curl -X POST https://your-app.onrender.com/login \
 
 ### Getting Started
 - **README.md** - Project overview
-- **SECURITY_QUICK_START.md** - Get started in 5 minutes
+- **security/SECURITY_QUICK_START.md** - Get started in 5 minutes
 - **ARCHITECTURE_REPORT.md** - System architecture
 
 ### Security
-- **SECURITY_FIXES_SUMMARY.md** - All security fixes
-- **STRIPE_SECURITY_SETUP.md** - Stripe configuration
+- **security/SECURITY_FIXES_SUMMARY.md** - All security fixes
+- **security/STRIPE_SECURITY_SETUP.md** - Stripe configuration
 - **test/manual_security_tests.md** - Testing guide
 - **test/security_test.rb** - Automated tests
 
@@ -633,9 +637,9 @@ git push origin main
 ## 📞 Getting Help
 
 ### Documentation
-Start with `SECURITY_QUICK_START.md` then dive into:
-- Security: `SECURITY_FIXES_SUMMARY.md`
-- Stripe: `STRIPE_SECURITY_SETUP.md`
+Start with `security/SECURITY_QUICK_START.md` then dive into:
+- Security: `security/SECURITY_FIXES_SUMMARY.md`
+- Stripe: `security/STRIPE_SECURITY_SETUP.md`
 - Scoop: `docs/SCOOP_BACKEND_SUMMARY.md`
 - Testing: `test/manual_security_tests.md`
 
