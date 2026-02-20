@@ -7,15 +7,35 @@ function UserProvider({ children }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch("/me")
+        const token = localStorage.getItem("token");
+
+        // If no token, user is not logged in
+        if (!token) {
+            setLoading(false);
+            return;
+        }
+
+        // Use JWT token for auto-login
+        fetch("/me", {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        })
             .then((response) => {
                 if (response.ok) {
                     response.json().then((data) => {
                         setUser(data);
                     });
                 } else {
+                    // Invalid token - clear it
+                    localStorage.removeItem("token");
                     setUser(null);
                 }
+            })
+            .catch((error) => {
+                console.error("Auto-login error:", error);
+                localStorage.removeItem("token");
+                setUser(null);
             })
             .finally(() => setLoading(false));
     }, []);
@@ -155,10 +175,27 @@ function UserProvider({ children }) {
     // Refresh user data from the server
     const refreshUser = useCallback(async () => {
         try {
-            const response = await fetch("/me");
+            const token = localStorage.getItem("token");
+
+            if (!token) {
+                console.warn('No token found for refresh');
+                setUser(null);
+                return;
+            }
+
+            const response = await fetch("/me", {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
             if (response.ok) {
                 const data = await response.json();
                 setUser(data);
+            } else {
+                // Invalid token - clear it
+                localStorage.removeItem("token");
+                setUser(null);
             }
         } catch (error) {
             console.error('Error refreshing user data:', error);
