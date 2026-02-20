@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_19_225328) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_20_023214) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -508,6 +508,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_19_225328) do
     t.boolean "admin", default: false, null: false
     t.string "device_token"
     t.string "device_platform"
+    t.string "custom_pin", default: "📍"
     t.index ["device_token"], name: "index_users_on_device_token"
     t.index ["is_scooper"], name: "index_users_on_is_scooper"
     t.index ["stripe_connect_account_id"], name: "index_users_on_stripe_connect_account_id"

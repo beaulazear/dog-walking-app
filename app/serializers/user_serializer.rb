@@ -23,6 +23,7 @@ class UserSerializer
       pet_sitting_rate: user.pet_sitting_rate,
       profile_pic_url: user.profile_pic_url,
       admin: user.admin,
+      custom_pin: user.custom_pin,
       created_at: user.created_at,
       pets: PetSerializer.serialize_collection(pets),
       appointments: AppointmentSerializer.serialize_collection(appointments),
@@ -49,6 +50,7 @@ class UserSerializer
       pet_sitting_rate: user.pet_sitting_rate,
       profile_pic_url: user.profile_pic_url,
       admin: user.admin,
+      custom_pin: user.custom_pin,
       created_at: user.created_at
     }
   end

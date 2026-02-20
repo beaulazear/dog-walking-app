@@ -160,7 +160,7 @@ class UsersController < ApplicationController
   end
 
   def profile_params
-    params.permit(:name, :username, :profile_pic)
+    params.permit(:name, :username, :profile_pic, :custom_pin)
   end
 
   def device_params
