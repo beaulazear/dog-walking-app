@@ -1,472 +1,471 @@
 # Scoop - Current Status & Deployment Summary
 
-**Last Updated:** February 18, 2026
-**Status:** ✅ **SUCCESSFULLY DEPLOYED TO PRODUCTION + SECURITY HARDENED**
+**Last Updated:** February 20, 2026
+**Status:** ✅ **MVP COMPLETE - JOB BOARD + RECURRING SUBSCRIPTIONS DEPLOYED**
 
 ---
 
-## 🔒 Security Status (NEW - Feb 18, 2026)
+## 🎯 Current Architecture
 
-### ✅ **ALL CRITICAL VULNERABILITIES FIXED**
+### Two Service Models (Both Live!)
 
-**8 Security Fixes Implemented:**
-1. ✅ SQL Injection - Parameterized queries prevent database compromise
-2. ✅ Stripe Subscription Cancellation - Properly cancels in Stripe
-3. ✅ Unauthorized Pledge Access - Strict authorization enforced
-4. ✅ GPS Fraud Prevention - Boundary validation enforced
-5. ✅ Pledge Amount Protection - Cannot modify active subscriptions
-6. ✅ JWT Token Validation - Token type confusion prevented
-7. ✅ User Enumeration - Endpoint disabled
-8. ✅ File Upload Validation - Type and size checks enforced
+**1. One-Off Job Board** - On-demand cleanup marketplace
+- Posters create cleanup jobs when they see waste
+- Scoopers browse map and claim jobs
+- One-time payment per job ($15-25)
+- Fast, simple, immediate
 
-**Security Infrastructure Added:**
-- ✅ Rate limiting (Rack::Attack) - Prevents brute force & abuse
-- ✅ Stripe error monitoring - Real-time payment tracking
-- ✅ Security test suite - Automated vulnerability testing
-- ✅ Monitoring commands - Daily health checks
+**2. Recurring Subscriptions** - Like a cleaning service
+- Residents subscribe to weekly/biweekly/monthly cleanups
+- Lower prices ($40-60/month = ~50% discount)
+- Jobs auto-generate on schedule
+- Cancel anytime, no complex pledges
 
-**See:** `SECURITY_FIXES_SUMMARY.md` for complete details
+**OLD SYSTEM** (Still in database, dormant):
+- Block-based pledge/sponsorship system
+- Complex funding mechanics
+- Not part of MVP, may revisit later
+
+---
+
+## 🔒 Security Status
+
+### ✅ **ALL CRITICAL VULNERABILITIES FIXED** (Feb 18-20, 2026)
+
+**10 Security Fixes Implemented:**
+1. ✅ SQL Injection - Parameterized queries
+2. ✅ Stripe Subscription Cancellation - Proper cancellation
+3. ✅ Unauthorized Access - Strict authorization
+4. ✅ GPS Fraud Prevention - Boundary validation
+5. ✅ JWT Token Validation - Type confusion prevented
+6. ✅ User Enumeration - Endpoint disabled
+7. ✅ File Upload Validation - Type and size checks
+8. ✅ **HTTPS Enforcement** - SSL-only in production
+9. ✅ **Security Headers** - XSS, clickjacking protection
+10. ✅ **File Scanner Blocking** - Stops .env, .git scanners
+
+**Security Infrastructure:**
+- ✅ Rate limiting (Rack::Attack) - Prevents brute force
+- ✅ Stripe error monitoring
+- ✅ Security test suite
+- ✅ Vulnerability scanner blocking
+
+**Recent Fixes (Feb 20, 2026):**
+- ✅ AWS S3 photo uploads working (fixed expiration limits)
+- ✅ Profile photos now display correctly
+- ✅ Blocked malicious file scanning attacks
 
 ---
 
 ## 🎉 What's Live Right Now
 
-### ✅ Fully Deployed & Working
+### ✅ Job Board MVP (Fully Deployed)
 
 **Backend API** - All endpoints deployed to Render:
-- 🗄️ **6 new database tables** created and migrated
-- 🎮 **8 RESTful controllers** with 40+ endpoints
+- 🗄️ **8 database tables** (cleanup_jobs, recurring_cleanups, reviews, etc.)
+- 🎮 **10 RESTful controllers** with 60+ endpoints
 - 🔐 **JWT authentication** shared with Pocket Walks
 - 📸 **Photo uploads** via Active Storage + S3
-- 🗺️ **Geospatial queries** using lat/lng (no PostGIS needed!)
-- 🏆 **Gamification system** with automatic milestone tracking
-- 💰 **Stripe integration** (test mode, Connect optional)
+- 🗺️ **GPS location tracking** using lat/lng
+- 💰 **Stripe Connect** integration (test mode)
+- 📱 **Push notifications** (iOS/Android)
+- 🔌 **WebSockets** (Action Cable) for real-time updates
 
 **Database Schema:**
 ```
-✅ blocks                  (geographic blocks for cleanup)
-✅ coverage_regions        (scoopers claim blocks)
-✅ pledges                 (residents pledge money)
-✅ cleanups                (GPS-verified cleanup logs)
-✅ poop_reports           (resident-submitted reports)
-✅ scooper_milestones     (achievement tracking)
-✅ users (extended)        (added Scoop fields)
-✅ clients (extended)      (added Scoop fields)
+✅ cleanup_jobs           (one-off jobs: open, claimed, completed)
+✅ recurring_cleanups     (subscription-based recurring service)
+✅ reviews                (scooper ratings from posters)
+✅ blocks                 (old system - dormant)
+✅ coverage_regions       (old system - dormant)
+✅ pledges                (old system - dormant)
+✅ cleanups               (old cleanup logs - may deprecate)
+✅ poop_reports           (old reporting - may deprecate)
+✅ scooper_milestones     (old gamification - may deprecate)
+✅ users (extended)       (Stripe Connect, device tokens, photos)
+✅ clients (extended)     (pet owner portal)
 ```
 
-**API Endpoints Live:**
+**Job Board API Endpoints:**
 ```
-GET    /blocks                           # List all blocks
-GET    /blocks/nearby                    # Find blocks near location
-GET    /blocks/:id/stats                 # Block statistics
+# One-Off Cleanup Jobs
+POST   /cleanup_jobs                          # Create new job
+GET    /cleanup_jobs                          # List all jobs (filter by status)
+GET    /cleanup_jobs/my_posted                # Jobs I posted
+GET    /cleanup_jobs/my_claimed               # Jobs I claimed as scooper
+POST   /cleanup_jobs/:id/claim                # Claim a job
+POST   /cleanup_jobs/:id/start                # Start working on job
+POST   /cleanup_jobs/:id/complete             # Mark job complete
+POST   /cleanup_jobs/:id/confirm              # Poster confirms completion
+POST   /cleanup_jobs/:id/dispute              # Dispute job completion
+POST   /cleanup_jobs/:id/cancel               # Cancel job
+POST   /cleanup_jobs/:id/upload_before_photo  # Upload before photo
+POST   /cleanup_jobs/:id/upload_after_photo   # Upload after photo
 
-POST   /coverage_regions                 # Scoopers claim blocks
-GET    /coverage_regions                 # List claims
-PATCH  /coverage_regions/:id             # Update rate/days
-DELETE /coverage_regions/:id             # Unclaim block
+# Recurring Cleanup Subscriptions
+POST   /recurring_cleanups                    # Create subscription
+GET    /recurring_cleanups/my_subscriptions   # My subscriptions (as poster)
+GET    /recurring_cleanups/my_assignments     # My assignments (as scooper)
+POST   /recurring_cleanups/:id/pause          # Pause subscription
+POST   /recurring_cleanups/:id/resume         # Resume subscription
+POST   /recurring_cleanups/:id/cancel         # Cancel subscription
+POST   /recurring_cleanups/:id/assign_scooper # Assign scooper to subscription
 
-POST   /pledges                          # Create pledge
-GET    /pledges                          # List pledges
-POST   /pledges/:id/switch_scooper       # Switch to different scooper
-DELETE /pledges/:id                      # Cancel pledge
+# Reviews
+POST   /reviews                               # Leave review for scooper
+GET    /reviews/:scooper_id                   # Get scooper's reviews
 
-POST   /cleanups                         # Log GPS-verified cleanup
-GET    /cleanups                         # List cleanups with filters
-PATCH  /cleanups/:id                     # Update pickup count/photo
-DELETE /cleanups/:id                     # Delete today's cleanup
+# Stripe Connect
+POST   /stripe_connect/onboard                # Scooper onboarding
+GET    /stripe_connect/status                 # Check Connect status
+GET    /stripe_connect/dashboard              # Stripe dashboard link
+POST   /stripe/webhooks                       # Handle payment events
 
-POST   /poop_reports                     # Submit poop report
-GET    /poop_reports/nearby              # Find reports near location
-PATCH  /poop_reports/:id                 # Update report status
+# WebSocket Channels
+/cable                                        # Action Cable endpoint
+  - JobBoardChannel                           # Real-time job updates
+  - CleanupJobChannel(job_id)                 # Specific job updates
 
-GET    /scooper_milestones               # List achievements
-GET    /scooper_milestones/available     # View all possible milestones
-PATCH  /scooper_milestones/:id/celebrate # Mark as celebrated
+# Push Notifications
+POST   /users/register_device                 # Register device token
+POST   /client/push_token                     # Register client device token
+```
 
-POST   /stripe_connect/onboard           # Stripe Connect onboarding
-GET    /stripe_connect/status            # Check Connect status
-POST   /stripe/webhooks                  # Handle payment events
+---
+
+## 📊 Job Board Features
+
+### Job Creation (Poster View)
+
+**Required Fields:**
+- `latitude` / `longitude` - GPS location
+- `address` - Street address
+- `price` - What poster will pay
+- `job_type` - "poop", "litter", or "both"
+- `segments_selected` - Block segments (north/south/east/west)
+
+**Conditional Fields:**
+- `poop_itemization` - "1-3", "4-8", or "9+" (if job_type includes poop)
+- `litter_itemization` - "light", "moderate", or "heavy" (if job_type includes litter)
+
+**Optional Fields:**
+- `note` - Additional instructions
+
+### Job Lifecycle
+
+```
+open → claimed → in_progress → completed → confirmed
+                                        ↓
+                                    disputed
+```
+
+**Status Descriptions:**
+- **open** - Available for scoopers to claim
+- **claimed** - Scooper accepted, hasn't started
+- **in_progress** - Scooper is working on it
+- **completed** - Scooper finished, awaiting confirmation
+- **confirmed** - Poster confirmed, payment released
+- **disputed** - Issue with completion, requires resolution
+- **cancelled** - Job cancelled (before completion)
+- **expired** - Job expired without being claimed
+
+### Real-Time Features
+
+**WebSocket Updates:**
+- New jobs appear on map instantly
+- Job status changes broadcast to all clients
+- Location tracking during job (optional)
+- Push notifications for all status changes
+
+**Push Notifications:**
+- Job claimed → poster notified
+- Job completed → poster notified
+- Job confirmed → scooper notified
+- Job disputed → both parties notified
+
+---
+
+## 🔄 Recurring Subscriptions Features
+
+### How It Works
+
+1. **Poster creates subscription** with address, frequency, price
+2. **Scooper assigned** (immediately or later)
+3. **Stripe subscription created** with monthly recurring payment
+4. **Jobs auto-generate** based on schedule (daily rake task)
+5. **Cancel anytime** - Simple cancellation, no penalties
+
+### Subscription Options
+
+**Frequencies:**
+- **Weekly** - Job every 7 days ($40/month recommended)
+- **Biweekly** - Job every 14 days ($25/month recommended)
+- **Monthly** - Job every 30 days ($15/month recommended)
+
+**Day Selection:**
+- Choose specific day of week (Monday-Sunday)
+- Jobs generated on that day automatically
+
+**Pricing Strategy:**
+Subscriptions are ~50% cheaper than one-off jobs:
+- One-off: $20/job
+- Weekly subscription: $40/month = $10/visit (50% savings)
+- Biweekly: $25/month = $12.50/visit (37% savings)
+- Monthly: $15/month = $15/visit (25% savings)
+
+### Auto-Generation System
+
+**Rake Task** (runs daily via cron):
+```bash
+rails recurring_cleanups:generate_jobs
+```
+
+**What It Does:**
+1. Finds subscriptions with `next_job_date <= today`
+2. Creates CleanupJob for each one
+3. Auto-assigns to scooper (status: "claimed")
+4. Updates `next_job_date` based on frequency
+5. Tracks `last_job_generated_at`
+
+**Other Tasks:**
+```bash
+rails recurring_cleanups:schedule   # View upcoming jobs
+rails recurring_cleanups:list       # List all subscriptions
 ```
 
 ---
 
 ## 🔧 Technical Decisions Made
 
-### 1. **No PostGIS (Simplified)**
-   - **Decision**: Skip PostGIS geometry columns
-   - **Why**: Deployment issues, not needed for MVP
-   - **Solution**: Use regular lat/lng decimal fields
-   - **Impact**: ✅ Works perfectly! Simpler, faster, easier to develop
-   - **Performance**: Totally fine for MVP scale
+### 1. **Simplified to Job Board Model**
+   - **Decision**: Pivot from complex pledge/block system to simple job board
+   - **Why**: Easier to understand, faster to market, real-world cleaning service model
+   - **Impact**: ✅ Much simpler UX, familiar model (like Uber/TaskRabbit)
 
-### 2. **Lat/Lng Nearby Queries**
-   - **How it works**: Simple bounding box math
-   - **Example**:
-     ```ruby
-     Block.where(
-       latitude: (lat - offset)..(lat + offset),
-       longitude: (lng - offset)..(lng + offset)
-     )
-     ```
-   - **Accuracy**: Excellent for urban blocks (100m-1km radius)
+### 2. **Added Recurring Subscriptions**
+   - **Decision**: Support both one-off AND subscription cleanups
+   - **Why**: Gives users choice, provides steady income for scoopers
+   - **Impact**: ✅ Best of both worlds - flexibility + predictability
 
-### 3. **Stripe Connect Temporarily Optional**
-   - **Status**: Test mode configured, Connect not enabled yet
-   - **Impact**: All features work except actual payments
-   - **Easy to enable**: Just add Connect Client ID to credentials
-   - **For MVP**: Can test all business logic without payments
+### 3. **No PostGIS (Still Using Lat/Lng)**
+   - **Decision**: Continue using decimal lat/lng fields
+   - **Why**: Works great for MVP, simpler deployment
+   - **Impact**: ✅ Fast queries, easy to develop
 
-### 4. **Shared Database with Pocket Walks**
-   - **Users table**: Extended with `is_scooper` and Scoop fields
-   - **Clients table**: Extended with pledge/block references
-   - **Safety**: ✅ Zero impact on existing Pocket Walks
-   - **Benefit**: Shared authentication, no duplicate accounts
+### 4. **Stripe Subscriptions (Not Complex Pledges)**
+   - **Status**: Standard Stripe subscriptions for recurring cleanups
+   - **Impact**: Simple monthly billing, easy cancellation
+   - **For MVP**: Test mode works, can enable live mode anytime
 
----
+### 5. **WebSocket Real-Time Updates**
+   - **Status**: Action Cable configured for job updates
+   - **Impact**: Jobs appear on map instantly, live status updates
+   - **For Production**: Works on Render, no Redis needed for MVP
 
-## 📊 What's Working vs What's Not
-
-### ✅ **FULLY WORKING** (No Configuration Needed)
-
-#### Core Features:
-- **Block Management**
-  - Create/read blocks with GPS boundaries (via GeoJSON)
-  - Search for blocks near user location
-  - Track block statistics and status
-
-- **Competitive Pledge System**
-  - Scoopers claim blocks with monthly rates
-  - Multiple scoopers can compete for same block
-  - **Automatic block activation** when fully funded
-  - First-to-fund-wins mechanics
-  - Losing scoopers' pledges auto-dissolve
-
-- **90-Day Warning System**
-  - Triggers when funding drops below threshold
-  - Grace period for residents to recruit pledgers
-  - Automatic expiration tracking
-
-- **GPS-Verified Cleanups**
-  - One cleanup per scooper per block per day
-  - Automatic stat tracking (block + scooper)
-  - Photo uploads with Active Storage
-  - Milestone achievement detection
-
-- **Gamification**
-  - Automatic milestone creation
-  - Pickup milestones: 100, 500, 1K, 5K, 10K
-  - Streak milestones: 7, 30, 100 days
-  - Badge system with icons
-  - Celebration tracking
-
-- **Poop Reporting**
-  - Residents submit reports with GPS + photo
-  - Status workflow: open → acknowledged → resolved
-  - Nearby query for finding reports
-  - Auto-assign to nearest block
-
-#### Business Logic:
-- ✅ Pledge aggregation and progress tracking
-- ✅ Block status management (inactive → pledging → active → warning)
-- ✅ Automatic statistics updates
-- ✅ Service day tracking for scoopers
-- ✅ Privacy settings (anonymous pledges)
-- ✅ Authorization (scooper-only, client-only endpoints)
-
-### ⚠️ **NEEDS CONFIGURATION** (Optional for MVP Testing)
-
-#### Stripe Connect Features:
-- ❌ Actual payment processing (requires Connect Client ID)
-- ❌ Subscription creation (Stripe API will error)
-- ❌ Payouts to scoopers (Connect not enabled)
-- ❌ Webhook event handling (webhook secret not configured)
-
-**BUT**: All pledge business logic works - just doesn't create Stripe subscriptions
-
-#### S3 Photo Auto-Deletion:
-- ❌ Photos don't auto-delete after 14 days yet
-- ✅ Photos upload successfully to S3
-- **Setup needed**: AWS Console lifecycle policy
-- **See**: `docs/SCOOP_S3_LIFECYCLE_SETUP.md`
+### 6. **Photo Uploads Fixed**
+   - **Issue**: AWS S3 presigned URLs had wrong expiration
+   - **Fix**: Changed from 1 year to 7 days (AWS maximum)
+   - **Status**: ✅ Photos upload and display correctly now
 
 ---
 
-## 🗺️ Where We Are in the MVP Plan
+## 📱 Frontend Integration Status
 
-### ✅ **COMPLETED** - Backend (Phase 1 & 2)
+### ✅ Ready for Frontend Development
 
-**Phase 1: Database & Models** ✅
-- [x] PostgreSQL database schema
-- [x] 6 new tables with associations
-- [x] User/Client model extensions
-- [x] All validations and callbacks
-- [x] Business logic implementation
-- [x] Automatic stat tracking
-- [x] Milestone achievement system
+**Documentation Available:**
+- `docs/SCOOP_MVP_TESTING_GUIDE.md` - Complete API testing guide
+- `docs/FRONTEND_INTEGRATION_PROMPT.md` - Frontend development guide
+- `docs/SCOOP_BACKEND_SUMMARY.md` - Full API reference
 
-**Phase 2: API Endpoints** ✅
-- [x] Blocks CRUD + nearby search
-- [x] Coverage regions CRUD
-- [x] Pledges CRUD + switching
-- [x] Cleanups CRUD + photo upload
-- [x] Poop reports CRUD + nearby
-- [x] Milestone tracking endpoints
-- [x] Stripe Connect scaffolding
-- [x] Webhook handlers
-- [x] JSON serialization
-- [x] Error handling
-- [x] Authorization
+**Test Data:**
+```bash
+# Create 25 realistic test jobs across NYC
+rails test_data:populate_jobs
 
-**Deployment** ✅
-- [x] Deployed to Render
-- [x] Migrations run successfully
-- [x] All routes accessible
-- [x] S3 storage configured
-- [x] Stripe test mode configured
-- [x] Environment variables set
+# Clear test data
+rails test_data:clear_test_jobs
+```
 
-### 🚧 **IN PROGRESS** - Frontend (Phase 2)
+**Frontend Needs to Build:**
+1. **Map View** - Show jobs on map with pins
+2. **Job Detail Modal** - View job details, claim button
+3. **Create Job Form** - Post new cleanup jobs
+4. **My Jobs Screen** - View posted/claimed jobs
+5. **Subscription Screen** - Create recurring cleanups
+6. **My Subscriptions** - Manage subscriptions (pause/cancel)
+7. **Photo Capture** - Before/after photos
+8. **Review System** - Rate scoopers after completion
 
-**You're working on this now in parallel:**
-- React Native + Expo app
-- Map view with nearby blocks
-- Scooper dashboard
-- Pledge creation flow
-- Cleanup logging
-- Photo capture
+---
 
-### ⏳ **TODO** - Future Phases
+## 🚧 What's Not Part of MVP (Dormant Features)
 
-**Phase 3: Payments** (When ready)
-- [ ] Enable Stripe Connect
-- [ ] Add Connect Client ID
-- [ ] Test payment flow
-- [ ] Configure webhooks
-- [ ] Test subscription creation
-- [ ] Test payout flow
+These exist in the database but are **not being used** in the current MVP:
 
-**Phase 4: Production Readiness**
-- [ ] Set up S3 lifecycle policies
-- [ ] Import NYC block data (optional)
-- [ ] Error monitoring (Sentry, etc.)
-- [ ] Performance optimization
-- [ ] Form LLC (if going live)
+### Old Block/Pledge System
+- ❌ `blocks` table - Geographic block sponsorship
+- ❌ `coverage_regions` table - Scoopers claiming blocks
+- ❌ `pledges` table - Complex subscription pledges
+- ❌ Warning periods, block activation, funding competition
+
+**Why dormant?**
+- Too complex for MVP
+- Users prefer simple job board model
+- May revisit if demand for neighborhood subscriptions
+
+### Old Gamification
+- ❌ `scooper_milestones` table - Achievement tracking
+- ❌ Pickup milestones, streak tracking
+- ❌ Badge system
+
+**Why dormant?**
+- Focus on core job completion first
+- Reviews more important than badges
+- May add back later
+
+### Old Cleanup Logging
+- ❌ `cleanups` table - GPS-verified cleanup logs
+- ❌ `poop_reports` table - Resident reports
+
+**Why dormant?**
+- Replaced by CleanupJob lifecycle
+- Photos now attached to jobs, not separate cleanups
+- Simpler to have one model (CleanupJob) vs. multiple
+
+---
+
+## 📊 Production Deployment Status
+
+### ✅ Fully Deployed on Render
+
+**Environment:**
+- ✅ Production database (PostgreSQL)
+- ✅ All migrations run successfully
+- ✅ AWS S3 configured and working
+- ✅ Stripe in test mode
+- ✅ HTTPS enforced
+- ✅ Security headers enabled
+- ✅ Rate limiting active
+- ✅ WebSockets enabled
+
+**Recent Deployments:**
+- Feb 20, 2026 - Photo upload fixes (S3 expiration)
+- Feb 20, 2026 - Recurring cleanups feature
+- Feb 19, 2026 - File scanner blocking
+- Feb 18, 2026 - Security hardening
+
+**Test Production API:**
+```bash
+# Check if API is up
+curl https://www.pocket-walks.com/cleanup_jobs
+
+# Should return JSON with jobs array
+```
+
+---
+
+## 🚀 Next Steps
+
+### 1. **Production Setup** (Optional)
+
+**Set up daily cron job** for recurring cleanup generation:
+```bash
+# Heroku Scheduler or Render Cron Job
+# Run daily at 6 AM
+rails recurring_cleanups:generate_jobs
+```
+
+**Enable Stripe Connect** (when ready for payments):
+1. Go to Stripe Dashboard → Connect
+2. Enable platform payments
+3. Copy Client ID
+4. Add to Render environment variables
+5. Test scooper onboarding flow
+
+### 2. **Frontend Development** (Primary Focus)
+
+Build React Native app with:
+- Map view showing available jobs
+- Job creation form with all required fields
+- Subscription creation form
+- Job claim/complete flow
+- Photo upload (before/after)
+- Review system
+- Push notifications
+
+### 3. **Testing** (Before Launch)
+
+- [ ] Test full job lifecycle (create → claim → complete → confirm)
+- [ ] Test recurring subscription (create → auto-generate jobs → cancel)
+- [ ] Test Stripe payments (when enabled)
+- [ ] Test push notifications on real devices
+- [ ] Test photo uploads
+- [ ] Test review system
+- [ ] Load test API with realistic usage
+
+### 4. **Launch Preparation** (When Ready)
+
 - [ ] Switch Stripe to live mode
-
----
-
-## 🎯 Your Render Deployment
-
-**URL**: Check your Render dashboard
-**Expected**: `https://dog-walking-app.onrender.com` (or similar)
-
-**Test It:**
-```bash
-# Replace with your actual Render URL
-curl https://your-app.onrender.com/blocks
-
-# Should return:
-# {"blocks":[],"meta":{...}}
-```
-
-**Verify Pocket Walks Still Works:**
-```bash
-curl https://your-app.onrender.com/appointments
-curl https://your-app.onrender.com/pets
-
-# Both should work as before!
-```
-
----
-
-## 📱 Frontend Development - Ready to Start!
-
-### API Integration
-
-**Base URL** (Update in your React Native app):
-```javascript
-const API_URL = 'https://your-app.onrender.com';
-```
-
-**Authentication** (Same as Pocket Walks):
-```javascript
-// Login
-const response = await fetch(`${API_URL}/login`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    email: 'user@example.com',
-    password: 'password'
-  })
-});
-
-const { token } = await response.json();
-
-// Use token in subsequent requests:
-fetch(`${API_URL}/blocks/nearby?latitude=40.7&longitude=-73.9&radius=1000`, {
-  headers: {
-    'Authorization': `Bearer ${token}`
-  }
-});
-```
-
-### Key Screens to Build
-
-1. **Map View**
-   - Display blocks on map
-   - Tap to see block details
-   - Show competing scoopers
-   - Show pledge progress
-
-2. **Scooper Dashboard**
-   - My claimed blocks
-   - Active blocks
-   - Stats (total pickups, streak)
-   - Milestones/achievements
-
-3. **Block Detail**
-   - Block info (neighborhood, borough)
-   - Current scoopers competing
-   - Pledge progress bar
-   - Recent cleanups
-   - Claim block button (if not claimed)
-
-4. **Pledge Screen** (Residents)
-   - Choose scooper
-   - Enter pledge amount
-   - Anonymous option
-   - Payment method (future)
-
-5. **Cleanup Logger**
-   - GPS location capture
-   - Pickup count input
-   - Photo upload
-   - Submit button
-
-6. **Poop Reporter**
-   - GPS location capture
-   - Photo upload
-   - Notes field
-   - Submit button
-
----
-
-## 🔥 What Makes This Special
-
-### Competitive Marketplace Mechanics
-```
-Multiple scoopers compete → First to reach funding wins → Others auto-dissolve
-```
-
-This is **unique** - not just matching, but competition!
-
-### Automatic Everything
-- ✅ Stats update on every cleanup
-- ✅ Milestones created automatically
-- ✅ Block activation when funded
-- ✅ Warning state on under-funding
-- ✅ Pledge dissolution when losing
-
-### Built for Scale
-- Lat/lng queries handle thousands of blocks
-- Counter caches avoid expensive queries
-- Pagination on all list endpoints
-- Indexes on all foreign keys
+- [ ] Set up error monitoring (Sentry)
+- [ ] Set up analytics
+- [ ] Create app store listings
+- [ ] Write terms of service
+- [ ] Write privacy policy
+- [ ] Set up customer support system
 
 ---
 
 ## 📚 Documentation Files
 
-**For Reference:**
-- `docs/SCOOP_BACKEND_SUMMARY.md` - Complete API documentation
-- `docs/SCOOP_STRIPE_CONNECT_SETUP.md` - How to enable payments
-- `docs/SCOOP_S3_LIFECYCLE_SETUP.md` - Photo auto-deletion setup
-- `SCOOP_SAFETY_VERIFICATION.md` - Proof Pocket Walks is safe
-- `TEMPORARY_STRIPE_CONFIG.md` - What works without Connect
-- `DEPLOYMENT_SUCCESS.md` - Deployment guide
+**Current Documentation:**
+- `docs/CURRENT_STATUS.md` - **This file!** Overall project status
+- `docs/SCOOP_MVP_TESTING_GUIDE.md` - Testing guide with rake tasks
+- `docs/FRONTEND_INTEGRATION_PROMPT.md` - Frontend development guide
+- `docs/SCOOP_BACKEND_SUMMARY.md` - Complete API reference
+- `docs/NEXT_STEPS.md` - Detailed next steps
 
-**Created Today:**
-- `docs/CURRENT_STATUS.md` - **This file!**
+**Setup Guides:**
+- `docs/SCOOP_STRIPE_CONNECT_SETUP.md` - Stripe Connect setup
+- `docs/SCOOP_S3_LIFECYCLE_SETUP.md` - S3 auto-deletion setup
 
----
-
-## 🚀 Next Steps (In Order)
-
-### 1. **Test the Deployed API** (5 mins)
-```bash
-# Get your Render URL from dashboard
-curl https://your-app.onrender.com/blocks
-
-# Test authentication
-curl -X POST https://your-app.onrender.com/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"existing@user.com","password":"password"}'
-```
-
-### 2. **Continue Frontend Development** (Now)
-- Connect React Native app to your Render URL
-- Build map view with block markers
-- Test nearby blocks API
-- Implement scooper claim flow
-- Test cleanup logging
-
-### 3. **Create Test Data** (Via API or Rails Console)
-```ruby
-# In Render shell or local console
-
-# Create a test block
-block = Block.create!(
-  block_id: "TEST001",
-  neighborhood: "East Village",
-  borough: "Manhattan",
-  status: "inactive",
-  geojson: { type: "Point", coordinates: [-73.9851, 40.7589] }
-)
-
-# Make a user a scooper
-user = User.first
-user.update!(is_scooper: true)
-```
-
-### 4. **Enable Stripe Connect** (When ready for payments)
-- Go to Stripe Dashboard
-- Enable Connect
-- Copy Client ID
-- Add to Rails credentials
-- Test onboarding flow
-
-### 5. **Set Up S3 Lifecycle** (When ready)
-- AWS Console → S3 → beaubucketone
-- Create lifecycle rule for 14-day deletion
-- See `docs/SCOOP_S3_LIFECYCLE_SETUP.md`
+**Legacy Docs** (Old system):
+- Various docs about pledge/block system (no longer primary model)
 
 ---
 
 ## ✅ Success Criteria Met
 
-- [x] Backend fully deployed without breaking Pocket Walks
-- [x] All API endpoints accessible and functional
-- [x] Database migrations completed successfully
-- [x] Stripe configured for testing
-- [x] Photo uploads working
-- [x] Geospatial queries working (lat/lng)
-- [x] Authentication shared with Pocket Walks
-- [x] Complete documentation created
-- [x] Frontend can start development
+- [x] Job board backend fully deployed
+- [x] Recurring subscriptions implemented
+- [x] All API endpoints working
+- [x] Photo uploads fixed and working
+- [x] Security hardened
+- [x] WebSockets configured
+- [x] Push notifications implemented
+- [x] Complete documentation
+- [x] Test data generation working
+- [x] Ready for frontend development
 
 ---
 
 ## 🎊 Summary
 
 **You now have:**
-- ✅ Production-ready Scoop backend deployed to Render
-- ✅ 40+ API endpoints ready for frontend integration
-- ✅ Complete competitive marketplace logic
-- ✅ Automatic gamification system
-- ✅ GPS-verified cleanup tracking
+- ✅ Complete job board marketplace (one-off jobs)
+- ✅ Subscription-based recurring cleanups
+- ✅ 60+ API endpoints ready to use
+- ✅ Real-time WebSocket updates
+- ✅ Push notifications
+- ✅ Photo upload system
+- ✅ Review system
+- ✅ Security hardened production API
 - ✅ Zero impact on Pocket Walks
 - ✅ Ready to build the mobile app!
 
-**The hard part is done!** Now you can focus on building a beautiful React Native UI that connects to this rock-solid backend.
+**The MVP backend is complete!** Focus on building a beautiful, intuitive React Native UI that makes it dead simple for:
+- **Posters** to request cleanups (one-time or recurring)
+- **Scoopers** to find and complete jobs
+- **Everyone** to see results and build trust through reviews
 
 Happy building! 🚀
