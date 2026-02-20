@@ -15,7 +15,14 @@ namespace :test_data do
         name: "Test Poster",
         password: "password123",
         password_confirmation: "password123",
-        is_scooper: false
+        is_scooper: false,
+        # Legacy dog-walking rate fields (required by validation)
+        thirty: 0,
+        fortyfive: 0,
+        sixty: 0,
+        solo_rate: 0,
+        training_rate: 0,
+        sibling_rate: 0
       )
       puts "✅ Created test user: #{user.email_address}"
     end
