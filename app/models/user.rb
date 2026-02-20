@@ -66,9 +66,10 @@ class User < ApplicationRecord
       if Rails.env.production?
         # Generate S3 URL using service method
         # Use blob's service to get the direct S3 URL
+        # Note: AWS S3 presigned URLs have a maximum expiration of 1 week
         profile_pic.blob.service.url(
           profile_pic.blob.key,
-          expires_in: 1.year,
+          expires_in: 7.days,
           disposition: "inline",
           filename: profile_pic.blob.filename,
           content_type: profile_pic.blob.content_type

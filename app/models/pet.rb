@@ -29,7 +29,8 @@ class Pet < ApplicationRecord
 
     begin
       if Rails.env.production?
-        profile_pic.url(expires_in: 1.year, disposition: "inline")
+        # Note: AWS S3 presigned URLs have a maximum expiration of 1 week
+        profile_pic.url(expires_in: 7.days, disposition: "inline")
       else
         Rails.application.routes.url_helpers.rails_blob_url(profile_pic, only_path: true)
       end
