@@ -64,15 +64,23 @@ class User < ApplicationRecord
     # In development/test, use rails_blob_url for local storage
     begin
       if Rails.env.production?
-        # Rails 7.2+ uses .url method for direct S3 URLs
-        profile_pic.url(expires_in: 1.year, disposition: "inline")
+        # Generate S3 URL using service method
+        # Use blob's service to get the direct S3 URL
+        profile_pic.blob.service.url(
+          profile_pic.blob.key,
+          expires_in: 1.year,
+          disposition: "inline",
+          filename: profile_pic.blob.filename,
+          content_type: profile_pic.blob.content_type
+        )
       else
         # For development/test, use blob URL for local storage
         Rails.application.routes.url_helpers.rails_blob_url(profile_pic, only_path: true)
       end
     rescue StandardError => e
-      # Log the error and return nil to prevent breaking serialization
-      Rails.logger.error("Error generating profile_pic_url: #{e.message}")
+      # Log the error with full details
+      Rails.logger.error("Error generating profile_pic_url: #{e.class} - #{e.message}")
+      Rails.logger.error(e.backtrace.first(5).join("\n"))
       nil
     end
   end
