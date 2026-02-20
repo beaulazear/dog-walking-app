@@ -127,6 +127,26 @@ class UsersController < ApplicationController
     end
   end
 
+  # POST /users/upload_profile_photo
+  # Simple endpoint to test S3 uploads
+  def upload_profile_photo
+    user = @current_user
+
+    unless params[:profile_pic].present?
+      return render json: { error: "No photo provided" }, status: :unprocessable_entity
+    end
+
+    if user.update(profile_pic: params[:profile_pic])
+      render json: {
+        message: "Profile photo uploaded successfully",
+        profile_pic_url: user.profile_pic_url,
+        user: UserSerializer.serialize_basic(user)
+      }, status: :ok
+    else
+      render json: { error: "Failed to upload photo" }, status: :unprocessable_entity
+    end
+  end
+
   private
 
   def user_params

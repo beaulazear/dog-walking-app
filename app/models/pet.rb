@@ -25,7 +25,18 @@ class Pet < ApplicationRecord
   end
 
   def profile_pic_url
-    profile_pic.attached? ? Rails.application.routes.url_helpers.rails_blob_url(profile_pic, only_path: true) : nil
+    return nil unless profile_pic.attached?
+
+    begin
+      if Rails.env.production?
+        profile_pic.url(expires_in: 1.year, disposition: "inline")
+      else
+        Rails.application.routes.url_helpers.rails_blob_url(profile_pic, only_path: true)
+      end
+    rescue StandardError => e
+      Rails.logger.error("Error generating pet profile_pic_url: #{e.message}")
+      nil
+    end
   end
 
   # Geocoding methods

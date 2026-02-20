@@ -3,14 +3,24 @@ namespace :test_data do
   task populate_jobs: :environment do
     puts "🧹 Populating test cleanup jobs across Manhattan, Brooklyn, Bronx, and Queens..."
 
-    # Find first user or create a test user
-    user = User.first
+    # Find user by email_address (beau09946@gmail.com)
+    user = User.find_by(email_address: "beau09946@gmail.com")
     unless user
-      puts "❌ No users found. Please create a user first."
-      exit 1
+      puts "❌ User with email beau09946@gmail.com not found."
+      puts "💡 Creating test user account..."
+
+      user = User.create!(
+        email_address: "beau09946@gmail.com",
+        username: "test_poster",
+        name: "Test Poster",
+        password: "password123",
+        password_confirmation: "password123",
+        is_scooper: false
+      )
+      puts "✅ Created test user: #{user.email_address}"
     end
 
-    puts "📍 Using poster: #{user.username} (#{user.name})"
+    puts "📍 Using poster: #{user.username} (#{user.email_address})"
 
     # NYC neighborhoods with coordinates and detailed job specs
     # Spread across all boroughs: Manhattan, Brooklyn, Bronx, Queens

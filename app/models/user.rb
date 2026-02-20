@@ -60,12 +60,12 @@ class User < ApplicationRecord
   def profile_pic_url
     return nil unless profile_pic.attached?
 
-    # In production with S3, use service_url for direct S3 URLs to avoid redirect issues
+    # In production with S3, use url for direct S3 URLs
     # In development/test, use rails_blob_url for local storage
     begin
       if Rails.env.production?
-        # service_url generates a direct S3 URL that doesn't require Rails to proxy
-        profile_pic.service_url(expires_in: 1.year, disposition: "inline")
+        # Rails 7.2+ uses .url method for direct S3 URLs
+        profile_pic.url(expires_in: 1.year, disposition: "inline")
       else
         # For development/test, use blob URL for local storage
         Rails.application.routes.url_helpers.rails_blob_url(profile_pic, only_path: true)

@@ -36,6 +36,7 @@ Rails.application.routes.draw do
   patch "/change_rates", to: "users#change_rates"
   patch "/update_profile", to: "users#update_profile"
   post "/users/register_device", to: "users#register_device"
+  post "/users/upload_profile_photo", to: "users#upload_profile_photo"
 
   # Walker Connections (Team Management)
   resources :walker_connections, only: %i[index create destroy] do
