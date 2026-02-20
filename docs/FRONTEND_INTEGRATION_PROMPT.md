@@ -13,8 +13,13 @@ The Scoop backend has been fully updated to support the MVP "job board on a map"
 
 ## 🎯 Core Concept Change
 
-**OLD MODEL:** Pledge/subscription system with monthly recurring payments
-**NEW MODEL:** On-demand job board where posters create one-time cleanup jobs and scoopers claim them
+**OLD MODEL:** Complex pledge/block sponsorship system
+**NEW MODEL (MVP):** Two service options:
+
+1. **One-Off Jobs** - Post a cleanup job when you see waste, scoopers claim it ($15-25)
+2. **Recurring Cleanups** - Subscribe to weekly/biweekly/monthly service ($40-60/month, ~50% discount)
+
+Both models coexist! Posters can choose one-time jobs OR subscribe for regular service.
 
 ---
 
@@ -608,6 +613,320 @@ function validateJobForm(formData) {
 {
   error: "Job not found"
 }
+```
+
+---
+
+## 🔄 Recurring Cleanups (Subscription Service)
+
+**NEW FEATURE:** In addition to one-off jobs, residents can now subscribe to recurring cleanup services at discounted rates.
+
+### Subscription Creation Flow
+
+1. **Poster creates subscription** with address, frequency, and price
+2. **Optional:** Assign scooper immediately OR leave open for scoopers to claim
+3. **Payment setup** with Stripe (recurring monthly subscription)
+4. **Jobs auto-generate** based on schedule
+
+### API Endpoints
+
+#### Create Subscription
+```javascript
+POST /recurring_cleanups
+Authorization: Bearer <jwt>
+
+{
+  recurring_cleanup: {
+    scooper_id: 2,              // Optional: assign scooper immediately
+    address: "123 Main St, Brooklyn, NY",
+    latitude: 40.6782,
+    longitude: -73.9442,
+    frequency: "weekly",        // "weekly", "biweekly", or "monthly"
+    day_of_week: 2,            // 0-6 (Sunday-Saturday)
+    price: 40.00,              // Monthly subscription price
+    job_type: "poop",          // Same as one-off jobs
+    segments_selected: ["north", "south"],
+    poop_itemization: "4-8"    // Conditional on job_type
+  },
+  payment_method_id: "pm_card_visa"  // Stripe payment method ID
+}
+```
+
+**Response:**
+```javascript
+{
+  recurring_cleanup: {
+    id: 1,
+    poster: { id: 1, name: "John Doe", email: "john@example.com" },
+    scooper: { id: 2, name: "Jane Smith", email: "jane@example.com" },
+    address: "123 Main St, Brooklyn, NY",
+    latitude: 40.6782,
+    longitude: -73.9442,
+    frequency: "weekly",
+    day_of_week: 2,
+    price: 40.00,
+    status: "active",
+    job_type: "poop",
+    segments_selected: ["north", "south"],
+    poop_itemization: "4-8",
+    next_job_date: "2026-02-25",
+    started_at: "2026-02-18T10:00:00Z",
+    created_at: "2026-02-18T10:00:00Z"
+  },
+  message: "Subscription created successfully"
+}
+```
+
+#### List My Subscriptions
+```javascript
+GET /recurring_cleanups/my_subscriptions
+Authorization: Bearer <jwt>
+
+// Returns array of all subscriptions created by current user
+```
+
+#### List My Assignments (Scooper View)
+```javascript
+GET /recurring_cleanups/my_assignments
+Authorization: Bearer <jwt>
+
+// Returns array of all subscriptions assigned to current user as scooper
+```
+
+#### Pause Subscription
+```javascript
+POST /recurring_cleanups/:id/pause
+Authorization: Bearer <jwt>
+
+// Pauses job generation but keeps subscription active
+```
+
+#### Resume Subscription
+```javascript
+POST /recurring_cleanups/:id/resume
+Authorization: Bearer <jwt>
+
+// Resumes job generation
+```
+
+#### Cancel Subscription
+```javascript
+POST /recurring_cleanups/:id/cancel
+Authorization: Bearer <jwt>
+
+// Cancels Stripe subscription and marks as cancelled
+```
+
+### UI Components Needed
+
+#### 1. Subscription Creation Screen
+
+**Toggle between One-Off and Recurring:**
+```javascript
+<SegmentedControl
+  values={['One-Time Job', 'Recurring Service']}
+  selectedIndex={jobMode}
+  onChange={(index) => setJobMode(index)}
+/>
+```
+
+**Recurring-Specific Fields:**
+```javascript
+// Frequency selector
+<Picker
+  selectedValue={frequency}
+  onValueChange={setFrequency}
+>
+  <Picker.Item label="Weekly" value="weekly" />
+  <Picker.Item label="Biweekly" value="biweekly" />
+  <Picker.Item label="Monthly" value="monthly" />
+</Picker>
+
+// Day of week selector (for weekly/biweekly)
+<Picker
+  selectedValue={dayOfWeek}
+  onValueChange={setDayOfWeek}
+>
+  <Picker.Item label="Monday" value={1} />
+  <Picker.Item label="Tuesday" value={2} />
+  <Picker.Item label="Wednesday" value={3} />
+  // ... etc
+</Picker>
+
+// Price guidance based on frequency
+<Text style={styles.priceGuidance}>
+  Recommended: ${getRecommendedPrice(frequency)}/month
+  {'\n'}
+  (${(getRecommendedPrice(frequency) / getVisitsPerMonth(frequency)).toFixed(2)}/visit
+  vs ${oneOffPrice}/visit for one-time jobs)
+</Text>
+```
+
+#### 2. My Subscriptions Screen
+
+Show all active/paused/cancelled subscriptions:
+
+```javascript
+const SubscriptionCard = ({ subscription }) => (
+  <View style={styles.card}>
+    <Text style={styles.address}>{subscription.address}</Text>
+    <Text style={styles.frequency}>
+      {subscription.frequency.charAt(0).toUpperCase() + subscription.frequency.slice(1)}
+      {' '}- Every {getDayName(subscription.day_of_week)}
+    </Text>
+    <Text style={styles.price}>${subscription.price}/month</Text>
+    <Text style={styles.nextJob}>
+      Next cleanup: {formatDate(subscription.next_job_date)}
+    </Text>
+
+    <View style={styles.actions}>
+      {subscription.status === 'active' && (
+        <>
+          <Button title="Pause" onPress={() => pauseSubscription(subscription.id)} />
+          <Button title="Cancel" onPress={() => cancelSubscription(subscription.id)} />
+        </>
+      )}
+      {subscription.status === 'paused' && (
+        <Button title="Resume" onPress={() => resumeSubscription(subscription.id)} />
+      )}
+    </View>
+  </View>
+);
+```
+
+#### 3. Scooper Assignments View
+
+Show scoopers their recurring assignments:
+
+```javascript
+const AssignmentCard = ({ assignment }) => (
+  <View style={styles.card}>
+    <Text style={styles.client}>{assignment.poster.name}</Text>
+    <Text style={styles.address}>{assignment.address}</Text>
+    <Text style={styles.earnings}>
+      ${assignment.price}/month · {assignment.frequency}
+    </Text>
+    <Text style={styles.nextJob}>
+      Next visit: {formatDate(assignment.next_job_date)}
+    </Text>
+  </View>
+);
+```
+
+### Stripe Integration
+
+Use `@stripe/stripe-react-native` for payment:
+
+```javascript
+import { useStripe } from '@stripe/stripe-react-native';
+
+const { createPaymentMethod } = useStripe();
+
+const createSubscription = async () => {
+  // 1. Collect card details
+  const { paymentMethod, error } = await createPaymentMethod({
+    paymentMethodType: 'Card',
+  });
+
+  if (error) {
+    alert('Payment method creation failed');
+    return;
+  }
+
+  // 2. Send to backend
+  const response = await fetch(`${API_URL}/recurring_cleanups`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      recurring_cleanup: { ...subscriptionData },
+      payment_method_id: paymentMethod.id,
+    }),
+  });
+
+  const data = await response.json();
+
+  // 3. Handle 3D Secure if needed
+  if (data.requires_action) {
+    const { error: confirmError } = await confirmPayment(data.client_secret);
+    if (confirmError) {
+      alert('Payment confirmation failed');
+      return;
+    }
+  }
+
+  alert('Subscription created successfully!');
+};
+```
+
+### TypeScript Interfaces
+
+```typescript
+interface RecurringCleanup {
+  id: number;
+  poster: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  scooper: {
+    id: number;
+    name: string;
+    email: string;
+  } | null;
+  address: string;
+  latitude: number;
+  longitude: number;
+  frequency: 'weekly' | 'biweekly' | 'monthly';
+  day_of_week: number; // 0-6
+  price: number;
+  status: 'pending' | 'active' | 'paused' | 'cancelled';
+  job_type: 'poop' | 'litter' | 'both';
+  segments_selected: string[];
+  poop_itemization?: string;
+  litter_itemization?: string;
+  next_job_date: string;
+  last_job_generated_at?: string;
+  started_at?: string;
+  cancelled_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+```
+
+### Pricing Recommendations
+
+Show savings to users:
+
+```javascript
+const getPricingGuidance = (frequency) => {
+  const oneOffPrice = 20;
+  const visitsPerMonth = {
+    weekly: 4,
+    biweekly: 2,
+    monthly: 1,
+  };
+
+  const recommendedMonthly = {
+    weekly: 40,    // $10/visit (50% off)
+    biweekly: 25,  // $12.50/visit (37% off)
+    monthly: 15,   // $15/visit (25% off)
+  };
+
+  const visits = visitsPerMonth[frequency];
+  const monthly = recommendedMonthly[frequency];
+  const perVisit = monthly / visits;
+  const savings = ((oneOffPrice - perVisit) / oneOffPrice * 100).toFixed(0);
+
+  return {
+    monthly,
+    perVisit,
+    savings,
+    message: `Save ${savings}%! $${perVisit}/visit vs $${oneOffPrice} for one-time jobs`,
+  };
+};
 ```
 
 ---

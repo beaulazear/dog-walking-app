@@ -10,6 +10,7 @@ class CleanupJob < ApplicationRecord
   belongs_to :scooper, class_name: "User", optional: true
   belongs_to :block, optional: true
   belongs_to :cancelled_by, class_name: "User", optional: true
+  belongs_to :recurring_cleanup, optional: true
 
   has_many_attached :before_photos
   has_many_attached :after_photos

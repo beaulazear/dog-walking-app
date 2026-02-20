@@ -37,6 +37,10 @@ class User < ApplicationRecord
   # Scoop associations (job board model)
   has_many :cleanup_jobs_as_poster, class_name: "CleanupJob", foreign_key: "poster_id", dependent: :destroy
   has_many :cleanup_jobs_as_scooper, class_name: "CleanupJob", foreign_key: "scooper_id", dependent: :nullify
+  has_many :recurring_cleanups_as_poster, class_name: "RecurringCleanup", foreign_key: "poster_id",
+                                          dependent: :destroy
+  has_many :recurring_cleanups_as_scooper, class_name: "RecurringCleanup", foreign_key: "scooper_id",
+                                           dependent: :nullify
   has_many :reviews_given, class_name: "Review", foreign_key: "reviewer_id", dependent: :destroy
   has_many :reviews_received, class_name: "Review", foreign_key: "scooper_id", dependent: :destroy
 

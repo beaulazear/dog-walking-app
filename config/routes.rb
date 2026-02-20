@@ -201,6 +201,20 @@ Rails.application.routes.draw do
     end
   end
 
+  # Recurring Cleanups - Subscription-based cleanup service
+  resources :recurring_cleanups, only: %i[index show create update] do
+    collection do
+      get :my_subscriptions    # GET /recurring_cleanups/my_subscriptions
+      get :my_assignments      # GET /recurring_cleanups/my_assignments
+    end
+    member do
+      post :pause              # POST /recurring_cleanups/:id/pause
+      post :resume             # POST /recurring_cleanups/:id/resume
+      post :cancel             # POST /recurring_cleanups/:id/cancel
+      post :assign_scooper     # POST /recurring_cleanups/:id/assign_scooper
+    end
+  end
+
   # Scooper Milestones - Achievement tracking
   resources :scooper_milestones, only: %i[index show] do
     collection do

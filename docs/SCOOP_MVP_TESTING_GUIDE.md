@@ -235,6 +235,174 @@ const jobChannel = cable.subscriptions.create(
 
 ---
 
+## Recurring Cleanups (Subscription Service)
+
+The Scoop MVP now supports **recurring cleanup subscriptions** - like a cleaning service! Residents can subscribe to regular weekly, biweekly, or monthly cleanups at discounted rates.
+
+### How It Works
+
+1. **Resident subscribes** to recurring cleanup at their address
+2. **Scooper is assigned** (either immediately or later)
+3. **Jobs auto-generate** based on the schedule (weekly/biweekly/monthly)
+4. **Stripe subscription** charges monthly until cancelled
+
+### Benefits Over One-Off Jobs
+
+- **Lower price** - $40/month for weekly = $10/visit (vs $20 one-time)
+- **Consistent schedule** - Every Tuesday, for example
+- **Predictable income** for scoopers
+- **Cancel anytime** - No complex pledge systems
+
+### API Endpoints
+
+#### Create Recurring Cleanup
+```bash
+curl -X POST http://localhost:3000/recurring_cleanups \
+  -H "Authorization: Bearer YOUR_JWT" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "recurring_cleanup": {
+      "scooper_id": 2,
+      "address": "123 Main St, Brooklyn, NY",
+      "latitude": 40.6782,
+      "longitude": -73.9442,
+      "frequency": "weekly",
+      "day_of_week": 2,
+      "price": 40.00,
+      "job_type": "poop",
+      "segments_selected": ["north", "south"],
+      "poop_itemization": "4-8"
+    },
+    "payment_method_id": "pm_card_visa"
+  }'
+```
+
+#### List My Subscriptions
+```bash
+curl http://localhost:3000/recurring_cleanups/my_subscriptions \
+  -H "Authorization: Bearer YOUR_JWT"
+```
+
+#### List My Assignments (as scooper)
+```bash
+curl http://localhost:3000/recurring_cleanups/my_assignments \
+  -H "Authorization: Bearer YOUR_JWT"
+```
+
+#### Pause Subscription
+```bash
+curl -X POST http://localhost:3000/recurring_cleanups/1/pause \
+  -H "Authorization: Bearer YOUR_JWT"
+```
+
+#### Resume Subscription
+```bash
+curl -X POST http://localhost:3000/recurring_cleanups/1/resume \
+  -H "Authorization: Bearer YOUR_JWT"
+```
+
+#### Cancel Subscription
+```bash
+curl -X POST http://localhost:3000/recurring_cleanups/1/cancel \
+  -H "Authorization: Bearer YOUR_JWT"
+```
+
+### Rake Tasks for Job Generation
+
+#### Generate Jobs from Subscriptions
+Run this daily (via cron or Heroku Scheduler):
+```bash
+rails recurring_cleanups:generate_jobs
+```
+
+**Output:**
+```
+🔄 Generating recurring cleanup jobs...
+  ✅ Generated job for 123 Main St, Brooklyn (weekly)
+  ✅ Generated job for 456 Oak Ave, Manhattan (biweekly)
+
+📊 Summary:
+   Generated: 2 jobs
+   Skipped: 0 jobs
+   Total active subscriptions checked: 5
+```
+
+#### View Schedule
+See when next jobs will be generated:
+```bash
+rails recurring_cleanups:schedule
+```
+
+**Output:**
+```
+📅 Recurring Cleanup Schedule
+
+🔴 123 Main St, Brooklyn
+   Frequency: weekly
+   Next job: 2026-02-20 (0 days)
+   Scooper: Jane Smith
+   Price: $40
+
+🟢 456 Oak Ave, Manhattan
+   Frequency: biweekly
+   Next job: 2026-02-25 (5 days)
+   Scooper: John Doe
+   Price: $60
+
+📊 Summary:
+   Total active subscriptions: 2
+   Jobs due today or overdue: 1
+```
+
+#### List All Subscriptions
+```bash
+rails recurring_cleanups:list
+```
+
+### Frequency Options
+
+- **weekly** - Jobs generated every 7 days
+- **biweekly** - Jobs generated every 14 days
+- **monthly** - Jobs generated every month (same date)
+
+### Pricing Strategy
+
+Recommended pricing (40-50% discount vs one-off):
+
+| Frequency | Monthly Price | Per-Visit Cost | vs One-Off |
+|-----------|--------------|----------------|------------|
+| Weekly (4x/month) | $40 | $10/visit | $20 normally (-50%) |
+| Biweekly (2x/month) | $25 | $12.50/visit | $20 normally (-37%) |
+| Monthly (1x/month) | $15 | $15/visit | $20 normally (-25%) |
+
+### Auto-Generated Jobs
+
+When a subscription's `next_job_date` arrives, the rake task creates a CleanupJob:
+
+- ✅ **Status**: "claimed" (if scooper assigned) or "open" (if no scooper yet)
+- ✅ **Price**: Same as subscription price (divided by frequency)
+- ✅ **Location**: Same as subscription address
+- ✅ **Job details**: Same job_type, itemization, segments
+- ✅ **Note**: "Recurring cleanup - weekly/biweekly/monthly"
+- ✅ **Linked**: `recurring_cleanup_id` links back to subscription
+
+### Production Setup
+
+1. **Set up cron job** to run `recurring_cleanups:generate_jobs` daily:
+   ```bash
+   # Heroku Scheduler (daily at 6 AM)
+   rails recurring_cleanups:generate_jobs
+
+   # Or cron (daily at 6 AM)
+   0 6 * * * cd /app && rails recurring_cleanups:generate_jobs
+   ```
+
+2. **Stripe webhook** handles subscription lifecycle (payment failures, etc.)
+
+3. **Monitor** with `recurring_cleanups:schedule` to see upcoming jobs
+
+---
+
 ## Data Distribution
 
 The rake task creates realistic variety:

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_20_023214) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_20_053559) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -222,11 +222,13 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_20_023214) do
     t.datetime "cancelled_at"
     t.decimal "cancellation_fee_amount", precision: 10, scale: 2
     t.text "cancellation_reason"
+    t.bigint "recurring_cleanup_id"
     t.index ["block_id"], name: "index_cleanup_jobs_on_block_id"
     t.index ["cancelled_by_id"], name: "index_cleanup_jobs_on_cancelled_by_id"
     t.index ["job_type"], name: "index_cleanup_jobs_on_job_type"
     t.index ["latitude", "longitude"], name: "index_cleanup_jobs_on_latitude_and_longitude"
     t.index ["poster_id"], name: "index_cleanup_jobs_on_poster_id"
+    t.index ["recurring_cleanup_id"], name: "index_cleanup_jobs_on_recurring_cleanup_id"
     t.index ["scooper_id"], name: "index_cleanup_jobs_on_scooper_id"
     t.index ["status", "created_at"], name: "index_cleanup_jobs_on_status_and_created_at"
     t.index ["status"], name: "index_cleanup_jobs_on_status"
@@ -430,6 +432,36 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_20_023214) do
     t.index ["status"], name: "index_poop_reports_on_status"
   end
 
+  create_table "recurring_cleanups", force: :cascade do |t|
+    t.bigint "poster_id", null: false
+    t.bigint "scooper_id"
+    t.string "address", null: false
+    t.decimal "latitude", precision: 10, scale: 6, null: false
+    t.decimal "longitude", precision: 10, scale: 6, null: false
+    t.string "frequency", null: false
+    t.integer "day_of_week"
+    t.decimal "price", precision: 8, scale: 2, null: false
+    t.string "status", default: "pending", null: false
+    t.string "stripe_subscription_id"
+    t.string "stripe_customer_id"
+    t.datetime "last_job_generated_at"
+    t.date "next_job_date"
+    t.datetime "started_at"
+    t.datetime "cancelled_at"
+    t.string "job_type", null: false
+    t.text "segments_selected"
+    t.string "poop_itemization"
+    t.string "litter_itemization"
+    t.text "note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["next_job_date"], name: "index_recurring_cleanups_on_next_job_date"
+    t.index ["poster_id"], name: "index_recurring_cleanups_on_poster_id"
+    t.index ["scooper_id"], name: "index_recurring_cleanups_on_scooper_id"
+    t.index ["status"], name: "index_recurring_cleanups_on_status"
+    t.index ["stripe_subscription_id"], name: "index_recurring_cleanups_on_stripe_subscription_id", unique: true
+  end
+
   create_table "reviews", force: :cascade do |t|
     t.bigint "cleanup_job_id", null: false
     t.bigint "reviewer_id", null: false
@@ -592,6 +624,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_20_023214) do
   add_foreign_key "books", "users"
   add_foreign_key "cancellations", "appointments"
   add_foreign_key "certification_goals", "users"
+  add_foreign_key "cleanup_jobs", "recurring_cleanups"
   add_foreign_key "cleanup_jobs", "users", column: "cancelled_by_id"
   add_foreign_key "cleanup_jobs", "users", column: "poster_id"
   add_foreign_key "cleanup_jobs", "users", column: "scooper_id"
@@ -617,6 +650,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_20_023214) do
   add_foreign_key "pledges", "coverage_regions"
   add_foreign_key "poop_reports", "blocks"
   add_foreign_key "poop_reports", "clients"
+  add_foreign_key "recurring_cleanups", "users", column: "poster_id"
+  add_foreign_key "recurring_cleanups", "users", column: "scooper_id"
   add_foreign_key "reviews", "cleanup_jobs"
   add_foreign_key "reviews", "users", column: "reviewer_id"
   add_foreign_key "reviews", "users", column: "scooper_id"
