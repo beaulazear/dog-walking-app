@@ -128,6 +128,38 @@ class Rack::Attack
     user_agent.match?(/sqlmap|nikto|nmap|masscan|nessus|openvas|acunetix/i)
   end
 
+  # Block vulnerability scanners looking for sensitive files
+  blocklist("file-scanners") do |req|
+    path = req.path.downcase
+    # Block requests for .env files, config files, git files, SSH keys, etc.
+    suspicious_paths = [
+      /\.env/,           # Environment files
+      /\.git/,           # Git repository files
+      /\.ssh/,           # SSH keys
+      /\.aws/,           # AWS credentials
+      /\.npmrc/,         # NPM credentials
+      /\.pypirc/,        # Python package index credentials
+      /\.htaccess/,      # Apache config
+      /\.htpasswd/,      # Apache passwords
+      /\.gitlab/,        # GitLab files
+      /\.svn/,           # Subversion files
+      /\.hg/,            # Mercurial files
+      /\.well-known\/security\.txt/, # Security policy (legitimate, but often scanned)
+      /wp-admin/,        # WordPress admin (we're not WordPress)
+      /wp-content/,      # WordPress content
+      /phpinfo/,         # PHP info page (we're not PHP)
+      /\.php$/,          # PHP files (we're Rails, not PHP)
+      /_next\/static/,   # Next.js files (we're not Next.js)
+      /_nuxt/,           # Nuxt files (we're not Nuxt)
+      /_ignition/,       # Laravel debug (we're not Laravel)
+      /_debugbar/,       # Debug toolbar
+      /dump\.sql/,       # Database dumps
+      /error\.log/       # Log files
+    ]
+
+    suspicious_paths.any? { |pattern| path.match?(pattern) }
+  end
+
   ### Custom Throttle Responses ###
 
   # Customize the response for throttled requests
