@@ -380,5 +380,12 @@ class CleanupJobsController < ApplicationController
         }
       )
     end
+  rescue Redis::CannotConnectError => e
+    # Redis not available - WebSocket broadcasting disabled
+    # This is fine for MVP. Jobs still work, just no real-time updates.
+    Rails.logger.warn "⚠️  WebSocket broadcast skipped (Redis not connected): #{e.message}"
+  rescue => e
+    # Catch any other broadcast errors
+    Rails.logger.error "❌ WebSocket broadcast failed: #{e.message}"
   end
 end
