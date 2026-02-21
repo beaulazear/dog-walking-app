@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_20_053559) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_21_222014) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -120,6 +120,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_20_053559) do
     t.datetime "activated_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "this_week_pickups", default: 0
+    t.date "clean_since_date"
+    t.string "sponsor_display_name"
     t.index ["active_scooper_id"], name: "index_blocks_on_active_scooper_id"
     t.index ["block_id"], name: "index_blocks_on_block_id", unique: true
     t.index ["borough"], name: "index_blocks_on_borough"
@@ -223,11 +226,20 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_20_053559) do
     t.decimal "cancellation_fee_amount", precision: 10, scale: 2
     t.text "cancellation_reason"
     t.bigint "recurring_cleanup_id"
+    t.string "arrival_status"
+    t.decimal "price_adjustment_requested", precision: 10, scale: 2
+    t.string "price_adjustment_status"
+    t.datetime "price_adjustment_requested_at"
+    t.datetime "price_adjustment_responded_at"
+    t.string "block_identifier"
+    t.index ["arrival_status"], name: "index_cleanup_jobs_on_arrival_status"
     t.index ["block_id"], name: "index_cleanup_jobs_on_block_id"
+    t.index ["block_identifier"], name: "index_cleanup_jobs_on_block_identifier"
     t.index ["cancelled_by_id"], name: "index_cleanup_jobs_on_cancelled_by_id"
     t.index ["job_type"], name: "index_cleanup_jobs_on_job_type"
     t.index ["latitude", "longitude"], name: "index_cleanup_jobs_on_latitude_and_longitude"
     t.index ["poster_id"], name: "index_cleanup_jobs_on_poster_id"
+    t.index ["price_adjustment_status"], name: "index_cleanup_jobs_on_price_adjustment_status"
     t.index ["recurring_cleanup_id"], name: "index_cleanup_jobs_on_recurring_cleanup_id"
     t.index ["scooper_id"], name: "index_cleanup_jobs_on_scooper_id"
     t.index ["status", "created_at"], name: "index_cleanup_jobs_on_status_and_created_at"
@@ -274,6 +286,18 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_20_053559) do
     t.index ["email"], name: "index_clients_on_email", unique: true
     t.index ["push_token"], name: "index_clients_on_push_token"
     t.index ["stripe_customer_id"], name: "index_clients_on_stripe_customer_id"
+  end
+
+  create_table "contributions", force: :cascade do |t|
+    t.bigint "sponsorship_id", null: false
+    t.bigint "contributor_id", null: false
+    t.decimal "monthly_amount", precision: 8, scale: 2, null: false
+    t.string "stripe_subscription_id"
+    t.string "status", default: "active"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["contributor_id"], name: "index_contributions_on_contributor_id"
+    t.index ["sponsorship_id"], name: "index_contributions_on_sponsorship_id"
   end
 
   create_table "coverage_regions", force: :cascade do |t|
@@ -471,6 +495,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_20_053559) do
     t.decimal "tip_amount", precision: 10, scale: 2
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "quality_rating"
+    t.integer "thoroughness_rating"
+    t.integer "timeliness_rating"
+    t.integer "communication_rating"
     t.index ["cleanup_job_id"], name: "index_reviews_on_cleanup_job_id"
     t.index ["reviewer_id"], name: "index_reviews_on_reviewer_id"
     t.index ["scooper_id"], name: "index_reviews_on_scooper_id"
@@ -499,6 +527,75 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_20_053559) do
     t.datetime "updated_at", null: false
     t.index ["appointment_share_id", "date"], name: "index_share_dates_on_appointment_share_id_and_date", unique: true
     t.index ["appointment_share_id"], name: "index_share_dates_on_appointment_share_id"
+  end
+
+  create_table "sponsorship_ratings", force: :cascade do |t|
+    t.bigint "sponsorship_id", null: false
+    t.bigint "sponsor_id", null: false
+    t.bigint "scooper_id", null: false
+    t.date "month", null: false
+    t.integer "quality_rating"
+    t.integer "thoroughness_rating"
+    t.integer "timeliness_rating"
+    t.integer "communication_rating"
+    t.decimal "overall_rating", precision: 3, scale: 2
+    t.text "review_text"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["scooper_id"], name: "index_sponsorship_ratings_on_scooper_id"
+    t.index ["sponsor_id"], name: "index_sponsorship_ratings_on_sponsor_id"
+    t.index ["sponsorship_id", "month"], name: "index_sponsorship_ratings_on_sponsorship_id_and_month", unique: true
+    t.index ["sponsorship_id"], name: "index_sponsorship_ratings_on_sponsorship_id"
+  end
+
+  create_table "sponsorships", force: :cascade do |t|
+    t.bigint "sponsor_id", null: false
+    t.bigint "scooper_id"
+    t.decimal "latitude", precision: 10, scale: 6, null: false
+    t.decimal "longitude", precision: 10, scale: 6, null: false
+    t.string "block_id", null: false
+    t.text "segments_selected", default: [], array: true
+    t.string "schedule", null: false
+    t.decimal "monthly_budget", precision: 8, scale: 2, null: false
+    t.string "display_preference", null: false
+    t.string "display_name"
+    t.string "status", default: "open"
+    t.datetime "claimed_at"
+    t.datetime "started_at"
+    t.string "stripe_subscription_id"
+    t.decimal "current_monthly_cost", precision: 8, scale: 2
+    t.integer "total_pickups", default: 0
+    t.integer "pickups_this_month", default: 0
+    t.integer "contributor_count", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["block_id"], name: "index_sponsorships_on_block_id"
+    t.index ["latitude", "longitude"], name: "index_sponsorships_on_latitude_and_longitude"
+    t.index ["scooper_id"], name: "index_sponsorships_on_scooper_id"
+    t.index ["sponsor_id"], name: "index_sponsorships_on_sponsor_id"
+    t.index ["status"], name: "index_sponsorships_on_status"
+  end
+
+  create_table "sweeps", force: :cascade do |t|
+    t.bigint "sponsorship_id", null: false
+    t.bigint "scooper_id", null: false
+    t.decimal "arrival_latitude", precision: 10, scale: 6
+    t.decimal "arrival_longitude", precision: 10, scale: 6
+    t.datetime "arrived_at"
+    t.integer "pickup_count", default: 0
+    t.string "after_photo_url"
+    t.text "notes"
+    t.boolean "litter_flagged", default: false
+    t.string "status", default: "scheduled"
+    t.datetime "completed_at"
+    t.decimal "payout_amount", precision: 8, scale: 2
+    t.string "stripe_payout_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["completed_at"], name: "index_sweeps_on_completed_at"
+    t.index ["scooper_id"], name: "index_sweeps_on_scooper_id"
+    t.index ["sponsorship_id"], name: "index_sweeps_on_sponsorship_id"
+    t.index ["status"], name: "index_sweeps_on_status"
   end
 
   create_table "training_sessions", force: :cascade do |t|
@@ -541,8 +638,20 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_20_053559) do
     t.string "device_token"
     t.string "device_platform"
     t.string "custom_pin", default: "📍"
+    t.boolean "is_poster", default: false, null: false
+    t.boolean "is_dog_walker", default: false, null: false
+    t.string "instagram_handle"
+    t.text "neighborhoods", default: [], array: true
+    t.string "business_name"
+    t.string "profile_photo_url"
+    t.decimal "overall_rating", precision: 3, scale: 2, default: "0.0"
+    t.integer "total_pickups", default: 0
+    t.string "user_type"
     t.index ["device_token"], name: "index_users_on_device_token"
+    t.index ["is_dog_walker"], name: "index_users_on_is_dog_walker"
+    t.index ["is_poster"], name: "index_users_on_is_poster"
     t.index ["is_scooper"], name: "index_users_on_is_scooper"
+    t.index ["neighborhoods"], name: "index_users_on_neighborhoods", using: :gin
     t.index ["stripe_connect_account_id"], name: "index_users_on_stripe_connect_account_id"
   end
 
@@ -630,6 +739,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_20_053559) do
   add_foreign_key "cleanup_jobs", "users", column: "scooper_id"
   add_foreign_key "cleanups", "blocks"
   add_foreign_key "cleanups", "users"
+  add_foreign_key "contributions", "sponsorships"
+  add_foreign_key "contributions", "users", column: "contributor_id"
   add_foreign_key "coverage_regions", "blocks"
   add_foreign_key "coverage_regions", "users"
   add_foreign_key "invoices", "appointments"
@@ -657,6 +768,13 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_20_053559) do
   add_foreign_key "reviews", "users", column: "scooper_id"
   add_foreign_key "scooper_milestones", "users"
   add_foreign_key "share_dates", "appointment_shares"
+  add_foreign_key "sponsorship_ratings", "sponsorships"
+  add_foreign_key "sponsorship_ratings", "users", column: "scooper_id"
+  add_foreign_key "sponsorship_ratings", "users", column: "sponsor_id"
+  add_foreign_key "sponsorships", "users", column: "scooper_id"
+  add_foreign_key "sponsorships", "users", column: "sponsor_id"
+  add_foreign_key "sweeps", "sponsorships"
+  add_foreign_key "sweeps", "users", column: "scooper_id"
   add_foreign_key "training_sessions", "pets"
   add_foreign_key "training_sessions", "users"
   add_foreign_key "walk_groups", "users"

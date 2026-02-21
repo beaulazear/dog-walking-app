@@ -44,6 +44,16 @@ class User < ApplicationRecord
   has_many :reviews_given, class_name: "Review", foreign_key: "reviewer_id", dependent: :destroy
   has_many :reviews_received, class_name: "Review", foreign_key: "scooper_id", dependent: :destroy
 
+  # MVP v3: Block sponsorship associations
+  has_many :sponsorships_as_sponsor, class_name: "Sponsorship", foreign_key: "sponsor_id", dependent: :destroy
+  has_many :sponsorships_as_scooper, class_name: "Sponsorship", foreign_key: "scooper_id", dependent: :nullify
+  has_many :sweeps, foreign_key: "scooper_id", dependent: :destroy
+  has_many :contributions, foreign_key: "contributor_id", dependent: :destroy
+  has_many :sponsorship_ratings_given, class_name: "SponsorshipRating", foreign_key: "sponsor_id",
+                                       dependent: :destroy
+  has_many :sponsorship_ratings_received, class_name: "SponsorshipRating", foreign_key: "scooper_id",
+                                          dependent: :destroy
+
   # Helper method to get all connections (both initiated and received)
   def all_connections
     WalkerConnection.where(user_id: id).or(WalkerConnection.where(connected_user_id: id))
@@ -146,5 +156,51 @@ class User < ApplicationRecord
         achieved_at: Time.current
       )
     end
+  end
+
+  # MVP v3: Dog walker and poster helper methods
+  def display_name_for_sponsorship(preference = "first_name", custom_name = nil)
+    case preference
+    when "business"
+      business_name || name
+    when "anonymous"
+      "A neighbor"
+    else
+      name&.split&.first || "Anonymous"
+    end
+  end
+
+  def calculate_overall_rating
+    job_ratings = reviews_received.average(:rating).to_f
+    sponsorship_ratings = sponsorship_ratings_received.average(:overall_rating).to_f
+
+    return 0.0 if job_ratings.zero? && sponsorship_ratings.zero?
+
+    if job_ratings.zero?
+      sponsorship_ratings
+    elsif sponsorship_ratings.zero?
+      job_ratings
+    else
+      ((job_ratings + sponsorship_ratings) / 2.0).round(2)
+    end
+  end
+
+  def update_overall_rating!
+    update(overall_rating: calculate_overall_rating)
+  end
+
+  # Public profile data for map/sponsorships
+  def public_profile
+    {
+      id:,
+      name:,
+      is_dog_walker:,
+      instagram_handle:,
+      business_name:,
+      overall_rating: overall_rating.to_f,
+      total_pickups:,
+      profile_photo_url:,
+      neighborhoods:
+    }
   end
 end

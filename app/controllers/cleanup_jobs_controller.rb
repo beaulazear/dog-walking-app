@@ -1,8 +1,11 @@
 class CleanupJobsController < ApplicationController
+  # MVP v3: Make index and show public (no auth required)
+  skip_before_action :authenticate_user, only: [ :index, :show ]
   before_action :set_cleanup_job, only: [ :show, :claim, :start, :complete, :confirm, :dispute, :cancel, :upload_before_photo, :upload_after_photo ]
 
   # GET /cleanup_jobs
   # List jobs - supports comprehensive filtering per MVP spec
+  # PUBLIC ENDPOINT (no auth required for browsing open jobs)
   def index
     jobs = CleanupJob.includes(:poster, :scooper)
 
@@ -116,28 +119,36 @@ class CleanupJobsController < ApplicationController
   end
 
   # POST /cleanup_jobs/:id/claim
-  # Scooper claims a job
+  # Scooper claims a job (first-tap-wins with database lock)
   def claim
-    unless @cleanup_job.claimable?
-      return render json: { error: "Job cannot be claimed" }, status: :unprocessable_entity
+    # MVP v3: Use database lock to prevent double-claiming (race condition protection)
+    ActiveRecord::Base.transaction do
+      # Lock the job to prevent concurrent claims
+      @cleanup_job = CleanupJob.lock.find(params[:id])
+
+      unless @cleanup_job.claimable?
+        return render json: { error: "Job cannot be claimed" }, status: :conflict
+      end
+
+      @cleanup_job.update!(
+        scooper: current_user,
+        status: "claimed",
+        claimed_at: Time.current
+      )
+
+      # Enqueue arrival timer (60 minutes - scooper must arrive or job auto-releases)
+      # ArrivalTimerJob.set(wait: 1.hour).perform_later(@cleanup_job.id)
+
+      # Notify poster that job was claimed
+      # PushNotificationService.notify_job_claimed(@cleanup_job)
+
+      # Broadcast status change
+      broadcast_job_update(@cleanup_job, "job_claimed")
+
+      render json: { job: job_json(@cleanup_job) }, status: :ok
     end
-
-    @cleanup_job.update!(
-      scooper: current_user,
-      status: "claimed",
-      claimed_at: Time.current
-    )
-
-    # Enqueue arrival timer (60 minutes - scooper must arrive or job auto-releases)
-    ArrivalTimerJob.set(wait: 1.hour).perform_later(@cleanup_job.id)
-
-    # Notify poster that job was claimed
-    PushNotificationService.notify_job_claimed(@cleanup_job)
-
-    # Broadcast status change
-    broadcast_job_update(@cleanup_job, "job_claimed")
-
-    render json: { job: job_json(@cleanup_job) }, status: :ok
+  rescue StandardError => e
+    render json: { error: e.message }, status: :unprocessable_entity
   end
 
   # POST /cleanup_jobs/:id/start

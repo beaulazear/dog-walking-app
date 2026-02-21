@@ -7,8 +7,8 @@ class RecurringCleanupsController < ApplicationController
     recurring_cleanups = RecurringCleanup.includes(:poster, :scooper).all
     render json: recurring_cleanups.as_json(
       include: {
-        poster: { only: [:id, :name, :email_address] },
-        scooper: { only: [:id, :name, :email_address] }
+        poster: { only: [ :id, :name, :email_address ] },
+        scooper: { only: [ :id, :name, :email_address ] }
       }
     )
   end
@@ -19,7 +19,7 @@ class RecurringCleanupsController < ApplicationController
     recurring_cleanup = RecurringCleanup.find(params[:id])
 
     # Authorization: only poster or scooper can view
-    unless [recurring_cleanup.poster_id, recurring_cleanup.scooper_id].include?(@current_user.id)
+    unless [ recurring_cleanup.poster_id, recurring_cleanup.scooper_id ].include?(@current_user.id)
       return render json: { error: "Not authorized" }, status: :forbidden
     end
 

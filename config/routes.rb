@@ -226,6 +226,35 @@ Rails.application.routes.draw do
     end
   end
 
+  # ===== MVP v3 ROUTES =====
+  # Block Sponsorships, Public Map, Dog Walker Profiles
+
+  # Public Map API (NO AUTH REQUIRED)
+  namespace :api do
+    namespace :map do
+      get "stats", to: "map#stats"                    # GET /api/map/stats?lat=40.6782&lng=-73.9442
+      get "blocks/:block_id", to: "map#block_detail"  # GET /api/map/blocks/BK-40.6782--73.9442
+      get "neighborhoods", to: "map#neighborhoods"     # GET /api/map/neighborhoods
+    end
+  end
+
+  # Sponsorships - Block sponsorship management
+  namespace :api do
+    resources :sponsorships, only: %i[index show create] do
+      member do
+        post :claim          # POST /api/sponsorships/:id/claim (dog walker claims)
+        post :pause          # POST /api/sponsorships/:id/pause (sponsor pauses)
+        post :resume         # POST /api/sponsorships/:id/resume (sponsor resumes)
+        post :cancel         # POST /api/sponsorships/:id/cancel (sponsor cancels)
+      end
+
+      # Nested resources under sponsorships
+      resources :sweeps, only: %i[index create], controller: "sweeps"            # Maintenance sweeps
+      resources :contributions, only: %i[index create destroy], controller: "contributions"  # Neighbor support
+      resources :ratings, only: %i[index create], controller: "sponsorship_ratings"  # Monthly ratings
+    end
+  end
+
   # Routing logic: fallback requests for React Router.
   # Leave this here to help deploy your app later!
 

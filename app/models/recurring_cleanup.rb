@@ -109,7 +109,7 @@ class RecurringCleanup < ApplicationRecord
     # Create subscription
     subscription = Stripe::Subscription.create({
       customer: customer.id,
-      items: [{
+      items: [ {
         price_data: {
           currency: "usd",
           product_data: {
@@ -119,13 +119,13 @@ class RecurringCleanup < ApplicationRecord
           recurring: { interval: "month" },
           unit_amount: (price * 100).to_i # Convert to cents
         }
-      }],
+      } ],
       default_payment_method: payment_method.id,
       application_fee_percent: 15, # 15% platform fee
       transfer_data: {
         destination: scooper.stripe_connect_account_id
       },
-      expand: ["latest_invoice.payment_intent"],
+      expand: [ "latest_invoice.payment_intent" ],
       metadata: {
         recurring_cleanup_id: id,
         frequency: frequency,
