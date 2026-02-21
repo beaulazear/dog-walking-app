@@ -1,6 +1,6 @@
 class CleanupJobsController < ApplicationController
   # MVP v3: Make index and show public (no auth required)
-  skip_before_action :authenticate_user, only: [ :index, :show ]
+  skip_before_action :authorized, only: [ :index, :show ]
   before_action :set_cleanup_job, only: [ :show, :claim, :start, :complete, :confirm, :dispute, :cancel, :upload_before_photo, :upload_after_photo ]
 
   # GET /cleanup_jobs

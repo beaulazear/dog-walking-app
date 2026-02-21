@@ -1,6 +1,6 @@
 module Api
   class MapController < ApplicationController
-    skip_before_action :authenticate_user, only: [ :stats, :block_detail, :neighborhoods ]
+    skip_before_action :authorized, only: [ :stats, :block_detail, :neighborhoods ]
 
     # GET /map/stats?lat=40.6782&lng=-73.9442
     # Returns neighborhood stats for the map ticker

@@ -71,6 +71,11 @@ class User < ApplicationRecord
 
   validates :thirty, :fortyfive, :sixty, :solo_rate, :training_rate, :sibling_rate, numericality: { only_integer: true }
 
+  # Admin helper method
+  def admin?
+    admin == true
+  end
+
   def profile_pic_url
     return nil unless profile_pic.attached?
 

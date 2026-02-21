@@ -1,6 +1,6 @@
 module Api
   class SponsorshipsController < ApplicationController
-    skip_before_action :authenticate_user, only: [ :index ]
+    skip_before_action :authorized, only: [ :index ]
     before_action :set_sponsorship, only: [ :show, :claim, :pause, :resume, :cancel ]
 
     # GET /sponsorships?status=open
