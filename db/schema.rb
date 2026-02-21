@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_21_222014) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_21_233416) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -592,6 +592,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_21_222014) do
     t.string "stripe_payout_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "gps_verified", default: false, null: false
     t.index ["completed_at"], name: "index_sweeps_on_completed_at"
     t.index ["scooper_id"], name: "index_sweeps_on_scooper_id"
     t.index ["sponsorship_id"], name: "index_sweeps_on_sponsorship_id"
