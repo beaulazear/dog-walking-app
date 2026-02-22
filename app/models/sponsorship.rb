@@ -20,6 +20,7 @@ class Sponsorship < ApplicationRecord
   scope :open, -> { where(status: "open") }
   scope :active, -> { where(status: "active") }
   scope :claimed, -> { where(status: "claimed") }
+  scope :paused, -> { where(status: "paused") }
 
   # Callbacks
   before_create :set_current_monthly_cost
