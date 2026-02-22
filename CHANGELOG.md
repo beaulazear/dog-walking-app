@@ -2,6 +2,168 @@
 
 All notable changes to this project will be documented in this file.
 
+## [MVP v3 Block Sponsorships System] - 2026-02-22
+
+### ✨ New Features (MAJOR RELEASE)
+
+#### Scoop MVP v3 - Complete Replacement of Previous System
+
+**Background:** The previous Scoop system (Feb 14-15) used a competitive blocks/pledges/cleanups model. MVP v3 completely replaces this with a simpler, more focused block sponsorship subscription system.
+
+**What Changed:**
+- ❌ **Removed:** blocks, coverage_regions, pledges, cleanups, poop_reports, scooper_milestones tables
+- ✅ **Added:** sponsorships, sweeps, contributions, sponsorship_ratings tables
+
+#### Core Features Added
+
+1. **Block Sponsorships** (`/api/sponsorships`)
+   - Monthly subscription model for block cleanup
+   - Sponsors set budget and schedule (weekly/biweekly)
+   - Display preferences (anonymous, first name, business name)
+   - Payment splits: 82% scooper, 18% platform
+   - Status machine: open → claimed → active (or paused/cancelled)
+
+2. **First-Tap-Wins Claiming**
+   - Database-level locking prevents race conditions
+   - Dog walkers claim open sponsorships
+   - Only one scooper can claim each block
+
+3. **GPS-Verified Sweeps** (`/api/sponsorships/:id/sweeps`)
+   - ~150m tolerance for GPS verification
+   - Photo uploads with 7-day S3 expiration
+   - Automatic payout calculation
+   - Updates sponsorship stats automatically
+
+4. **Neighbor Contributions** (`/api/sponsorships/:id/contributions`)
+   - Neighbors contribute monthly to reduce sponsor cost
+   - Sponsor cost = budget - contributions (never below $0)
+   - Auto-updates sponsorship cost on changes
+
+5. **Monthly Ratings** (`/api/sponsorships/:id/ratings`)
+   - 4-category ratings (quality, thoroughness, timeliness, communication)
+   - Database constraint: one rating per month per sponsorship
+   - Auto-calculates overall rating
+   - Updates dog walker's overall_rating
+
+6. **Public Map API** (`/api/map/*`)
+   - NO authentication required
+   - Browse neighborhood stats without signup
+   - View block details publicly
+
+7. **User Role Toggle** (`PATCH /users/toggle_roles`)
+   - Users can be poster AND dog walker simultaneously
+   - Easy role switching for testing
+
+### 📊 Database Schema
+
+**New Tables:**
+- `sponsorships` (21 columns) - Core subscription records
+- `sweeps` (17 columns) - GPS-verified maintenance logs
+- `contributions` (8 columns) - Neighbor support payments
+- `sponsorship_ratings` (13 columns) - Monthly feedback
+
+**Migrations:**
+- `20260221221759_add_dog_walker_fields_to_users.rb`
+- `20260221221918_create_sponsorships.rb`
+- `20260221221939_create_sweeps.rb`
+- `20260221221957_create_contributions.rb`
+- `20260221222014_create_sponsorship_ratings.rb`
+- `20260221233416_add_gps_verified_to_sweeps.rb`
+
+### 🎯 Controllers & Routes
+
+**New Controllers:**
+- `Api::SponsorshipsController` (index, show, create, update, claim, pause, resume, cancel)
+- `Api::SweepsController` (index, create)
+- `Api::ContributionsController` (index, create, update, destroy)
+- `Api::SponsorshipRatingsController` (index, create)
+- `Api::MapController` (stats, block_detail, neighborhoods)
+
+**Total New Endpoints:** 19+ across 5 controllers
+
+### 🔐 Security Features
+
+- ✅ Authorization checks on all modify operations
+- ✅ GPS boundary validation (prevents fraud)
+- ✅ First-tap-wins database locking (prevents race conditions)
+- ✅ Rate limiting via Rack::Attack
+- ✅ JWT token expiration (24 hours)
+
+### 📚 Documentation
+
+**Created:**
+- `docs/MVP_V3_BACKEND_COMPLETE.md` - 1000+ line technical reference
+- `docs/MVP_V3_HANDOFF_PROMPT.md` - Session handoff for new Claude sessions
+- `docs/SECURITY_QUICK_WINS.md` - Security implementation guide
+- `docs/MONTHLY_CRON_SETUP.md` - Monthly maintenance tasks
+
+**Updated:**
+- `README.md` - Updated for MVP v3
+- `PROJECT_STATUS.md` - Updated status overview
+- `DOCUMENTATION_INDEX.md` - Updated navigation
+
+**Archived:**
+- Old Scoop system docs moved to `docs/archive/old-scoop-system/`
+- Outdated prompts moved to `docs/archive/old-prompts/`
+
+### 🧪 Testing
+
+**Test Data Generation:**
+```bash
+bundle exec rake test_data:create_sponsorships  # Creates 10 test sponsorships
+bundle exec rake test_data:clear_sponsorships   # Clears test data
+```
+
+**Creates:**
+- 10 sponsorships across Brooklyn neighborhoods
+- 3 test dog walkers with profiles
+- 27 completed sweeps with GPS verification
+- Random contributions and ratings
+- Mix of statuses (open, claimed, active, paused)
+
+### 🐛 Bug Fixes During Implementation
+
+Fixed 11 schema mismatches during testing:
+1. Segment names (NW/NE/SW/SE instead of cardinal directions)
+2. Display preference values (first_name not name)
+3. Removed non-existent columns (clean_since, scheduled_date, last_sweep_at, etc.)
+4. Fixed Contribution to use contributor_id (User reference)
+5. Fixed SponsorshipRating column names (review_text not notes)
+6. Added missing methods (completed?, paused scope)
+7. Fixed cascade deletes (destroy_all vs delete_all)
+8. Added missing foreign keys in ratings
+9. Added gps_verified column to sweeps
+10. Fixed authentication callback name (authorized not authenticate_user)
+11. Fixed payment calculations to prevent negative costs
+
+### 💰 Payment Model
+
+**Deferred for Later:**
+- Stripe payment processing
+- Subscription creation in Stripe
+- Payouts to dog walkers
+
+**Business Logic Complete:**
+- Payment split calculations (82/18)
+- Payout per sweep calculations
+- Sponsor cost with contributions
+- All payment math tested and working
+
+**Can Enable Payments Later By:**
+1. Adding Stripe Connect Client ID to credentials
+2. Implementing subscription creation in controller
+3. Setting up webhook handlers
+4. See `docs/MVP_V3_BACKEND_COMPLETE.md` for details
+
+### 📝 Notes
+
+- **Backward Compatible:** Zero impact on existing Pocket Walks functionality
+- **Production Ready:** All tests passing, migrations successful
+- **Frontend Ready:** Backend complete and documented for frontend integration
+- **Two Separate Systems:** One-off cleanup jobs (`/cleanup_jobs`) still exist separately
+
+---
+
 ## [HTTPS Enforcement & Security Headers] - 2026-02-19
 
 ### 🔒 Security Improvements

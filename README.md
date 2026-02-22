@@ -2,8 +2,8 @@
 
 **A professional Rails + React application for dog care professionals**
 
-**Last Updated:** February 18, 2026
-**Status:** ✅ Production-Ready with Security Hardening Complete
+**Last Updated:** February 22, 2026
+**Status:** ✅ MVP v3 Complete - Block Sponsorships Live
 
 ---
 
@@ -13,7 +13,7 @@ This is a **three-product platform** sharing a single Rails backend with Postgre
 
 1. **Pocket Walks** - Dog walking business management (✅ Deployed)
 2. **Client Portal** - Pet owner interface (✅ Backend complete, ⚠️ Frontend needed)
-3. **Scoop** - Dog waste cleanup marketplace (✅ Backend deployed, 🚧 Frontend in progress)
+3. **Scoop MVP v3** - Block sponsorship subscriptions (✅ Backend complete, 🚧 Frontend in progress)
 
 **Key Features:**
 - ✅ Enterprise-grade security (all vulnerabilities fixed)
@@ -30,15 +30,15 @@ This is a **three-product platform** sharing a single Rails backend with Postgre
 
 ### **START HERE:**
 1. **[PROJECT_STATUS.md](PROJECT_STATUS.md)** - Complete project overview
-2. **[SECURITY_QUICK_START.md](SECURITY_QUICK_START.md)** - Get running in 5 minutes
+2. **[docs/MVP_V3_HANDOFF_PROMPT.md](docs/MVP_V3_HANDOFF_PROMPT.md)** - MVP v3 quick start
 3. **[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** - Navigate all docs
 
 ### Quick Links:
-- **Security:** [SECURITY_FIXES_SUMMARY.md](SECURITY_FIXES_SUMMARY.md)
-- **Scoop API:** [docs/SCOOP_BACKEND_SUMMARY.md](docs/SCOOP_BACKEND_SUMMARY.md)
+- **Security:** [docs/SECURITY_QUICK_WINS.md](docs/SECURITY_QUICK_WINS.md)
+- **MVP v3 API:** [docs/MVP_V3_BACKEND_COMPLETE.md](docs/MVP_V3_BACKEND_COMPLETE.md)
+- **MVP v3 Handoff:** [docs/MVP_V3_HANDOFF_PROMPT.md](docs/MVP_V3_HANDOFF_PROMPT.md)
 - **Client API:** [CLIENT_API_DOCUMENTATION.md](CLIENT_API_DOCUMENTATION.md)
 - **Architecture:** [ARCHITECTURE_REPORT.md](ARCHITECTURE_REPORT.md)
-- **Next Steps:** [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)
 
 ---
 
@@ -79,14 +79,11 @@ npm start --prefix client       # Frontend on port 4000
 ### Verify Setup
 
 ```bash
-# Check Stripe configuration
-./bin/check_stripe_config
+# Run test data generation
+bundle exec rake test_data:create_sponsorships
 
-# Run security tests
-ruby test/security_test.rb
-
-# Check Stripe health
-rails stripe:monitor:health
+# Check database
+rails runner "puts Sponsorship.count"
 ```
 
 ---
@@ -104,14 +101,14 @@ rails stripe:monitor:health
 ✅ Error Monitoring
 ✅ Comprehensive Testing
 
-**See:** [SECURITY_FIXES_SUMMARY.md](SECURITY_FIXES_SUMMARY.md) for details
+**See:** [docs/SECURITY_QUICK_WINS.md](docs/SECURITY_QUICK_WINS.md) for implementation guide
 
-**Security Commands:**
-```bash
-./bin/check_stripe_config           # Verify configuration
-ruby test/security_test.rb          # Run tests
-rails stripe:monitor:health         # Monitor Stripe
-```
+**Key Security Features:**
+- JWT token expiration (24 hours)
+- Rate limiting (Rack::Attack)
+- GPS boundary validation (~150m tolerance)
+- First-tap-wins database locking
+- Authorization checks on all endpoints
 
 ---
 
@@ -145,14 +142,16 @@ rails stripe:monitor:health         # Monitor Stripe
 - Pet management, Booking
 - Invoice viewing, Notifications
 
-### Scoop (Marketplace)
-- Block management, Pledges
-- GPS-verified cleanups, Poop reports
-- Gamification, Stripe Connect
+### Scoop MVP v3 (Block Sponsorships)
+- Monthly block sponsorships
+- GPS-verified maintenance sweeps
+- Neighbor contributions
+- Monthly ratings & reviews
+- First-tap-wins claiming
 
 **Total:** 100+ RESTful JSON API endpoints
 
-**See:** [docs/SCOOP_BACKEND_SUMMARY.md](docs/SCOOP_BACKEND_SUMMARY.md) for complete API docs
+**See:** [docs/MVP_V3_BACKEND_COMPLETE.md](docs/MVP_V3_BACKEND_COMPLETE.md) for complete API docs
 
 ---
 
@@ -165,9 +164,9 @@ rails stripe:monitor:health         # Monitor Stripe
 - `clients` (pet owners + residents)
 - `pets`, `appointments`, `invoices`
 
-**Scoop Tables:**
-- `blocks`, `coverage_regions`, `pledges`
-- `cleanups`, `poop_reports`, `scooper_milestones`
+**Scoop MVP v3 Tables:**
+- `sponsorships`, `sweeps`, `contributions`
+- `sponsorship_ratings`
 
 **Shared Infrastructure:**
 - JWT authentication across all products
@@ -202,7 +201,7 @@ git push origin main
 # Render auto-deploys from main branch
 ```
 
-**See:** [DEPLOYMENT_SUCCESS.md](DEPLOYMENT_SUCCESS.md) for details
+**See:** [docs/MVP_V3_BACKEND_COMPLETE.md](docs/MVP_V3_BACKEND_COMPLETE.md) for deployment details
 
 ---
 
@@ -210,29 +209,28 @@ git push origin main
 
 ### Run Tests
 ```bash
-# RSpec tests
-bundle exec rspec
+# Generate test data
+bundle exec rake test_data:create_sponsorships
 
-# Security tests
-ruby test/security_test.rb
+# Clear test data
+bundle exec rake test_data:clear_sponsorships
 
-# Manual testing
-# See test/manual_security_tests.md
+# Check database records
+rails runner "puts 'Sponsorships: ' + Sponsorship.count.to_s"
+rails runner "puts 'Sweeps: ' + Sweep.count.to_s"
 ```
 
-### Monitoring
+### Common Tasks
 ```bash
-# Stripe health check
-rails stripe:monitor:health
+# Create test sponsorship
+rails console
+> Sponsorship.create!(sponsor_id: 1, latitude: 40.6782, longitude: -73.9442, ...)
 
-# Check for errors
-rails stripe:monitor:errors
+# View all sponsorships
+> Sponsorship.all
 
-# Validate scoopers
-rails stripe:monitor:validate_scoopers
-
-# Check subscriptions
-rails stripe:monitor:check_cancelled_subscriptions
+# Check user roles
+> User.find(1).update(is_dog_walker: true)
 ```
 
 ---
@@ -246,11 +244,12 @@ npm start
 # Runs on http://localhost:4000
 ```
 
-### Scoop (React Native - In Progress)
-- Mobile app for scoopers and residents
-- Map view with block markers
-- GPS-verified cleanup logging
-- See: [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)
+### Scoop MVP v3 (React Native - In Progress)
+- Mobile app for sponsors and dog walkers
+- Block sponsorship creation
+- GPS-verified maintenance sweeps
+- Neighbor contribution support
+- See: [docs/MVP_V3_HANDOFF_PROMPT.md](docs/MVP_V3_HANDOFF_PROMPT.md)
 
 ### Client Portal (Not Yet Built)
 - Web interface for pet owners
@@ -287,14 +286,14 @@ rails db:reset                # Reset database
 rails console                 # REPL
 
 # Routes
-rails routes                  # View all routes
+rails routes | grep sponsorships  # View sponsorship routes
 
-# Security
-./bin/check_stripe_config     # Verify Stripe
-ruby test/security_test.rb    # Security tests
+# Test data
+bundle exec rake test_data:create_sponsorships  # Generate test data
+bundle exec rake test_data:clear_sponsorships   # Clear test data
 
-# Monitoring
-rails stripe:monitor:health   # Stripe health
+# Rake tasks
+rails -T                      # View all rake tasks
 ```
 
 ---
@@ -390,7 +389,7 @@ EDITOR="code --wait" rails credentials:edit
 rails server
 ```
 
-**More help:** See [SECURITY_QUICK_START.md](SECURITY_QUICK_START.md)
+**More help:** See [docs/SECURITY_QUICK_WINS.md](docs/SECURITY_QUICK_WINS.md)
 
 ---
 
@@ -398,8 +397,8 @@ rails server
 
 ### Documentation
 - **Overview:** [PROJECT_STATUS.md](PROJECT_STATUS.md)
-- **Security:** [SECURITY_FIXES_SUMMARY.md](SECURITY_FIXES_SUMMARY.md)
-- **Scoop:** [docs/SCOOP_BACKEND_SUMMARY.md](docs/SCOOP_BACKEND_SUMMARY.md)
+- **MVP v3:** [docs/MVP_V3_BACKEND_COMPLETE.md](docs/MVP_V3_BACKEND_COMPLETE.md)
+- **Security:** [docs/SECURITY_QUICK_WINS.md](docs/SECURITY_QUICK_WINS.md)
 - **All Docs:** [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)
 
 ### Resources
@@ -425,9 +424,9 @@ See [LICENSE.md](LICENSE.md)
 - [ ] Start servers (`rails server`, `npm start --prefix client`)
 - [ ] Run tests (`ruby test/security_test.rb`)
 - [ ] Read [PROJECT_STATUS.md](PROJECT_STATUS.md)
-- [ ] Read [SECURITY_QUICK_START.md](SECURITY_QUICK_START.md)
-- [ ] Review [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)
+- [ ] Read [docs/SECURITY_QUICK_WINS.md](docs/SECURITY_QUICK_WINS.md)
+- [ ] Review [docs/MVP_V3_HANDOFF_PROMPT.md](docs/MVP_V3_HANDOFF_PROMPT.md)
 
 ---
 
-**Ready to build?** Start with [SECURITY_QUICK_START.md](SECURITY_QUICK_START.md) then dive into [PROJECT_STATUS.md](PROJECT_STATUS.md)!
+**Ready to build?** Start with [docs/MVP_V3_HANDOFF_PROMPT.md](docs/MVP_V3_HANDOFF_PROMPT.md) then dive into [PROJECT_STATUS.md](PROJECT_STATUS.md)!

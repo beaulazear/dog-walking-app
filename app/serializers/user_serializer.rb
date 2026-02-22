@@ -25,6 +25,29 @@ class UserSerializer
       admin: user.admin,
       custom_pin: user.custom_pin,
       created_at: user.created_at,
+      # App separation fields (Scoopers vs Pocket Walks)
+      uses_pocket_walks: user.uses_pocket_walks,
+      uses_scoopers: user.uses_scoopers,
+      registered_from_app: user.registered_from_app,
+      # Role flags
+      is_scooper: user.is_scooper,
+      is_poster: user.is_poster,
+      is_dog_walker: user.is_dog_walker,
+      user_type: user.user_type,
+      # Dog walker specific fields
+      business_name: user.business_name,
+      instagram_handle: user.instagram_handle,
+      neighborhoods: user.neighborhoods,
+      # Scooper stats
+      overall_rating: user.overall_rating,
+      total_pickups: user.total_pickups,
+      total_scooper_earnings: user.total_scooper_earnings,
+      total_lifetime_pickups: user.total_lifetime_pickups,
+      current_streak_days: user.current_streak_days,
+      longest_streak_days: user.longest_streak_days,
+      # Stripe Connect
+      stripe_connect_onboarded: user.stripe_connect_onboarded,
+      # Pocket Walks associations
       pets: PetSerializer.serialize_collection(pets),
       appointments: AppointmentSerializer.serialize_collection(appointments),
       pet_sits: pet_sits.as_json(include: { pet: {}, pet_sit_completions: {} }),
@@ -51,7 +74,29 @@ class UserSerializer
       profile_pic_url: user.profile_pic_url,
       admin: user.admin,
       custom_pin: user.custom_pin,
-      created_at: user.created_at
+      created_at: user.created_at,
+      # App separation fields (Scoopers vs Pocket Walks)
+      uses_pocket_walks: user.uses_pocket_walks,
+      uses_scoopers: user.uses_scoopers,
+      registered_from_app: user.registered_from_app,
+      # Role flags
+      is_scooper: user.is_scooper,
+      is_poster: user.is_poster,
+      is_dog_walker: user.is_dog_walker,
+      user_type: user.user_type,
+      # Dog walker specific fields
+      business_name: user.business_name,
+      instagram_handle: user.instagram_handle,
+      neighborhoods: user.neighborhoods,
+      # Scooper stats
+      overall_rating: user.overall_rating,
+      total_pickups: user.total_pickups,
+      total_scooper_earnings: user.total_scooper_earnings,
+      total_lifetime_pickups: user.total_lifetime_pickups,
+      current_streak_days: user.current_streak_days,
+      longest_streak_days: user.longest_streak_days,
+      # Stripe Connect
+      stripe_connect_onboarded: user.stripe_connect_onboarded
     }
   end
 end

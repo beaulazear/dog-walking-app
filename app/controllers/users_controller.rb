@@ -13,20 +13,64 @@ class UsersController < ApplicationController
       password: params[:password],
       password_confirmation: params[:password_confirmation],
       name: params[:name],
-      email_address: params[:email_address]
+      email_address: params[:email] || params[:email_address]
     )
 
     if user.save
-      # Set default rates for new users
-      user.update(
-        thirty: 30,
-        fortyfive: 40,
-        sixty: 50,
-        solo_rate: 15,
-        training_rate: 25,
-        sibling_rate: 10,
-        pet_sitting_rate: 50
-      )
+      # Set default rates for Pocket Walks users only
+      if params[:registered_from_app] == 'pocket_walks' || params[:uses_pocket_walks]
+        user.update(
+          thirty: 30,
+          fortyfive: 40,
+          sixty: 50,
+          solo_rate: 15,
+          training_rate: 25,
+          sibling_rate: 10,
+          pet_sitting_rate: 50
+        )
+      end
+
+      # Update app separation fields and Scoopers-specific fields
+      updates = {}
+
+      # App tracking fields
+      if params[:registered_from_app].present?
+        updates[:registered_from_app] = params[:registered_from_app]
+      end
+      if params[:uses_scoopers] == true
+        updates[:uses_scoopers] = true
+      end
+      if params[:uses_pocket_walks] == true
+        updates[:uses_pocket_walks] = true
+      end
+
+      # Role flags
+      if params[:is_dog_walker] == true
+        updates[:is_dog_walker] = true
+      end
+      if params[:is_scooper] == true
+        updates[:is_scooper] = true
+      end
+      if params[:is_poster] == true
+        updates[:is_poster] = true
+      end
+
+      # Dog walker profile fields
+      if params[:business_name].present?
+        updates[:business_name] = params[:business_name]
+      end
+      if params[:instagram_handle].present?
+        updates[:instagram_handle] = params[:instagram_handle]
+      end
+      if params[:neighborhoods].present?
+        updates[:neighborhoods] = params[:neighborhoods]
+      end
+      if params[:custom_pin].present?
+        updates[:custom_pin] = params[:custom_pin]
+      end
+
+      # Apply all updates at once
+      user.update(updates) unless updates.empty?
 
       # Set session for web app compatibility
       session[:user_id] = user.id
@@ -179,7 +223,16 @@ class UsersController < ApplicationController
   end
 
   def profile_params
-    params.permit(:name, :username, :profile_pic, :custom_pin)
+    params.permit(
+      :name,
+      :username,
+      :email_address,
+      :profile_pic,
+      :custom_pin,
+      :business_name,
+      :instagram_handle,
+      neighborhoods: []
+    )
   end
 
   def device_params

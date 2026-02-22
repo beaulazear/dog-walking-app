@@ -3,11 +3,15 @@ module Api
     skip_before_action :authorized, only: [ :index ]
     before_action :set_sponsorship, only: [ :show, :claim, :pause, :resume, :cancel ]
 
-    # GET /sponsorships?status=open
-    # Public endpoint - returns open sponsorships for map/dog walkers
+    # GET /sponsorships?status=open|active|claimed
+    # Public endpoint - returns sponsorships for map/dog walkers
     def index
       sponsorships = if params[:status] == "open"
                        Sponsorship.open
+      elsif params[:status] == "active"
+                       Sponsorship.active
+      elsif params[:status] == "claimed"
+                       Sponsorship.claimed
       elsif params[:my_sponsorships] && current_user
                        current_user.sponsorships_as_sponsor
       elsif params[:my_claimed] && current_user

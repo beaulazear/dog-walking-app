@@ -1,7 +1,7 @@
 # Dog Walking App - Complete Project Status
 
-**Last Updated:** February 18, 2026
-**Current Phase:** Production-Ready with Security Hardening Complete
+**Last Updated:** February 22, 2026
+**Current Phase:** MVP v3 Complete - Block Sponsorships System Live
 
 ---
 
@@ -11,9 +11,9 @@
 |-----------|--------|----------|---------------------|
 | **Pocket Walks (Walker App)** | ✅ Deployed | ✅ Secured | ✅ Yes |
 | **Client Portal (Pet Owners)** | ✅ Backend Complete | ✅ Secured | ⚠️ Frontend Needed |
-| **Scoop Marketplace** | ✅ Backend Deployed | ✅ Secured | ⚠️ Frontend In Progress |
+| **Scoop MVP v3 (Sponsorships)** | ✅ Backend Complete | ✅ Secured | ⚠️ Frontend In Progress |
 | **Security Infrastructure** | ✅ Hardened | ✅ All Vulnerabilities Fixed | ✅ Yes |
-| **Stripe Integration** | ⚠️ Test Mode | ✅ Secured | ⚠️ Connect Setup Needed |
+| **Payment Integration** | ⚠️ Stripe Deferred | ✅ Secured | ⚠️ Integration Needed |
 
 ---
 
@@ -59,25 +59,25 @@ This is a **multi-product platform** sharing infrastructure:
 
 ---
 
-### 3. Scoop - Dog Waste Cleanup Marketplace
-**Purpose:** Competitive marketplace connecting residents & scoopers
-**Status:** ✅ Backend deployed, 🚧 Frontend in progress
-**Users:** Scoopers (cleanup workers) & Residents
+### 3. Scoop MVP v3 - Block Sponsorship System
+**Purpose:** Monthly subscriptions for recurring block cleanup
+**Status:** ✅ Backend complete, 🚧 Frontend in progress
+**Users:** Sponsors (residents/businesses) & Dog Walkers (scoopers)
 
 **Features:**
-- ✅ Competitive pledge system (first-to-fund wins)
-- ✅ GPS-verified cleanup logging
-- ✅ Photo uploads with 14-day auto-deletion
-- ✅ Gamification (milestones, streaks, badges)
-- ✅ Poop reporting system
-- ✅ 90-day warning system
-- ✅ Stripe Connect scaffolding
-- ⚠️ Geospatial queries (lat/lng, no PostGIS)
+- ✅ Block sponsorships with monthly budgets
+- ✅ First-tap-wins block claiming (database locking)
+- ✅ GPS-verified maintenance sweeps (~150m tolerance)
+- ✅ Neighbor contributions (reduce sponsor cost)
+- ✅ Monthly ratings (4 categories + overall)
+- ✅ Public map API (no auth required)
+- ✅ Automatic payout calculations (82/18 split)
+- ✅ Photo uploads (S3 with 7-day expiration)
 
 **Frontend:** 🚧 React Native + Expo (in development)
-**Backend:** 40+ API endpoints
+**Backend:** 19+ API endpoints across 4 controllers
 **Security:** ✅ All vulnerabilities fixed
-**Payments:** ⚠️ Stripe Connect not yet enabled
+**Payments:** ⚠️ Stripe deferred for later implementation
 
 ---
 
@@ -253,19 +253,16 @@ dog-walking-app/
 **Client Portal Tables:**
 - clients (pet owners - shares pets/appointments/invoices)
 
-**Scoop Tables:**
-- blocks (geographic blocks)
-- coverage_regions (scooper claims)
-- pledges (resident subscriptions)
-- cleanups (GPS-verified logs)
-- poop_reports (resident complaints)
-- scooper_milestones (achievements)
-- webhook_events (Stripe events)
+**Scoop MVP v3 Tables:**
+- sponsorships (monthly subscriptions - 21 columns)
+- sweeps (GPS-verified maintenance - 17 columns)
+- contributions (neighbor support - 8 columns)
+- sponsorship_ratings (monthly feedback - 13 columns)
 
 **Shared Models:**
-- `User` serves walkers AND scoopers (`is_scooper` flag)
-- `Client` serves pet owners AND residents (pledgers)
-- `Pet` belongs to User (walker) OR Client (owner)
+- `User` serves walkers AND dog walkers (`is_poster`, `is_dog_walker` flags)
+- Dog walkers can create sponsorships (as sponsors) OR claim them (as scoopers)
+- Unified user model with role toggles
 
 ---
 
@@ -473,12 +470,11 @@ curl -X POST https://your-app.onrender.com/login \
 - **test/manual_security_tests.md** - Testing guide
 - **test/security_test.rb** - Automated tests
 
-### Scoop Marketplace
-- **docs/SCOOP_BACKEND_SUMMARY.md** - Complete API docs
-- **docs/SCOOP_STRIPE_CONNECT_SETUP.md** - Payment setup
-- **docs/SCOOP_S3_LIFECYCLE_SETUP.md** - Photo deletion
-- **docs/CURRENT_STATUS.md** - Deployment status
-- **docs/NEXT_STEPS.md** - Development roadmap
+### Scoop MVP v3
+- **docs/MVP_V3_BACKEND_COMPLETE.md** - Complete technical reference
+- **docs/MVP_V3_HANDOFF_PROMPT.md** - Session handoff & quick start
+- **docs/SECURITY_QUICK_WINS.md** - Security implementation guide
+- **docs/MONTHLY_CRON_SETUP.md** - Monthly maintenance tasks
 
 ### Client Portal
 - **CLIENT_API_DOCUMENTATION.md** - API reference

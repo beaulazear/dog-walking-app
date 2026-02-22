@@ -2,7 +2,7 @@
 
 **Quick navigation guide to all project documentation**
 
-Last Updated: February 18, 2026
+Last Updated: February 22, 2026
 
 ---
 
@@ -20,31 +20,39 @@ Last Updated: February 18, 2026
 
 **Essential for all developers:**
 
-- **[security/README.md](security/README.md)** - Security documentation index
-- **[security/SECURITY_QUICK_START.md](security/SECURITY_QUICK_START.md)** - Get running in 5 minutes
-- **[security/SECURITY_FIXES_SUMMARY.md](security/SECURITY_FIXES_SUMMARY.md)** - All 8 security fixes
-- **[security/STRIPE_SECURITY_SETUP.md](security/STRIPE_SECURITY_SETUP.md)** - Stripe setup guide
-- **[security/manual_security_tests.md](security/manual_security_tests.md)** - Manual testing
-- **[security/security_test.rb](security/security_test.rb)** - Automated tests
+- **[docs/SECURITY_QUICK_WINS.md](docs/SECURITY_QUICK_WINS.md)** - Security implementation guide
+- **[docs/MOBILE_APP_SECURITY_GUIDE.md](docs/MOBILE_APP_SECURITY_GUIDE.md)** - Mobile security guide
+
+**Key Security Features (MVP v3):**
+- JWT token expiration (24 hours)
+- Rate limiting (Rack::Attack)
+- GPS boundary validation (~150m)
+- First-tap-wins database locking
+- Authorization checks on all endpoints
 
 **Security Commands:**
 ```bash
-./bin/check_stripe_config             # Verify Stripe setup
-ruby security/security_test.rb        # Run security tests
-rails stripe:monitor:health           # Check Stripe health
+# Generate test data
+bundle exec rake test_data:create_sponsorships
+
+# Check database
+rails runner "puts Sponsorship.count"
 ```
 
 ---
 
-## 🛍️ Scoop Marketplace Documentation
+## 🛍️ Scoop MVP v3 Documentation
 
-**For Scoop development:**
+**For Scoop MVP v3 development:**
 
-- **[docs/SCOOP_BACKEND_SUMMARY.md](docs/SCOOP_BACKEND_SUMMARY.md)** - Complete API docs (40+ endpoints)
-- **[docs/CURRENT_STATUS.md](docs/CURRENT_STATUS.md)** - Deployment status & what's working
-- **[docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)** - Development roadmap & TODO list
-- **[docs/SCOOP_STRIPE_CONNECT_SETUP.md](docs/SCOOP_STRIPE_CONNECT_SETUP.md)** - Payment setup
-- **[docs/SCOOP_S3_LIFECYCLE_SETUP.md](docs/SCOOP_S3_LIFECYCLE_SETUP.md)** - Photo auto-deletion
+- **[docs/MVP_V3_BACKEND_COMPLETE.md](docs/MVP_V3_BACKEND_COMPLETE.md)** - Complete technical reference (1000+ lines)
+- **[docs/MVP_V3_HANDOFF_PROMPT.md](docs/MVP_V3_HANDOFF_PROMPT.md)** - Session handoff for new Claude sessions
+- **[docs/SECURITY_QUICK_WINS.md](docs/SECURITY_QUICK_WINS.md)** - Security implementation guide
+- **[docs/MONTHLY_CRON_SETUP.md](docs/MONTHLY_CRON_SETUP.md)** - Monthly maintenance tasks
+
+**Old System (Archived):**
+- Old Scoop marketplace docs → `docs/archive/old-scoop-system/`
+- See `docs/archive/README.md` for historical context
 
 ---
 
@@ -108,31 +116,32 @@ rails stripe:monitor:health           # Check Stripe health
 ## 🗂️ By Topic
 
 ### Security
-1. security/README.md
-2. security/SECURITY_QUICK_START.md
-3. security/SECURITY_FIXES_SUMMARY.md
-4. security/manual_security_tests.md
+1. docs/SECURITY_QUICK_WINS.md
+2. docs/MOBILE_APP_SECURITY_GUIDE.md
 
-### Stripe Integration
-1. security/STRIPE_SECURITY_SETUP.md
-2. docs/SCOOP_STRIPE_CONNECT_SETUP.md
-3. STRIPE_SETUP_COMPLETE.md
-4. STRIPE_SETUP_INSTRUCTIONS.md
+### MVP v3 (Block Sponsorships)
+1. docs/MVP_V3_BACKEND_COMPLETE.md
+2. docs/MVP_V3_HANDOFF_PROMPT.md
+3. docs/MONTHLY_CRON_SETUP.md
 
 ### API Documentation
-1. docs/SCOOP_BACKEND_SUMMARY.md
-2. CLIENT_API_DOCUMENTATION.md
-3. CLIENT_API_REFERENCE.md
+1. docs/MVP_V3_BACKEND_COMPLETE.md - Scoop MVP v3 API
+2. CLIENT_API_DOCUMENTATION.md - Client Portal API
+3. CLIENT_API_REFERENCE.md - Client API reference
 
 ### Deployment
-1. PROJECT_STATUS.md
-2. docs/CURRENT_STATUS.md
-3. DEPLOYMENT_SUCCESS.md
+1. PROJECT_STATUS.md - Master status
+2. README.md - Quick start guide
 
-### Development Roadmap
-1. docs/NEXT_STEPS.md
-2. ROUTE_OPTIMIZER_FINAL_SPEC.md
-3. PET_SITS_FEATURE_PLAN.md
+### Pocket Walks Features (Future)
+1. ROUTE_OPTIMIZER_FINAL_SPEC.md - Route optimization
+2. PET_SITS_FEATURE_PLAN.md - Pet sitting
+3. SHARING_SYSTEM_STATUS.md - Walk sharing
+
+### Archived Documentation
+1. docs/archive/old-scoop-system/ - Old Scoop marketplace (Feb 14-15)
+2. docs/archive/old-prompts/ - Outdated session prompts
+3. docs/archive/README.md - Archive index
 
 ---
 
@@ -140,35 +149,30 @@ rails stripe:monitor:health           # Check Stripe health
 
 ### Setting Up Development Environment
 1. Read [README.md](README.md)
-2. Read [security/SECURITY_QUICK_START.md](security/SECURITY_QUICK_START.md)
-3. Run `./bin/check_stripe_config`
+2. Read [docs/MVP_V3_HANDOFF_PROMPT.md](docs/MVP_V3_HANDOFF_PROMPT.md)
+3. Run `bundle exec rake test_data:create_sponsorships`
 
-### Understanding the Codebase
+### Understanding MVP v3
 1. Read [PROJECT_STATUS.md](PROJECT_STATUS.md)
-2. Read [ARCHITECTURE_REPORT.md](ARCHITECTURE_REPORT.md)
-3. Read [docs/SCOOP_BACKEND_SUMMARY.md](docs/SCOOP_BACKEND_SUMMARY.md)
+2. Read [docs/MVP_V3_BACKEND_COMPLETE.md](docs/MVP_V3_BACKEND_COMPLETE.md)
+3. Read [docs/MVP_V3_HANDOFF_PROMPT.md](docs/MVP_V3_HANDOFF_PROMPT.md)
 
-### Security Review
-1. Read [security/SECURITY_FIXES_SUMMARY.md](security/SECURITY_FIXES_SUMMARY.md)
-2. Run `ruby security/security_test.rb`
-3. Follow [security/manual_security_tests.md](security/manual_security_tests.md)
+### Security Implementation
+1. Read [docs/SECURITY_QUICK_WINS.md](docs/SECURITY_QUICK_WINS.md)
+2. Read [docs/MOBILE_APP_SECURITY_GUIDE.md](docs/MOBILE_APP_SECURITY_GUIDE.md)
+3. Implement secure token storage (expo-secure-store)
 
-### Setting Up Payments
-1. Read [security/STRIPE_SECURITY_SETUP.md](security/STRIPE_SECURITY_SETUP.md)
-2. Read [docs/SCOOP_STRIPE_CONNECT_SETUP.md](docs/SCOOP_STRIPE_CONNECT_SETUP.md)
-3. Run `./bin/check_stripe_config`
+### Building Frontend
+1. Read [docs/MVP_V3_BACKEND_COMPLETE.md](docs/MVP_V3_BACKEND_COMPLETE.md) - API reference
+2. Review API endpoints (`/api/sponsorships`, `/api/sweeps`, etc.)
+3. Test with generated data from rake task
 
-### Building Scoop Frontend
-1. Read [docs/CURRENT_STATUS.md](docs/CURRENT_STATUS.md)
-2. Read [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)
-3. Read [docs/SCOOP_BACKEND_SUMMARY.md](docs/SCOOP_BACKEND_SUMMARY.md)
-
-### Monitoring Production
+### Testing & Development
 ```bash
-rails stripe:monitor:health                         # Daily health check
-rails stripe:monitor:errors                         # Check recent errors
-rails stripe:monitor:validate_scoopers             # Validate accounts
-rails stripe:monitor:check_cancelled_subscriptions # Check integrity
+bundle exec rake test_data:create_sponsorships  # Generate test data
+bundle exec rake test_data:clear_sponsorships   # Clear test data
+rails runner "puts Sponsorship.count"           # Check database
+rails routes | grep sponsorships                # View routes
 ```
 
 ---
