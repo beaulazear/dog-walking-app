@@ -81,8 +81,10 @@ namespace :test_data do
       { name: "Williamsburg - Bedford Ave", lat: 40.7081, lng: -73.9571, schedule: "weekly", budget: 48.00, status: :open }
     ]
 
-    # Clear existing test sponsorships
-    deleted = Sponsorship.where("block_id LIKE ?", "BK-%").delete_all
+    # Clear existing test sponsorships and related data
+    sponsorships_to_delete = Sponsorship.where("block_id LIKE ?", "BK-%")
+    deleted = sponsorships_to_delete.count
+    sponsorships_to_delete.destroy_all  # Use destroy_all to trigger cascade deletes
     puts "🗑️  Deleted #{deleted} existing test sponsorships\n"
 
     created_count = 0
