@@ -123,11 +123,12 @@ namespace :test_data do
         # Create some completed sweeps
         sweep_count = rand(2..8)
         sweep_count.times do |i|
+          sweep_time = (sweep_count - i).weeks.ago + rand(0..2).hours
           Sweep.create!(
             sponsorship: sponsorship,
             scooper: scooper,
-            scheduled_date: (sweep_count - i).weeks.ago.to_date,
-            completed_at: (sweep_count - i).weeks.ago + rand(0..2).hours,
+            arrived_at: sweep_time,
+            completed_at: sweep_time + rand(15..45).minutes,
             arrival_latitude: location[:lat] + rand(-0.0005..0.0005),
             arrival_longitude: location[:lng] + rand(-0.0005..0.0005),
             gps_verified: true,
