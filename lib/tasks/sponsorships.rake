@@ -41,7 +41,7 @@ namespace :test_data do
           is_dog_walker: true,
           instagram_handle: walker_data[:instagram],
           business_name: walker_data[:business],
-          neighborhoods: ["Park Slope", "Prospect Heights", "Windsor Terrace"],
+          neighborhoods: [ "Park Slope", "Prospect Heights", "Windsor Terrace" ],
           overall_rating: rand(4.5..5.0).round(2),
           total_pickups: rand(50..200),
           thirty: 0, fortyfive: 0, sixty: 0,
@@ -95,7 +95,7 @@ namespace :test_data do
         latitude: location[:lat],
         longitude: location[:lng],
         block_id: block_id,
-        segments_selected: ["NW", "NE", "SW", "SE"],
+        segments_selected: [ "NW", "NE", "SW", "SE" ],
         schedule: location[:schedule],
         monthly_budget: location[:budget],
         display_preference: index.even? ? "anonymous" : "first_name",
@@ -160,7 +160,7 @@ namespace :test_data do
           Contribution.create!(
             sponsorship: sponsorship,
             contributor: neighbor,
-            monthly_amount: [5, 10, 15, 20].sample,
+            monthly_amount: [ 5, 10, 15, 20 ].sample,
             status: "active",
             stripe_subscription_id: "sub_test_#{SecureRandom.hex(8)}"
           )
@@ -177,7 +177,7 @@ namespace :test_data do
             thoroughness_rating: rand(4..5),
             timeliness_rating: rand(3..5),
             communication_rating: rand(4..5),
-            review_text: ["Great job!", "Very thorough", "Always on time", nil].sample
+            review_text: [ "Great job!", "Very thorough", "Always on time", nil ].sample
           )
         end
 

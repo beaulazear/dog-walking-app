@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_21_233416) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_22_051107) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -621,12 +621,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_21_233416) do
     t.string "email_address"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "thirty"
-    t.integer "fortyfive"
-    t.integer "sixty"
-    t.integer "solo_rate"
-    t.integer "training_rate"
-    t.integer "sibling_rate"
+    t.integer "thirty", default: 0
+    t.integer "fortyfive", default: 0
+    t.integer "sixty", default: 0
+    t.integer "solo_rate", default: 0
+    t.integer "training_rate", default: 0
+    t.integer "sibling_rate", default: 0
     t.integer "pet_sitting_rate"
     t.boolean "is_scooper", default: false, null: false
     t.string "stripe_connect_account_id"
@@ -648,12 +648,18 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_21_233416) do
     t.decimal "overall_rating", precision: 3, scale: 2, default: "0.0"
     t.integer "total_pickups", default: 0
     t.string "user_type"
+    t.boolean "uses_pocket_walks", default: false, null: false
+    t.boolean "uses_scoopers", default: false, null: false
+    t.string "registered_from_app"
     t.index ["device_token"], name: "index_users_on_device_token"
     t.index ["is_dog_walker"], name: "index_users_on_is_dog_walker"
     t.index ["is_poster"], name: "index_users_on_is_poster"
     t.index ["is_scooper"], name: "index_users_on_is_scooper"
     t.index ["neighborhoods"], name: "index_users_on_neighborhoods", using: :gin
+    t.index ["registered_from_app"], name: "index_users_on_registered_from_app"
     t.index ["stripe_connect_account_id"], name: "index_users_on_stripe_connect_account_id"
+    t.index ["uses_pocket_walks"], name: "index_users_on_uses_pocket_walks"
+    t.index ["uses_scoopers"], name: "index_users_on_uses_scoopers"
   end
 
   create_table "waitlist_signups", force: :cascade do |t|

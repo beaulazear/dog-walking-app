@@ -69,7 +69,10 @@ class User < ApplicationRecord
   validates :name, presence: true
   validates :email_address, presence: true
 
-  validates :thirty, :fortyfive, :sixty, :solo_rate, :training_rate, :sibling_rate, numericality: { only_integer: true }
+  # Only validate dog walking rates for Pocket Walks users
+  validates :thirty, :fortyfive, :sixty, :solo_rate, :training_rate, :sibling_rate,
+            numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+            if: :uses_pocket_walks?
 
   # Admin helper method
   def admin?
@@ -207,5 +210,22 @@ class User < ApplicationRecord
       profile_photo_url:,
       neighborhoods:
     }
+  end
+
+  # App tracking helpers
+  def mark_app_usage!(app_name)
+    case app_name.to_s
+    when "pocket_walks"
+      update(uses_pocket_walks: true, registered_from_app: registered_from_app || "pocket_walks")
+    when "scoopers"
+      update(uses_scoopers: true, registered_from_app: registered_from_app || "scoopers")
+    end
+  end
+
+  def app_list
+    apps = []
+    apps << "Pocket Walks" if uses_pocket_walks?
+    apps << "Scoopers" if uses_scoopers?
+    apps.join(", ")
   end
 end

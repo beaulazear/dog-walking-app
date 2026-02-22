@@ -142,6 +142,17 @@ Rails.application.routes.draw do
   get "/waitlist_signups", to: "waitlist_signups#index"
   post "/waitlist_signups", to: "waitlist_signups#create"
 
+  # Admin Panel Routes
+  get "/admin/dashboard", to: "admin#dashboard"
+  get "/admin/users", to: "admin#users"
+  get "/admin/sponsorships", to: "admin#sponsorships"
+  get "/admin/cleanup_jobs", to: "admin#cleanup_jobs"
+  get "/admin/sweeps", to: "admin#sweeps"
+  get "/admin/contributions", to: "admin#contributions"
+  get "/admin/waitlist", to: "admin#waitlist"
+  get "/admin/reviews", to: "admin#reviews"
+  get "/admin/sponsorship_ratings", to: "admin#sponsorship_ratings"
+
   # ===== SCOOP ROUTES =====
   # Hyperlocal dog waste cleanup marketplace
 
