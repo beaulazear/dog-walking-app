@@ -144,12 +144,22 @@ namespace :test_data do
           pickups_this_month: rand(0..sweep_count)
         )
 
-        # Maybe add a contribution from a neighbor
+        # Maybe add a contribution from a neighbor (create a test neighbor user)
         if rand < 0.3  # 30% chance
+          neighbor = User.create!(
+            email_address: "neighbor#{rand(1000)}@example.com",
+            username: "neighbor#{rand(1000)}",
+            name: "Neighbor #{rand(100)}",
+            password: "password123",
+            password_confirmation: "password123",
+            is_poster: true,
+            thirty: 0, fortyfive: 0, sixty: 0,
+            solo_rate: 0, training_rate: 0, sibling_rate: 0
+          )
+
           Contribution.create!(
             sponsorship: sponsorship,
-            contributor_email: "neighbor#{rand(100)}@example.com",
-            contributor_name: "Neighbor #{rand(100)}",
+            contributor: neighbor,
             monthly_amount: [5, 10, 15, 20].sample,
             status: "active",
             stripe_subscription_id: "sub_test_#{SecureRandom.hex(8)}"
@@ -160,12 +170,14 @@ namespace :test_data do
         if rand < 0.4 && sponsorship.sweeps.any?  # 40% chance
           SponsorshipRating.create!(
             sponsorship: sponsorship,
+            sponsor: sponsorship.sponsor,
+            scooper: sponsorship.scooper,
             month: 1.month.ago.beginning_of_month.to_date,
             quality_rating: rand(4..5),
             thoroughness_rating: rand(4..5),
             timeliness_rating: rand(3..5),
             communication_rating: rand(4..5),
-            notes: ["Great job!", "Very thorough", "Always on time", nil].sample
+            review_text: ["Great job!", "Very thorough", "Always on time", nil].sample
           )
         end
 
