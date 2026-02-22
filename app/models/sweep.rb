@@ -41,6 +41,10 @@ class Sweep < ApplicationRecord
     sponsorship.activate! if sponsorship.status == "claimed"
   end
 
+  def completed?
+    status == "completed"
+  end
+
   def after_photo_url
     return nil unless after_photo.attached?
 
