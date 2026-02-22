@@ -95,10 +95,10 @@ namespace :test_data do
         latitude: location[:lat],
         longitude: location[:lng],
         block_id: block_id,
-        segments_selected: ["north", "south", "east", "west"],
+        segments_selected: ["NW", "NE", "SW", "SE"],
         schedule: location[:schedule],
         monthly_budget: location[:budget],
-        display_preference: index.even? ? "anonymous" : "name",
+        display_preference: index.even? ? "anonymous" : "first_name",
         display_name: index.even? ? nil : "Beau L.",
         status: "open"
       }
