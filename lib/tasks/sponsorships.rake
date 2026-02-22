@@ -117,8 +117,7 @@ namespace :test_data do
         sponsorship.claim!(scooper)
         sponsorship.update!(
           status: "active",
-          started_at: rand(1..30).days.ago,
-          clean_since: rand(1..7).days.ago
+          started_at: rand(1..30).days.ago
         )
 
         # Create some completed sweeps
