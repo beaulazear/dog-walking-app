@@ -89,7 +89,7 @@ class Sponsorship < ApplicationRecord
   def record_sweep(sweep)
     increment!(:total_pickups, sweep.pickup_count)
     increment!(:pickups_this_month, sweep.pickup_count)
-    update!(last_sweep_at: sweep.completed_at)
+    # Note: last sweep can be queried via sweeps.completed.order(completed_at: :desc).first
   end
 
   def reset_monthly_pickups!
