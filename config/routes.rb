@@ -35,6 +35,7 @@ Rails.application.routes.draw do
   get "/me", to: "users#show"
   patch "/change_rates", to: "users#change_rates"
   patch "/update_profile", to: "users#update_profile"
+  patch "/users/toggle_roles", to: "users#toggle_roles"
   post "/users/register_device", to: "users#register_device"
   post "/users/upload_profile_photo", to: "users#upload_profile_photo"
 

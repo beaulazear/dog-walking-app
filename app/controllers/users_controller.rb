@@ -147,6 +147,25 @@ class UsersController < ApplicationController
     end
   end
 
+  # PATCH /users/toggle_roles
+  # Toggle between poster and dog walker roles
+  # Users can be both at the same time
+  def toggle_roles
+    user = @current_user
+
+    if user.update(role_params)
+      render json: {
+        message: "Roles updated successfully",
+        is_poster: user.is_poster,
+        is_dog_walker: user.is_dog_walker,
+        user: UserSerializer.serialize(user)
+      }, status: :ok
+    else
+      render json: { error: user.errors.full_messages.first || "Failed to update roles" },
+             status: :unprocessable_entity
+    end
+  end
+
   private
 
   def user_params
@@ -165,5 +184,15 @@ class UsersController < ApplicationController
 
   def device_params
     params.permit(:device_token, :device_platform)
+  end
+
+  def role_params
+    params.permit(
+      :is_poster,
+      :is_dog_walker,
+      :instagram_handle,
+      :business_name,
+      neighborhoods: []
+    )
   end
 end
