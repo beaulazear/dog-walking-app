@@ -1,13 +1,24 @@
 # Scoop - Current Status & Deployment Summary
 
-**Last Updated:** February 20, 2026
-**Status:** ✅ **MVP COMPLETE - JOB BOARD + RECURRING SUBSCRIPTIONS DEPLOYED**
+**Last Updated:** February 22, 2026
+**Status:** ✅ **MVP v3 COMPLETE - BLOCK SPONSORSHIPS + JOB BOARD DEPLOYED**
 
 ---
 
 ## 🎯 Current Architecture
 
-### Two Service Models (Both Live!)
+### Three Service Models (All Live!)
+
+**⭐ NEW: MVP v3 - Block Sponsorships** (`/api/sponsorships`) - Added Feb 22, 2026
+- Sponsors pay monthly for recurring cleanup of specific blocks
+- Dog walkers claim blocks and perform scheduled maintenance sweeps
+- Neighbors can contribute to reduce sponsor costs
+- Monthly ratings for accountability
+- GPS-verified sweeps
+- First-tap-wins claiming with database locks
+- See `docs/MVP_V3_BACKEND_COMPLETE.md` for full details
+
+**1. One-Off Job Board** (`/cleanup_jobs`) - On-demand cleanup marketplace
 
 **1. One-Off Job Board** - On-demand cleanup marketplace
 - Posters create cleanup jobs when they see waste
@@ -73,6 +84,10 @@
 
 **Database Schema:**
 ```
+✅ sponsorships           ⭐ NEW: Block sponsorships (monthly subscriptions)
+✅ sweeps                 ⭐ NEW: GPS-verified maintenance sweeps
+✅ contributions          ⭐ NEW: Neighbor monthly contributions
+✅ sponsorship_ratings    ⭐ NEW: Monthly feedback system
 ✅ cleanup_jobs           (one-off jobs: open, claimed, completed)
 ✅ recurring_cleanups     (subscription-based recurring service)
 ✅ reviews                (scooper ratings from posters)
@@ -82,12 +97,31 @@
 ✅ cleanups               (old cleanup logs - may deprecate)
 ✅ poop_reports           (old reporting - may deprecate)
 ✅ scooper_milestones     (old gamification - may deprecate)
-✅ users (extended)       (Stripe Connect, device tokens, photos)
+✅ users (extended)       (Stripe Connect, device tokens, photos, MVP v3 fields)
 ✅ clients (extended)     (pet owner portal)
 ```
 
-**Job Board API Endpoints:**
+**API Endpoints:**
 ```
+# ⭐ NEW: MVP v3 Block Sponsorships
+GET    /api/map/stats                                # Public map stats (no auth)
+GET    /api/map/blocks/:block_id                     # Block details (no auth)
+GET    /api/map/neighborhoods                        # Neighborhoods list (no auth)
+GET    /api/sponsorships                             # List sponsorships
+POST   /api/sponsorships                             # Create sponsorship
+POST   /api/sponsorships/:id/claim                   # Dog walker claims block
+POST   /api/sponsorships/:id/pause                   # Pause sponsorship
+POST   /api/sponsorships/:id/resume                  # Resume sponsorship
+POST   /api/sponsorships/:id/cancel                  # Cancel sponsorship
+GET    /api/sponsorships/:id/sweeps                  # List sweeps
+POST   /api/sponsorships/:id/sweeps                  # Log completed sweep
+GET    /api/sponsorships/:id/contributions           # List contributions
+POST   /api/sponsorships/:id/contributions           # Add contribution
+DELETE /api/sponsorships/:id/contributions/:id       # Cancel contribution
+GET    /api/sponsorships/:id/ratings                 # List ratings
+POST   /api/sponsorships/:id/ratings                 # Add monthly rating
+PATCH  /users/toggle_roles                           # Toggle poster/dog walker roles
+
 # One-Off Cleanup Jobs
 POST   /cleanup_jobs                          # Create new job
 GET    /cleanup_jobs                          # List all jobs (filter by status)
@@ -274,16 +308,20 @@ rails recurring_cleanups:list       # List all subscriptions
 ### ✅ Ready for Frontend Development
 
 **Documentation Available:**
+- `docs/MVP_V3_BACKEND_COMPLETE.md` ⭐ **NEW: Complete MVP v3 reference**
+- `docs/MVP_V3_HANDOFF_PROMPT.md` ⭐ **NEW: Next session handoff**
 - `docs/SCOOP_MVP_TESTING_GUIDE.md` - Complete API testing guide
 - `docs/FRONTEND_INTEGRATION_PROMPT.md` - Frontend development guide
 - `docs/SCOOP_BACKEND_SUMMARY.md` - Full API reference
 
 **Test Data:**
 ```bash
+# ⭐ NEW: Create 10 block sponsorships across Brooklyn
+rails test_data:create_sponsorships
+rails test_data:clear_sponsorships
+
 # Create 25 realistic test jobs across NYC
 rails test_data:populate_jobs
-
-# Clear test data
 rails test_data:clear_test_jobs
 ```
 
@@ -350,6 +388,7 @@ These exist in the database but are **not being used** in the current MVP:
 - ✅ WebSockets enabled
 
 **Recent Deployments:**
+- Feb 22, 2026 ⭐ **MVP v3: Block sponsorships complete**
 - Feb 20, 2026 - Photo upload fixes (S3 expiration)
 - Feb 20, 2026 - Recurring cleanups feature
 - Feb 19, 2026 - File scanner blocking
@@ -420,6 +459,9 @@ Build React Native app with:
 
 **Current Documentation:**
 - `docs/CURRENT_STATUS.md` - **This file!** Overall project status
+- `docs/MVP_V3_BACKEND_COMPLETE.md` ⭐ **NEW: MVP v3 complete reference**
+- `docs/MVP_V3_HANDOFF_PROMPT.md` ⭐ **NEW: Session handoff prompt**
+- `docs/MONTHLY_CRON_SETUP.md` ⭐ **NEW: Cron job setup for sponsorships**
 - `docs/SCOOP_MVP_TESTING_GUIDE.md` - Testing guide with rake tasks
 - `docs/FRONTEND_INTEGRATION_PROMPT.md` - Frontend development guide
 - `docs/SCOOP_BACKEND_SUMMARY.md` - Complete API reference
@@ -436,6 +478,11 @@ Build React Native app with:
 
 ## ✅ Success Criteria Met
 
+- [x] ⭐ **MVP v3: Block sponsorships deployed**
+- [x] ⭐ **GPS-verified sweep system**
+- [x] ⭐ **Neighbor contribution system**
+- [x] ⭐ **Monthly rating system**
+- [x] ⭐ **Role toggle (poster + dog walker)**
 - [x] Job board backend fully deployed
 - [x] Recurring subscriptions implemented
 - [x] All API endpoints working
@@ -452,9 +499,13 @@ Build React Native app with:
 ## 🎊 Summary
 
 **You now have:**
+- ✅ ⭐ **Block sponsorship system** (MVP v3)
+- ✅ ⭐ **GPS-verified maintenance sweeps**
+- ✅ ⭐ **Neighbor contribution payments**
+- ✅ ⭐ **Monthly accountability ratings**
 - ✅ Complete job board marketplace (one-off jobs)
 - ✅ Subscription-based recurring cleanups
-- ✅ 60+ API endpoints ready to use
+- ✅ 80+ API endpoints ready to use
 - ✅ Real-time WebSocket updates
 - ✅ Push notifications
 - ✅ Photo upload system
