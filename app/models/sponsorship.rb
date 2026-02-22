@@ -49,26 +49,17 @@ class Sponsorship < ApplicationRecord
   def pause!
     raise "Sponsorship not active" unless status == "active"
 
-    update!(
-      status: "paused",
-      paused_at: Time.current
-    )
+    update!(status: "paused")
   end
 
   def resume!
     raise "Sponsorship not paused" unless status == "paused"
 
-    update!(
-      status: "active",
-      paused_at: nil
-    )
+    update!(status: "active")
   end
 
   def cancel!
-    update!(
-      status: "cancelled",
-      cancelled_at: Time.current
-    )
+    update!(status: "cancelled")
   end
 
   # Sponsorship display helpers
