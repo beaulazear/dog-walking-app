@@ -11,16 +11,16 @@ namespace :test_data do
     puts "="*60
 
     # STEP 1: Create TEST dog walker user
-    dog_walker = User.find_or_create_by!(email_address: 'beau@scoopersnyc.com') do |u|
-      u.username = 'beauscooper'
-      u.name = 'Beau Test Walker'
-      u.password = 'password123'
+    dog_walker = User.find_or_create_by!(email_address: "beau@scoopersnyc.com") do |u|
+      u.username = "beauscooper"
+      u.name = "Beau Test Walker"
+      u.password = "password123"
       u.is_scooper = true
       u.is_dog_walker = true
       u.business_name = "Beau's Test Block Service"
       u.instagram_handle = "beauscoopers"
-      u.neighborhoods = ['Park Slope', 'Prospect Heights', 'Carroll Gardens']
-      u.registered_from_app = 'scoopers'
+      u.neighborhoods = [ "Park Slope", "Prospect Heights", "Carroll Gardens" ]
+      u.registered_from_app = "scoopers"
       u.uses_scoopers = true
     end
 
@@ -29,7 +29,7 @@ namespace :test_data do
       is_dog_walker: true,
       business_name: "Beau's Test Block Service",
       instagram_handle: "beauscoopers",
-      neighborhoods: ['Park Slope', 'Prospect Heights', 'Carroll Gardens']
+      neighborhoods: [ "Park Slope", "Prospect Heights", "Carroll Gardens" ]
     )
 
     puts "✅ TEST Dog Walker: #{dog_walker.username} (#{dog_walker.email_address}) - ID: #{dog_walker.id}"
@@ -39,12 +39,12 @@ namespace :test_data do
     sponsors = []
 
     # Sponsor 1: Test Coffee shop
-    sponsor1 = User.find_or_create_by!(email_address: 'sponsor1@test.com') do |u|
-      u.username = 'testcafe'
-      u.name = 'Test Coffee Shop'
-      u.password = 'password123'
+    sponsor1 = User.find_or_create_by!(email_address: "sponsor1@test.com") do |u|
+      u.username = "testcafe"
+      u.name = "Test Coffee Shop"
+      u.password = "password123"
       u.is_scooper = false
-      u.registered_from_app = 'scoopers'
+      u.registered_from_app = "scoopers"
       u.uses_scoopers = true
     end
     sponsors << sponsor1
@@ -52,12 +52,12 @@ namespace :test_data do
     puts "   Password: password123"
 
     # Sponsor 2: Test Resident
-    sponsor2 = User.find_or_create_by!(email_address: 'sponsor2@test.com') do |u|
-      u.username = 'testresident'
-      u.name = 'Test Resident'
-      u.password = 'password123'
+    sponsor2 = User.find_or_create_by!(email_address: "sponsor2@test.com") do |u|
+      u.username = "testresident"
+      u.name = "Test Resident"
+      u.password = "password123"
       u.is_scooper = false
-      u.registered_from_app = 'scoopers'
+      u.registered_from_app = "scoopers"
       u.uses_scoopers = true
     end
     sponsors << sponsor2
@@ -69,7 +69,7 @@ namespace :test_data do
     puts "="*60
 
     # STEP 3: Delete ONLY test sponsorships (not production data!)
-    test_user_ids = [dog_walker.id, sponsor1.id, sponsor2.id]
+    test_user_ids = [ dog_walker.id, sponsor1.id, sponsor2.id ]
     old_test_sponsorships = Sponsorship.where(sponsor_id: test_user_ids)
                                        .or(Sponsorship.where(scooper_id: test_user_ids))
     old_count = old_test_sponsorships.count
@@ -87,10 +87,10 @@ namespace :test_data do
         latitude: center_lat,
         longitude: center_lng,
         neighborhood: "Park Slope Test Block 1",
-        segments: ['NW', 'NE', 'SW', 'SE'],
-        schedule: 'weekly',
+        segments: [ "NW", "NE", "SW", "SE" ],
+        schedule: "weekly",
         budget: 72.00,
-        display: 'business',
+        display: "business",
         display_name: "Test Coffee Shop"
       },
       {
@@ -98,10 +98,10 @@ namespace :test_data do
         latitude: center_lat + 0.005, # ~0.3 miles north
         longitude: center_lng - 0.005,
         neighborhood: "Park Slope Test Block 2",
-        segments: ['NW', 'NE'],
-        schedule: 'biweekly',
+        segments: [ "NW", "NE" ],
+        schedule: "biweekly",
         budget: 48.00,
-        display: 'first_name',
+        display: "first_name",
         display_name: nil
       },
       {
@@ -109,12 +109,12 @@ namespace :test_data do
         latitude: center_lat - 0.005, # ~0.3 miles south
         longitude: center_lng + 0.005,
         neighborhood: "Park Slope Test Block 3",
-        segments: ['SW', 'SE'],
-        schedule: 'weekly',
+        segments: [ "SW", "SE" ],
+        schedule: "weekly",
         budget: 56.00,
-        display: 'business',
+        display: "business",
         display_name: "Test Coffee Shop"
-      },
+      }
     ]
 
     open_count = 0
@@ -140,7 +140,7 @@ namespace :test_data do
           monthly_budget: data[:budget],
           display_preference: data[:display],
           display_name: data[:display_name],
-          status: 'open',
+          status: "open",
           current_monthly_cost: data[:budget],
           total_pickups: 0,
           pickups_this_month: 0,
@@ -160,10 +160,10 @@ namespace :test_data do
         latitude: center_lat + 0.003,
         longitude: center_lng - 0.003,
         neighborhood: "Park Slope Test Active 1",
-        segments: ['NW', 'NE', 'SW', 'SE'],
-        schedule: 'weekly',
+        segments: [ "NW", "NE", "SW", "SE" ],
+        schedule: "weekly",
         budget: 64.00,
-        display: 'first_name',
+        display: "first_name",
         clean_since: 2.months.ago,
         sweeps_count: 8,
         pickups_total: 67
@@ -173,15 +173,15 @@ namespace :test_data do
         latitude: center_lat - 0.003,
         longitude: center_lng + 0.003,
         neighborhood: "Park Slope Test Active 2",
-        segments: ['NW', 'NE'],
-        schedule: 'biweekly',
+        segments: [ "NW", "NE" ],
+        schedule: "biweekly",
         budget: 52.00,
-        display: 'business',
+        display: "business",
         display_name: "Test Coffee Shop",
         clean_since: 1.month.ago,
         sweeps_count: 4,
         pickups_total: 34
-      },
+      }
     ]
 
     active_count = 0
@@ -208,12 +208,12 @@ namespace :test_data do
           monthly_budget: data[:budget],
           display_preference: data[:display],
           display_name: data[:display_name],
-          status: 'active',
+          status: "active",
           claimed_at: data[:clean_since] + 1.day,
           started_at: data[:clean_since] + 1.day,
           current_monthly_cost: data[:budget],
           total_pickups: data[:pickups_total],
-          pickups_this_month: [data[:pickups_total] / 3, 10].max,
+          pickups_this_month: [ data[:pickups_total] / 3, 10 ].max,
           contributor_count: 0
         )
 
@@ -222,7 +222,7 @@ namespace :test_data do
         # Create sweep history
         puts "   📋 Creating #{data[:sweeps_count]} sweeps..."
         data[:sweeps_count].times do |sweep_index|
-          days_ago = (data[:sweeps_count] - sweep_index) * (data[:schedule] == 'weekly' ? 7 : 14)
+          days_ago = (data[:sweeps_count] - sweep_index) * (data[:schedule] == "weekly" ? 7 : 14)
           completed_date = days_ago.days.ago
           pickups = rand(6..12)
 
@@ -235,9 +235,9 @@ namespace :test_data do
             pickup_count: pickups,
             notes: "Regular #{data[:schedule]} sweep - block looking great!",
             litter_flagged: sweep_index == 1,
-            status: 'completed',
+            status: "completed",
             completed_at: completed_date,
-            payout_amount: (data[:budget] / (data[:schedule] == 'weekly' ? 4 : 2)) * 0.82,
+            payout_amount: (data[:budget] / (data[:schedule] == "weekly" ? 4 : 2)) * 0.82,
             gps_verified: true
           )
         end

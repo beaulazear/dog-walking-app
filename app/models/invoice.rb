@@ -4,6 +4,7 @@ class Invoice < ApplicationRecord
   belongs_to :pet
   belongs_to :training_session, optional: true
   belongs_to :completed_by_user, class_name: "User", optional: true
+  belongs_to :bill, optional: true
 
   validates :date_completed, presence: true
   validates :compensation, presence: true, numericality: { greater_than_or_equal_to: 0 }
@@ -13,6 +14,13 @@ class Invoice < ApplicationRecord
   # Scopes
   scope :unpaid, -> { where(paid: false) }
   scope :paid, -> { where(paid: true) }
+  scope :unbilled, -> { where(bill_id: nil) }
+  scope :unpaid_and_unbilled, -> { where(paid: false, bill_id: nil) }
+
+  # Helper method
+  def on_bill?
+    bill_id.present?
+  end
 
   # Detect if this invoice is for a training session based on title
   def training_walk?

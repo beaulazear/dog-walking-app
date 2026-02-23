@@ -54,6 +54,9 @@ class User < ApplicationRecord
   has_many :sponsorship_ratings_received, class_name: "SponsorshipRating", foreign_key: "scooper_id",
                                           dependent: :destroy
 
+  # Billing associations
+  has_many :bills, dependent: :destroy
+
   # Helper method to get all connections (both initiated and received)
   def all_connections
     WalkerConnection.where(user_id: id).or(WalkerConnection.where(connected_user_id: id))
@@ -227,5 +230,48 @@ class User < ApplicationRecord
     apps << "Pocket Walks" if uses_pocket_walks?
     apps << "Scoopers" if uses_scoopers?
     apps.join(", ")
+  end
+
+  # Billing methods
+  def next_billing_date
+    return nil unless billing_day_of_week && billing_recurrence_weeks
+
+    today = Date.today
+    target_wday = billing_day_of_week
+
+    # Find next occurrence of the target day
+    days_until_target = (target_wday - today.wday) % 7
+    days_until_target = 7 if days_until_target.zero?  # If today is the day, go to next week
+
+    next_date = today + days_until_target.days
+
+    # Adjust for recurrence (if bi-weekly, monthly, etc.)
+    if billing_recurrence_weeks && billing_recurrence_weeks > 1
+      # Check if we're within the recurrence period of the last bill
+      last_bill = bills.order(created_at: :desc).first
+
+      if last_bill
+        weeks_since_last = ((today - last_bill.created_at.to_date) / 7).floor
+
+        if weeks_since_last < billing_recurrence_weeks
+          # Add weeks to get to the right cycle
+          next_date += ((billing_recurrence_weeks - weeks_since_last) * 7).days
+        end
+      end
+    end
+
+    next_date
+  end
+
+  # Billing period for next bill
+  def next_billing_period
+    next_date = next_billing_date
+    return nil unless next_date
+
+    weeks = billing_recurrence_weeks || 2
+    period_start = next_date - (weeks.weeks)
+    period_end = next_date - 1.day
+
+    { start: period_start, end: period_end }
   end
 end

@@ -18,7 +18,7 @@ class UsersController < ApplicationController
 
     if user.save
       # Set default rates for Pocket Walks users only
-      if params[:registered_from_app] == 'pocket_walks' || params[:uses_pocket_walks]
+      if params[:registered_from_app] == "pocket_walks" || params[:uses_pocket_walks]
         user.update(
           thirty: 30,
           fortyfive: 40,
@@ -210,6 +210,22 @@ class UsersController < ApplicationController
     end
   end
 
+  # PATCH /user/billing_settings
+  def update_billing_settings
+    if current_user.update(billing_settings_params)
+      render json: {
+        message: "Billing settings updated",
+        billing_day_of_week: current_user.billing_day_of_week,
+        billing_time_of_day: current_user.billing_time_of_day,
+        billing_recurrence_weeks: current_user.billing_recurrence_weeks,
+        next_billing_date: current_user.next_billing_date,
+        next_billing_period: current_user.next_billing_period
+      }
+    else
+      render json: { errors: current_user.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
   private
 
   def user_params
@@ -247,5 +263,9 @@ class UsersController < ApplicationController
       :business_name,
       neighborhoods: []
     )
+  end
+
+  def billing_settings_params
+    params.permit(:billing_day_of_week, :billing_time_of_day, :billing_recurrence_weeks)
   end
 end

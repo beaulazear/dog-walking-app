@@ -38,6 +38,18 @@ Rails.application.routes.draw do
   patch "/users/toggle_roles", to: "users#toggle_roles"
   post "/users/register_device", to: "users#register_device"
   post "/users/upload_profile_photo", to: "users#upload_profile_photo"
+  patch "/user/billing_settings", to: "users#update_billing_settings"
+
+  # Bills
+  resources :bills, only: %i[index show create destroy] do
+    collection do
+      get :preview  # GET /bills/preview?client_id=123
+    end
+    member do
+      patch :mark_paid    # PATCH /bills/:id/mark_paid
+      patch :mark_unpaid  # PATCH /bills/:id/mark_unpaid
+    end
+  end
 
   # Walker Connections (Team Management)
   resources :walker_connections, only: %i[index create destroy] do

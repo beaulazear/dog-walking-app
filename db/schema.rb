@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_22_051107) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_23_050103) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -101,6 +101,24 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_22_051107) do
     t.index ["user_id", "recurring", "canceled", "completed"], name: "index_appointments_on_user_and_status"
     t.index ["user_id"], name: "index_appointments_on_user_id"
     t.index ["walk_group_id"], name: "index_appointments_on_walk_group_id"
+  end
+
+  create_table "bills", force: :cascade do |t|
+    t.bigint "client_id", null: false
+    t.bigint "user_id", null: false
+    t.date "period_start", null: false
+    t.date "period_end", null: false
+    t.decimal "total_amount", precision: 8, scale: 2, default: "0.0"
+    t.boolean "paid", default: false
+    t.datetime "paid_at"
+    t.text "notes"
+    t.string "bill_number"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["bill_number"], name: "index_bills_on_bill_number", unique: true
+    t.index ["client_id"], name: "index_bills_on_client_id"
+    t.index ["user_id", "client_id", "period_start"], name: "index_bills_on_user_id_and_client_id_and_period_start"
+    t.index ["user_id"], name: "index_bills_on_user_id"
   end
 
   create_table "blocks", force: :cascade do |t|
@@ -232,12 +250,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_22_051107) do
     t.datetime "price_adjustment_requested_at"
     t.datetime "price_adjustment_responded_at"
     t.string "block_identifier"
+    t.string "neighborhood"
     t.index ["arrival_status"], name: "index_cleanup_jobs_on_arrival_status"
     t.index ["block_id"], name: "index_cleanup_jobs_on_block_id"
     t.index ["block_identifier"], name: "index_cleanup_jobs_on_block_identifier"
     t.index ["cancelled_by_id"], name: "index_cleanup_jobs_on_cancelled_by_id"
     t.index ["job_type"], name: "index_cleanup_jobs_on_job_type"
     t.index ["latitude", "longitude"], name: "index_cleanup_jobs_on_latitude_and_longitude"
+    t.index ["neighborhood"], name: "index_cleanup_jobs_on_neighborhood"
     t.index ["poster_id"], name: "index_cleanup_jobs_on_poster_id"
     t.index ["price_adjustment_status"], name: "index_cleanup_jobs_on_price_adjustment_status"
     t.index ["recurring_cleanup_id"], name: "index_cleanup_jobs_on_recurring_cleanup_id"
@@ -338,7 +358,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_22_051107) do
     t.decimal "walker_amount", precision: 10, scale: 2
     t.bigint "completed_by_user_id"
     t.bigint "pet_sit_id"
+    t.bigint "bill_id"
     t.index ["appointment_id"], name: "index_invoices_on_appointment_id"
+    t.index ["bill_id", "date_completed"], name: "index_invoices_on_bill_id_and_date_completed"
+    t.index ["bill_id"], name: "index_invoices_on_bill_id"
     t.index ["completed_by_user_id"], name: "index_invoices_on_completed_by_user_id"
     t.index ["is_shared"], name: "index_invoices_on_is_shared"
     t.index ["pet_id", "paid", "pending"], name: "index_invoices_on_pet_and_payment_status"
@@ -651,6 +674,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_22_051107) do
     t.boolean "uses_pocket_walks", default: false, null: false
     t.boolean "uses_scoopers", default: false, null: false
     t.string "registered_from_app"
+    t.integer "billing_day_of_week", comment: "0=Sunday, 1=Monday, etc."
+    t.time "billing_time_of_day", comment: "Time of day to generate bills"
+    t.integer "billing_recurrence_weeks", default: 2, comment: "Billing frequency in weeks (1-4)"
     t.index ["device_token"], name: "index_users_on_device_token"
     t.index ["is_dog_walker"], name: "index_users_on_is_dog_walker"
     t.index ["is_poster"], name: "index_users_on_is_poster"
@@ -735,6 +761,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_22_051107) do
   add_foreign_key "appointments", "users"
   add_foreign_key "appointments", "users", column: "completed_by_user_id"
   add_foreign_key "appointments", "walk_groups"
+  add_foreign_key "bills", "clients"
+  add_foreign_key "bills", "users"
   add_foreign_key "blogs", "pets"
   add_foreign_key "blogs", "users"
   add_foreign_key "books", "users"
@@ -751,6 +779,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_22_051107) do
   add_foreign_key "coverage_regions", "blocks"
   add_foreign_key "coverage_regions", "users"
   add_foreign_key "invoices", "appointments"
+  add_foreign_key "invoices", "bills"
   add_foreign_key "invoices", "pet_sits"
   add_foreign_key "invoices", "pets"
   add_foreign_key "invoices", "training_sessions"

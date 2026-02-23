@@ -14,9 +14,9 @@ class SessionsController < ApplicationController
       # Track which app the user is logging in from (Scoopers vs Pocket Walks)
       if params[:app].present?
         case params[:app]
-        when 'scoopers'
+        when "scoopers"
           user.update(uses_scoopers: true) unless user.uses_scoopers
-        when 'pocket_walks'
+        when "pocket_walks"
           user.update(uses_pocket_walks: true) unless user.uses_pocket_walks
         end
       end
