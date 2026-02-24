@@ -36,6 +36,10 @@ gem "rack-attack"
 # AWS SDK for Active Storage
 gem "aws-sdk-s3"
 
+# Image processing for Active Storage
+gem "image_processing", "~> 1.2"
+gem "mini_magick"
+
 # PostGIS support for geospatial queries
 gem "activerecord-postgis-adapter"
 gem "rgeo"

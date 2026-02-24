@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_23_050103) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_24_004148) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -119,6 +119,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_23_050103) do
     t.index ["client_id"], name: "index_bills_on_client_id"
     t.index ["user_id", "client_id", "period_start"], name: "index_bills_on_user_id_and_client_id_and_period_start"
     t.index ["user_id"], name: "index_bills_on_user_id"
+  end
+
+  create_table "blocked_users", force: :cascade do |t|
+    t.bigint "blocker_id", null: false
+    t.bigint "blocked_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["blocked_id"], name: "index_blocked_users_on_blocked_id"
+    t.index ["blocker_id", "blocked_id"], name: "index_blocked_users_on_blocker_id_and_blocked_id", unique: true
+    t.index ["blocker_id"], name: "index_blocked_users_on_blocker_id"
   end
 
   create_table "blocks", force: :cascade do |t|
@@ -381,6 +391,23 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_23_050103) do
     t.index ["user_id"], name: "index_milestones_on_user_id"
   end
 
+  create_table "moderation_actions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "moderator_id", null: false
+    t.bigint "report_id"
+    t.string "action_type", null: false
+    t.text "reason"
+    t.text "details"
+    t.datetime "expires_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["action_type"], name: "index_moderation_actions_on_action_type"
+    t.index ["created_at"], name: "index_moderation_actions_on_created_at"
+    t.index ["moderator_id"], name: "index_moderation_actions_on_moderator_id"
+    t.index ["report_id"], name: "index_moderation_actions_on_report_id"
+    t.index ["user_id"], name: "index_moderation_actions_on_user_id"
+  end
+
   create_table "pet_sit_completions", force: :cascade do |t|
     t.bigint "pet_sit_id", null: false
     t.date "completion_date", null: false
@@ -509,6 +536,29 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_23_050103) do
     t.index ["stripe_subscription_id"], name: "index_recurring_cleanups_on_stripe_subscription_id", unique: true
   end
 
+  create_table "reports", force: :cascade do |t|
+    t.string "reportable_type", null: false
+    t.bigint "reportable_id", null: false
+    t.bigint "reporter_id", null: false
+    t.string "reason", null: false
+    t.text "description"
+    t.string "status", default: "pending", null: false
+    t.datetime "reviewed_at"
+    t.bigint "reviewed_by_id"
+    t.string "resolution_action"
+    t.text "resolution_notes"
+    t.text "internal_notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_reports_on_created_at"
+    t.index ["reason"], name: "index_reports_on_reason"
+    t.index ["reportable_type", "reportable_id"], name: "index_reports_on_reportable_type_and_reportable_id"
+    t.index ["reporter_id", "reportable_type", "reportable_id"], name: "index_reports_on_reporter_and_reportable", unique: true
+    t.index ["reporter_id"], name: "index_reports_on_reporter_id"
+    t.index ["reviewed_by_id"], name: "index_reports_on_reviewed_by_id"
+    t.index ["status"], name: "index_reports_on_status"
+  end
+
   create_table "reviews", force: :cascade do |t|
     t.bigint "cleanup_job_id", null: false
     t.bigint "reviewer_id", null: false
@@ -550,6 +600,31 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_23_050103) do
     t.datetime "updated_at", null: false
     t.index ["appointment_share_id", "date"], name: "index_share_dates_on_appointment_share_id_and_date", unique: true
     t.index ["appointment_share_id"], name: "index_share_dates_on_appointment_share_id"
+  end
+
+  create_table "sightings", force: :cascade do |t|
+    t.decimal "latitude", precision: 10, scale: 6, null: false
+    t.decimal "longitude", precision: 10, scale: 6, null: false
+    t.string "address", null: false
+    t.string "neighborhood", null: false
+    t.string "tag_type", default: "residential", null: false
+    t.string "business_name"
+    t.integer "reporter_id"
+    t.string "reporter_name", null: false
+    t.text "comment"
+    t.integer "confirmation_count", default: 0
+    t.integer "confirmed_by_ids", default: [], array: true
+    t.datetime "expires_at", null: false
+    t.string "status", default: "active"
+    t.integer "converted_job_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["converted_job_id"], name: "index_sightings_on_converted_job_id"
+    t.index ["expires_at"], name: "index_sightings_on_expires_at"
+    t.index ["latitude", "longitude"], name: "index_sightings_on_latitude_and_longitude"
+    t.index ["neighborhood"], name: "index_sightings_on_neighborhood"
+    t.index ["reporter_id"], name: "index_sightings_on_reporter_id"
+    t.index ["status"], name: "index_sightings_on_status"
   end
 
   create_table "sponsorship_ratings", force: :cascade do |t|
@@ -677,13 +752,29 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_23_050103) do
     t.integer "billing_day_of_week", comment: "0=Sunday, 1=Monday, etc."
     t.time "billing_time_of_day", comment: "Time of day to generate bills"
     t.integer "billing_recurrence_weeks", default: 2, comment: "Billing frequency in weeks (1-4)"
+    t.string "status", default: "active", null: false
+    t.datetime "suspended_until"
+    t.text "suspension_reason"
+    t.datetime "banned_at"
+    t.text "ban_reason"
+    t.integer "warnings_count", default: 0, null: false
+    t.integer "reports_count", default: 0, null: false
+    t.datetime "terms_accepted_at"
+    t.string "terms_version"
+    t.datetime "privacy_policy_accepted_at"
+    t.string "privacy_policy_version"
+    t.datetime "community_guidelines_accepted_at"
+    t.string "community_guidelines_version"
+    t.index ["banned_at"], name: "index_users_on_banned_at"
     t.index ["device_token"], name: "index_users_on_device_token"
     t.index ["is_dog_walker"], name: "index_users_on_is_dog_walker"
     t.index ["is_poster"], name: "index_users_on_is_poster"
     t.index ["is_scooper"], name: "index_users_on_is_scooper"
     t.index ["neighborhoods"], name: "index_users_on_neighborhoods", using: :gin
     t.index ["registered_from_app"], name: "index_users_on_registered_from_app"
+    t.index ["status"], name: "index_users_on_status"
     t.index ["stripe_connect_account_id"], name: "index_users_on_stripe_connect_account_id"
+    t.index ["suspended_until"], name: "index_users_on_suspended_until"
     t.index ["uses_pocket_walks"], name: "index_users_on_uses_pocket_walks"
     t.index ["uses_scoopers"], name: "index_users_on_uses_scoopers"
   end
@@ -763,6 +854,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_23_050103) do
   add_foreign_key "appointments", "walk_groups"
   add_foreign_key "bills", "clients"
   add_foreign_key "bills", "users"
+  add_foreign_key "blocked_users", "users", column: "blocked_id"
+  add_foreign_key "blocked_users", "users", column: "blocker_id"
   add_foreign_key "blogs", "pets"
   add_foreign_key "blogs", "users"
   add_foreign_key "books", "users"
@@ -785,6 +878,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_23_050103) do
   add_foreign_key "invoices", "training_sessions"
   add_foreign_key "invoices", "users", column: "completed_by_user_id"
   add_foreign_key "milestones", "users"
+  add_foreign_key "moderation_actions", "reports"
+  add_foreign_key "moderation_actions", "users"
+  add_foreign_key "moderation_actions", "users", column: "moderator_id"
   add_foreign_key "pet_sit_completions", "pet_sits"
   add_foreign_key "pet_sit_completions", "users", column: "completed_by_user_id"
   add_foreign_key "pet_sits", "pets"
@@ -799,6 +895,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_23_050103) do
   add_foreign_key "poop_reports", "clients"
   add_foreign_key "recurring_cleanups", "users", column: "poster_id"
   add_foreign_key "recurring_cleanups", "users", column: "scooper_id"
+  add_foreign_key "reports", "users", column: "reporter_id"
+  add_foreign_key "reports", "users", column: "reviewed_by_id"
   add_foreign_key "reviews", "cleanup_jobs"
   add_foreign_key "reviews", "users", column: "reviewer_id"
   add_foreign_key "reviews", "users", column: "scooper_id"

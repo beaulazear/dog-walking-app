@@ -165,6 +165,37 @@ Rails.application.routes.draw do
   get "/admin/reviews", to: "admin#reviews"
   get "/admin/sponsorship_ratings", to: "admin#sponsorship_ratings"
 
+  # Content Moderation Routes (Admin)
+  namespace :admin do
+    namespace :moderation do
+      get "dashboard", to: "moderation#dashboard"           # GET /admin/moderation/dashboard
+      get "reports", to: "moderation#index"                # GET /admin/moderation/reports
+      get "reports/:id", to: "moderation#show"             # GET /admin/moderation/reports/:id
+      patch "reports/:id/review", to: "moderation#review"   # PATCH /admin/moderation/reports/:id/review
+      patch "reports/:id/resolve", to: "moderation#resolve" # PATCH /admin/moderation/reports/:id/resolve
+      patch "reports/:id/dismiss", to: "moderation#dismiss" # PATCH /admin/moderation/reports/:id/dismiss
+      get "users/:id/history", to: "moderation#user_history" # GET /admin/moderation/users/:id/history
+      post "users/:id/warn", to: "moderation#warn_user"    # POST /admin/moderation/users/:id/warn
+      post "users/:id/suspend", to: "moderation#suspend_user" # POST /admin/moderation/users/:id/suspend
+      post "users/:id/ban", to: "moderation#ban_user"      # POST /admin/moderation/users/:id/ban
+      post "users/:id/unsuspend", to: "moderation#unsuspend_user" # POST /admin/moderation/users/:id/unsuspend
+      post "users/:id/unban", to: "moderation#unban_user"  # POST /admin/moderation/users/:id/unban
+      get "stats", to: "moderation#stats"                  # GET /admin/moderation/stats
+    end
+  end
+
+  # Content Reporting Routes (Mobile App)
+  resources :reports, only: [ :create, :show ] do
+    collection do
+      get :my_reports       # GET /reports/my_reports
+    end
+  end
+
+  # User Blocking Routes
+  post "/users/:user_id/block", to: "blocked_users#create"    # POST /users/:id/block
+  delete "/users/:user_id/unblock", to: "blocked_users#destroy" # DELETE /users/:id/unblock
+  get "/users/blocked", to: "blocked_users#index"             # GET /users/blocked
+
   # ===== SCOOP ROUTES =====
   # Hyperlocal dog waste cleanup marketplace
 
@@ -238,6 +269,18 @@ Rails.application.routes.draw do
       post :assign_scooper     # POST /recurring_cleanups/:id/assign_scooper
     end
   end
+
+  # Sightings - Public poop sighting reports (Phase 1A)
+  resources :sightings, only: %i[index show create] do
+    member do
+      post :confirm            # POST /sightings/:id/confirm
+      post :convert            # POST /sightings/:id/convert (Phase 1B)
+      post :upload_photo       # POST /sightings/:id/upload_photo
+    end
+  end
+
+  # Neighborhood Stats - Stats ticker for public map
+  get "neighborhoods/:neighborhood/stats", to: "neighborhoods#stats"
 
   # Scooper Milestones - Achievement tracking
   resources :scooper_milestones, only: %i[index show] do

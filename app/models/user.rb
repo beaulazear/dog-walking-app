@@ -57,6 +57,15 @@ class User < ApplicationRecord
   # Billing associations
   has_many :bills, dependent: :destroy
 
+  # Moderation associations
+  has_many :reports_filed, class_name: "Report", foreign_key: "reporter_id", dependent: :destroy
+  has_many :reports_about_me, class_name: "Report", as: :reportable, dependent: :destroy
+  has_many :moderation_actions, dependent: :destroy
+  has_many :moderation_actions_performed, class_name: "ModerationAction", foreign_key: "moderator_id",
+                                          dependent: :destroy
+  has_many :blocked_users_initiated, class_name: "BlockedUser", foreign_key: "blocker_id", dependent: :destroy
+  has_many :blocked_users_received, class_name: "BlockedUser", foreign_key: "blocked_id", dependent: :destroy
+
   # Helper method to get all connections (both initiated and received)
   def all_connections
     WalkerConnection.where(user_id: id).or(WalkerConnection.where(connected_user_id: id))
@@ -273,5 +282,151 @@ class User < ApplicationRecord
     period_end = next_date - 1.day
 
     { start: period_start, end: period_end }
+  end
+
+  # ============================================================================
+  # MODERATION METHODS
+  # ============================================================================
+
+  def active?
+    status == "active"
+  end
+
+  def suspended?
+    status == "suspended" || (suspended_until.present? && suspended_until > Time.current)
+  end
+
+  def banned?
+    status == "banned" || banned_at.present?
+  end
+
+  def can_login?
+    active? && !suspended? && !banned?
+  end
+
+  def warn!(reason, admin_user, report = nil)
+    transaction do
+      increment!(:warnings_count)
+
+      moderation_actions.create!(
+        moderator: admin_user,
+        report: report,
+        action_type: "warned",
+        reason: reason,
+        details: "Warning #{warnings_count}/3"
+      )
+
+      # Send warning email
+      # UserModerationMailer.warning_email(self).deliver_later
+      Rails.logger.info "⚠️  User ##{id} warned (#{warnings_count}/3)"
+    end
+  end
+
+  def suspend!(duration, reason, admin_user, report = nil)
+    transaction do
+      update!(
+        status: "suspended",
+        suspended_until: Time.current + duration,
+        suspension_reason: reason
+      )
+
+      moderation_actions.create!(
+        moderator: admin_user,
+        report: report,
+        action_type: "suspended",
+        reason: reason,
+        details: "Suspended for #{duration.inspect}",
+        expires_at: Time.current + duration
+      )
+
+      # Send suspension email
+      # UserModerationMailer.suspension_email(self).deliver_later
+      Rails.logger.info "🚫 User ##{id} suspended until #{suspended_until}"
+    end
+  end
+
+  def ban!(reason, admin_user, report = nil)
+    transaction do
+      update!(
+        status: "banned",
+        banned_at: Time.current,
+        ban_reason: reason
+      )
+
+      moderation_actions.create!(
+        moderator: admin_user,
+        report: report,
+        action_type: "banned",
+        reason: reason,
+        details: "Permanent ban"
+      )
+
+      # Send ban email
+      # UserModerationMailer.ban_email(self).deliver_later
+      Rails.logger.info "🔨 User ##{id} permanently banned"
+    end
+  end
+
+  def unsuspend!(admin_user)
+    transaction do
+      update!(
+        status: "active",
+        suspended_until: nil,
+        suspension_reason: nil
+      )
+
+      moderation_actions.create!(
+        moderator: admin_user,
+        action_type: "unsuspended",
+        details: "Suspension lifted"
+      )
+
+      Rails.logger.info "✅ User ##{id} unsuspended"
+    end
+  end
+
+  def unban!(admin_user)
+    transaction do
+      update!(
+        status: "active",
+        banned_at: nil,
+        ban_reason: nil
+      )
+
+      moderation_actions.create!(
+        moderator: admin_user,
+        action_type: "unbanned",
+        details: "Ban lifted"
+      )
+
+      Rails.logger.info "✅ User ##{id} unbanned"
+    end
+  end
+
+  def check_suspension_expiry
+    if suspended? && suspended_until.present? && suspended_until <= Time.current
+      update!(status: "active", suspended_until: nil, suspension_reason: nil)
+      Rails.logger.info "✅ User ##{id} suspension auto-expired"
+    end
+  end
+
+  def blocked_user_ids
+    blocked_users_initiated.pluck(:blocked_id)
+  end
+
+  def blocking?(user)
+    blocked_user_ids.include?(user.id)
+  end
+
+  def blocked_by?(user)
+    user.blocking?(self)
+  end
+
+  def block!(user_to_block)
+    blocked_users_initiated.create!(blocked: user_to_block)
+  end
+
+  def unblock!(user_to_unblock)
+    blocked_users_initiated.find_by(blocked: user_to_unblock)&.destroy
   end
 end

@@ -16,6 +16,7 @@ class CleanupJob < ApplicationRecord
   has_many_attached :after_photos
 
   has_many :reviews, dependent: :destroy
+  has_many :reports, as: :reportable, dependent: :destroy
 
   # Basic validations
   validates :latitude, :longitude, :price, presence: true
