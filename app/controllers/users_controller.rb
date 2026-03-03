@@ -259,6 +259,7 @@ class UsersController < ApplicationController
     params.permit(
       :is_poster,
       :is_dog_walker,
+      :is_scooper,
       :instagram_handle,
       :business_name,
       neighborhoods: []
