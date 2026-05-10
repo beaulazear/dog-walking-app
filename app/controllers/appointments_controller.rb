@@ -388,28 +388,31 @@ class AppointmentsController < ApplicationController
     # If price is explicitly set on appointment, use it
     return appointment.price if appointment.price.present? && appointment.price > 0
 
-    # Otherwise, calculate based on walk type and duration using user's rates
-    case appointment.walk_type&.downcase
-    when "solo"
-      @current_user.solo_rate || 0
-    when "training"
-      @current_user.training_rate || 0
-    when "sibling"
-      @current_user.sibling_rate || 0
-    else
-      # For group walks or no walk_type specified, use duration-based rates
-      case appointment.duration
-      when 30
-        @current_user.thirty || 0
-      when 45
-        @current_user.fortyfive || 0
-      when 60
-        @current_user.sixty || 0
-      else
-        # Default fallback
-        0
-      end
-    end
+    # Calculate base compensation by duration
+    base_compensation = case appointment.duration
+                        when 30
+                          @current_user.thirty || 0
+                        when 45
+                          @current_user.fortyfive || 0
+                        when 60
+                          @current_user.sixty || 0
+                        else
+                          0
+                        end
+
+    # Add walk type upcharge
+    walk_type_upcharge = case appointment.walk_type&.downcase
+                         when "solo"
+                           @current_user.solo_rate || 0
+                         when "training"
+                           @current_user.training_rate || 0
+                         when "sibling"
+                           @current_user.sibling_rate || 0
+                         else
+                           0
+                         end
+
+    base_compensation + walk_type_upcharge
   end
 
   def appointment_params
