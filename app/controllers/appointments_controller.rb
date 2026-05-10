@@ -175,85 +175,97 @@ class AppointmentsController < ApplicationController
 
   # GET /appointments/client_financial_overview
   # Returns detailed financial breakdown per client/pet
+  # This replicates the exact logic from YearlyFinanceOverview.js that's working
   def client_financial_overview
     Rails.logger.info "💰 CLIENT FINANCIAL OVERVIEW"
     Rails.logger.info "   User ID: #{@current_user.id}"
-    Rails.logger.info "   User rates: 30=#{@current_user.thirty}, 45=#{@current_user.fortyfive}, 60=#{@current_user.sixty}"
-    Rails.logger.info "   Active pets count: #{@current_user.pets.where(active: true).count}"
 
-    pets = @current_user.pets.includes(:appointments).where(active: true).order(:name)
+    # Get ALL recurring, non-canceled appointments for the user (same as frontend)
+    all_recurring = @current_user.appointments
+                                 .includes(:pet)
+                                 .where(recurring: true)
+                                 .where("canceled = ? OR canceled IS NULL", false)
 
-    overview_data = pets.map do |pet|
-      # Get all active recurring appointments for this pet
-      # Handle both canceled: false and canceled: null (NOT canceled)
-      recurring_appointments = pet.appointments.where(recurring: true).where("canceled IS NULL OR canceled = ?", false)
-      Rails.logger.info "   Pet #{pet.name}: #{recurring_appointments.count} recurring appointments"
+    Rails.logger.info "   Total recurring appointments: #{all_recurring.count}"
 
-      # Calculate weekly walks and income
-      days_per_week = 0
-      weekly_income = 0
+    # Group by pet
+    pets_data = {}
 
-      recurring_appointments.each do |apt|
-        walks_this_week = 0
-        walks_this_week += 1 if apt.monday
-        walks_this_week += 1 if apt.tuesday
-        walks_this_week += 1 if apt.wednesday
-        walks_this_week += 1 if apt.thursday
-        walks_this_week += 1 if apt.friday
-        walks_this_week += 1 if apt.saturday
-        walks_this_week += 1 if apt.sunday
+    all_recurring.each do |apt|
+      next unless apt.pet&.active # Only include active pets
 
-        # Calculate price based on walk type and duration
-        price = calculate_walk_price(apt)
-
-        days_per_week += walks_this_week
-        weekly_income += price * walks_this_week
-      end
-
-      # Calculate monthly income (4.33 weeks per month average)
-      monthly_income = (weekly_income * 4.33).round(2)
-      annual_income = (weekly_income * 52).round(2)
-
-      {
+      pet = apt.pet
+      pets_data[pet.id] ||= {
         pet_id: pet.id,
         pet_name: pet.name,
         address: pet.address,
         client_name: pet.client&.full_name,
         client_phone: pet.client&.phone_number,
-        recurring_appointments: recurring_appointments.map do |apt|
-          {
-            id: apt.id,
-            start_time: apt.start_time,
-            end_time: apt.end_time,
-            duration: apt.duration,
-            price: calculate_walk_price(apt),
-            walk_type: apt.walk_type,
-            days: {
-              monday: apt.monday,
-              tuesday: apt.tuesday,
-              wednesday: apt.wednesday,
-              thursday: apt.thursday,
-              friday: apt.friday,
-              saturday: apt.saturday,
-              sunday: apt.sunday
-            }
-          }
-        end,
-        walks_per_week: days_per_week,
-        weekly_income: weekly_income,
-        monthly_income: monthly_income,
-        annual_income: annual_income
+        recurring_appointments: [],
+        walks_per_week: 0,
+        weekly_income: 0
+      }
+
+      # Calculate days per week for this appointment
+      days_per_week = 0
+      days_per_week += 1 if apt.monday
+      days_per_week += 1 if apt.tuesday
+      days_per_week += 1 if apt.wednesday
+      days_per_week += 1 if apt.thursday
+      days_per_week += 1 if apt.friday
+      days_per_week += 1 if apt.saturday
+      days_per_week += 1 if apt.sunday
+
+      # Calculate rate (base rate by duration, NO walk_type upcharges for now)
+      rate = case apt.duration
+             when 30 then @current_user.thirty || 0
+             when 45 then @current_user.fortyfive || 0
+             when 60 then @current_user.sixty || 0
+             else 0
+             end
+
+      weekly_for_this_apt = rate * days_per_week
+
+      # Add to pet totals
+      pets_data[pet.id][:walks_per_week] += days_per_week
+      pets_data[pet.id][:weekly_income] += weekly_for_this_apt
+      pets_data[pet.id][:recurring_appointments] << {
+        id: apt.id,
+        start_time: apt.start_time,
+        end_time: apt.end_time,
+        duration: apt.duration,
+        price: rate,
+        walk_type: apt.walk_type,
+        days: {
+          monday: apt.monday || false,
+          tuesday: apt.tuesday || false,
+          wednesday: apt.wednesday || false,
+          thursday: apt.thursday || false,
+          friday: apt.friday || false,
+          saturday: apt.saturday || false,
+          sunday: apt.sunday || false
+        }
       }
     end
 
-    # Calculate totals across all pets
+    # Convert to array and add monthly/annual calculations
+    overview_data = pets_data.values.map do |pet_data|
+      pet_data[:monthly_income] = (pet_data[:weekly_income] * 4.33).round(2)
+      pet_data[:annual_income] = (pet_data[:weekly_income] * 52).round(2)
+      pet_data
+    end
+
+    # Calculate totals
     total_weekly = overview_data.sum { |data| data[:weekly_income] }
-    total_monthly = overview_data.sum { |data| data[:monthly_income] }
-    total_annual = overview_data.sum { |data| data[:annual_income] }
+    total_monthly = (total_weekly * 4.33).round(2)
+    total_annual = (total_weekly * 52).round(2)
     total_walks_per_week = overview_data.sum { |data| data[:walks_per_week] }
 
+    Rails.logger.info "   Total weekly income: $#{total_weekly}"
+    Rails.logger.info "   Total walks per week: #{total_walks_per_week}"
+
     render json: {
-      pets: overview_data,
+      pets: overview_data.sort_by { |p| p[:pet_name] },
       totals: {
         total_weekly_income: total_weekly,
         total_monthly_income: total_monthly,
@@ -390,37 +402,6 @@ class AppointmentsController < ApplicationController
   end
 
   private
-
-  def calculate_walk_price(appointment)
-    # If price is explicitly set on appointment, use it
-    return appointment.price if appointment.price.present? && appointment.price > 0
-
-    # Calculate base compensation by duration
-    base_compensation = case appointment.duration
-                        when 30
-                          @current_user.thirty || 0
-                        when 45
-                          @current_user.fortyfive || 0
-                        when 60
-                          @current_user.sixty || 0
-                        else
-                          0
-                        end
-
-    # Add walk type upcharge
-    walk_type_upcharge = case appointment.walk_type&.downcase
-                         when "solo"
-                           @current_user.solo_rate || 0
-                         when "training"
-                           @current_user.training_rate || 0
-                         when "sibling"
-                           @current_user.sibling_rate || 0
-                         else
-                           0
-                         end
-
-    base_compensation + walk_type_upcharge
-  end
 
   def appointment_params
     params.require(:appointment).permit(:user_id, :pet_id, :appointment_date, :start_time, :id, :canceled,
