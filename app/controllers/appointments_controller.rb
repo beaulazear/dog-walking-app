@@ -176,11 +176,17 @@ class AppointmentsController < ApplicationController
   # GET /appointments/client_financial_overview
   # Returns detailed financial breakdown per client/pet
   def client_financial_overview
+    Rails.logger.info "💰 CLIENT FINANCIAL OVERVIEW"
+    Rails.logger.info "   User ID: #{@current_user.id}"
+    Rails.logger.info "   User rates: 30=#{@current_user.thirty}, 45=#{@current_user.fortyfive}, 60=#{@current_user.sixty}"
+    Rails.logger.info "   Active pets count: #{@current_user.pets.where(active: true).count}"
+
     pets = @current_user.pets.includes(:appointments).where(active: true).order(:name)
 
     overview_data = pets.map do |pet|
       # Get all active recurring appointments for this pet
       recurring_appointments = pet.appointments.where(recurring: true, canceled: false)
+      Rails.logger.info "   Pet #{pet.name}: #{recurring_appointments.count} recurring appointments"
 
       # Calculate weekly walks and income
       days_per_week = 0

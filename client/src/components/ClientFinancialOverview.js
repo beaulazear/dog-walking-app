@@ -243,9 +243,11 @@ export default function ClientFinancialOverview() {
   const fetchFinancialOverview = async () => {
     try {
       setLoading(true);
+      const token = localStorage.getItem("token");
       const response = await fetch("/appointments/client_financial_overview", {
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
         },
       });
 
