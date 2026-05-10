@@ -196,8 +196,11 @@ class AppointmentsController < ApplicationController
         walks_this_week += 1 if apt.saturday
         walks_this_week += 1 if apt.sunday
 
+        # Calculate price based on walk type and duration
+        price = calculate_walk_price(apt)
+
         days_per_week += walks_this_week
-        weekly_income += (apt.price || 0) * walks_this_week
+        weekly_income += price * walks_this_week
       end
 
       # Calculate monthly income (4.33 weeks per month average)
@@ -216,7 +219,7 @@ class AppointmentsController < ApplicationController
             start_time: apt.start_time,
             end_time: apt.end_time,
             duration: apt.duration,
-            price: apt.price,
+            price: calculate_walk_price(apt),
             walk_type: apt.walk_type,
             days: {
               monday: apt.monday,
@@ -380,6 +383,34 @@ class AppointmentsController < ApplicationController
   end
 
   private
+
+  def calculate_walk_price(appointment)
+    # If price is explicitly set on appointment, use it
+    return appointment.price if appointment.price.present? && appointment.price > 0
+
+    # Otherwise, calculate based on walk type and duration using user's rates
+    case appointment.walk_type&.downcase
+    when "solo"
+      @current_user.solo_rate || 0
+    when "training"
+      @current_user.training_rate || 0
+    when "sibling"
+      @current_user.sibling_rate || 0
+    else
+      # For group walks or no walk_type specified, use duration-based rates
+      case appointment.duration
+      when 30
+        @current_user.thirty || 0
+      when 45
+        @current_user.fortyfive || 0
+      when 60
+        @current_user.sixty || 0
+      else
+        # Default fallback
+        0
+      end
+    end
+  end
 
   def appointment_params
     params.require(:appointment).permit(:user_id, :pet_id, :appointment_date, :start_time, :id, :canceled,
