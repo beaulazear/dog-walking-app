@@ -185,7 +185,8 @@ class AppointmentsController < ApplicationController
 
     overview_data = pets.map do |pet|
       # Get all active recurring appointments for this pet
-      recurring_appointments = pet.appointments.where(recurring: true, canceled: false)
+      # Handle both canceled: false and canceled: null (NOT canceled)
+      recurring_appointments = pet.appointments.where(recurring: true).where("canceled IS NULL OR canceled = ?", false)
       Rails.logger.info "   Pet #{pet.name}: #{recurring_appointments.count} recurring appointments"
 
       # Calculate weekly walks and income
