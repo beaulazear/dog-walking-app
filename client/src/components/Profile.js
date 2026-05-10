@@ -2,6 +2,7 @@ import React, { useContext, useState, useEffect } from "react";
 import styled from "styled-components";
 import toast from 'react-hot-toast';
 import dayjs from "dayjs";
+import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/user";
 import YearlyFinanceOverview from "./YearlyFinanceOverview";
 import dogPlaceholder from "../assets/dog.png";
@@ -19,7 +20,8 @@ import {
     Camera,
     Upload,
     LogOut,
-    Cake
+    Cake,
+    TrendingUp
 } from "lucide-react";
 
 const calculateTrainingHours = (invoices) => {
@@ -73,6 +75,7 @@ const getUpcomingBirthday = (pets) => {
 
 export default function Profile() {
     const { user, setUser } = useContext(UserContext);
+    const navigate = useNavigate();
     const [isUpdatingRates, setIsUpdatingRates] = useState(false);
     const [rates, setRates] = useState({
         thirty: user?.thirty || "",
@@ -742,6 +745,11 @@ export default function Profile() {
                     </BirthdayContent>
                 </BirthdayCard>
             )}
+
+            <FinancialOverviewButton onClick={() => navigate('/client-financial-overview')}>
+                <TrendingUp size={18} />
+                Client Financial Overview
+            </FinancialOverviewButton>
 
             <LogoutButton onClick={handleLogout}>
                 <LogOut size={16} />
@@ -1555,6 +1563,36 @@ const ModernUpdateButton = styled.button`
     }
 
     &:active:not(:disabled) {
+        transform: translateY(0);
+    }
+`;
+
+const FinancialOverviewButton = styled.button`
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: none;
+    border-radius: 12px;
+    padding: 14px 28px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 0 auto 15px;
+    max-width: 400px;
+    width: calc(100% - 40px);
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+    }
+
+    &:active {
         transform: translateY(0);
     }
 `;

@@ -173,6 +173,87 @@ class AppointmentsController < ApplicationController
     }
   end
 
+  # GET /appointments/client_financial_overview
+  # Returns detailed financial breakdown per client/pet
+  def client_financial_overview
+    pets = @current_user.pets.includes(:appointments).where(active: true).order(:name)
+
+    overview_data = pets.map do |pet|
+      # Get all active recurring appointments for this pet
+      recurring_appointments = pet.appointments.where(recurring: true, canceled: false)
+
+      # Calculate weekly walks and income
+      days_per_week = 0
+      weekly_income = 0
+
+      recurring_appointments.each do |apt|
+        walks_this_week = 0
+        walks_this_week += 1 if apt.monday
+        walks_this_week += 1 if apt.tuesday
+        walks_this_week += 1 if apt.wednesday
+        walks_this_week += 1 if apt.thursday
+        walks_this_week += 1 if apt.friday
+        walks_this_week += 1 if apt.saturday
+        walks_this_week += 1 if apt.sunday
+
+        days_per_week += walks_this_week
+        weekly_income += (apt.price || 0) * walks_this_week
+      end
+
+      # Calculate monthly income (4.33 weeks per month average)
+      monthly_income = (weekly_income * 4.33).round(2)
+      annual_income = (weekly_income * 52).round(2)
+
+      {
+        pet_id: pet.id,
+        pet_name: pet.name,
+        address: pet.address,
+        client_name: pet.client&.full_name,
+        client_phone: pet.client&.phone_number,
+        recurring_appointments: recurring_appointments.map do |apt|
+          {
+            id: apt.id,
+            start_time: apt.start_time,
+            end_time: apt.end_time,
+            duration: apt.duration,
+            price: apt.price,
+            walk_type: apt.walk_type,
+            days: {
+              monday: apt.monday,
+              tuesday: apt.tuesday,
+              wednesday: apt.wednesday,
+              thursday: apt.thursday,
+              friday: apt.friday,
+              saturday: apt.saturday,
+              sunday: apt.sunday
+            }
+          }
+        end,
+        walks_per_week: days_per_week,
+        weekly_income: weekly_income,
+        monthly_income: monthly_income,
+        annual_income: annual_income
+      }
+    end
+
+    # Calculate totals across all pets
+    total_weekly = overview_data.sum { |data| data[:weekly_income] }
+    total_monthly = overview_data.sum { |data| data[:monthly_income] }
+    total_annual = overview_data.sum { |data| data[:annual_income] }
+    total_walks_per_week = overview_data.sum { |data| data[:walks_per_week] }
+
+    render json: {
+      pets: overview_data,
+      totals: {
+        total_weekly_income: total_weekly,
+        total_monthly_income: total_monthly,
+        total_annual_income: total_annual,
+        total_walks_per_week: total_walks_per_week,
+        active_clients: overview_data.length
+      }
+    }
+  end
+
   # GET /appointments/my_earnings
   # Returns combined earnings from invoices (pet owner) and walker_earnings (covering walker)
   def my_earnings

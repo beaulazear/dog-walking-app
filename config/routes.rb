@@ -12,6 +12,7 @@ Rails.application.routes.draw do
       get :for_date
       get :my_earnings
       get :team_financials
+      get :client_financial_overview
     end
   end
   resources :pets

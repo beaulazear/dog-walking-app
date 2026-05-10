@@ -15,6 +15,7 @@ const PetsPage = lazy(() => import("./components/PetsPage"));
 const TeamAndShares = lazy(() => import("./components/TeamAndShares"));
 const Profile = lazy(() => import("./components/Profile"));
 const MyEarnings = lazy(() => import("./components/MyEarnings"));
+const ClientFinancialOverview = lazy(() => import("./components/ClientFinancialOverview"));
 
 function App() {
   const { user, loading } = useContext(UserContext);
@@ -59,6 +60,7 @@ function App() {
               <Route path="/pets-page" element={<PetsPage />} />
               <Route path="/team" element={<TeamAndShares />} />
               <Route path="/my-earnings" element={<MyEarnings />} />
+              <Route path="/client-financial-overview" element={<ClientFinancialOverview />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="*" element={<Dashboard />} />
             </Routes>
